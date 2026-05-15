@@ -1,0 +1,37 @@
+# Blazor WASM required MIME types
+AddType application/wasm .wasm
+AddType application/octet-stream .dat .blat .pdb
+
+# Serve pre-compressed Brotli files
+<IfModule mod_mime.c>
+    AddEncoding br .br
+    AddEncoding gzip .gz
+</IfModule>
+
+<IfModule mod_headers.c>
+    <FilesMatch "\.wasm\.br$">
+        Header set Content-Type application/wasm
+        Header set Content-Encoding br
+    </FilesMatch>
+    <FilesMatch "\.js\.br$">
+        Header set Content-Type application/javascript
+        Header set Content-Encoding br
+    </FilesMatch>
+    <FilesMatch "\.wasm\.gz$">
+        Header set Content-Type application/wasm
+        Header set Content-Encoding gzip
+    </FilesMatch>
+    <FilesMatch "\.js\.gz$">
+        Header set Content-Type application/javascript
+        Header set Content-Encoding gzip
+    </FilesMatch>
+</IfModule>
+
+# SPA routing — send all non-file requests to index.html
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule . /index.html [L]
+</IfModule>
