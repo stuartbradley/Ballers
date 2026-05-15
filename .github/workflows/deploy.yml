@@ -44,7 +44,8 @@ jobs:
         with:
           server: bristonlyfans.co.uk
           username: bradley5
-          password: Marvel1991!
+          password: "Marvel1991!"
+          protocol: ftps
           local-dir: publish/api/
           server-dir: /api.bristonlyfans.co.uk/
 
@@ -53,6 +54,7 @@ jobs:
         with:
           server: bristonlyfans.co.uk
           username: bradley5
-          password: Marvel1991!
+          password: "Marvel1991!"
+          protocol: ftps
           local-dir: publish/blazor/wwwroot/
           server-dir: /bristonlyfans.co.uk/
