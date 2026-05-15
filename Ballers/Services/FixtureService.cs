@@ -25,14 +25,16 @@ namespace Ballers.Services
 
         public async Task<FixtureWeekDto?> GetCurrentWeek()
         {
-            return await _httpClient.GetFromJsonAsync<FixtureWeekDto>(
-                "api/fixtures/current-week");
+            var response = await _httpClient.GetAsync("api/fixtures/current-week");
+            if (!response.IsSuccessStatusCode) return null;
+            return await response.Content.ReadFromJsonAsync<FixtureWeekDto>();
         }
 
         public async Task<List<FixtureWeekDto>> GetFixtureWeeks()
         {
-            return await _httpClient.GetFromJsonAsync<List<FixtureWeekDto>>(
-                "api/fixtures/weeks") ?? new();
+            var response = await _httpClient.GetAsync("api/fixtures/weeks");
+            if (!response.IsSuccessStatusCode) return [];
+            return await response.Content.ReadFromJsonAsync<List<FixtureWeekDto>>() ?? [];
         }
 
         public async Task<FixtureDetailsDto?> GetFixture(int id)
