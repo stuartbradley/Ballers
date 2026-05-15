@@ -39,6 +39,15 @@ jobs:
       - name: Publish Blazor
         run: dotnet publish Ballers/Ballers.csproj -c Release -o publish/blazor --nologo
 
+      # Take the API offline so IIS releases the file locks before we overwrite the DLLs
+      - name: Take API offline
+        run: |
+          echo "<html><body>Deploying update, back in a moment...</body></html>" | \
+          curl --ssl-reqd -T - \
+            "ftp://bristonlyfans.co.uk/api.bristonlyfans.co.uk/app_offline.htm" \
+            -u "bradley5:8TPwRdv_e_b3jw9t"
+          sleep 5
+
       - name: Deploy API via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -48,6 +57,14 @@ jobs:
           protocol: ftps
           local-dir: publish/api/
           server-dir: /api.bristonlyfans.co.uk/
+
+      # Remove app_offline.htm to bring the API back online
+      - name: Bring API back online
+        run: |
+          curl --ssl-reqd \
+            "ftp://bristonlyfans.co.uk" \
+            -u "bradley5:8TPwRdv_e_b3jw9t" \
+            -Q "DELE /api.bristonlyfans.co.uk/app_offline.htm"
 
       - name: Deploy Blazor via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
