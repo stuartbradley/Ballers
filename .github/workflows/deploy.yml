@@ -31,7 +31,7 @@ jobs:
           EOF
 
       - name: Publish API
-        run: dotnet publish Ballers.API/Ballers.API.csproj -c Release -o publish/api --nologo
+        run: dotnet publish Ballers.API/Ballers.API.csproj -c Release -o publish/api --nologo --self-contained true -r win-x64
 
       - name: Set Blazor API URL for production
         run: echo '{"ApiBaseUrl":"https://api.bristonlyfans.co.uk/"}' > Ballers/wwwroot/appsettings.json
@@ -77,3 +77,4 @@ jobs:
           security: loose
           local-dir: publish/blazor/wwwroot/
           server-dir: /bristonlyfans.co.uk/wwwroot/
+          dangerous-clean-slate: true
