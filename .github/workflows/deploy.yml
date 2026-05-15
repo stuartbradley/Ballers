@@ -33,6 +33,15 @@ jobs:
       - name: Publish API
         run: dotnet publish Ballers.API/Ballers.API.csproj -c Release -o publish/api --nologo --self-contained true -r win-x86
 
+      - name: Ensure production config is in publish output
+        run: |
+          echo "=== appsettings files in publish output ==="
+          ls publish/api/appsettings*.json 2>/dev/null || echo "No appsettings files found"
+          echo "=== Copying appsettings.Production.json explicitly ==="
+          cp Ballers.API/appsettings.Production.json publish/api/appsettings.Production.json
+          echo "=== Verifying ==="
+          cat publish/api/appsettings.Production.json
+
       - name: Set Blazor API URL for production
         run: echo '{"ApiBaseUrl":"https://api.bristonlyfans.co.uk/"}' > Ballers/wwwroot/appsettings.json
 
