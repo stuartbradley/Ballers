@@ -27,6 +27,13 @@ AddType application/octet-stream .dat .blat .pdb
     </FilesMatch>
 </IfModule>
 
+# Never cache index.html so browsers always load the latest version
+<FilesMatch "^index\.html$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires 0
+</FilesMatch>
+
 # SPA routing — send all non-file requests to index.html
 <IfModule mod_rewrite.c>
     RewriteEngine On
