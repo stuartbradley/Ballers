@@ -1,0 +1,335 @@
+﻿:root {
+    /* ===== PRIMARY BRAND ===== */
+    --ballers-primary: #1E3A8A; /* League Blue */
+    --ballers-primary-hover: #2563EB; /* Bright Blue */
+    /* ===== ACCENT ===== */
+    --ballers-accent: #FACC15; /* Football Yellow */
+    --ballers-accent-soft: #FEF08A;
+    /* ===== FOOTBALL HINT ===== */
+    --ballers-pitch: #16A34A; /* subtle green */
+    --ballers-pitch-soft: rgba(22,163,74,0.08);
+    /* ===== SURFACES ===== */
+    --ballers-bg: #F8FAFC;
+    --ballers-card: #FFFFFF;
+    --ballers-surface: #F1F5F9;
+    /* ===== TEXT ===== */
+    --ballers-text: #0F172A;
+    --ballers-text-muted: #64748B;
+    /* ===== STATUS ===== */
+    --ballers-danger: #EF4444;
+    /* ===== EFFECTS ===== */
+    --ballers-shadow: 0 10px 25px rgba(15,23,42,0.08);
+    /* ===== BACKGROUND TINTS ===== */
+    --bg-blue-soft: rgba(30, 58, 138, 0.05);
+    --bg-blue-subtle: rgba(30, 58, 138, 0.08);
+    --bg-yellow-soft: rgba(250, 204, 21, 0.10);
+    --bg-pitch-soft: rgba(22, 163, 74, 0.06);
+    --bg-neutral: #F8FAFC;
+    --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+    --text-xs: 0.8rem;
+    --text-sm: 0.9rem;
+    --text-md: 1rem;
+    --text-lg: 1.2rem;
+    --text-xl: 1.8rem;
+    --text-2xl: 2.4rem;
+    --text-hero: 3rem;
+    --ballers-blue: #0b3c82;
+    --ballers-yellow: #ffd447;
+    --ballers-green: #2fbf71;
+}
+
+body {
+    font-family: var(--font-main);
+    color: var(--ballers-text);
+    line-height: 1.6;
+    font-size: var(--text-md);
+    margin: 0;
+    background: radial-gradient( circle at 20% 10%, rgba(30, 58, 138, 0.06), transparent 40% ), radial-gradient( circle at 80% 60%, rgba(250, 204, 21, 0.05), transparent 45% ), #F8FAFC;
+}
+    body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background: linear-gradient( 180deg, rgba(30,58,138,0.05), transparent 30% );
+        z-index: -1;
+    }
+
+.section-wrapper {
+    max-width: 1200px;
+    margin: 80px auto;
+    padding: 60px;
+    background: var(--ballers-card);
+    border-radius: 18px;
+    box-shadow: var(--ballers-shadow);
+}
+.main-header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    backdrop-filter: blur(12px);
+    background: rgba(255,255,255,0.75);
+    border-bottom: 1px solid rgba(15,23,42,0.06);
+}
+
+.header-inner {
+    max-width: 1200px;
+    margin: auto;
+    padding: 18px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* LOGO */
+
+.logo {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--ballers-primary);
+    letter-spacing: -0.5px;
+}
+
+    .logo span {
+        margin-left: 6px;
+    }
+
+/* NAVIGATION */
+
+.nav-links a {
+    margin-left: 28px;
+    text-decoration: none;
+    color: var(--ballers-text-muted);
+    font-weight: 600;
+    position: relative;
+    transition: 0.25s;
+}
+
+    /* Hover effect */
+    .nav-links a:hover {
+        color: var(--ballers-primary);
+    }
+
+    /* Active page indicator */
+    .nav-links a.active {
+        color: var(--ballers-primary);
+    }
+
+    /* underline animation */
+    .nav-links a::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: -6px;
+        width: 0%;
+        height: 2px;
+        background: var(--ballers-accent);
+        transition: width 0.25s ease;
+    }
+
+    .nav-links a:hover::after,
+    .nav-links a.active::after {
+        width: 100%;
+    }
+
+nav a {
+    color: white;
+    margin-left: 20px;
+    text-decoration: none;
+}
+
+section {
+    padding: 60px 40px;
+}
+
+
+
+
+h1, h2, h3, h4 {
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+}
+
+/* Page title */
+h1 {
+    font-size: var(--text-2xl);
+    color: var(--ballers-primary);
+}
+
+/* Section titles */
+h2 {
+    font-size: var(--text-xl);
+    color: var(--ballers-primary);
+}
+
+/* Card titles */
+h3 {
+    font-size: var(--text-lg);
+}
+
+/* Small headings */
+h4 {
+    font-size: var(--text-md);
+}
+p {
+    margin: 0;
+    color: var(--ballers-text-muted);
+    font-size: var(--text-md);
+}
+button {
+    font-family: var(--font-main);
+    font-size: var(--text-md);
+    font-weight: 600;
+}
+input,
+select,
+textarea {
+    font-family: var(--font-main);
+    font-size: var(--text-md);
+}
+
+
+.page-header {
+    max-width: 1100px;
+    margin: 60px auto 40px;
+    padding: 0 20px;
+}
+
+    .page-header h1 {
+        font-size: var(--text-2xl);
+        color: var(--ballers-primary);
+        font-weight: 800;
+        position: relative;
+        display: inline-block;
+    }
+
+        /* Yellow accent line */
+        .page-header h1::after {
+            content: "";
+            display: block;
+            width: 70%;
+            height: 4px;
+            margin-top: 10px;
+            background: var(--ballers-accent);
+            border-radius: 3px;
+        }
+
+    .page-header p {
+        margin-top: 10px;
+        color: var(--ballers-text-muted);
+    }
+
+/* ===== GLOBAL RESPONSIVE ===== */
+
+@media (max-width: 1024px) {
+    .section-wrapper {
+        padding: 40px 30px;
+        margin: 40px 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .section-wrapper {
+        margin: 20px 16px;
+        padding: 24px 18px;
+        border-radius: 12px;
+    }
+
+    section {
+        padding: 40px 16px;
+    }
+
+    .page-header {
+        margin: 24px auto 20px;
+        padding: 0 16px;
+    }
+
+    h1 {
+        font-size: var(--text-xl);
+    }
+
+    h2 {
+        font-size: var(--text-lg);
+    }
+}
+
+@media (max-width: 480px) {
+    section {
+        padding: 28px 12px;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+    }
+}
+
+/* ===== 404 PAGE ===== */
+
+.not-found-container {
+    max-width: 480px;
+    margin: 80px auto;
+    padding: 60px 40px;
+    text-align: center;
+    background: var(--ballers-card);
+    border-radius: 18px;
+    box-shadow: var(--ballers-shadow);
+}
+
+.not-found-code {
+    font-size: 6rem;
+    font-weight: 800;
+    color: var(--ballers-primary);
+    line-height: 1;
+    opacity: 0.15;
+    margin-bottom: -10px;
+}
+
+.not-found-title {
+    font-size: var(--text-2xl);
+    color: var(--ballers-primary);
+    margin-bottom: 12px;
+}
+
+.not-found-text {
+    color: var(--ballers-text-muted);
+    margin-bottom: 28px;
+}
+
+.not-found-btn {
+    display: inline-block;
+    padding: 12px 28px;
+    background: var(--ballers-primary);
+    color: white;
+    border-radius: 10px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: 0.2s ease;
+}
+
+    .not-found-btn:hover {
+        background: var(--ballers-primary-hover);
+        transform: translateY(-2px);
+    }
+
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(18px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

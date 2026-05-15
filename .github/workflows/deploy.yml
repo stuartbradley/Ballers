@@ -1,0 +1,58 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Write API production config
+        run: |
+          cat > Ballers.API/appsettings.Production.json << 'EOF'
+          {
+            "ConnectionStrings": {
+              "Default": "Server=p4476.fra1.stableserver.net;Database=bradley5_ballers;User Id=bradley5;Password=Marvel1991!;TrustServerCertificate=True;"
+            },
+            "Cors": {
+              "AllowedOrigins": ["https://bristonlyfans.co.uk", "https://www.bristonlyfans.co.uk"]
+            },
+            "AdminSeedPassword": "CHANGE_ME"
+          }
+          EOF
+
+      - name: Publish API
+        run: dotnet publish Ballers.API/Ballers.API.csproj -c Release -o publish/api --nologo
+
+      - name: Set Blazor API URL for production
+        run: echo '{"ApiBaseUrl":"https://api.bristonlyfans.co.uk/"}' > Ballers/wwwroot/appsettings.json
+
+      - name: Publish Blazor
+        run: dotnet publish Ballers/Ballers.csproj -c Release -o publish/blazor --nologo
+
+      - name: Deploy API via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: bristonlyfans.co.uk
+          username: bradley5
+          password: Marvel1991!
+          local-dir: publish/api/
+          server-dir: /api.bristonlyfans.co.uk/
+
+      - name: Deploy Blazor via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: bristonlyfans.co.uk
+          username: bradley5
+          password: Marvel1991!
+          local-dir: publish/blazor/wwwroot/
+          server-dir: /bristonlyfans.co.uk/

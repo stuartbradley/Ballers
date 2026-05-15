@@ -1,0 +1,321 @@
+﻿.fixtures-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill,minmax(320px,1fr));
+    gap: 22px;
+}
+
+.fixture-card {
+    width: 65%;
+    margin: 40px auto 0 auto; /* pushes card down from navbar */
+    background: var(--ballers-card);
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: var(--ballers-shadow);
+}
+
+.fixture-week {
+    color: var(--ballers-accent);
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.fixture-teams {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--ballers-text);
+}
+
+.fixture-info {
+    margin-top: 12px;
+    color: var(--ballers-text-muted);
+}
+
+.fixture-button {
+    margin-top: 16px;
+    display: inline-block;
+    padding: 8px 16px;
+    background: var(--ballers-primary);
+    color: white;
+    border-radius: 8px;
+    text-decoration: none;
+}
+
+.fixtures-table {
+    background: var(--ballers-card);
+    border-radius: 14px;
+    box-shadow: var(--ballers-shadow);
+    overflow: hidden;
+
+    width:75%;
+    margin:0 auto;
+}
+
+.fixtures-header {
+    display: grid;
+    grid-template-columns: 80px 1.5fr 140px 1fr 120px 100px;
+    padding: 14px 18px;
+    font-weight: 600;
+    color: var(--ballers-text);
+    background:none;
+}
+
+.fixture-row {
+    display: grid;
+    grid-template-columns: 80px 1.5fr 140px 1fr 120px 100px;
+    padding: 16px 18px;
+    border-top: 1px solid var(--ballers-surface);
+    align-items: center;
+    transition: background 0.15s ease;
+}
+
+    .fixture-row:hover {
+        background: var(--bg-pitch-soft);
+    }
+
+.match-number {
+    font-weight: 600;
+}
+
+.fixture-teams {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.vs {
+    color: var(--ballers-text-muted);
+}
+
+.fixture-actions {
+    text-align: right;
+}
+
+.edit-btn,
+.view-btn {
+    border: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: var(--text-sm);
+}
+
+.edit-btn {
+    background: var(--ballers-primary);
+    color: white;
+}
+
+    .edit-btn:hover {
+        background: var(--ballers-primary-hover);
+    }
+
+.view-btn {
+    background: var(--ballers-surface);
+}
+/* ===== Empty State ===== */
+
+.empty-fixtures {
+    width: 75%;
+    margin: 40px auto;
+    padding: 40px;
+    text-align: center;
+    background: var(--ballers-card);
+    border-radius: 14px;
+    box-shadow: var(--ballers-shadow);
+    color: var(--ballers-text-muted);
+    font-size: var(--text-sm);
+}
+
+/* ===== Page Title ===== */
+
+/* ===== Page Title ===== */
+
+.fixtures-title {
+    width: 75%;
+    margin: 0 auto 25px auto;
+}
+
+    .fixtures-title h1 {
+        font-size: var(--text-2xl);
+        font-weight: 700;
+        color: var(--ballers-primary); /* Ballers Blue */
+        position: relative;
+        margin: 0;
+    }
+
+        /* Yellow underline accent */
+
+        .fixtures-title h1::after {
+            content: "";
+            display: block;
+            width: 70px;
+            height: 4px;
+            background: var(--ballers-accent); /* Ballers Yellow */
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+
+.fixtures-title,
+.fixtures-table {
+    background: var(--ballers-card);
+}
+
+.status {
+    padding: 4px 10px;
+    border-radius: 14px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+    /* Awaiting schedule */
+
+    .status.awaiting {
+        background: rgba(250,204,21,0.2);
+        color: #b08900;
+    }
+
+    /* Scheduled */
+
+    .status.scheduled {
+        background: rgba(30,58,138,0.15);
+        color: var(--ballers-primary);
+    }
+
+    /* Played */
+
+    .status.played {
+        background: rgba(22,163,74,0.2);
+        color: var(--ballers-pitch);
+    }
+
+.fixtures-title {
+    background: transparent;
+}
+
+/* ===== RESPONSIVE ===== */
+
+@media (max-width: 1024px) {
+    .fixtures-table {
+        width: 95%;
+    }
+
+    .fixtures-title {
+        width: 95%;
+    }
+
+    .fixture-card {
+        width: 90%;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-container {
+        padding: 16px;
+    }
+
+    .fixtures-title {
+        width: 100%;
+        margin-bottom: 16px;
+    }
+
+    .fixtures-title h1 {
+        font-size: var(--text-xl);
+    }
+
+    /* Column headers make no sense as cards — hide them */
+    .fixtures-header {
+        display: none;
+    }
+
+    /* Table becomes a plain transparent container */
+    .fixtures-table {
+        width: 100%;
+        overflow-x: visible;
+        background: transparent;
+        box-shadow: none;
+        border-radius: 0;
+    }
+
+    /* Each row becomes a card */
+    .fixture-row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 0 8px;
+        padding: 16px;
+        margin-bottom: 10px;
+        border-top: none;
+        border-radius: 12px;
+        background: var(--ballers-card);
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.07);
+    }
+
+    .fixture-row:hover {
+        background: var(--ballers-card);
+    }
+
+    /* Week number: small label top-left */
+    .match-number {
+        grid-column: 1;
+        grid-row: 1;
+        font-size: 0.72rem;
+        font-weight: 500;
+        color: var(--ballers-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 4px;
+    }
+
+    /* Status badge: top-right, vertically centred with teams */
+    .fixture-row span:nth-child(5) {
+        grid-column: 2;
+        grid-row: 1 / 3;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+    }
+
+    /* Teams: row 2 */
+    .fixture-teams {
+        grid-column: 1;
+        grid-row: 2;
+        font-size: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 6px;
+    }
+
+    /* Kickoff: row 3 */
+    .fixture-row span:nth-child(3) {
+        grid-column: 1 / -1;
+        grid-row: 3;
+        font-size: 0.82rem;
+        color: var(--ballers-text-muted);
+    }
+
+    /* Location: row 4 */
+    .fixture-row span:nth-child(4) {
+        grid-column: 1 / -1;
+        grid-row: 4;
+        font-size: 0.82rem;
+        color: var(--ballers-text-muted);
+        margin-bottom: 6px;
+    }
+
+    /* Edit button: full width at bottom */
+    .fixture-actions {
+        grid-column: 1 / -1;
+        grid-row: 5;
+        text-align: left;
+        margin-top: 4px;
+    }
+
+    .edit-btn,
+    .view-btn {
+        width: 100%;
+        padding: 10px 14px;
+        text-align: center;
+        border-radius: 8px;
+    }
+
+    .fixture-card {
+        width: 100%;
+    }
+}

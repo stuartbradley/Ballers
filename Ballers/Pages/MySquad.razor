@@ -1,0 +1,160 @@
+@page "/my-squad"
+@using Ballers.Models
+@using Ballers.Services
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+
+@inject PlayerService PlayerService
+
+<PageTitle>My Squad</PageTitle>
+
+<div class="squad-page">
+
+    <h1 class="page-title">My Squad</h1>
+
+    <!-- Summary Strip -->
+    <div class="squad-summary">
+        <div class="summary-item">
+            <span class="summary-value">@players.Count</span>
+            <span class="summary-label">Total</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-value">@players.Count(p => p.Position == "GK")</span>
+            <span class="summary-label">GK</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-value">@players.Count(p => p.Position == "DEF")</span>
+            <span class="summary-label">DEF</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-value">@players.Count(p => p.Position == "MID")</span>
+            <span class="summary-label">MID</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-value">@players.Count(p => p.Position == "FWD")</span>
+            <span class="summary-label">FWD</span>
+        </div>
+    </div>
+
+    <!-- Add Player Form -->
+    <div class="form-card">
+        <h2 class="section-heading">Add Player</h2>
+        <div class="add-player-row">
+            <input class="form-input"
+                   placeholder="Player name"
+                   @bind="newName" />
+            <input class="form-input number-input"
+                   type="number"
+                   placeholder="#"
+                   min="1"
+                   @bind="newNumber" />
+            <select class="form-input"
+                    @bind="newPosition">
+                <option value="GK">GK</option>
+                <option value="DEF">DEF</option>
+                <option value="MID">MID</option>
+                <option value="FWD">FWD</option>
+            </select>
+            <button class="add-btn" @onclick="AddPlayer">Add Player</button>
+        </div>
+        @if (!string.IsNullOrEmpty(formError))
+        {
+            <p class="form-error">@formError</p>
+        }
+    </div>
+
+    <!-- Player List -->
+    @if (isLoading)
+    {
+        <LoadingSpinner />
+    }
+    else if (players.Count == 0)
+    {
+        <div class="empty-state">
+            <span class="empty-icon">👥</span>
+            <p>No players added yet. Use the form above to build your squad.</p>
+        </div>
+    }
+    else
+    {
+        @foreach (var group in GroupedPlayers)
+        {
+            <div class="position-group">
+                <div class="group-header">
+                    <span class="group-badge @group.Key">@group.Key</span>
+                    <span class="group-count">@group.Count() player@(group.Count() == 1 ? "" : "s")</span>
+                </div>
+                <div class="squad-grid">
+                    @foreach (var p in group.OrderBy(x => x.Number))
+                    {
+                        <div class="player-card @p.Position">
+                            <div class="shirt-circle">@p.Number</div>
+                            <div class="player-details">
+                                <span class="player-name">@p.Name</span>
+                                <span class="position-badge @p.Position">@p.Position</span>
+                            </div>
+                            <button class="remove-btn" @onclick="() => RemovePlayer(p.Id)" title="Remove player">✕</button>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    }
+
+</div>
+
+@code {
+
+    private static readonly string[] PositionOrder = ["GK", "DEF", "MID", "FWD"];
+
+    private List<PlayerDto> players = new();
+    private bool isLoading = true;
+    private string newName = "";
+    private int newNumber;
+    private string newPosition = "MID";
+    private string formError = "";
+
+    private IEnumerable<IGrouping<string, PlayerDto>> GroupedPlayers =>
+        players.GroupBy(p => p.Position)
+               .OrderBy(g => Array.IndexOf(PositionOrder, g.Key) is int i && i >= 0 ? i : 99);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPlayers();
+    }
+
+    async Task LoadPlayers()
+    {
+        players = await PlayerService.GetMyPlayers();
+        isLoading = false;
+    }
+
+    async Task AddPlayer()
+    {
+        formError = "";
+        if (string.IsNullOrWhiteSpace(newName))
+        {
+            formError = "Please enter a player name.";
+            return;
+        }
+        if (newNumber <= 0)
+        {
+            formError = "Please enter a valid squad number.";
+            return;
+        }
+
+        await PlayerService.AddPlayer(newName, newNumber, newPosition);
+
+        newName = "";
+        newNumber = 0;
+        newPosition = "MID";
+
+        await LoadPlayers();
+    }
+
+    async Task RemovePlayer(int id)
+    {
+        await PlayerService.RemovePlayer(id);
+        await LoadPlayers();
+    }
+}

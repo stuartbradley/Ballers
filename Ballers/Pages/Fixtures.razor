@@ -1,0 +1,43 @@
+@page "/fixtures"
+@using Ballers.Components
+@using Ballers.Models
+@using Ballers.Services
+@inject FixtureService FixtureService
+
+<PageTitle>Fixtures</PageTitle>
+
+<section class="fixtures-page">
+
+    <div class="page-header">
+        <h1>Fixtures</h1>
+        <p>Ballers League Schedule</p>
+    </div>
+
+    @if (isLoading)
+    {
+        <LoadingSpinner />
+    }
+    else if (!FixtureWeeks.Any())
+    {
+        <div class="empty-state">No fixtures scheduled yet.</div>
+    }
+    else
+    {
+        @foreach (var week in FixtureWeeks)
+        {
+            <FixtureWeekCard Week="week" />
+        }
+    }
+
+</section>
+
+@code {
+    private List<FixtureWeekDto> FixtureWeeks = new();
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        FixtureWeeks = await FixtureService.GetFixtureWeeks();
+        isLoading = false;
+    }
+}

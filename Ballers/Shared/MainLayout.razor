@@ -1,0 +1,100 @@
+﻿@using Ballers.Auth
+@using Ballers.Client.Auth
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inherits LayoutComponentBase
+
+<header class="main-header">
+    <div class="header-inner">
+
+        <!-- LEFT SIDE -->
+        <div class="logo-area">
+            <div class="logo">
+                ⚽ <span>Ballers</span>
+            </div>
+
+            <AuthorizeView Context="auth">
+                <Authorized>
+                    <span class="hello-text">
+                        Hello @teamName
+                    </span>
+                </Authorized>
+            </AuthorizeView>
+        </div>
+
+        <!-- HAMBURGER (mobile only) -->
+        <button class="hamburger @(navOpen ? "open" : "")"
+                @onclick="ToggleNav"
+                aria-label="Toggle navigation">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+        <!-- RIGHT SIDE -->
+        <nav class="nav-links @(navOpen ? "nav-open" : "")">
+            <NavLink href="/" Match="NavLinkMatch.All" @onclick="CloseNav">Home</NavLink>
+            <NavLink href="/fixtures" @onclick="CloseNav">Fixtures</NavLink>
+
+            <AuthorizeView>
+                <Authorized>
+                    <NavLink href="/dashboard" @onclick="CloseNav">Dashboard</NavLink>
+                    <a href=""
+                    class="logout-link"
+                    @onclick="Logout"
+                    @onclick:preventDefault>
+                        Logout
+                    </a>
+                </Authorized>
+
+                <NotAuthorized>
+                    <NavLink href="/login" @onclick="CloseNav">Login</NavLink>
+                </NotAuthorized>
+            </AuthorizeView>
+        </nav>
+
+    </div>
+</header>
+
+<div class="main-content">
+    @Body
+</div>
+
+@inject AuthService Auth
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthProvider
+@code {
+
+    private string? teamName;
+    private bool navOpen = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState =
+            await AuthProvider.GetAuthenticationStateAsync();
+
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            teamName = user.FindFirst("TeamName")?.Value;
+        }
+
+        StateHasChanged();
+    }
+
+    private void ToggleNav() => navOpen = !navOpen;
+    private void CloseNav() => navOpen = false;
+
+    async Task Logout()
+    {
+        await Auth.Logout();
+
+        ((AuthStateProvider)AuthProvider)
+            .NotifyUserLogout();
+
+        navOpen = false;
+        Nav.NavigateTo("/");
+        StateHasChanged();
+    }
+}

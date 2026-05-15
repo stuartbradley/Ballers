@@ -1,0 +1,444 @@
+﻿/* ================= HERO ================= */
+
+.hero {
+    position: relative;
+    height: 85vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: white;
+    overflow: hidden;
+}
+
+    /* Background Image */
+    .hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: url("https://images.unsplash.com/photo-1517747614396-d21a78b850e8?q=80&w=1920&auto=format&fit=crop") center center / cover no-repeat;
+        opacity: 0.68;
+        z-index: 1;
+    }
+
+    /* Stadium overlay using brand dark colour */
+    .hero::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient( to bottom, rgba(15,23,42,0.75) 0%, rgba(15,23,42,0.65) 40%, rgba(15,23,42,0.85) 100% );
+        z-index: 2;
+    }
+
+.hero-overlay {
+    position: relative;
+    z-index: 3;
+}
+
+    .hero-overlay h1 {
+        font-size: clamp(3rem, 6vw, 4.5rem);
+        font-weight: 800;
+        letter-spacing: -1px;
+        line-height: 1.1;
+        margin-bottom: 18px;
+        color: white;
+        text-shadow: 0 4px 20px rgba(0,0,0,0.45);
+    }
+
+    .hero-overlay p {
+        font-size: 1.3rem;
+        font-weight: 500;
+        opacity: 0.95;
+        max-width: 650px;
+        margin: 0 auto 30px;
+        color: rgba(255,255,255,0.9);
+    }
+
+/* CTA Button */
+.accent {
+    color: var(--ballers-accent);
+}
+.cta {
+    background: var(--ballers-primary);
+    color: white;
+    border: none;
+    padding: 14px 35px;
+    font-size: 1.05rem;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+    .cta:hover {
+        background: var(--ballers-primary-hover);
+        transform: translateY(-3px);
+    }
+
+/* ================= LAYOUT ================= */
+
+.container {
+    max-width: 1100px;
+    margin: auto;
+}
+
+.about {
+    padding: 90px 20px;
+    text-align: center;
+    background: var(--ballers-card);
+    position: relative;
+    font-size: 1.1rem;
+    max-width: 750px;
+    margin: 0 auto;
+    color: var(--ballers-text-muted);
+    line-height: 1.8;
+}
+
+/* ================= LEAGUE TABLE ================= */
+
+.league-table {
+    background: var(--bg-blue-soft);
+    padding: 80px 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--ballers-card);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: var(--ballers-shadow);
+}
+
+/* Shared column alignment */
+th,
+td {
+    padding: 14px 16px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+/* HEADER */
+th {
+    background: var(--ballers-surface);
+    color: var(--ballers-text-muted);
+    border-bottom: 3px solid var(--ballers-primary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+/* CELLS */
+td {
+    color: var(--ballers-text);
+    border-bottom: 1px solid #eef2f7;
+}
+
+    /* Team column aligned left */
+    th:nth-child(2),
+    td:nth-child(2) {
+        text-align: left;
+    }
+
+/* Zebra rows */
+tbody tr:nth-child(even) {
+    background: #fafafa;
+}
+tbody tr:nth-child(1) {
+    background: rgba(250, 204, 21, 0.12);
+}
+/* Hover */
+tbody tr:hover {
+    background: rgba(0, 200, 83, 0.05);
+    transition: background 0.2s ease;
+}
+
+.team {
+    font-weight: 600;
+    color: var(--ballers-text);
+}
+
+.points {
+    font-weight: 700;
+    color: var(--ballers-primary);
+}
+
+/* ================= STATS CARDS ================= */
+
+.stats {
+    background: var(--bg-yellow-soft);
+    padding: 90px 20px;
+}
+
+.cards {
+    display: flex;
+    gap: 25px;
+}
+
+.card {
+    background: var(--ballers-card);
+    box-shadow: var(--ballers-shadow);
+    border-radius: 14px;
+    border-top: 4px solid var(--ballers-primary);
+    padding: 30px;
+    flex: 1;
+    transition: all 0.25s ease;
+    text-align: center; 
+}
+
+    .card:hover {
+        transform: translateY(-6px);
+    }
+
+    .card h3 {
+        margin-bottom: 15px;
+        color: var(--ballers-dark);
+    }
+
+    .card ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    .card li {
+        padding: 8px 0;
+        border-bottom: 1px solid #f1f5f9;
+        color: var(--ballers-text-muted);
+    }
+h2 {
+    font-size: 2.4rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--ballers-primary);
+    margin-bottom: 20px;
+    position: relative;
+    display: inline-block;
+}
+
+    /* Yellow accent underline */
+    h2::after {
+        content: "";
+        display: block;
+        height: 4px;
+        width: 60%;
+        margin-top: 10px;
+        background: var(--ballers-accent);
+        border-radius: 3px;
+    }
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+.season-select {
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--ballers-surface);
+    background: white;
+    font-family: var(--font-main);
+    font-size: var(--text-sm);
+    color: var(--ballers-text);
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+    .season-select:hover {
+        border-color: var(--ballers-primary);
+    }
+
+    .season-select:focus {
+        outline: none;
+        border-color: var(--ballers-primary);
+    }
+
+.cards-wrapper {
+    display: flex;
+    gap: 25px;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* ===== STAT LIST ITEMS ===== */
+
+.card ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+    .stat-item:last-child {
+        border-bottom: none;
+    }
+
+.rank {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    font-weight: 800;
+    flex-shrink: 0;
+    background: var(--ballers-surface);
+    color: var(--ballers-text-muted);
+}
+
+    .rank.gold {
+        background: linear-gradient(135deg, #fbbf24, #f59e0b);
+        color: white;
+    }
+
+    .rank.silver {
+        background: linear-gradient(135deg, #cbd5e1, #94a3b8);
+        color: white;
+    }
+
+    .rank.bronze {
+        background: linear-gradient(135deg, #d97706, #b45309);
+        color: white;
+    }
+
+.stat-name {
+    flex: 1;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--ballers-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.stat-num {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--ballers-primary);
+    flex-shrink: 0;
+}
+
+/* ===== EMPTY STAT STATE ===== */
+
+.empty-stat {
+    padding: 24px 0;
+    text-align: center;
+    color: var(--ballers-text-muted);
+    font-size: var(--text-sm);
+    font-style: italic;
+}
+
+/* ===== CARD ENTRANCE ANIMATION ===== */
+
+.cards-wrapper > .card:nth-child(1) { animation: fadeUp 0.4s ease both; }
+.cards-wrapper > .card:nth-child(2) { animation: fadeUp 0.4s ease 0.08s both; }
+.cards-wrapper > .card:nth-child(3) { animation: fadeUp 0.4s ease 0.16s both; }
+
+/* ===== RESPONSIVE ===== */
+
+@media (max-width: 1024px) {
+    .league-table {
+        padding: 50px 16px;
+    }
+
+    .stats {
+        padding: 50px 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero {
+        height: 60vh;
+    }
+
+    .hero-overlay p {
+        font-size: 1rem;
+        padding: 0 16px;
+    }
+
+    .about {
+        padding: 40px 20px;
+        font-size: 1rem;
+    }
+
+    /* Stack stats cards vertically */
+    .cards-wrapper {
+        flex-direction: column;
+        padding: 0 16px;
+    }
+
+    /* Hide GF / GA / GD columns (7, 8, 9) — keeps table within viewport */
+    th:nth-child(7),
+    td:nth-child(7),
+    th:nth-child(8),
+    td:nth-child(8),
+    th:nth-child(9),
+    td:nth-child(9) {
+        display: none;
+    }
+
+    /* Tighten cell padding so remaining columns breathe */
+    th, td {
+        padding: 10px 8px;
+        font-size: 0.82rem;
+    }
+
+    /* Season selector: stack below heading */
+    .table-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .season-select {
+        width: 100%;
+    }
+
+    h2 {
+        font-size: 1.6rem;
+    }
+
+    .league-table {
+        padding: 40px 16px;
+    }
+
+    .stats {
+        padding: 40px 16px;
+    }
+
+    /* Fixtures section */
+    .fixtures-section {
+        padding: 40px 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero {
+        height: 50vh;
+    }
+
+    .cta {
+        padding: 12px 24px;
+        font-size: 0.9rem;
+    }
+
+    .card {
+        padding: 20px 16px;
+    }
+
+    /* Tighten cells further so W / D / L fit without scrolling */
+    th, td {
+        padding: 8px 5px;
+        font-size: 0.75rem;
+    }
+}

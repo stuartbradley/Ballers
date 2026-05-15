@@ -1,0 +1,115 @@
+﻿@page "/manager-fixtures"
+@using Ballers.Client.Auth
+@using Ballers.Models
+@using Ballers.Services
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+
+@inject FixtureService FixtureService
+@inject AuthService AuthService
+@inject NavigationManager Nav
+
+<div class="dashboard-container">
+
+    <div class="fixtures-title">
+        <h1>My Fixtures</h1>
+    </div>
+    <PageTitle>My Fixtures</PageTitle>
+
+    @if (fixtures == null)
+    {
+        <LoadingSpinner />
+    }
+    else if (!fixtures.Any())
+    {
+        <div class="empty-fixtures">
+            <p>No fixtures have been scheduled yet.</p>
+        </div>
+    }
+    else
+    {
+        <div class="fixtures-table">
+
+            <div class="fixtures-header">
+                <span>Match</span>
+                <span>Fixture</span>
+                <span>Kickoff</span>
+                <span>Location</span>
+                <span>Status</span>
+                <span></span>
+            </div>
+
+            @foreach (var fixture in fixtures)
+            {
+                <div class="fixture-row">
+
+                    <span class="match-number">
+                        @fixture.Week
+                    </span>
+
+                    <span class="fixture-teams">
+                        <strong>@fixture.HomeTeam</strong>
+                        <span class="vs">vs</span>
+                        <strong>@fixture.AwayTeam</strong>
+                    </span>
+
+                    <span>
+                        @(fixture.KickOff == null
+                                        ? "Not Set"
+                                        : fixture.KickOff.Value.ToString("dd MMM HH:mm"))
+                    </span>
+
+                    <span>
+                        @(string.IsNullOrEmpty(fixture.Location)
+                                        ? "Not Set"
+                                        : fixture.Location)
+                    </span>
+
+                    <span>
+                        @if (fixture.IsPlayed)
+                        {
+                            <span class="status played">Played</span>
+                        }
+                        else if(fixture.KickOff != null && !string.IsNullOrEmpty(fixture.Location))
+                        {
+                            <span class="status scheduled">Scheduled</span>
+                        }
+                        else
+                        {
+                            <span class="status awaiting">Awaiting</span>
+                        }
+                    </span>
+
+                    <span class="fixture-actions">
+
+                        <button class="@(fixture.IsPlayed ? "view-btn" : "edit-btn")"
+                                @onclick="() => OpenFixture(fixture.Id)">
+                            @(fixture.IsPlayed ? "View" : "Edit")
+                        </button>
+
+                    </span>
+
+                </div>
+            }
+
+        </div>
+    }
+
+</div>
+
+
+@code {
+
+    private List<FixtureDto>? fixtures;
+
+    protected override async Task OnInitializedAsync()
+    {
+        fixtures = await FixtureService.GetFixtures();
+    }
+
+    void OpenFixture(int id)
+    {
+        Nav.NavigateTo($"/fixture/{id}");
+    }
+
+}

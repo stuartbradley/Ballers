@@ -1,0 +1,99 @@
+@page "/admin/fairplay"
+@using Ballers.Models
+@using Ballers.Services
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Admin")]
+
+@inject FairplayService FairplayService
+@inject SeasonService SeasonService
+
+<PageTitle>Fairplay Table</PageTitle>
+
+<div class="dashboard-container">
+
+    <div class="page-header">
+        <h1 class="page-title">Fairplay Table</h1>
+        <a href="/admin" class="back-link">← Admin</a>
+    </div>
+
+    @if (isLoading)
+    {
+        <LoadingSpinner />
+    }
+    else
+    {
+        <div class="season-bar">
+            <label>Season</label>
+            <select class="season-select"
+                    @bind="selectedSeasonId"
+                    @bind:after="LoadTable">
+                @foreach (var s in seasons)
+                {
+                    <option value="@s.Id">Season @s.SeasonNumber</option>
+                }
+            </select>
+        </div>
+
+        <div class="fairplay-card">
+
+            <table class="fairplay-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Team</th>
+                        <th>Rated</th>
+                        <th>Total</th>
+                        <th>Avg</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!rows.Any())
+                    {
+                        <tr>
+                            <td colspan="5" class="empty-row">No ratings recorded yet.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var row in rows)
+                        {
+                            <tr>
+                                <td class="pos">@row.Position</td>
+                                <td class="team-name">@row.Team</td>
+                                <td>@row.Rated</td>
+                                <td>@row.TotalRating</td>
+                                <td class="avg @RatingClass(row.AverageRating)">@row.AverageRating.ToString("0.00")</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+
+        </div>
+    }
+
+</div>
+
+@code {
+    private bool isLoading = true;
+    private List<SeasonDto> seasons = new();
+    private int selectedSeasonId;
+    private List<FairplayTableRowDto> rows = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        seasons = await SeasonService.GetSeasons();
+        var current = await SeasonService.GetCurrentSeason();
+        selectedSeasonId = current?.Id ?? seasons.FirstOrDefault()?.Id ?? 0;
+        await LoadTable();
+        isLoading = false;
+    }
+
+    async Task LoadTable()
+    {
+        if (selectedSeasonId > 0)
+            rows = await FairplayService.GetTable(selectedSeasonId);
+    }
+
+    string RatingClass(double avg) => avg >= 7 ? "high" : avg >= 5 ? "mid" : "low";
+}

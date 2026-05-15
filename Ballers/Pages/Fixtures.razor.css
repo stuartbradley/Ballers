@@ -1,0 +1,58 @@
+/* ===== PAGE ===== */
+
+.fixtures-page {
+    max-width: 900px;
+    margin: 60px auto;
+    padding: 0 20px 60px;
+}
+
+/* ===== HEADER ===== */
+
+.page-header {
+    text-align: center;
+    margin-bottom: 48px;
+}
+
+    .page-header h1 {
+        font-size: 2.6rem;
+        color: var(--ballers-primary);
+        font-weight: 800;
+        margin-bottom: 8px;
+    }
+
+    .page-header p {
+        color: var(--ballers-text-muted);
+        font-size: 1rem;
+    }
+
+/* ===== STATES ===== */
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--ballers-text-muted);
+    font-size: 1rem;
+}
+
+/* ===== RESPONSIVE ===== */
+
+@media (max-width: 768px) {
+    .fixtures-page {
+        margin: 30px auto;
+        padding: 0 16px 40px;
+    }
+
+    .page-header h1 {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-header h1 {
+        font-size: 1.6rem;
+    }
+
+    .page-header {
+        margin-bottom: 32px;
+    }
+}

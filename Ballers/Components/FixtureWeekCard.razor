@@ -1,0 +1,58 @@
+@using Ballers.Models
+
+<div class="week-card">
+
+    <div class="week-header">
+        <span class="week-badge">Week @Week.WeekNumber</span>
+        <span class="date-range">@Week.DateRange</span>
+    </div>
+
+    <div class="fixtures-grid">
+        @foreach (var match in Week.Matches)
+        {
+            <div class="fixture-card">
+
+                <div class="matchup">
+                    <span class="team-name home-team">@match.Home</span>
+                    <div class="vs-ring">VS</div>
+                    <span class="team-name away-team">@match.Away</span>
+                </div>
+
+                <div class="fixture-meta">
+                    @if (!string.IsNullOrEmpty(match.Day) || !string.IsNullOrEmpty(match.Time))
+                    {
+                        <span class="meta-item">
+                            🕐 @(string.IsNullOrEmpty(match.Day) ? "TBD" : $"{match.Day}{(string.IsNullOrEmpty(match.Time) ? "" : $" · {match.Time}")}")
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="meta-item tbd">Time TBD</span>
+                    }
+                    @if (!string.IsNullOrEmpty(match.Location))
+                    {
+                        <span class="meta-item">📍 @match.Location</span>
+                    }
+                </div>
+
+            </div>
+        }
+    </div>
+
+    @if (Week.Byes.Any())
+    {
+        <div class="bye-strip">
+            <span class="bye-label">BYE</span>
+            @foreach (var team in Week.Byes)
+            {
+                <span class="bye-team">@team</span>
+            }
+        </div>
+    }
+
+</div>
+
+@code {
+    [Parameter]
+    public FixtureWeekDto Week { get; set; } = new();
+}

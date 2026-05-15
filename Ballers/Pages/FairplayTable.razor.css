@@ -1,0 +1,127 @@
+.dashboard-container {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 30px 20px 60px;
+}
+
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+
+.page-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--ballers-text);
+    margin: 0;
+}
+
+.back-link {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--ballers-primary);
+    text-decoration: none;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+}
+
+.season-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--ballers-text-muted);
+}
+
+.season-select {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1.5px solid #e2e8f0;
+    font-family: var(--font-main);
+    font-size: 0.9rem;
+    background: white;
+    color: var(--ballers-text);
+    cursor: pointer;
+}
+
+.fairplay-card {
+    background: var(--ballers-card);
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(15,23,42,0.08);
+    overflow: hidden;
+}
+
+.fairplay-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.fairplay-table thead tr {
+    background: var(--ballers-surface);
+}
+
+.fairplay-table th {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ballers-text-muted);
+}
+
+.fairplay-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--ballers-surface);
+}
+
+.fairplay-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.fairplay-table tbody tr:hover {
+    background: rgba(30,58,138,0.03);
+}
+
+.pos {
+    font-weight: 700;
+    color: var(--ballers-text-muted);
+    width: 36px;
+}
+
+.team-name {
+    font-weight: 600;
+}
+
+.avg {
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.avg.high { color: #16a34a; }
+.avg.mid  { color: var(--ballers-primary); }
+.avg.low  { color: var(--ballers-danger, #dc2626); }
+
+.empty-row {
+    text-align: center;
+    color: var(--ballers-text-muted);
+    padding: 40px 0;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .dashboard-container {
+        padding: 16px 12px 40px;
+    }
+
+    .page-title {
+        font-size: 1.3rem;
+    }
+}

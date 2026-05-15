@@ -1,0 +1,306 @@
+@page "/"
+@using Ballers.Components
+@using Ballers.Models
+@using Ballers.Services
+
+<PageTitle>Ballers League</PageTitle>
+
+@inject SeasonService SeasonService;
+@inject LeagueService LeagueService;
+@inject FixtureService FixtureService;
+@inject StatService StatService;
+@inject PenaltyService PenaltyService;
+@inject IJSRuntime JS;
+
+<section class="hero">
+    <div class="hero-overlay">
+        <h1>
+            The <span class="accent">Ballers</span> League
+        </h1>
+        <p>The Ultimate Local 11-a-Side Competition</p>
+        <button class="cta" @onclick="ScrollToTable">View League Table</button>
+    </div>
+</section>
+
+<section>
+    <div class="section-wrapper about">
+        <div class="container">
+            <h2>About Ballers</h2>
+            <p>
+                This league isn't just about playing football. It's about competing for trophies, being recognized for playing the game in the right spirit and giving all teams no matter what their level
+                a genuine chance to become champions. At the end of the season, we'll celebrate properly with a Presentation Evening where trophies, medals, awards, and prizes will be handed out.
+                It will be a night for players, coaches, and supporters to come together not just to celebrate what's achieved, but to build a stronger Ballers Social & Community family.
+                On top of that, all participants will enjoy exclusive Ballers membership perks, including cheap drinks, discounted food, games, and access to Ballers events and activities.
+            </p>
+        </div>
+    </div>
+</section>
+
+<section id="league-table" class="league-table">
+    <div class="container">
+        <div class="table-header">
+            <h2>League Table</h2>
+            <select class="season-select"
+            @bind="selectedSeasonId"
+            @bind:after="LoadTable">
+                @foreach (var season in seasons)
+                {
+                    <option value="@season.Id">Season @season.SeasonNumber</option>
+                }
+            </select>
+        </div>
+
+        @if (isLoading)
+        {
+            <LoadingSpinner />
+        }
+        else
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Team</th>
+                        <th>P</th>
+                        <th>W</th>
+                        <th>D</th>
+                        <th>L</th>
+                        <th>GF</th>
+                        <th>GA</th>
+                        <th>GD</th>
+                        <th>Pts</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var team in table)
+                    {
+                        <tr>
+                            <td>@team.Position</td>
+                            <td class="team">@team.Team</td>
+                            <td>@team.Played</td>
+                            <td>@team.Won</td>
+                            <td>@team.Drawn</td>
+                            <td>@team.Lost</td>
+                            <td>@team.GoalsFor</td>
+                            <td>@team.GoalsAgainst</td>
+                            <td>@team.GoalDifference</td>
+                            <td class="points">@team.Points</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</section>
+
+<section class="league-table penalty-table-section">
+    <div class="container">
+        <div class="table-header">
+            <h2>Penalty League</h2>
+        </div>
+
+        @if (isLoading)
+        {
+            <LoadingSpinner />
+        }
+        else
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Team</th>
+                        <th>P</th>
+                        <th>W</th>
+                        <th>D</th>
+                        <th>L</th>
+                        <th>PF</th>
+                        <th>PA</th>
+                        <th>PD</th>
+                        <th>Pts</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in penaltyTable)
+                    {
+                        <tr>
+                            <td>@row.Position</td>
+                            <td class="team">@row.Team</td>
+                            <td>@row.Played</td>
+                            <td>@row.Won</td>
+                            <td>@row.Drawn</td>
+                            <td>@row.Lost</td>
+                            <td>@row.PenaltiesFor</td>
+                            <td>@row.PenaltiesAgainst</td>
+                            <td>@row.PenaltyDifference</td>
+                            <td class="points">@row.Points</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</section>
+
+<section class="fixtures-section">
+    <h2>Next Fixtures</h2>
+
+    @if (isLoading)
+    {
+        <LoadingSpinner />
+    }
+    else if (currentWeek != null)
+    {
+        <FixtureWeekCard Week="currentWeek" />
+    }
+    else
+    {
+        <p>No fixtures available.</p>
+    }
+</section>
+
+<section class="stats">
+    <div class="cards-wrapper">
+
+        <div class="card">
+            <h3>Top Goalscorers</h3>
+            @if (isLoading)
+            {
+                <LoadingSpinner />
+            }
+            else if (!topScorers.Any())
+            {
+                <p class="empty-stat">No data yet this season.</p>
+            }
+            else
+            {
+                <ul>
+                    @{ int r1 = 0; }
+                    @foreach (var player in topScorers)
+                    {
+                        r1++;
+                        <li class="stat-item">
+                            <span class="rank @RankClass(r1)">@r1</span>
+                            <span class="stat-name">@player.Name</span>
+                            <span class="stat-num">@player.Goals</span>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+
+        <div class="card">
+            <h3>Top Assists</h3>
+            @if (isLoading)
+            {
+                <LoadingSpinner />
+            }
+            else if (!topAssists.Any())
+            {
+                <p class="empty-stat">No data yet this season.</p>
+            }
+            else
+            {
+                <ul>
+                    @{ int r2 = 0; }
+                    @foreach (var player in topAssists)
+                    {
+                        r2++;
+                        <li class="stat-item">
+                            <span class="rank @RankClass(r2)">@r2</span>
+                            <span class="stat-name">@player.Name</span>
+                            <span class="stat-num">@player.Assists</span>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+
+        <div class="card">
+            <h3>Most MOTMs</h3>
+            @if (isLoading)
+            {
+                <LoadingSpinner />
+            }
+            else if (!topMotm.Any())
+            {
+                <p class="empty-stat">No data yet this season.</p>
+            }
+            else
+            {
+                <ul>
+                    @{ int r3 = 0; }
+                    @foreach (var player in topMotm)
+                    {
+                        r3++;
+                        <li class="stat-item">
+                            <span class="rank @RankClass(r3)">@r3</span>
+                            <span class="stat-name">@player.Name</span>
+                            <span class="stat-num">@player.Motm</span>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+
+    </div>
+</section>
+
+@code {
+    private FixtureWeekDto? currentWeek;
+    private List<LeagueTableRowDto> table = new();
+    private List<SeasonDto> seasons = new();
+    private int selectedSeasonId;
+    private List<PlayerGoalsDto> topScorers = new();
+    private List<PlayerAssistDto> topAssists = new();
+    private List<PlayerMotmDto> topMotm = new();
+    private List<PenaltyTableRowDto> penaltyTable = new();
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var scorersTask = StatService.GetTopGoalScorers();
+        var assistsTask = StatService.GetTopAssists();
+        var motmTask = StatService.GetTopMotm();
+        var weekTask = FixtureService.GetCurrentWeek();
+        var seasonsTask = SeasonService.GetSeasons();
+        var currentSeasonTask = SeasonService.GetCurrentSeason();
+
+        await Task.WhenAll(scorersTask, assistsTask, motmTask, weekTask, seasonsTask, currentSeasonTask);
+
+        topScorers = scorersTask.Result;
+        topAssists = assistsTask.Result;
+        topMotm = motmTask.Result;
+        currentWeek = weekTask.Result;
+        seasons = seasonsTask.Result;
+
+        var currentSeason = currentSeasonTask.Result;
+        selectedSeasonId = currentSeason?.Id ?? seasons.FirstOrDefault()?.Id ?? 0;
+
+        await LoadTable();
+
+        isLoading = false;
+    }
+
+    async Task LoadTable()
+    {
+        var tableTask = LeagueService.GetTable(selectedSeasonId);
+        var penaltyTask = PenaltyService.GetTable(selectedSeasonId);
+        await Task.WhenAll(tableTask, penaltyTask);
+        table = tableTask.Result;
+        penaltyTable = penaltyTask.Result;
+    }
+
+    async Task ScrollToTable()
+    {
+        await JS.InvokeVoidAsync("scrollToId", "league-table");
+    }
+
+    static string RankClass(int rank) => rank switch
+    {
+        1 => "gold",
+        2 => "silver",
+        3 => "bronze",
+        _ => ""
+    };
+}

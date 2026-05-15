@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"C:\\\\git\\\\Ballers\" -Recurse -Directory -Name)",
+      "Bash(Select-Object -First 20)",
+      "Read(//c/git/Ballers.API//**)",
+      "Read(//c/git//**)",
+      "Bash(xargs grep -l \"Repository\\\\|Service\")",
+      "Bash(Get-ChildItem -Path \"C:\\\\git\\\\Ballers.API\" -Recurse -File -Filter \"*.cs\")",
+      "Bash(Select-Object FullName)",
+      "Bash(Sort-Object FullName)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\git\\\\Ballers\" -Recurse -File | Where-Object { $_.Extension -in @\\('.cs', '.razor', '.css'\\) } | Sort-Object FullName)",
+      "Bash(Remove-Item \"C:\\\\git\\\\Ballers.API\\\\Controllers\\\\Stats.cs\" -Force)",
+      "Bash(Remove-Item \"C:\\\\git\\\\Ballers\\\\Pages\\\\ShowFixture.razor\" -Force)",
+      "Bash(Remove-Item \"C:\\\\git\\\\Ballers\\\\Pages\\\\ShowFixture.razor.css\" -Force)",
+      "Bash(Remove-Item \"C:\\\\git\\\\Ballers\\\\Services\\\\FakeLeagueService.cs\" -Force)",
+      "PowerShell(dotnet new xunit *)",
+      "Bash(dotnet build *)"
+    ]
+  }
+}

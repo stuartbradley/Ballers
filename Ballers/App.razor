@@ -1,0 +1,29 @@
+@using Microsoft.AspNetCore.Components.Authorization
+<CascadingAuthenticationState>
+
+    <Router AppAssembly="@typeof(App).Assembly">
+
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData"
+                                DefaultLayout="@typeof(MainLayout)">
+                <Authorizing />
+            </AuthorizeRouteView>
+        </Found>
+
+        <Navigating />
+
+        <NotFound>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <PageTitle>404 Not Found</PageTitle>
+                <div class="not-found-container">
+                    <div class="not-found-code">404</div>
+                    <h2 class="not-found-title">Page Not Found</h2>
+                    <p class="not-found-text">The page you're looking for doesn't exist.</p>
+                    <a href="/" class="not-found-btn">Back to Home</a>
+                </div>
+            </LayoutView>
+        </NotFound>
+
+    </Router>
+
+</CascadingAuthenticationState>

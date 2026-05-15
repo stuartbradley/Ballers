@@ -1,0 +1,214 @@
+@page "/dashboard"
+@attribute [Authorize]
+
+@using Ballers.Models
+@using Ballers.Services
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthProvider
+@inject StatService StatService
+@inject IJSRuntime JS
+<PageTitle>Dashboard</PageTitle>
+
+<div class="dashboard-container">
+
+    <h1 class="page-title">Dashboard</h1>
+
+    <AuthorizeView Context="auth">
+
+        <Authorized>
+
+            @if (isLoading)
+            {
+                <LoadingSpinner />
+            }
+            else
+            {
+            <div class="dashboard-grid">
+                <div class="dashboard-card chart-card">
+
+                    <h3>Season Record</h3>
+
+                    <div class="stats-layout">
+
+                        <!-- LEFT: DONUT -->
+                        <div class="chart-wrapper">
+                            <canvas id="winLossChart" style="@(chartReady ? "" : "visibility:hidden")"></canvas>
+                            @if (!chartReady)
+                            {
+                                <div class="chart-spinner-overlay">
+                                    <LoadingSpinner />
+                                </div>
+                            }
+                        </div>
+
+                        <!-- RIGHT: MINI CARDS -->
+                        <div class="mini-stats">
+
+                            <div class="mini-card">
+                                <span class="mini-title">Top Goalscorer</span>
+                                @if (topScorer != null)
+                                {
+                                    <span class="mini-name">@topScorer.Name</span>
+                                    <span class="mini-value">@topScorer.Goals Goals</span>
+                                }
+                                else
+                                {
+                                    <span class="mini-name">—</span>
+                                    <span class="mini-value">No data yet</span>
+                                }
+                            </div>
+
+                            <div class="mini-card">
+                                <span class="mini-title">Top Assists</span>
+                                @if (topAssist != null)
+                                {
+                                    <span class="mini-name">@topAssist.Name</span>
+                                    <span class="mini-value">@topAssist.Assists Assists</span>
+                                }
+                                else
+                                {
+                                    <span class="mini-name">—</span>
+                                    <span class="mini-value">No data yet</span>
+                                }
+                            </div>
+
+                            <div class="mini-card">
+                                <span class="mini-title">Top Player</span>
+                                @if (topPlayer != null)
+                                {
+                                    <span class="mini-name">@topPlayer.Name</span>
+                                    <span class="mini-value">@topPlayer.Motm MOTMs</span>
+                                }
+                                else
+                                {
+                                    <span class="mini-name">—</span>
+                                    <span class="mini-value">No data yet</span>
+                                }
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    @if (stats != null)
+                    {
+                        <div class="record-row">
+                            <div class="record-item record-win">
+                                <span class="record-value">@stats.Wins</span>
+                                <span class="record-label">Wins</span>
+                            </div>
+                            <div class="record-item record-draw">
+                                <span class="record-value">@stats.Draws</span>
+                                <span class="record-label">Draws</span>
+                            </div>
+                            <div class="record-item record-loss">
+                                <span class="record-value">@stats.Losses</span>
+                                <span class="record-label">Losses</span>
+                            </div>
+                        </div>
+                    }
+
+                </div>
+
+                <div class="dashboard-card">
+                    <h3>Welcome</h3>
+                    <p>
+                        Hello
+                        <strong>
+                            @auth.User.FindFirst("TeamName")?.Value
+                        </strong>
+                    </p>
+                </div>
+
+                <!-- Fixtures Shortcut -->
+                <div class="dashboard-card">
+                    <h3>Fixtures</h3>
+                    <p>View and manage your upcoming matches.</p>
+
+                    <NavLink class="dashboard-btn"
+                             href="/manager-fixtures">
+                        View Fixtures
+                    </NavLink>
+                </div>
+                <div class="dashboard-card">
+
+                    <h3>My Squad</h3>
+
+                    <p>
+                        Manage your team players and squad list.
+                    </p>
+
+                    <NavLink class="dashboard-btn"
+                             href="/my-squad">
+                        Manage Squad
+                    </NavLink>
+
+                </div>
+
+                <!-- Admin Only -->
+                <AuthorizeView Roles="Admin">
+                    <div class="dashboard-card admin">
+                        <h3>Admin Panel</h3>
+                        <p>Manage seasons and league setup.</p>
+
+                        <NavLink class="dashboard-btn"
+                                 href="/admin">
+                            Admin Tools
+                        </NavLink>
+                    </div>
+                </AuthorizeView>
+
+            </div>
+            }
+
+        </Authorized>
+
+    </AuthorizeView>
+
+</div>
+
+@code {
+
+    private WinLossDto? stats;
+    private PlayerGoalsDto? topScorer;
+    private PlayerAssistDto? topAssist;
+    private PlayerMotmDto? topPlayer;
+    private bool isLoading = true;
+    private bool chartRendered = false;
+    private bool chartReady = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var scorers = await StatService.GetTopGoalScorers();
+        var assists = await StatService.GetTopAssists();
+        var motm = await StatService.GetTopMotm();
+
+        topScorer = scorers.FirstOrDefault();
+        topAssist = assists.FirstOrDefault();
+        topPlayer = motm.FirstOrDefault();
+
+        isLoading = false;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (chartRendered || isLoading) return;
+        chartRendered = true;
+
+        stats = await StatService.GetWinLoss();
+
+        if (stats != null)
+        {
+            await JS.InvokeVoidAsync(
+                "ballersCharts.renderWinLossChart",
+                "winLossChart",
+                stats.Wins,
+                stats.Draws,
+                stats.Losses);
+        }
+
+        chartReady = true;
+        StateHasChanged();
+    }
+}

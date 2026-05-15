@@ -1,0 +1,670 @@
+﻿@page "/fixture/{Id:int}"
+@using Ballers.Client.Auth
+@using Ballers.Models
+@using Ballers.Services
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+
+@inject FixtureService FixtureService
+@inject AuthService AuthService
+@inject PenaltyService PenaltyService
+@inject FairplayService FairplayService
+@inject NavigationManager Nav
+
+<PageTitle>@(fixture != null ? $"{fixture.HomeTeam} vs {fixture.AwayTeam}" : "Fixture")</PageTitle>
+
+<div class="toast-container">
+    @if (toastVisible)
+    {
+        <div class="toast @(toastSuccess ? "toast-success" : "toast-error")">
+            @toastMessage
+        </div>
+    }
+</div>
+
+<div class="dashboard-container">
+
+    @if (fixture == null)
+    {
+        <LoadingSpinner />
+    }
+    else
+    {
+
+        <div class="fixture-card">
+
+            <!-- HEADER -->
+
+            <div class="fixture-header">
+
+                <div class="fixture-teams">
+
+                    <span class="team">
+                        @fixture.HomeTeam
+                    </span>
+
+                    <span class="score">
+                        @if(previewHomeScore > 0 || previewAwayScore > 0)
+                        {
+                            <span>@previewHomeScore</span>
+                            <span class="dash">-</span>
+                            <span>@previewAwayScore</span>
+                        }
+                        else
+                        {
+                            <span class="vs">vs</span>
+                        }
+
+                    </span>
+
+                    <span class="team">
+                        @fixture.AwayTeam
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- TABS -->
+
+            <div class="fixture-tabs">
+
+                <button class="tab @(activeTab == "overview" ? "active" : "")"
+                @onclick="@(() => SelectTab("overview"))">
+                    Overview
+                </button>
+
+                <button class="tab @(activeTab == "squad" ? "active" : "")"
+                @onclick="@(() => SelectTab("squad"))">
+                    Squad
+                </button>
+
+                <button class="tab @(activeTab == "stats" ? "active" : "") @(squadSelected ? "" : "disabled")"
+                disabled="@(!squadSelected)"
+                @onclick="@(() => SelectTab("stats"))">
+                    Match Stats
+                </button>
+
+                <button class="tab @(activeTab == "penalties" ? "active" : "")"
+                @onclick="@(() => SelectTab("penalties"))">
+                    Penalties
+                </button>
+
+            </div>
+
+
+            <!-- OVERVIEW TAB -->
+            @if (activeTab == "overview")
+            {
+                <div class="tab-content">
+
+                    <div class="fixture-info-grid">
+
+                        <div class="info-card">
+                            <span class="label">Status</span>
+
+                            @if (fixture.IsPlayed)
+                            {
+                                <span class="status played">Played</span>
+                            }
+                            else if (fixture.Kickoff != null)
+                            {
+                                <span class="status scheduled">Scheduled</span>
+                            }
+                            else
+                            {
+                                <span class="status awaiting">Awaiting Schedule</span>
+                            }
+
+                        </div>
+
+                        <div class="info-card">
+                            <span class="label">Location</span>
+                            <span>@(fixture.Location ?? "Not set")</span>
+                        </div>
+
+                        <div class="info-card">
+                            <span class="label">Kickoff</span>
+                            <span>
+                                @(fixture.Kickoff?.ToString("dd MMM HH:mm") ?? "Not set")
+                            </span>
+                        </div>
+
+                    </div>
+
+
+                    @if (canEditSchedule)
+                    {
+                        <div class="schedule-section">
+
+                            <h3>Edit Schedule</h3>
+
+                            <div class="schedule-editor">
+
+                                <input class="form-input"
+                                placeholder="Location"
+                                @bind="location" />
+
+                                <InputDate class="form-input"
+                                @bind-Value="kickoffTime" />
+
+                                <button class="primary-btn"
+                                @onclick="SaveSchedule">
+                                    Save Fixture
+                                </button>
+
+                            </div>
+
+                        </div>
+                    }
+
+                    @if (isAdmin)
+                    {
+                        <div class="fairplay-section">
+
+                            <h3>Fairplay Ratings</h3>
+
+                            <div class="fairplay-editor">
+
+                                <div class="fairplay-team">
+                                    <label>@fixture.HomeTeam</label>
+                                    <input type="number"
+                                           class="stat-input"
+                                           min="1" max="10"
+                                           @bind="fairplayHomeRating" />
+                                </div>
+
+                                <div class="fairplay-team">
+                                    <label>@fixture.AwayTeam</label>
+                                    <input type="number"
+                                           class="stat-input"
+                                           min="1" max="10"
+                                           @bind="fairplayAwayRating" />
+                                </div>
+
+                                <button class="primary-btn"
+                                        @onclick="SaveFairplay">
+                                    Save Ratings
+                                </button>
+
+                            </div>
+
+                        </div>
+                    }
+
+                </div>
+            }
+
+
+            <!-- SQUAD TAB -->
+            @if (activeTab == "squad")
+            {
+                <div class="tab-content">
+
+                    <h3>Select Match Squad</h3>
+
+                    @foreach (var player in teamPlayers)
+                    {
+                        <div class="squad-row">
+
+                            <input type="checkbox"
+                            @bind="player.IsSelected" />
+
+                            <span>@player.Name</span>
+
+                        </div>
+                    }
+
+                    <button class="primary-btn"
+                    @onclick="SaveSquad">
+                        Save Squad
+                    </button>
+
+                </div>
+            }
+
+
+            <!-- MATCH STATS TAB -->
+            @if (activeTab == "stats")
+            {
+                <div class="tab-content">
+
+                    <h3>Match Stats</h3>
+
+                    <div class="stats-table">
+
+                        <div class="stats-header">
+                            <span>Player</span>
+                            <span>Goals</span>
+                            <span>Assists</span>
+                            <span>MOTM</span>
+                            <span>Yellow Card</span>
+                            <span>Red Card</span>
+                        </div>
+
+                        @foreach (var player in players)
+                        {
+                            <div class="stats-row">
+
+                                <span class="player-name">
+                                    @player.Name
+                                </span>
+
+                                <input type="number"
+                                min="0"
+                                class="stat-input"
+                                @bind="player.Goals" />
+
+                                <input type="number"
+                                min="0"
+                                class="stat-input"
+                                @bind="player.Assists" />
+
+                                <input type="checkbox"
+                                class="motm-checkbox"
+                                @bind="player.IsMotm" />
+
+                                <input type="checkbox"
+                                       class="motm-checkbox"
+                                       @bind="player.HasYellowCard" />
+
+                                <input type="checkbox"
+                                       class="motm-checkbox"
+                                       @bind="player.HasRedCard" />
+
+                            </div>
+                        }
+
+                    </div>
+
+                    <button class="submit-stats-btn"
+                    @onclick="SubmitStats">
+                        Submit Match Stats
+                    </button>
+
+                </div>
+            }
+
+            <!-- PENALTIES TAB -->
+            @if (activeTab == "penalties")
+            {
+                <div class="tab-content">
+                    @if (!fixture.IsPlayed)
+                    {
+                        <div class="penalty-unavailable">
+                            Penalty kicks can be entered once the match has been played.
+                        </div>
+                    }
+                    else
+                    {
+                        <h3>My Team's Penalties</h3>
+
+                        <div class="penalty-table">
+                            <div class="penalty-header">
+                                <span>#</span>
+                                <span>Player</span>
+                                <span>Scored</span>
+                            </div>
+
+                            @foreach (var kick in penaltyKicks)
+                            {
+                                <div class="penalty-row">
+                                    <span class="kick-order">@kick.Order</span>
+                                    <select class="penalty-select" @bind="kick.PlayerId">
+                                        <option value="0">Select player...</option>
+                                        @foreach (var p in teamPlayers)
+                                        {
+                                            <option value="@p.PlayerId">@p.Name</option>
+                                        }
+                                    </select>
+                                    <label class="scored-toggle">
+                                        <input type="checkbox" @bind="kick.Scored" />
+                                        <span>@(kick.Scored ? "Scored" : "Missed")</span>
+                                    </label>
+                                </div>
+                            }
+                        </div>
+
+                        <button class="submit-stats-btn" @onclick="SubmitPenalties">
+                            Submit Penalties
+                        </button>
+
+                        @if (opponentKicks.Any())
+                        {
+                            <div class="opponent-kicks">
+                                <h3>@(isUserHome ? fixture.AwayTeam : fixture.HomeTeam)'s Penalties</h3>
+                                <div class="penalty-table">
+                                    <div class="penalty-header">
+                                        <span>#</span>
+                                        <span>Player</span>
+                                        <span>Result</span>
+                                    </div>
+                                    @foreach (var kick in opponentKicks)
+                                    {
+                                        <div class="penalty-row">
+                                            <span class="kick-order">@kick.Order</span>
+                                            <span class="kick-player">@kick.PlayerName</span>
+                                            <span class="kick-result @(kick.Scored ? "scored" : "missed")">
+                                                @(kick.Scored ? "✓ Scored" : "✗ Missed")
+                                            </span>
+                                        </div>
+                                    }
+                                </div>
+
+                                @{
+                                    int opponentScore = opponentKicks.Count(k => k.Scored);
+                                    int myScore = penaltyKicks.Count(k => k.Scored && k.PlayerId > 0);
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="opponent-pending">
+                                Opponent has not yet submitted their penalties.
+                            </div>
+                        }
+                    }
+                </div>
+            }
+
+        </div>
+
+    }
+
+</div>
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+
+    private FixtureDetailsDto fixture;
+
+    private string location = "";
+    private DateTime kickoffTime = DateTime.Now;
+
+    private bool canEditSchedule;
+    private string activeTab = "overview";
+    private bool squadSelected = false;
+
+    private List<TeamPlayerViewModel> teamPlayers = new();
+    private List<PlayerStatViewModel> players = new();
+
+    private int previewHomeScore = 0;
+    private int previewAwayScore = 0;
+    private bool isUserHome = false;
+    private List<PenaltyKickViewModel> penaltyKicks = new();
+    private List<PenaltyKickResultDto> opponentKicks = new();
+
+    private bool isAdmin = false;
+    private int fairplayHomeRating = 5;
+    private int fairplayAwayRating = 5;
+
+    private bool toastVisible = false;
+    private bool toastSuccess = true;
+    private string toastMessage = "";
+
+    async Task ShowToast(string message, bool success = true)
+    {
+        toastMessage = message;
+        toastSuccess = success;
+        toastVisible = true;
+        StateHasChanged();
+        await Task.Delay(3000);
+        toastVisible = false;
+        StateHasChanged();
+    }
+
+    class PenaltyKickViewModel
+    {
+        public int Order { get; set; }
+        public int PlayerId { get; set; }
+        public bool Scored { get; set; }
+    }
+
+    class PlayerStatViewModel
+    {
+        public int TeamId { get; set; } 
+
+        public int PlayerId { get; set; }
+
+        public string Name { get; set; } = "";
+
+        private int goals;
+
+        public int Goals
+        {
+            get => goals;
+            set
+            {
+                goals = value;
+                OnGoalsChanged?.Invoke();
+            }
+        }
+
+        public Action? OnGoalsChanged;
+        public int Assists { get; set; }
+
+        public bool IsMotm { get; set; }
+
+        public bool HasYellowCard { get; set; }
+        public bool HasRedCard { get; set; }
+    }
+
+    class TeamPlayerViewModel
+    {
+        public int PlayerId { get; set; }
+
+        public string Name { get; set; } = "";
+
+        public bool IsSelected { get; set; }
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadFixture();
+    }
+
+    async Task LoadFixture()
+    {
+        fixture = await FixtureService.GetFixture(Id);
+
+        if (fixture == null)
+            return;
+
+        var savedStats = await FixtureService.GetFixtureStats(fixture.Id);
+
+        location = fixture.Location ?? "";
+        kickoffTime = fixture.Kickoff ?? DateTime.Now;
+
+        var user = await AuthService.GetCurrentUser();
+
+        isUserHome = user?.TeamId == fixture.HomeTeamId;
+        isAdmin = user?.IsAdmin ?? false;
+        canEditSchedule = isUserHome;
+
+        int teamId = isUserHome ? fixture.HomeTeamId : fixture.AwayTeamId;
+
+        var squad = await FixtureService.GetFixtureSquad(fixture.Id);
+
+        squadSelected = squad.Count > 10;
+
+        teamPlayers = squad.Any()
+            ? squad.Select(p => new TeamPlayerViewModel
+                {
+                    PlayerId = p.PlayerId,
+                    Name = p.Name,
+                    IsSelected = true
+                }).ToList()
+            : (await FixtureService.GetFixturePlayers(fixture.Id))
+                .Select(p => new TeamPlayerViewModel
+                    {
+                        PlayerId = p.Id,
+                        Name = p.Name
+                    }).ToList();
+
+
+        players = teamPlayers
+            .Where(p => p.IsSelected)
+            .Select(p =>
+                {
+                    var stat = savedStats.FirstOrDefault(x => x.PlayerId == p.PlayerId);
+                    return new PlayerStatViewModel
+                    {
+                        PlayerId = p.PlayerId,
+                        Name = p.Name,
+                        TeamId = teamId,
+                        Goals = stat?.Goals ?? 0,
+                        Assists = stat?.Assists ?? 0,
+                        IsMotm = stat?.IsManOfTheMatch ?? false,
+                        HasYellowCard = stat?.HadYellowCard ?? false,
+                        HasRedCard = stat?.HadRedCard ?? false
+                    };
+                }).ToList();
+
+        foreach(var p in players)
+        {
+            p.OnGoalsChanged = UpdateScorePreview;
+        }
+
+        // Load penalty kicks
+        var shootout = await PenaltyService.GetShootout(fixture.Id);
+        var myKicks = isUserHome ? shootout?.HomeKicks : shootout?.AwayKicks;
+        opponentKicks = (isUserHome ? shootout?.AwayKicks : shootout?.HomeKicks) ?? new();
+
+        penaltyKicks = Enumerable.Range(1, 5).Select(i =>
+        {
+            var existing = myKicks?.FirstOrDefault(k => k.Order == i);
+            return new PenaltyKickViewModel
+            {
+                Order = i,
+                PlayerId = existing?.PlayerId ?? 0,
+                Scored = existing?.Scored ?? false
+            };
+        }).ToList();
+
+        if (isAdmin)
+        {
+            var fairplay = await FairplayService.GetRatings(fixture.Id);
+            fairplayHomeRating = fairplay?.HomeRating ?? 5;
+            fairplayAwayRating = fairplay?.AwayRating ?? 5;
+        }
+    }
+
+    async Task SaveFairplay()
+    {
+        if (fairplayHomeRating < 1 || fairplayHomeRating > 10 ||
+            fairplayAwayRating < 1 || fairplayAwayRating > 10)
+        {
+            await ShowToast("Ratings must be between 1 and 10.", success: false);
+            return;
+        }
+
+        await FairplayService.SubmitRatings(fixture!.Id, fairplayHomeRating, fairplayAwayRating);
+        await ShowToast("Fairplay ratings saved.");
+    }
+
+    void UpdateScorePreview()
+    {
+        previewHomeScore = players.Where(x => x.TeamId == fixture.HomeTeamId).Sum(x => x.Goals);
+        previewAwayScore = players.Where(x => x.TeamId == fixture.AwayTeamId).Sum(x => x.Goals);
+
+        StateHasChanged();
+    }
+
+    void SelectTab(string tab)
+    {
+        activeTab = tab;
+    }
+
+    async Task SaveSquad()
+    {
+        var selectedPlayers = teamPlayers
+            .Where(p => p.IsSelected)
+            .Select(p => p.PlayerId)
+            .ToList();
+
+        await FixtureService.SaveSquad(fixture!.Id, selectedPlayers);
+
+        squadSelected = selectedPlayers.Count > 10;
+
+        int teamId = isUserHome ? fixture!.HomeTeamId : fixture!.AwayTeamId;
+        var savedStats = await FixtureService.GetFixtureStats(fixture!.Id);
+
+        players = teamPlayers
+            .Where(p => p.IsSelected)
+            .Select(p =>
+            {
+                var stat = savedStats.FirstOrDefault(x => x.PlayerId == p.PlayerId);
+                return new PlayerStatViewModel
+                {
+                    PlayerId = p.PlayerId,
+                    Name = p.Name,
+                    TeamId = teamId,
+                    Goals = stat?.Goals ?? 0,
+                    Assists = stat?.Assists ?? 0,
+                    IsMotm = stat?.IsManOfTheMatch ?? false,
+                    HasYellowCard = stat?.HadYellowCard ?? false,
+                    HasRedCard = stat?.HadRedCard ?? false
+                };
+            }).ToList();
+
+        foreach (var p in players)
+            p.OnGoalsChanged = UpdateScorePreview;
+
+        await ShowToast("Squad saved.");
+    }
+
+    async Task SaveSchedule()
+    {
+        await FixtureService.UpdateFixtureSchedule(
+            fixture!.Id,
+            location,
+            kickoffTime);
+
+        await LoadFixture();
+        await ShowToast("Schedule saved.");
+    }
+
+    async Task SubmitPenalties()
+    {
+        var kicks = penaltyKicks
+            .Where(k => k.PlayerId > 0)
+            .Select(k => new PenaltyKickInput
+            {
+                PlayerId = k.PlayerId,
+                Order = k.Order,
+                Scored = k.Scored
+            }).ToList();
+
+        if (kicks.Count != 5)
+        {
+            await ShowToast("Please assign a player to all 5 kicks.", success: false);
+            return;
+        }
+
+        await PenaltyService.SubmitKicks(fixture!.Id, kicks);
+        await LoadFixture();
+        await ShowToast("Penalties submitted.");
+    }
+
+    async Task SubmitStats()
+    {
+        var stats = players.Select(p => new FixturePlayerStatInput
+            {
+                PlayerId = p.PlayerId,
+                Goals = p.Goals,
+                Assists = p.Assists,
+                IsManOfTheMatch = p.IsMotm,
+                HadYellowCard = p.HasYellowCard,
+                HadRedCard = p.HasRedCard
+            }).ToList();
+
+        await FixtureService.SubmitStats(
+            fixture!.Id,
+            stats);
+
+        await LoadFixture();
+        await ShowToast("Match stats saved.");
+    }
+}

@@ -1,0 +1,252 @@
+﻿@page "/admin"
+@using Ballers.Models
+@using Ballers.Services
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Admin")]
+
+@inject AdminService AdminService
+
+<PageTitle>Admin</PageTitle>
+
+<div class="dashboard-container">
+
+    <h1 class="page-title">Admin Control</h1>
+
+    <div class="admin-links">
+        <a href="/admin/fairplay" class="admin-link-card">
+            <span class="link-icon">⭐</span>
+            <span>Fairplay Table</span>
+        </a>
+    </div>
+
+    <div class="dashboard-grid">
+
+        <!-- CREATE TEAM CARD -->
+        <div class="dashboard-card">
+
+            <h3>Add New Team</h3>
+
+            <EditForm EditContext="editContext"
+                      OnValidSubmit="CreateTeam">
+
+                <DataAnnotationsValidator />
+
+                <div class="form-group">
+
+                    <InputText class="form-input"
+                               placeholder="Team Name"
+                               @bind-Value="createTeamModel.TeamName" />
+
+                    <ValidationMessage For="@(() => createTeamModel.TeamName)" />
+
+                    <InputText class="form-input"
+                               placeholder="Manager Email"
+                               @bind-Value="createTeamModel.Email" />
+
+                    <ValidationMessage For="@(() => createTeamModel.Email)" />
+
+                    <InputText class="form-input"
+                               type="password"
+                               placeholder="Password"
+                               @bind-Value="createTeamModel.Password" />
+
+                    <div class="validation-wrapper">
+                        <ValidationMessage For="@(() => createTeamModel.Password)" />
+                    </div>
+                </div>
+
+                <button type="button"
+                        class="primary-btn"
+                        @onclick="SubmitForm">
+                    Create Team
+                </button>
+
+            </EditForm>
+
+            @if (!string.IsNullOrEmpty(teamMessage))
+            {
+                <p class="@(teamIsError ? "error-msg" : "success-msg")">@teamMessage</p>
+            }
+
+        </div>
+
+
+        <!-- SEASONS CARD -->
+        <div class="dashboard-card season-card">
+
+            <h3>Seasons</h3>
+
+            @if (!seasons.Any())
+            {
+                <p class="empty-seasons">No seasons created yet.</p>
+            }
+            else
+            {
+                <div class="season-list">
+                    @foreach (var s in seasons.OrderByDescending(x => x.SeasonNumber))
+                    {
+                        <div class="season-row">
+                            <div class="season-info">
+                                <span class="season-name">Season @s.SeasonNumber</span>
+                                <span class="season-dates">@s.StartDate.ToString("dd MMM yyyy") — @s.EndDate.ToString("dd MMM yyyy")</span>
+                            </div>
+                            @if (s.IsActive)
+                            {
+                                <span class="season-badge active">Active</span>
+                            }
+                            else
+                            {
+                                <button class="activate-btn" @onclick="() => ActivateSeason(s.Id)">
+                                    Activate
+                                </button>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(seasonMessage))
+            {
+                <p class="@(seasonIsError ? "error-msg" : "success-msg")">@seasonMessage</p>
+            }
+
+        </div>
+
+
+        <!-- GENERATE FIXTURES CARD -->
+        <div class="dashboard-card">
+
+            <h3>Generate Fixtures</h3>
+
+            <div class="form-group">
+
+                <InputDate @bind-Value="seasonStartDate" />
+
+                <div class="team-grid">
+                    @foreach (var t in teams)
+                    {
+                        <label>
+                            <input type="checkbox"
+                            value="@t.Id"
+                            @onchange="(e) => ToggleTeam(t.Id, e.Value)" />
+                            @t.Name
+                        </label>
+                    }
+                </div>
+
+            </div>
+
+            @if (selectedTeamIds.Count % 2 != 0 && selectedTeamIds.Count >= 3)
+            {
+                <p class="info-msg">Odd number of teams — one team per round will have a bye week.</p>
+            }
+
+            <button class="primary-btn"
+            @onclick="GenerateFixtures">
+                Generate
+            </button>
+
+            @if (!string.IsNullOrEmpty(fixtureMessage))
+            {
+                <p class="@(fixtureIsError ? "error-msg" : "success-msg")">@fixtureMessage</p>
+            }
+
+        </div>
+
+    </div>
+
+</div>
+
+@code {
+    private string teamMessage = "";
+    private string fixtureMessage = "";
+    private string seasonMessage = "";
+    private bool teamIsError;
+    private bool fixtureIsError;
+    private bool seasonIsError;
+
+    private List<TeamDto> teams = new();
+    private List<SeasonDto> seasons = new();
+    private List<int> selectedTeamIds = new();
+    private DateTime seasonStartDate = DateTime.Today;
+    private CreateTeamViewModel createTeamModel = new();
+    private EditContext editContext = null!;
+
+    private async Task SubmitForm()
+    {
+        if (editContext.Validate())
+        {
+            await CreateTeam();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        editContext = new EditContext(createTeamModel);
+        var teamsTask = AdminService.GetTeams();
+        var seasonsTask = AdminService.GetSeasons();
+        await Task.WhenAll(teamsTask, seasonsTask);
+        teams = teamsTask.Result;
+        seasons = seasonsTask.Result;
+    }
+
+    async Task CreateTeam()
+    {
+        try
+        {
+            await AdminService.CreateTeam(createTeamModel.TeamName, createTeamModel.Email, createTeamModel.Password);
+            teamMessage = "Team created successfully.";
+            teamIsError = false;
+            createTeamModel = new();
+            editContext = new EditContext(createTeamModel);
+            teams = await AdminService.GetTeams();
+        }
+        catch (Exception ex)
+        {
+            teamMessage = ex.Message;
+            teamIsError = true;
+        }
+    }
+
+    void ToggleTeam(int id, object? value)
+    {
+        var isChecked = (bool)value!;
+
+        if (isChecked)
+            selectedTeamIds.Add(id);
+        else
+            selectedTeamIds.Remove(id);
+    }
+
+    async Task GenerateFixtures()
+    {
+        try
+        {
+            await AdminService.GenerateFixtures(selectedTeamIds, seasonStartDate);
+            fixtureMessage = "Fixtures generated.";
+            fixtureIsError = false;
+            seasons = await AdminService.GetSeasons();
+        }
+        catch (Exception ex)
+        {
+            fixtureMessage = ex.Message;
+            fixtureIsError = true;
+        }
+    }
+
+    async Task ActivateSeason(int id)
+    {
+        try
+        {
+            await AdminService.ActivateSeason(id);
+            seasonMessage = "Season activated.";
+            seasonIsError = false;
+            seasons = await AdminService.GetSeasons();
+        }
+        catch (Exception ex)
+        {
+            seasonMessage = ex.Message;
+            seasonIsError = true;
+        }
+    }
+}

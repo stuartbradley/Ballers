@@ -1,0 +1,83 @@
+﻿@page "/login"
+@using Ballers.Auth
+@using Ballers.Client.Auth
+@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager Nav
+@inject AuthService Auth
+@inject AuthenticationStateProvider AuthProvider
+
+<PageTitle>Login</PageTitle>
+
+<div class="login-page">
+
+    <!-- LEFT SIDE -->
+    <div class="login-left">
+
+        <div class="login-card">
+
+            <h1>Manager Login</h1>
+            <p class="subtitle">Access your team dashboard</p>
+
+            <div class="form-group">
+                <label>Email</label>
+                <input @bind="Email" placeholder="manager@team.com" />
+            </div>
+
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" @bind="Password" />
+            </div>
+
+            @if (!string.IsNullOrEmpty(loginError))
+            {
+                <div class="login-error">@loginError</div>
+            }
+
+            <button class="login-btn" @onclick="HandleLogin">
+                Sign In
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- RIGHT SIDE -->
+    <div class="login-right">
+
+        <div class="branding">
+            <!-- Replace later with logo image -->
+            <div class="logo-placeholder">
+                ⚽ BALLERS
+            </div>
+
+            <p>The Local Football League</p>
+        </div>
+
+    </div>
+
+</div>
+
+@code {
+    string? Email;
+    string? Password;
+    string? loginError;
+
+    async Task HandleLogin()
+    {
+        loginError = null;
+        var success = await Auth.Login(new Client.Models.LoginRequest
+        {
+            Email = Email!,
+            Password = Password!
+        });
+        if (success)
+        {
+            ((AuthStateProvider)AuthProvider).NotifyAuthChanged();
+            Nav.NavigateTo("/dashboard");
+        }
+        else
+        {
+            loginError = "Invalid email or password.";
+        }
+    }
+}
