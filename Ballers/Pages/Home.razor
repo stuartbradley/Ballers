@@ -36,111 +36,114 @@
     </div>
 </section>
 
-<section id="league-table" class="league-table">
-    <div class="container">
-        <div class="table-header">
-            <h2>League Table</h2>
-            <select class="season-select"
-            @bind="selectedSeasonId"
-            @bind:after="LoadTable">
-                @foreach (var season in seasons)
-                {
-                    <option value="@season.Id">Season @season.SeasonNumber</option>
-                }
-            </select>
-        </div>
-
-        @if (isLoading)
-        {
-            <LoadingSpinner />
-        }
-        else
-        {
-            <table>
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Team</th>
-                        <th>P</th>
-                        <th>W</th>
-                        <th>D</th>
-                        <th>L</th>
-                        <th>GF</th>
-                        <th>GA</th>
-                        <th>GD</th>
-                        <th>Pts</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var team in table)
+@if (isLoading || seasons.Any())
+{
+    <section id="league-table" class="league-table">
+        <div class="container">
+            <div class="table-header">
+                <h2>League Table</h2>
+                <select class="season-select"
+                @bind="selectedSeasonId"
+                @bind:after="LoadTable">
+                    @foreach (var season in seasons)
                     {
-                        <tr>
-                            <td>@team.Position</td>
-                            <td class="team">@team.Team</td>
-                            <td>@team.Played</td>
-                            <td>@team.Won</td>
-                            <td>@team.Drawn</td>
-                            <td>@team.Lost</td>
-                            <td>@team.GoalsFor</td>
-                            <td>@team.GoalsAgainst</td>
-                            <td>@team.GoalDifference</td>
-                            <td class="points">@team.Points</td>
-                        </tr>
+                        <option value="@season.Id">Season @season.SeasonNumber</option>
                     }
-                </tbody>
-            </table>
-        }
-    </div>
-</section>
+                </select>
+            </div>
 
-<section class="league-table penalty-table-section">
-    <div class="container">
-        <div class="table-header">
-            <h2>Penalty League</h2>
+            @if (isLoading)
+            {
+                <LoadingSpinner />
+            }
+            else
+            {
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Team</th>
+                            <th>P</th>
+                            <th>W</th>
+                            <th>D</th>
+                            <th>L</th>
+                            <th>GF</th>
+                            <th>GA</th>
+                            <th>GD</th>
+                            <th>Pts</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var team in table)
+                        {
+                            <tr>
+                                <td>@team.Position</td>
+                                <td class="team">@team.Team</td>
+                                <td>@team.Played</td>
+                                <td>@team.Won</td>
+                                <td>@team.Drawn</td>
+                                <td>@team.Lost</td>
+                                <td>@team.GoalsFor</td>
+                                <td>@team.GoalsAgainst</td>
+                                <td>@team.GoalDifference</td>
+                                <td class="points">@team.Points</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
         </div>
+    </section>
 
-        @if (isLoading)
-        {
-            <LoadingSpinner />
-        }
-        else
-        {
-            <table>
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Team</th>
-                        <th>P</th>
-                        <th>W</th>
-                        <th>D</th>
-                        <th>L</th>
-                        <th>PF</th>
-                        <th>PA</th>
-                        <th>PD</th>
-                        <th>Pts</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var row in penaltyTable)
-                    {
+    <section class="league-table penalty-table-section">
+        <div class="container">
+            <div class="table-header">
+                <h2>Penalty League</h2>
+            </div>
+
+            @if (isLoading)
+            {
+                <LoadingSpinner />
+            }
+            else
+            {
+                <table>
+                    <thead>
                         <tr>
-                            <td>@row.Position</td>
-                            <td class="team">@row.Team</td>
-                            <td>@row.Played</td>
-                            <td>@row.Won</td>
-                            <td>@row.Drawn</td>
-                            <td>@row.Lost</td>
-                            <td>@row.PenaltiesFor</td>
-                            <td>@row.PenaltiesAgainst</td>
-                            <td>@row.PenaltyDifference</td>
-                            <td class="points">@row.Points</td>
+                            <th>#</th>
+                            <th>Team</th>
+                            <th>P</th>
+                            <th>W</th>
+                            <th>D</th>
+                            <th>L</th>
+                            <th>PF</th>
+                            <th>PA</th>
+                            <th>PD</th>
+                            <th>Pts</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
-        }
-    </div>
-</section>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in penaltyTable)
+                        {
+                            <tr>
+                                <td>@row.Position</td>
+                                <td class="team">@row.Team</td>
+                                <td>@row.Played</td>
+                                <td>@row.Won</td>
+                                <td>@row.Drawn</td>
+                                <td>@row.Lost</td>
+                                <td>@row.PenaltiesFor</td>
+                                <td>@row.PenaltiesAgainst</td>
+                                <td>@row.PenaltyDifference</td>
+                                <td class="points">@row.Points</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </section>
+}
 
 <section class="fixtures-section">
     <h2>Next Fixtures</h2>
@@ -259,27 +262,33 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var scorersTask = StatService.GetTopGoalScorers();
-        var assistsTask = StatService.GetTopAssists();
-        var motmTask = StatService.GetTopMotm();
-        var weekTask = FixtureService.GetCurrentWeek();
-        var seasonsTask = SeasonService.GetSeasons();
-        var currentSeasonTask = SeasonService.GetCurrentSeason();
+        try
+        {
+            var scorersTask = StatService.GetTopGoalScorers();
+            var assistsTask = StatService.GetTopAssists();
+            var motmTask = StatService.GetTopMotm();
+            var weekTask = FixtureService.GetCurrentWeek();
+            var seasonsTask = SeasonService.GetSeasons();
+            var currentSeasonTask = SeasonService.GetCurrentSeason();
 
-        await Task.WhenAll(scorersTask, assistsTask, motmTask, weekTask, seasonsTask, currentSeasonTask);
+            await Task.WhenAll(scorersTask, assistsTask, motmTask, weekTask, seasonsTask, currentSeasonTask);
 
-        topScorers = scorersTask.Result;
-        topAssists = assistsTask.Result;
-        topMotm = motmTask.Result;
-        currentWeek = weekTask.Result;
-        seasons = seasonsTask.Result;
+            topScorers = scorersTask.Result;
+            topAssists = assistsTask.Result;
+            topMotm = motmTask.Result;
+            currentWeek = weekTask.Result;
+            seasons = seasonsTask.Result;
 
-        var currentSeason = currentSeasonTask.Result;
-        selectedSeasonId = currentSeason?.Id ?? seasons.FirstOrDefault()?.Id ?? 0;
+            var currentSeason = currentSeasonTask.Result;
+            selectedSeasonId = currentSeason?.Id ?? seasons.FirstOrDefault()?.Id ?? 0;
 
-        await LoadTable();
-
-        isLoading = false;
+            if (selectedSeasonId > 0)
+                await LoadTable();
+        }
+        finally
+        {
+            isLoading = false;
+        }
     }
 
     async Task LoadTable()
