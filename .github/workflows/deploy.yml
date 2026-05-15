@@ -43,7 +43,7 @@ jobs:
       - name: Take API offline
         run: |
           echo "<html><body>Deploying update, back in a moment...</body></html>" | \
-          curl --ssl-reqd -T - \
+          curl --ssl-reqd --insecure -T - \
             "ftp://bristonlyfans.co.uk/api.bristonlyfans.co.uk/app_offline.htm" \
             -u "bradley5:8TPwRdv_e_b3jw9t"
           sleep 5
@@ -55,13 +55,14 @@ jobs:
           username: bradley5
           password: "8TPwRdv_e_b3jw9t"
           protocol: ftps
+          security: loose
           local-dir: publish/api/
           server-dir: /api.bristonlyfans.co.uk/
 
       # Remove app_offline.htm to bring the API back online
       - name: Bring API back online
         run: |
-          curl --ssl-reqd \
+          curl --ssl-reqd --insecure \
             "ftp://bristonlyfans.co.uk" \
             -u "bradley5:8TPwRdv_e_b3jw9t" \
             -Q "DELE /api.bristonlyfans.co.uk/app_offline.htm"
@@ -73,5 +74,6 @@ jobs:
           username: bradley5
           password: "8TPwRdv_e_b3jw9t"
           protocol: ftps
+          security: loose
           local-dir: publish/blazor/wwwroot/
           server-dir: /bristonlyfans.co.uk/
