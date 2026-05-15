@@ -26,7 +26,7 @@ jobs:
             "Cors": {
               "AllowedOrigins": ["https://bristonlyfans.co.uk", "https://www.bristonlyfans.co.uk"]
             },
-            "AdminSeedPassword": "CHANGE_ME"
+            "AdminSeedPassword": "Admin123!"
           }
           EOF
 
@@ -70,11 +70,14 @@ jobs:
 
       # Remove app_offline.htm to bring the API back online
       - name: Bring API back online
+        if: always()
         run: |
           curl --ssl-reqd --insecure \
             "ftp://bristonlyfans.co.uk" \
             -u "bradley5:8TPwRdv_e_b3jw9t" \
-            -Q "DELE /api.bristonlyfans.co.uk/app_offline.htm"
+            -Q "DELE /api.bristonlyfans.co.uk/app_offline.htm" \
+            --fail-with-body \
+            -v 2>&1 || echo "Warning: could not delete app_offline.htm — delete it manually via FTP"
 
       - name: Deploy Blazor via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5

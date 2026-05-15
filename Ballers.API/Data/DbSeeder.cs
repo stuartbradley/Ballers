@@ -1,6 +1,7 @@
 ﻿using Ballers.API.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
+using System.Linq;
 
 namespace Ballers.API.Data
 {
@@ -33,7 +34,10 @@ namespace Ballers.API.Data
                     Email = adminEmail,
                     IsAdmin = true,
                 };
-                await userManager.CreateAsync(admin, adminPassword);
+                var result = await userManager.CreateAsync(admin, adminPassword);
+                if (!result.Succeeded)
+                    throw new InvalidOperationException(
+                        $"Failed to seed admin user: {string.Join(", ", result.Errors.Select(e => e.Description))}");
                 await userManager.AddToRoleAsync(admin, "Admin");
             }
         }
