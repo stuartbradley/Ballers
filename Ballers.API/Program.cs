@@ -112,8 +112,7 @@ using (var scope = app.Services.CreateScope())
     await db.Database.MigrateAsync();
     await DbSeeder.Seed(scope.ServiceProvider);
 
-    if (app.Environment.IsDevelopment())
-        await DevSeeder.SeedAsync(scope.ServiceProvider);
+    await DevSeeder.SeedAsync(scope.ServiceProvider);
 }
 
 try
