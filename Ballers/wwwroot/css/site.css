@@ -1,4 +1,12 @@
-﻿:root {
+﻿*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html {
+    overflow-x: hidden;
+}
+
+:root {
     /* ===== PRIMARY BRAND ===== */
     --ballers-primary: #1E3A8A; /* League Blue */
     --ballers-primary-hover: #2563EB; /* Bright Blue */
