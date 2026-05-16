@@ -14,24 +14,38 @@
 
 <section class="hero">
     <div class="hero-overlay">
+        <div class="hero-eyebrow">Season 1 &middot; Now Underway</div>
         <h1>
             The <span class="accent">Ballers</span> League
         </h1>
-        <p>The Ultimate Local 11-a-Side Competition</p>
+        <p class="hero-sub">The Ultimate Local 11-a-Side Competition</p>
         <button class="cta" @onclick="ScrollToTable">View League Table</button>
+    </div>
+    <div class="scroll-indicator" @onclick="ScrollToTable">
+        <span></span>
+        <span></span>
     </div>
 </section>
 
-<section>
-    <div class="section-wrapper about">
-        <div class="container">
-            <h2>About Ballers</h2>
-            <p>
-                This league isn't just about playing football. It's about competing for trophies, being recognized for playing the game in the right spirit and giving all teams no matter what their level
-                a genuine chance to become champions. At the end of the season, we'll celebrate properly with a Presentation Evening where trophies, medals, awards, and prizes will be handed out.
-                It will be a night for players, coaches, and supporters to come together not just to celebrate what's achieved, but to build a stronger Ballers Social & Community family.
-                On top of that, all participants will enjoy exclusive Ballers membership perks, including cheap drinks, discounted food, games, and access to Ballers events and activities.
-            </p>
+<section class="about-section">
+    <div class="container">
+        <h2>About Ballers</h2>
+        <p class="about-intro">
+            This league isn't just about playing football. It's about competing for trophies, being recognised for playing the game in the right spirit, and giving every team — no matter their level — a genuine chance to become champions.
+        </p>
+        <div class="feature-strip">
+            <div class="feature-item">
+                <strong>Trophies &amp; Recognition</strong>
+                <span>We celebrate properly at the end of the season with a Presentation Evening — trophies, medals, awards, and prizes for players, coaches, and supporters alike.</span>
+            </div>
+            <div class="feature-item">
+                <strong>Fair &amp; Competitive</strong>
+                <span>Every team has a genuine shot at the title regardless of their level. The spirit of the game matters here just as much as the result on the pitch.</span>
+            </div>
+            <div class="feature-item">
+                <strong>Exclusive Membership</strong>
+                <span>All participants enjoy Ballers member perks — cheap drinks, discounted food, games, and access to exclusive Ballers events and social activities.</span>
+            </div>
         </div>
     </div>
 </section>
@@ -146,6 +160,7 @@
 }
 
 <section class="fixtures-section">
+    <div class="container">
     <h2>Next Fixtures</h2>
 
     @if (isLoading)
@@ -160,12 +175,16 @@
     {
         <p>No fixtures available.</p>
     }
+    </div>
 </section>
 
 <section class="stats">
+    <div class="stats-header">
+        <h2>Player Stats</h2>
+    </div>
     <div class="cards-wrapper">
 
-        <div class="card">
+        <div class="card goals-card">
             <h3>Top Goalscorers</h3>
             @if (isLoading)
             {
@@ -192,7 +211,7 @@
             }
         </div>
 
-        <div class="card">
+        <div class="card assists-card">
             <h3>Top Assists</h3>
             @if (isLoading)
             {
@@ -219,7 +238,7 @@
             }
         </div>
 
-        <div class="card">
+        <div class="card motm-card">
             <h3>Most MOTMs</h3>
             @if (isLoading)
             {

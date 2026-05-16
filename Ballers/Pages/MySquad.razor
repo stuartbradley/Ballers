@@ -143,18 +143,31 @@
             return;
         }
 
-        await PlayerService.AddPlayer(newName, newNumber, newPosition);
-
-        newName = "";
-        newNumber = 0;
-        newPosition = "MID";
-
-        await LoadPlayers();
+        try
+        {
+            await PlayerService.AddPlayer(newName, newNumber, newPosition);
+            newName = "";
+            newNumber = 0;
+            newPosition = "MID";
+            await LoadPlayers();
+        }
+        catch
+        {
+            formError = "Failed to add player. Please try again.";
+        }
     }
 
     async Task RemovePlayer(int id)
     {
-        await PlayerService.RemovePlayer(id);
-        await LoadPlayers();
+        formError = "";
+        try
+        {
+            await PlayerService.RemovePlayer(id);
+            await LoadPlayers();
+        }
+        catch
+        {
+            formError = "Failed to remove player. Please try again.";
+        }
     }
 }

@@ -1,43 +1,102 @@
-﻿/* PAGE LAYOUT */
+/* ================================================================
+   LOGIN PAGE — dark stadium split-screen
+   ================================================================ */
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes lightDrift {
+    from { transform: translate(-5%, -5%) scale(1.05); }
+    to   { transform: translate(5%, 5%) scale(1); }
+}
+
+@keyframes lightDriftReverse {
+    from { transform: translate(6%, -4%); }
+    to   { transform: translate(-6%, 4%); }
+}
+
+@keyframes brandReveal {
+    from { clip-path: inset(100% 0 0 0); opacity: 0; transform: translateY(16px); }
+    to   { clip-path: inset(0% 0 0 0); opacity: 1; transform: translateY(0); }
+}
+
+/* ================================================================
+   PAGE SHELL
+   ================================================================ */
 
 .login-page {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    min-height: calc(100vh - 80px);
+    min-height: calc(100vh - 71px);
+    background: #07101E;
 }
 
-/* ================= LEFT SIDE ================= */
+/* ================================================================
+   LEFT — form side
+   ================================================================ */
 
 .login-left {
     display: flex;
     justify-content: center;
     align-items: center;
-    background: var(--ballers-bg);
-    padding: 40px;
+    background: #07101E;
+    padding: 48px 40px;
+    position: relative;
 }
 
-/* LOGIN CARD */
+/* Subtle pitch-circle decoration behind the form */
+.login-left::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    pointer-events: none;
+}
+
+/* ===== FORM CARD ===== */
 
 .login-card {
-    background: var(--ballers-card);
-    padding: 50px;
-    border-radius: 18px;
     width: 100%;
-    max-width: 420px;
-    box-shadow: var(--ballers-shadow);
+    max-width: 400px;
+    animation: fadeUp 0.6s ease both;
 }
 
-    .login-card h1 {
-        color: var(--ballers-primary);
-        margin-bottom: 8px;
-    }
+.login-card h1 {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: white;
+    margin-bottom: 6px;
+}
 
 .subtitle {
-    color: var(--ballers-text-muted);
-    margin-bottom: 30px;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.82rem;
+    letter-spacing: 0.06em;
+    margin-bottom: 36px;
 }
 
-/* FORM */
+/* Accent line under heading */
+.login-card h1::after {
+    content: "";
+    display: block;
+    width: 36px;
+    height: 3px;
+    background: var(--ballers-accent);
+    border-radius: 1px;
+    margin-top: 12px;
+}
+
+/* ===== FORM FIELDS ===== */
 
 .form-group {
     margin-bottom: 20px;
@@ -45,46 +104,80 @@
 
 label {
     display: block;
-    font-weight: 600;
-    margin-bottom: 6px;
-    color: var(--ballers-text);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.45);
+    margin-bottom: 8px;
 }
 
 input {
     width: 100%;
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-    font-size: 1rem;
-    transition: 0.2s;
+    padding: 13px 16px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    font-size: 0.95rem;
+    font-family: var(--font-main);
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
 }
 
-    input:focus {
-        outline: none;
-        border-color: var(--ballers-primary);
-        box-shadow: 0 0 0 2px rgba(30,58,138,0.15);
-    }
+input::placeholder { color: rgba(255, 255, 255, 0.2); }
 
-/* BUTTON */
+input:focus {
+    outline: none;
+    border-color: var(--ballers-accent);
+    background: rgba(255, 255, 255, 0.07);
+    box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.12);
+}
+
+/* ===== CTA BUTTON ===== */
 
 .login-btn {
     width: 100%;
-    margin-top: 10px;
-    padding: 14px;
-    border-radius: 10px;
+    margin-top: 12px;
+    padding: 15px;
+    border-radius: 5px;
     border: none;
+    background: var(--ballers-accent);
+    color: #07101E;
+    font-family: var(--font-display);
+    font-size: 0.9rem;
     font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
     cursor: pointer;
-    color: white;
-    background: var(--ballers-primary);
-    transition: 0.25s;
+    transition: background 0.18s, transform 0.18s, box-shadow 0.18s;
 }
 
-    .login-btn:hover {
-        background: var(--ballers-primary-hover);
-    }
+.login-btn:hover {
+    background: white;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
 
-/* ================= RIGHT SIDE ================= */
+.login-btn:active {
+    transform: translateY(0);
+}
+
+/* ===== ERROR MESSAGE ===== */
+
+.login-error {
+    background: rgba(239, 68, 68, 0.1);
+    border-left: 3px solid #ef4444;
+    color: #fca5a5;
+    padding: 11px 14px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-bottom: 18px;
+}
+
+/* ================================================================
+   RIGHT — branding / stadium panel
+   ================================================================ */
 
 .login-right {
     position: relative;
@@ -92,85 +185,116 @@ input {
     justify-content: center;
     align-items: center;
     overflow: hidden;
-    background: linear-gradient( 135deg, var(--ballers-primary), #1e40af );
-    color: white;
-    text-align: center;
-    background-blend-mode: overlay;
-}
-    .login-right::before {
-        content: "";
-        position: absolute;
-        inset: -30%;
-        background: radial-gradient( circle at 30% 30%, rgba(255,255,255,0.15), transparent 60% );
-        animation: lightDrift 28s ease-in-out infinite alternate;
-    }
-    .login-right::after {
-        content: "";
-        position: absolute;
-        inset: -30%;
-        background: radial-gradient( circle at 70% 70%, rgba(250,204,21,0.12), transparent 65% );
-        animation: lightDriftReverse 36s ease-in-out infinite alternate;
-    }
-@keyframes lightDrift {
-    0% {
-        transform: translate(-5%, -5%);
-    }
-
-    100% {
-        transform: translate(5%, 5%);
-    }
+    background: #07101E;
 }
 
-@keyframes lightDriftReverse {
-    0% {
-        transform: translate(6%, -4%);
-    }
-
-    100% {
-        transform: translate(-6%, 4%);
-    }
+/* Stadium photo layer */
+.login-right-bg {
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(135deg, rgba(8, 13, 35, 0.75) 0%, rgba(8, 13, 35, 0.55) 100%),
+        url("https://images.unsplash.com/photo-1489944440615-453fc2b6a9a9?q=80&w=1200&auto=format&fit=crop") center / cover no-repeat;
+    z-index: 1;
 }
 
-/* BRANDING AREA */
+/* Roaming light glow overlays */
+.login-right-bg::before {
+    content: "";
+    position: absolute;
+    inset: -30%;
+    background: radial-gradient(circle at 30% 30%, rgba(30, 58, 138, 0.35), transparent 60%);
+    animation: lightDrift 20s ease-in-out infinite alternate;
+}
+
+.login-right-bg::after {
+    content: "";
+    position: absolute;
+    inset: -30%;
+    background: radial-gradient(circle at 70% 70%, rgba(250, 204, 21, 0.15), transparent 55%);
+    animation: lightDriftReverse 28s ease-in-out infinite alternate;
+}
+
+/* Diagonal yellow accent line */
+.login-right::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, var(--ballers-accent) 0%, transparent 100%);
+    z-index: 3;
+}
+
+/* ===== BIG BRAND WORDMARK ===== */
 
 .branding {
     position: relative;
     z-index: 2;
+    text-align: center;
+    color: white;
+    padding: 0 40px;
 }
 
-.logo-placeholder {
-    font-size: 3rem;
-    font-weight: 800;
-    letter-spacing: 2px;
+.brand-wordmark {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
     margin-bottom: 20px;
 }
 
-.branding p {
-    opacity: 0.9;
+.brand-the {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 400;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.5);
+    animation: brandReveal 0.7s 0.2s ease both;
 }
 
-/* LOGIN ERROR */
-
-.login-error {
-    background: rgba(239, 68, 68, 0.08);
-    border-left: 4px solid var(--ballers-danger);
-    color: var(--ballers-danger);
-    padding: 10px 14px;
-    border-radius: 6px;
-    font-size: 0.88rem;
-    font-weight: 500;
-    margin-bottom: 16px;
-    animation: fadeIn 0.2s ease-in-out;
+.brand-name {
+    font-family: var(--font-display);
+    font-size: clamp(3.5rem, 6vw, 5.5rem);
+    font-weight: 700;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    color: var(--ballers-accent);
+    line-height: 1;
+    animation: brandReveal 0.7s 0.35s ease both;
 }
 
-/* ================= RESPONSIVE ================= */
+.brand-league {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    font-weight: 600;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.7);
+    animation: brandReveal 0.7s 0.5s ease both;
+}
+
+.brand-tagline {
+    font-size: 0.75rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.3);
+    font-weight: 400;
+    animation: fadeUp 0.7s 0.65s ease both;
+}
+
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
 
 @media (max-width: 900px) {
-    .login-page {
-        grid-template-columns: 1fr;
-    }
+    .login-page        { grid-template-columns: 1fr; }
+    .login-right       { display: none; }
+    .login-left        { padding: 40px 24px; }
+}
 
-    .login-right {
-        display: none;
-    }
+@media (max-width: 480px) {
+    .login-card h1 { font-size: 1.6rem; }
 }

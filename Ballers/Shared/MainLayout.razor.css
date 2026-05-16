@@ -1,10 +1,33 @@
+/* ================================================================
+   MAIN LAYOUT — header, nav, mobile drawer
+   ================================================================ */
+
+@keyframes slideInStagger {
+    from { opacity: 0; transform: translateX(18px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ===== HEADER ===== */
 
 .main-header {
-    width: 100%;
-    background: var(--ballers-card);
-    border-bottom: 1px solid var(--ballers-surface);
-    position: relative;
-    z-index: 100;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+/* Yellow → blue → green sport stripe */
+.main-header::before {
+    content: "";
+    display: block;
+    height: 3px;
+    background: linear-gradient(90deg,
+        var(--ballers-accent) 0%,
+        var(--ballers-primary) 50%,
+        var(--ballers-pitch) 100%);
 }
 
 .header-inner {
@@ -12,157 +35,353 @@
     justify-content: space-between;
     align-items: center;
     padding: 0 24px;
-    height: 70px;
-    max-width: none;
-    margin: 0;
-    flex-wrap: wrap;
+    height: 68px;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
-/* LEFT GROUP */
+/* ===== LOGO / CREST ===== */
+
 .logo-area {
     display: flex;
     align-items: center;
-    gap: 16px;
-    height: 70px;
+    gap: 14px;
+    min-width: 0;
 }
 
-/* LOGO */
 .logo {
-    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-family: var(--font-display);
+    font-size: 1.5rem;
     font-weight: 700;
-    color: var(--ballers-blue);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ballers-primary);
+    white-space: nowrap;
+    flex-shrink: 0;
+    text-decoration: none;
 }
 
-/* GREETING */
+/* Shield/crest badge drawn entirely in CSS */
+.logo-crest {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 32px;
+    background: var(--ballers-primary);
+    clip-path: polygon(0% 0%, 100% 0%, 100% 65%, 50% 100%, 0% 65%);
+    flex-shrink: 0;
+    position: relative;
+    top: -1px;
+}
+
+.logo-crest::before {
+    content: "B";
+    font-family: var(--font-display);
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--ballers-accent);
+    padding-bottom: 6px;
+    line-height: 1;
+}
+
+.logo-text {
+    /* inherits from .logo */
+}
+
 .hello-text {
-    color: var(--ballers-blue);
+    color: var(--ballers-primary);
     font-weight: 600;
+    font-size: 0.82rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0.7;
 }
 
-/* NAV LINKS — desktop */
+/* ===== DESKTOP NAV ===== */
+
 .nav-links {
     display: flex;
     align-items: center;
-    gap: 22px;
+    gap: 28px;
 }
 
-    .nav-links a {
-        color: var(--ballers-blue);
-        text-decoration: none;
-        font-weight: 600;
-        transition: color 0.2s;
-    }
-
-        .nav-links a:hover {
-            color: var(--ballers-yellow);
-        }
-
-        .nav-links a.active {
-            color: var(--ballers-yellow);
-        }
-
+.nav-links a,
 .logout-link {
-    color: var(--ballers-blue);
-    cursor: pointer;
+    font-family: var(--font-display);
+    font-size: 0.82rem;
     font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ballers-primary);
+    text-decoration: none;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    transition: color 0.2s;
+    position: relative;
 }
 
-/* ===== HAMBURGER BUTTON ===== */
+.nav-links a::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -4px;
+    width: 0;
+    height: 2px;
+    background: var(--ballers-accent);
+    border-radius: 1px;
+    transition: width 0.22s ease;
+}
+
+.nav-links a:hover,
+.nav-links a.active,
+.logout-link:hover {
+    color: var(--ballers-primary);
+    opacity: 0.7;
+}
+
+.nav-links a.active {
+    opacity: 1;
+}
+
+.nav-links a:hover::after,
+.nav-links a.active::after {
+    width: 100%;
+}
+
+/* ===== HAMBURGER ===== */
 
 .hamburger {
     display: none;
-    flex-direction: column;
-    justify-content: space-between;
-    width: 26px;
-    height: 19px;
-    background: none;
+    width: 40px;
+    height: 40px;
+    background: var(--ballers-primary);
     border: none;
+    border-radius: 8px;
     cursor: pointer;
-    padding: 0;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+    transition: background 0.2s, transform 0.2s;
 }
 
-    .hamburger span {
-        display: block;
-        height: 2.5px;
-        width: 100%;
-        background: var(--ballers-blue);
-        border-radius: 2px;
-        transition: transform 0.28s ease, opacity 0.2s ease;
-    }
+.hamburger:hover { background: var(--ballers-primary-hover); }
+.hamburger.open  { background: var(--ballers-primary-hover); transform: rotate(90deg); }
 
-    /* Animate into X when open */
-    .hamburger.open span:nth-child(1) {
-        transform: translateY(8.25px) rotate(45deg);
-    }
+.hamburger span {
+    display: block;
+    width: 18px;
+    height: 2px;
+    background: white;
+    border-radius: 2px;
+    transition: transform 0.28s ease, opacity 0.2s ease, width 0.2s ease;
+}
 
-    .hamburger.open span:nth-child(2) {
-        opacity: 0;
-        transform: scaleX(0);
-    }
+.hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.hamburger.open span:nth-child(2) { opacity: 0; width: 0; }
+.hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
-    .hamburger.open span:nth-child(3) {
-        transform: translateY(-8.25px) rotate(-45deg);
-    }
+/* ================================================================
+   BACKDROP — semi-transparent scrim behind the drawer
+   ================================================================ */
 
-/* ===== MOBILE NAV ===== */
+.nav-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 998;
+    background: rgba(0, 0, 0, 0);
+    transition: background 0.32s ease;
+    pointer-events: none;
+}
+
+.nav-backdrop.is-visible {
+    background: rgba(0, 0, 0, 0.55);
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+/* ================================================================
+   MOBILE DRAWER — right-slide panel
+   ================================================================ */
+
+.mobile-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 82vw;
+    max-width: 300px;
+    z-index: 999;
+    background: #07101E;
+    flex-direction: column;
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: -6px 0 40px rgba(0, 0, 0, 0.5);
+    border-left: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.mobile-overlay.is-open {
+    transform: translateX(0);
+}
+
+/* ===== DRAWER PANEL HEADER ===== */
+
+.mobile-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    height: 64px;
+    background: var(--ballers-primary);
+    border-bottom: 2px solid var(--ballers-accent);
+    flex-shrink: 0;
+}
+
+.mobile-panel-logo {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: white;
+}
+
+.mobile-panel-close {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 8px;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.mobile-panel-close:hover { color: var(--ballers-accent); }
+
+/* ===== GREETING PILL ===== */
+
+.mobile-greeting {
+    margin: 16px 16px 4px;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+/* ===== MOBILE NAV LINKS ===== */
+
+.mobile-nav {
+    display: flex;
+    flex-direction: column;
+    padding: 12px 16px 32px;
+    gap: 6px;
+}
+
+.mobile-nav a,
+.mobile-logout-btn {
+    display: flex;
+    align-items: center;
+    padding: 16px 18px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.85);
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.18s, color 0.18s, border-color 0.18s;
+    position: relative;
+}
+
+/* Stagger entrance when drawer opens */
+.mobile-overlay.is-open .mobile-nav a:nth-child(1) { animation: slideInStagger 0.28s 0.08s ease both; }
+.mobile-overlay.is-open .mobile-nav a:nth-child(2) { animation: slideInStagger 0.28s 0.14s ease both; }
+.mobile-overlay.is-open .mobile-nav a:nth-child(3) { animation: slideInStagger 0.28s 0.20s ease both; }
+.mobile-overlay.is-open .mobile-nav a:nth-child(4) { animation: slideInStagger 0.28s 0.26s ease both; }
+.mobile-overlay.is-open .mobile-logout-btn         { animation: slideInStagger 0.28s 0.32s ease both; }
+
+/* Yellow left accent on active */
+.mobile-nav a.active {
+    background: rgba(250, 204, 21, 0.08);
+    border-color: rgba(250, 204, 21, 0.3);
+    color: var(--ballers-accent);
+}
+
+.mobile-nav a:hover,
+.mobile-logout-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.14);
+    color: white;
+}
+
+/* Chevron */
+.mobile-nav a::after,
+.mobile-logout-btn::after {
+    content: "›";
+    position: absolute;
+    right: 18px;
+    font-size: 1.3rem;
+    line-height: 1;
+    color: rgba(255, 255, 255, 0.2);
+    transition: right 0.18s, color 0.18s;
+}
+
+.mobile-nav a:hover::after,
+.mobile-logout-btn:hover::after { right: 14px; color: rgba(255, 255, 255, 0.6); }
+.mobile-nav a.active::after     { color: var(--ballers-accent); }
+
+.mobile-logout-btn {
+    width: 100%;
+    text-align: left;
+    font-family: var(--font-display);
+    background: rgba(239, 68, 68, 0.06);
+    border-color: rgba(239, 68, 68, 0.15);
+    color: rgba(255, 255, 255, 0.65);
+}
+
+.mobile-logout-btn:hover {
+    background: rgba(239, 68, 68, 0.12);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #fca5a5;
+}
+
+/* ================================================================
+   RESPONSIVE — show mobile elements
+   ================================================================ */
 
 @media (max-width: 768px) {
-    .header-inner {
-        padding: 0 16px;
-        align-items: center;
-        gap: 0;
-    }
+    .header-inner { padding: 0 16px; }
 
-    .logo-area {
-        flex: 1;
-    }
+    .hamburger    { display: flex; }
+    .nav-links    { display: none; }
+    .mobile-overlay { display: flex; }
+    .nav-backdrop   { display: block; }
 
-    .hamburger {
-        display: flex;
-    }
-
-    /* Hidden by default on mobile */
-    .nav-links {
-        display: none;
-        width: 100%;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0;
-        padding: 8px 0 14px;
-        border-top: 1px solid rgba(15, 23, 42, 0.08);
-        animation: fadeUp 0.2s ease both;
-    }
-
-    /* Shown when hamburger toggled */
-    .nav-links.nav-open {
-        display: flex;
-    }
-
-    .nav-links a,
-    .logout-link {
-        width: 100%;
-        padding: 13px 4px;
-        font-size: 1rem;
-        border-bottom: 1px solid rgba(15, 23, 42, 0.05);
-        display: block;
-    }
-
-    .nav-links a:last-child {
-        border-bottom: none;
-    }
-
-    .logout-link {
-        border-bottom: none;
-        display: block;
-    }
+    .hello-text   { font-size: 0.75rem; }
 }
 
 @media (max-width: 480px) {
-    .logo {
-        font-size: 1.15rem;
-    }
-
-    .hello-text {
-        font-size: 0.8rem;
-    }
+    .logo         { font-size: 1.25rem; }
+    .hello-text   { display: none; }
 }

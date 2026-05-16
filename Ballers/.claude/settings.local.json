@@ -15,7 +15,8 @@
       "Bash(Remove-Item \"C:\\\\git\\\\Ballers\\\\Pages\\\\ShowFixture.razor.css\" -Force)",
       "Bash(Remove-Item \"C:\\\\git\\\\Ballers\\\\Services\\\\FakeLeagueService.cs\" -Force)",
       "PowerShell(dotnet new xunit *)",
-      "Bash(dotnet build *)"
+      "Bash(dotnet build *)",
+      "Bash(xargs grep -l \"public record\\\\|public class\")"
     ]
   }
 }

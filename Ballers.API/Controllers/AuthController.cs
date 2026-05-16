@@ -42,7 +42,6 @@ namespace Ballers.API.Controllers
             return Ok();
         }
 
-        [Authorize]
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {

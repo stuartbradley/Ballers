@@ -50,12 +50,6 @@ namespace Ballers.Auth
             return new AuthenticationState(
                 new ClaimsPrincipal(identity));
         }
-        public void NotifyUserAuthentication()
-        {
-            NotifyAuthenticationStateChanged(
-                GetAuthenticationStateAsync());
-        }
-
         public void NotifyUserLogout()
         {
             NotifyAuthenticationStateChanged(

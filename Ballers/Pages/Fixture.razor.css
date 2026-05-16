@@ -226,13 +226,6 @@
         color: var(--ballers-pitch);
     }
 
-/* ===== SCHEDULE EDITOR ===== */
-
-.schedule-section {
-    border-top: 1px solid var(--ballers-surface);
-    padding-top: 24px;
-}
-
 /* ===== FAIRPLAY SECTION ===== */
 
 .fairplay-section {
@@ -271,16 +264,6 @@
 .fairplay-team .stat-input {
     width: 60px;
     flex-shrink: 0;
-}
-
-    .schedule-section h3 {
-        margin-bottom: 14px;
-    }
-
-.schedule-editor {
-    display: flex;
-    gap: 12px;
-    align-items: center;
 }
 
 ::deep .form-input {
@@ -592,12 +575,6 @@
 
     .fixture-info-grid {
         gap: 10px;
-    }
-
-    /* Schedule editor stacks */
-    .schedule-editor {
-        flex-direction: column;
-        align-items: stretch;
     }
 
     ::deep .form-input {

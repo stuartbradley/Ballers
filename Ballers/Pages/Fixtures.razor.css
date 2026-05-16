@@ -1,58 +1,192 @@
-/* ===== PAGE ===== */
+/* ================================================================
+   FIXTURES PAGE — dark stadium aesthetic
+   ================================================================ */
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes heroReveal {
+    from { clip-path: inset(100% 0 0 0); opacity: 0; transform: translateY(12px); }
+    to   { clip-path: inset(0% 0 0 0); opacity: 1; transform: translateY(0); }
+}
+
+@keyframes eyebrowPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0); }
+    50%       { box-shadow: 0 0 0 6px rgba(250, 204, 21, 0.18); }
+}
+
+/* ================================================================
+   PAGE SHELL
+   ================================================================ */
 
 .fixtures-page {
-    max-width: 900px;
-    margin: 60px auto;
-    padding: 0 20px 60px;
+    min-height: calc(100vh - 71px);
+    background: #07101E;
 }
 
-/* ===== HEADER ===== */
+/* ================================================================
+   HERO BANNER
+   ================================================================ */
 
-.page-header {
+.fixtures-hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 36vh;
+    overflow: hidden;
+    background: #07101E;
+    clip-path: polygon(0 0, 100% 0, 100% 88%, 0 100%);
+    margin-bottom: -48px;
+}
+
+/* Pitch texture overlay */
+.fixtures-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(135deg, rgba(30, 58, 138, 0.4) 0%, rgba(8, 13, 35, 0.85) 100%),
+        repeating-linear-gradient(
+            90deg,
+            transparent 0px,
+            transparent 59px,
+            rgba(255, 255, 255, 0.018) 59px,
+            rgba(255, 255, 255, 0.018) 60px
+        ),
+        repeating-linear-gradient(
+            0deg,
+            transparent 0px,
+            transparent 59px,
+            rgba(255, 255, 255, 0.018) 59px,
+            rgba(255, 255, 255, 0.018) 60px
+        );
+    pointer-events: none;
+}
+
+/* Decorative centre-circle graphic */
+.fixtures-hero::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: 8%;
+    transform: translateY(-50%);
+    width: 380px;
+    height: 380px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    pointer-events: none;
+}
+
+/* Yellow accent strip on left edge */
+.fixtures-hero-inner {
+    position: relative;
+    z-index: 2;
     text-align: center;
-    margin-bottom: 48px;
+    padding: 60px 24px 80px;
 }
 
-    .page-header h1 {
-        font-size: 2.6rem;
-        color: var(--ballers-primary);
-        font-weight: 800;
-        margin-bottom: 8px;
-    }
+/* Yellow season pill */
+.fixtures-eyebrow {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--ballers-primary);
+    background: var(--ballers-accent);
+    padding: 5px 16px;
+    border-radius: 100px;
+    margin-bottom: 18px;
+    animation: eyebrowPulse 3s 1.2s ease-in-out infinite, fadeUp 0.5s ease both;
+}
 
-    .page-header p {
-        color: var(--ballers-text-muted);
-        font-size: 1rem;
-    }
+.fixtures-hero-inner h1 {
+    font-family: var(--font-display);
+    font-size: clamp(3.5rem, 8vw, 6rem);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: white;
+    line-height: 1;
+    margin: 0 0 14px;
+    animation: heroReveal 0.65s 0.15s ease both;
+}
 
-/* ===== STATES ===== */
+.fixtures-sub {
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+    margin: 0;
+    animation: fadeUp 0.6s 0.4s ease both;
+}
+
+/* ================================================================
+   BODY — week cards container
+   ================================================================ */
+
+.fixtures-body {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 80px 20px 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+/* ================================================================
+   EMPTY STATE
+   ================================================================ */
 
 .empty-state {
     text-align: center;
-    padding: 60px 20px;
-    color: var(--ballers-text-muted);
-    font-size: 1rem;
+    padding: 80px 20px;
+    color: rgba(255, 255, 255, 0.35);
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    animation: fadeUp 0.5s ease both;
 }
 
-/* ===== RESPONSIVE ===== */
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
 
 @media (max-width: 768px) {
-    .fixtures-page {
-        margin: 30px auto;
-        padding: 0 16px 40px;
+    .fixtures-hero {
+        min-height: 28vh;
+        clip-path: polygon(0 0, 100% 0, 100% 92%, 0 100%);
+        margin-bottom: -32px;
     }
 
-    .page-header h1 {
-        font-size: 2rem;
+    .fixtures-hero-inner {
+        padding: 48px 20px 64px;
+    }
+
+    .fixtures-body {
+        padding: 60px 16px 60px;
     }
 }
 
 @media (max-width: 480px) {
-    .page-header h1 {
-        font-size: 1.6rem;
+    .fixtures-hero {
+        min-height: 24vh;
+        clip-path: none;
+        margin-bottom: 0;
     }
 
-    .page-header {
-        margin-bottom: 32px;
+    .fixtures-hero-inner {
+        padding: 40px 16px 48px;
+    }
+
+    .fixtures-body {
+        padding: 40px 12px 48px;
     }
 }

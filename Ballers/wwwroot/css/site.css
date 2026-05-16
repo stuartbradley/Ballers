@@ -1,4 +1,6 @@
-﻿*, *::before, *::after {
+﻿@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
+
+*, *::before, *::after {
     box-sizing: border-box;
 }
 
@@ -34,6 +36,7 @@ html {
     --bg-pitch-soft: rgba(22, 163, 74, 0.06);
     --bg-neutral: #F8FAFC;
     --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-display: 'Oswald', 'Arial Narrow', sans-serif;
     --text-xs: 0.8rem;
     --text-sm: 0.9rem;
     --text-md: 1rem;
@@ -155,8 +158,10 @@ section {
 
 h1, h2, h3, h4 {
     margin: 0;
+    font-family: var(--font-display);
     font-weight: 700;
-    letter-spacing: -0.3px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
 }
 
 /* Page title */

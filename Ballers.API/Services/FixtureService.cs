@@ -15,9 +15,9 @@ namespace Ballers.API.Services
         Task<List<FixtureWeekDto>> GetAllWeeksAsync();
         Task<List<PlayerSummary>?> GetPlayersAsync(int fixtureId, bool isAdmin, int? userTeamId, int? requestedTeamId);
         Task<List<SquadEntry>> GetSquadAsync(int fixtureId);
-        Task UpdateSquadAsync(int fixtureId, List<int> playerIds);
+        Task UpdateSquadAsync(int fixtureId, List<int> playerIds, int? teamId);
         Task<List<PlayerStatDto>> GetStatsAsync(int fixtureId);
-        Task SubmitStatsAsync(int fixtureId, List<PlayerStatDto> stats);
+        Task SubmitStatsAsync(int fixtureId, List<PlayerStatDto> stats, int? teamId);
         Task<bool> UpdateScheduleAsync(int fixtureId, string? location, DateTime kickoff);
         Task GenerateFixturesAsync(List<int> teamIds, DateTime startDate);
     }
@@ -70,7 +70,12 @@ namespace Ballers.API.Services
 
         public async Task<List<LeagueTableRowDto>> GetTableAsync(int seasonId)
         {
-            var teams = await _db.Teams.ToListAsync();
+            var teams = await _db.Teams
+                .Where(t => _db.Fixtures.Any(f =>
+                    f.SeasonId == seasonId &&
+                    (f.HomeTeamId == t.Id || f.AwayTeamId == t.Id)))
+                .ToListAsync();
+
             var fixtures = await _db.Fixtures
                 .Where(f => f.SeasonId == seasonId && f.IsPlayed)
                 .ToListAsync();
@@ -231,13 +236,30 @@ namespace Ballers.API.Services
                 .ToListAsync();
         }
 
-        public async Task UpdateSquadAsync(int fixtureId, List<int> playerIds)
+        public async Task UpdateSquadAsync(int fixtureId, List<int> playerIds, int? teamId)
         {
-            var existing = _db.FixturePlayers.Where(fp => fp.FixtureId == fixtureId);
-            _db.FixturePlayers.RemoveRange(existing);
+            if (teamId.HasValue)
+            {
+                var teamPlayerIds = await _db.Players
+                    .Where(p => p.TeamId == teamId.Value)
+                    .Select(p => p.Id)
+                    .ToListAsync();
 
-            foreach (var playerId in playerIds)
-                _db.FixturePlayers.Add(new FixturePlayer { FixtureId = fixtureId, PlayerId = playerId });
+                var existing = _db.FixturePlayers
+                    .Where(fp => fp.FixtureId == fixtureId && teamPlayerIds.Contains(fp.PlayerId));
+                _db.FixturePlayers.RemoveRange(existing);
+
+                foreach (var id in playerIds.Where(id => teamPlayerIds.Contains(id)))
+                    _db.FixturePlayers.Add(new FixturePlayer { FixtureId = fixtureId, PlayerId = id });
+            }
+            else
+            {
+                var existing = _db.FixturePlayers.Where(fp => fp.FixtureId == fixtureId);
+                _db.FixturePlayers.RemoveRange(existing);
+
+                foreach (var playerId in playerIds)
+                    _db.FixturePlayers.Add(new FixturePlayer { FixtureId = fixtureId, PlayerId = playerId });
+            }
 
             await _db.SaveChangesAsync();
         }
@@ -258,25 +280,29 @@ namespace Ballers.API.Services
                 .ToListAsync();
         }
 
-        public async Task SubmitStatsAsync(int fixtureId, List<PlayerStatDto> stats)
+        public async Task SubmitStatsAsync(int fixtureId, List<PlayerStatDto> stats, int? teamId)
         {
+            using var transaction = await _db.Database.BeginTransactionAsync();
+
             var fixture = await _db.Fixtures.FindAsync(fixtureId)
                 ?? throw new KeyNotFoundException($"Fixture {fixtureId} not found.");
 
             var playerIds = stats.Select(s => s.PlayerId).ToList();
-            var players = await _db.Players
-                .Where(p => playerIds.Contains(p.Id))
-                .ToDictionaryAsync(p => p.Id);
+
+            // When teamId is supplied only process stats for that team's players
+            var playersQuery = _db.Players.Where(p => playerIds.Contains(p.Id));
+            if (teamId.HasValue)
+                playersQuery = playersQuery.Where(p => p.TeamId == teamId.Value);
+
+            var players = await playersQuery.ToDictionaryAsync(p => p.Id);
 
             var existingStats = await _db.FixturePlayerStats
                 .Where(s => s.FixtureId == fixtureId && playerIds.Contains(s.PlayerId))
                 .ToDictionaryAsync(s => s.PlayerId);
 
-            int homeScore = 0, awayScore = 0;
-
             foreach (var stat in stats)
             {
-                if (!players.TryGetValue(stat.PlayerId, out var player)) continue;
+                if (!players.ContainsKey(stat.PlayerId)) continue;
 
                 if (existingStats.TryGetValue(stat.PlayerId, out var existing))
                 {
@@ -299,16 +325,23 @@ namespace Ballers.API.Services
                         RedCard = stat.HadRedCard
                     });
                 }
-
-                if (player.TeamId == fixture.HomeTeamId) homeScore += stat.Goals;
-                if (player.TeamId == fixture.AwayTeamId) awayScore += stat.Goals;
             }
 
-            fixture.HomeScore = homeScore;
-            fixture.AwayScore = awayScore;
+            await _db.SaveChangesAsync();
+
+            // Recalculate scores from all stats currently in DB for this fixture
+            var allScores = await _db.FixturePlayerStats
+                .Where(s => s.FixtureId == fixtureId)
+                .Join(_db.Players, s => s.PlayerId, p => p.Id,
+                    (s, p) => new { s.Goals, p.TeamId })
+                .ToListAsync();
+
+            fixture.HomeScore = allScores.Where(x => x.TeamId == fixture.HomeTeamId).Sum(x => x.Goals);
+            fixture.AwayScore = allScores.Where(x => x.TeamId == fixture.AwayTeamId).Sum(x => x.Goals);
             fixture.IsPlayed = true;
 
             await _db.SaveChangesAsync();
+            await transaction.CommitAsync();
         }
 
         public async Task<bool> UpdateScheduleAsync(int fixtureId, string? location, DateTime kickoff)

@@ -1,43 +1,7 @@
-﻿.fixtures-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill,minmax(320px,1fr));
-    gap: 22px;
-}
-
-.fixture-card {
-    width: 65%;
-    margin: 40px auto 0 auto; /* pushes card down from navbar */
-    background: var(--ballers-card);
-    padding: 30px;
-    border-radius: 16px;
-    box-shadow: var(--ballers-shadow);
-}
-
-.fixture-week {
-    color: var(--ballers-accent);
-    font-weight: 600;
-    margin-bottom: 10px;
-}
-
-.fixture-teams {
+﻿.fixture-teams {
     font-size: var(--text-lg);
     font-weight: 600;
     color: var(--ballers-text);
-}
-
-.fixture-info {
-    margin-top: 12px;
-    color: var(--ballers-text-muted);
-}
-
-.fixture-button {
-    margin-top: 16px;
-    display: inline-block;
-    padding: 8px 16px;
-    background: var(--ballers-primary);
-    color: white;
-    border-radius: 8px;
-    text-decoration: none;
 }
 
 .fixtures-table {
@@ -127,8 +91,6 @@
 
 /* ===== Page Title ===== */
 
-/* ===== Page Title ===== */
-
 .fixtures-title {
     width: 75%;
     margin: 0 auto 25px auto;
@@ -153,11 +115,6 @@
             margin-top: 10px;
             border-radius: 4px;
         }
-
-.fixtures-title,
-.fixtures-table {
-    background: var(--ballers-card);
-}
 
 .status {
     padding: 4px 10px;
@@ -186,10 +143,6 @@
         background: rgba(22,163,74,0.2);
         color: var(--ballers-pitch);
     }
-
-.fixtures-title {
-    background: transparent;
-}
 
 /* ===== RESPONSIVE ===== */
 

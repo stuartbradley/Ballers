@@ -25,7 +25,7 @@
 
             <div class="form-group">
                 <label>Password</label>
-                <input type="password" @bind="Password" />
+                <input type="password" @bind="Password" @onkeydown="OnKeyDown" />
             </div>
 
             @if (!string.IsNullOrEmpty(loginError))
@@ -43,16 +43,15 @@
 
     <!-- RIGHT SIDE -->
     <div class="login-right">
-
+        <div class="login-right-bg"></div>
         <div class="branding">
-            <!-- Replace later with logo image -->
-            <div class="logo-placeholder">
-                ⚽ BALLERS
+            <div class="brand-wordmark">
+                <span class="brand-the">The</span>
+                <span class="brand-name">Ballers</span>
+                <span class="brand-league">League</span>
             </div>
-
-            <p>The Local Football League</p>
+            <p class="brand-tagline">The Ultimate Local 11-a-Side Competition</p>
         </div>
-
     </div>
 
 </div>
@@ -61,6 +60,18 @@
     string? Email;
     string? Password;
     string? loginError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthProvider.GetAuthenticationStateAsync();
+        if (state.User.Identity?.IsAuthenticated == true)
+            Nav.NavigateTo("/dashboard", replace: true);
+    }
+
+    async Task OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await HandleLogin();
+    }
 
     async Task HandleLogin()
     {

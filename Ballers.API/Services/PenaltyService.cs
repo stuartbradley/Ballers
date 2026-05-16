@@ -21,7 +21,11 @@ namespace Ballers.API.Services
 
         public async Task<List<PenaltyTableRowDto>> GetTableAsync(int seasonId)
         {
-            var teams = await _db.Teams.ToListAsync();
+            var teams = await _db.Teams
+                .Where(t => _db.Fixtures.Any(f =>
+                    f.SeasonId == seasonId &&
+                    (f.HomeTeamId == t.Id || f.AwayTeamId == t.Id)))
+                .ToListAsync();
 
             var shootouts = await _db.PenaltyShootouts
                 .Include(s => s.Fixture)

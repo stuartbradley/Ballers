@@ -1,4 +1,4 @@
-﻿@using Ballers.Auth
+@using Ballers.Auth
 @using Ballers.Client.Auth
 @using Microsoft.AspNetCore.Components.Authorization
 
@@ -7,22 +7,31 @@
 <header class="main-header">
     <div class="header-inner">
 
-        <!-- LEFT SIDE -->
         <div class="logo-area">
-            <div class="logo">
-                ⚽ <span>Ballers</span>
-            </div>
-
+            <div class="logo"><span class="logo-crest"></span><span class="logo-text">Ballers</span></div>
             <AuthorizeView Context="auth">
                 <Authorized>
-                    <span class="hello-text">
-                        Hello @teamName
-                    </span>
+                    <span class="hello-text">Hello @teamName</span>
                 </Authorized>
             </AuthorizeView>
         </div>
 
-        <!-- HAMBURGER (mobile only) -->
+        <!-- Desktop nav -->
+        <nav class="nav-links">
+            <NavLink href="/" Match="NavLinkMatch.All">Home</NavLink>
+            <NavLink href="/fixtures">Fixtures</NavLink>
+            <AuthorizeView>
+                <Authorized>
+                    <NavLink href="/dashboard">Dashboard</NavLink>
+                    <a class="logout-link" @onclick="Logout" @onclick:preventDefault>Logout</a>
+                </Authorized>
+                <NotAuthorized>
+                    <NavLink href="/login">Login</NavLink>
+                </NotAuthorized>
+            </AuthorizeView>
+        </nav>
+
+        <!-- Hamburger (mobile only) -->
         <button class="hamburger @(navOpen ? "open" : "")"
                 @onclick="ToggleNav"
                 aria-label="Toggle navigation">
@@ -31,30 +40,36 @@
             <span></span>
         </button>
 
-        <!-- RIGHT SIDE -->
-        <nav class="nav-links @(navOpen ? "nav-open" : "")">
-            <NavLink href="/" Match="NavLinkMatch.All" @onclick="CloseNav">Home</NavLink>
-            <NavLink href="/fixtures" @onclick="CloseNav">Fixtures</NavLink>
-
-            <AuthorizeView>
-                <Authorized>
-                    <NavLink href="/dashboard" @onclick="CloseNav">Dashboard</NavLink>
-                    <a href=""
-                    class="logout-link"
-                    @onclick="Logout"
-                    @onclick:preventDefault>
-                        Logout
-                    </a>
-                </Authorized>
-
-                <NotAuthorized>
-                    <NavLink href="/login" @onclick="CloseNav">Login</NavLink>
-                </NotAuthorized>
-            </AuthorizeView>
-        </nav>
-
     </div>
 </header>
+
+<!-- Mobile right-slide drawer -->
+<div class="nav-backdrop @(navOpen ? "is-visible" : "")" @onclick="CloseNav"></div>
+<div class="mobile-overlay @(navOpen ? "is-open" : "")">
+    <div class="mobile-panel-header">
+        <span class="mobile-panel-logo">Ballers</span>
+        <button class="mobile-panel-close" @onclick="CloseNav" aria-label="Close menu">&#x2715;</button>
+    </div>
+    <AuthorizeView>
+        <Authorized>
+            <p class="mobile-greeting">Hello, @teamName</p>
+        </Authorized>
+    </AuthorizeView>
+
+    <nav class="mobile-nav">
+        <NavLink href="/" Match="NavLinkMatch.All" @onclick="CloseNav">Home</NavLink>
+        <NavLink href="/fixtures" @onclick="CloseNav">Fixtures</NavLink>
+        <AuthorizeView>
+            <Authorized>
+                <NavLink href="/dashboard" @onclick="CloseNav">Dashboard</NavLink>
+                <button class="mobile-logout-btn" @onclick="Logout">Logout</button>
+            </Authorized>
+            <NotAuthorized>
+                <NavLink href="/login" @onclick="CloseNav">Login</NavLink>
+            </NotAuthorized>
+        </AuthorizeView>
+    </nav>
+</div>
 
 <div class="main-content">
     @Body
@@ -70,15 +85,11 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var authState =
-            await AuthProvider.GetAuthenticationStateAsync();
-
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
         var user = authState.User;
 
         if (user.Identity?.IsAuthenticated == true)
-        {
             teamName = user.FindFirst("TeamName")?.Value;
-        }
 
         StateHasChanged();
     }
@@ -89,10 +100,7 @@
     async Task Logout()
     {
         await Auth.Logout();
-
-        ((AuthStateProvider)AuthProvider)
-            .NotifyUserLogout();
-
+        ((AuthStateProvider)AuthProvider).NotifyUserLogout();
         navOpen = false;
         Nav.NavigateTo("/");
         StateHasChanged();

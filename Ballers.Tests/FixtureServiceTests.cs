@@ -228,7 +228,7 @@ namespace Ballers.Tests
             await db.SaveChangesAsync();
 
             var svc = new FixtureService(db);
-            await svc.UpdateSquadAsync(1, new List<int> { 2, 3 });
+            await svc.UpdateSquadAsync(1, new List<int> { 2, 3 }, teamId: null);
 
             var squad = db.FixturePlayers.Where(fp => fp.FixtureId == 1).ToList();
             Assert.Equal(2, squad.Count);
@@ -252,7 +252,7 @@ namespace Ballers.Tests
             {
                 new() { PlayerId = 1, Goals = 2, Assists = 1, IsManOfTheMatch = true },
                 new() { PlayerId = 2, Goals = 1, Assists = 0 }
-            });
+            }, teamId: null);
 
             var fixture = db.Fixtures.Find(1)!;
             Assert.True(fixture.IsPlayed);
@@ -278,7 +278,7 @@ namespace Ballers.Tests
             await svc.SubmitStatsAsync(1, new List<PlayerStatDto>
             {
                 new() { PlayerId = 1, Goals = 3, Assists = 2 }
-            });
+            }, teamId: null);
 
             Assert.Equal(1, db.FixturePlayerStats.Count());
             var stat = db.FixturePlayerStats.Single(s => s.PlayerId == 1);
@@ -292,7 +292,7 @@ namespace Ballers.Tests
             var db = await SeedBase(nameof(SubmitStats_UnknownFixture_ThrowsKeyNotFoundException));
             var svc = new FixtureService(db);
             await Assert.ThrowsAsync<KeyNotFoundException>(() =>
-                svc.SubmitStatsAsync(99, new List<PlayerStatDto>()));
+                svc.SubmitStatsAsync(99, new List<PlayerStatDto>(), teamId: null));
         }
 
         // ── UpdateScheduleAsync ─────────────────────────────────────────

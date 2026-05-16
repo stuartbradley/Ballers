@@ -61,7 +61,7 @@ namespace Ballers.API.Controllers
 
             try
             {
-                await _fixtures.SubmitStatsAsync(fixtureId, request.PlayerStats);
+                await _fixtures.SubmitStatsAsync(fixtureId, request.PlayerStats, isAdmin ? null : user.TeamId);
                 return Ok();
             }
             catch (KeyNotFoundException) { return NotFound(); }
@@ -72,17 +72,12 @@ namespace Ballers.API.Controllers
         public async Task<IActionResult> GetTable(int seasonId)
             => Ok(await _fixtures.GetTableAsync(seasonId));
 
+        [Authorize(Roles = "Admin")]
         [HttpPut("{fixtureId}/schedule")]
         public async Task<IActionResult> UpdateSchedule(int fixtureId, UpdateFixtureScheduleRequest request)
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return Unauthorized();
-
             var fixture = await _fixtures.GetByIdAsync(fixtureId);
             if (fixture == null) return NotFound();
-
-            bool isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
-            if (!isAdmin && user.TeamId != fixture.HomeTeamId) return Forbid();
 
             await _fixtures.UpdateScheduleAsync(fixtureId, request.Location, request.KickOffTime);
             return Ok();
@@ -125,7 +120,7 @@ namespace Ballers.API.Controllers
             if (!isAdmin && user.TeamId != fixture.HomeTeamId && user.TeamId != fixture.AwayTeamId)
                 return Forbid();
 
-            await _fixtures.UpdateSquadAsync(fixtureId, request.PlayerIds);
+            await _fixtures.UpdateSquadAsync(fixtureId, request.PlayerIds, isAdmin ? null : user.TeamId);
             return Ok();
         }
 

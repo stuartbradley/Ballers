@@ -24,9 +24,17 @@
 
 <div class="dashboard-container">
 
-    @if (fixture == null)
+    @if (isLoading)
     {
         <LoadingSpinner />
+    }
+    else if (fixture == null)
+    {
+        <div class="not-found-container">
+            <div class="not-found-code">404</div>
+            <p class="not-found-title">Fixture not found</p>
+            <NavLink class="not-found-btn" href="/manager-fixtures">Back to Fixtures</NavLink>
+        </div>
     }
     else
     {
@@ -133,31 +141,6 @@
 
                     </div>
 
-
-                    @if (canEditSchedule)
-                    {
-                        <div class="schedule-section">
-
-                            <h3>Edit Schedule</h3>
-
-                            <div class="schedule-editor">
-
-                                <input class="form-input"
-                                placeholder="Location"
-                                @bind="location" />
-
-                                <InputDate class="form-input"
-                                @bind-Value="kickoffTime" />
-
-                                <button class="primary-btn"
-                                @onclick="SaveSchedule">
-                                    Save Fixture
-                                </button>
-
-                            </div>
-
-                        </div>
-                    }
 
                     @if (isAdmin)
                     {
@@ -381,10 +364,7 @@
 
     private FixtureDetailsDto fixture;
 
-    private string location = "";
-    private DateTime kickoffTime = DateTime.Now;
-
-    private bool canEditSchedule;
+    private bool isLoading = true;
     private string activeTab = "overview";
     private bool squadSelected = false;
 
@@ -468,41 +448,33 @@
     async Task LoadFixture()
     {
         fixture = await FixtureService.GetFixture(Id);
+        isLoading = false;
 
         if (fixture == null)
             return;
 
         var savedStats = await FixtureService.GetFixtureStats(fixture.Id);
 
-        location = fixture.Location ?? "";
-        kickoffTime = fixture.Kickoff ?? DateTime.Now;
-
         var user = await AuthService.GetCurrentUser();
 
         isUserHome = user?.TeamId == fixture.HomeTeamId;
         isAdmin = user?.IsAdmin ?? false;
-        canEditSchedule = isUserHome;
 
         int teamId = isUserHome ? fixture.HomeTeamId : fixture.AwayTeamId;
 
-        var squad = await FixtureService.GetFixtureSquad(fixture.Id);
+        var squadTask = FixtureService.GetFixtureSquad(fixture.Id);
+        var myPlayersTask = FixtureService.GetFixturePlayers(fixture.Id);
+        await Task.WhenAll(squadTask, myPlayersTask);
 
-        squadSelected = squad.Count > 10;
+        var squadIds = squadTask.Result.Select(p => p.PlayerId).ToHashSet();
+        teamPlayers = myPlayersTask.Result.Select(p => new TeamPlayerViewModel
+        {
+            PlayerId = p.Id,
+            Name = p.Name,
+            IsSelected = squadIds.Contains(p.Id)
+        }).ToList();
 
-        teamPlayers = squad.Any()
-            ? squad.Select(p => new TeamPlayerViewModel
-                {
-                    PlayerId = p.PlayerId,
-                    Name = p.Name,
-                    IsSelected = true
-                }).ToList()
-            : (await FixtureService.GetFixturePlayers(fixture.Id))
-                .Select(p => new TeamPlayerViewModel
-                    {
-                        PlayerId = p.Id,
-                        Name = p.Name
-                    }).ToList();
-
+        squadSelected = teamPlayers.Count(p => p.IsSelected) > 10;
 
         players = teamPlayers
             .Where(p => p.IsSelected)
@@ -521,6 +493,9 @@
                         HasRedCard = stat?.HadRedCard ?? false
                     };
                 }).ToList();
+
+        previewHomeScore = fixture.HomeScore;
+        previewAwayScore = fixture.AwayScore;
 
         foreach(var p in players)
         {
@@ -613,17 +588,6 @@
             p.OnGoalsChanged = UpdateScorePreview;
 
         await ShowToast("Squad saved.");
-    }
-
-    async Task SaveSchedule()
-    {
-        await FixtureService.UpdateFixtureSchedule(
-            fixture!.Id,
-            location,
-            kickoffTime);
-
-        await LoadFixture();
-        await ShowToast("Schedule saved.");
     }
 
     async Task SubmitPenalties()

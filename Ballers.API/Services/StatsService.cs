@@ -34,6 +34,7 @@ namespace Ballers.API.Services
             return stats
                 .GroupBy(x => new { x.PlayerId, x.Player!.Name })
                 .Select(g => new PlayerGoalsStat(g.Key.PlayerId, g.Key.Name, g.Sum(x => x.Goals)))
+                .Where(x => x.Goals > 0)
                 .OrderByDescending(x => x.Goals)
                 .Take(5)
                 .ToList();
@@ -45,6 +46,7 @@ namespace Ballers.API.Services
             return stats
                 .GroupBy(x => new { x.PlayerId, x.Player!.Name })
                 .Select(g => new PlayerAssistsStat(g.Key.PlayerId, g.Key.Name, g.Sum(x => x.Assists)))
+                .Where(x => x.Assists > 0)
                 .OrderByDescending(x => x.Assists)
                 .Take(5)
                 .ToList();
@@ -57,6 +59,7 @@ namespace Ballers.API.Services
             return stats
                 .GroupBy(x => new { x.PlayerId, x.Player!.Name })
                 .Select(g => new PlayerMotmStat(g.Key.PlayerId, g.Key.Name, g.Count(x => x.ManOfTheMatch)))
+                .Where(x => x.Motm > 0)
                 .OrderByDescending(x => x.Motm)
                 .Take(5)
                 .ToList();

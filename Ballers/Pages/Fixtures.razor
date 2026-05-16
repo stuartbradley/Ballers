@@ -6,30 +6,35 @@
 
 <PageTitle>Fixtures</PageTitle>
 
-<section class="fixtures-page">
+<div class="fixtures-page">
 
-    <div class="page-header">
-        <h1>Fixtures</h1>
-        <p>Ballers League Schedule</p>
+    <div class="fixtures-hero">
+        <div class="fixtures-hero-inner">
+            <p class="fixtures-eyebrow">Ballers League</p>
+            <h1>Fixtures</h1>
+            <p class="fixtures-sub">Full Season Schedule</p>
+        </div>
     </div>
 
-    @if (isLoading)
-    {
-        <LoadingSpinner />
-    }
-    else if (!FixtureWeeks.Any())
-    {
-        <div class="empty-state">No fixtures scheduled yet.</div>
-    }
-    else
-    {
-        @foreach (var week in FixtureWeeks)
+    <div class="fixtures-body">
+        @if (isLoading)
         {
-            <FixtureWeekCard Week="week" />
+            <LoadingSpinner />
         }
-    }
+        else if (!FixtureWeeks.Any())
+        {
+            <div class="empty-state">No fixtures scheduled yet.</div>
+        }
+        else
+        {
+            @foreach (var week in FixtureWeeks)
+            {
+                <FixtureWeekCard Week="week" />
+            }
+        }
+    </div>
 
-</section>
+</div>
 
 @code {
     private List<FixtureWeekDto> FixtureWeeks = new();

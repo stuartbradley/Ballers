@@ -1,7 +1,8 @@
-﻿.dashboard-container {
+.dashboard-container {
     max-width: 1100px;
     margin: auto;
-    padding: 20px;
+    padding: 40px 24px;
+    overflow-x: hidden;
 }
 
 .page-title {
@@ -9,11 +10,16 @@
     color: var(--ballers-text);
 }
 
+/* ===== GRID ===== */
+
 .dashboard-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 24px;
+    min-width: 0;
 }
+
+/* ===== CARD BASE ===== */
 
 .dashboard-card {
     background: var(--ballers-card);
@@ -37,14 +43,16 @@
     }
 
 .dashboard-btn {
-    display: inline-block;
-    margin-top: 14px;
-    padding: 10px 18px;
+    display: block;
+    margin-top: 16px;
+    padding: 11px 18px;
     background: var(--ballers-primary);
     color: white;
     border-radius: 8px;
     text-decoration: none;
     font-weight: 600;
+    text-align: center;
+    transition: background 0.2s ease;
 }
 
     .dashboard-btn:hover {
@@ -54,15 +62,33 @@
 .dashboard-card.admin {
     border-left: 5px solid var(--ballers-accent);
 }
-/* span full grid row */
+
+/* ===== CHART CARD ===== */
+
 .chart-card {
     grid-column: 1 / -1;
 }
 
-/* control chart height */
+.stats-layout {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 30px;
+    align-items: center;
+    margin-bottom: 24px;
+    min-width: 0;
+}
+
 .chart-wrapper {
-    height: 320px;
+    height: 300px;
     position: relative;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+}
+
+/* Prevent Chart.js canvas from exceeding its container */
+.chart-wrapper canvas {
+    max-width: 100% !important;
 }
 
 .chart-spinner-overlay {
@@ -75,80 +101,52 @@
     border-radius: 8px;
 }
 
-.stats-layout {
-    display: grid;
-    grid-template-columns: 1.2fr 1fr;
-    gap: 30px;
-    align-items: center;
+/* ===== MINI STAT CARDS ===== */
+
+.mini-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
 }
 
 .mini-card {
     background: var(--ballers-surface);
     border-radius: 12px;
-    padding: 16px 18px;
+    padding: 14px 16px;
     display: flex;
     flex-direction: column;
-    box-shadow: var(--ballers-shadow);
-    transition: 0.2s ease;
-}
-
-    .mini-card:hover {
-        transform: translateY(-3px);
-    }
-
-.mini-stats {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+    gap: 2px;
+    min-width: 0;
 }
 
 .mini-title {
-    font-size: var(--text-sm);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
     color: var(--ballers-text-muted);
-    margin-bottom: 4px;
 }
 
 .mini-name {
-    font-weight: 600;
-    font-size: var(--text-lg);
+    font-weight: 700;
+    font-size: 1rem;
     color: var(--ballers-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .mini-value {
-    font-size: var(--text-sm);
-    color: var(--ballers-text);
-}
-@media (max-width: 900px) {
-
-    /* Switch layout to single column */
-    .stats-layout {
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-    }
-
-    /* Chart first */
-    .chart-wrapper {
-        height: 260px;
-        width: 100%;
-    }
-
-    /* Mini cards become full width */
-    .mini-stats {
-        width: 100%;
-    }
-
-    .mini-card {
-        width: 100%;
-    }
+    font-size: 0.82rem;
+    color: var(--ballers-text-muted);
 }
 
-/* ===== WIN / DRAW / LOSS RECORD STRIP ===== */
+/* ===== WIN / DRAW / LOSS STRIP ===== */
 
 .record-row {
     display: flex;
     gap: 12px;
-    margin-top: 24px;
     padding-top: 20px;
     border-top: 1px solid var(--ballers-surface);
 }
@@ -176,53 +174,16 @@
     letter-spacing: 0.07em;
 }
 
-.record-win {
-    background: rgba(22, 163, 74, 0.1);
-}
+.record-win  { background: rgba(22, 163, 74, 0.1); }
+.record-win  .record-value, .record-win  .record-label { color: var(--ballers-pitch); }
 
-    .record-win .record-value {
-        color: var(--ballers-pitch);
-    }
+.record-draw { background: rgba(100, 116, 139, 0.1); }
+.record-draw .record-value, .record-draw .record-label { color: var(--ballers-text-muted); }
 
-    .record-win .record-label {
-        color: var(--ballers-pitch);
-    }
+.record-loss { background: rgba(239, 68, 68, 0.08); }
+.record-loss .record-value, .record-loss .record-label { color: var(--ballers-danger); }
 
-.record-draw {
-    background: rgba(100, 116, 139, 0.1);
-}
-
-    .record-draw .record-value {
-        color: var(--ballers-text-muted);
-    }
-
-    .record-draw .record-label {
-        color: var(--ballers-text-muted);
-    }
-
-.record-loss {
-    background: rgba(239, 68, 68, 0.08);
-}
-
-    .record-loss .record-value {
-        color: var(--ballers-danger);
-    }
-
-    .record-loss .record-label {
-        color: var(--ballers-danger);
-    }
-
-.dashboard-link {
-    text-decoration: none;
-    display: block;
-    color: inherit;
-}
-
-    .dashboard-link:hover {
-        text-decoration: none;
-    }
-
-/* ===== CARD ENTRANCE ANIMATION ===== */
+/* ===== CARD ENTRANCE ANIMATIONS ===== */
 
 .dashboard-grid > *:nth-child(1) { animation: fadeUp 0.35s ease both; }
 .dashboard-grid > *:nth-child(2) { animation: fadeUp 0.35s ease 0.06s both; }
@@ -230,11 +191,33 @@
 .dashboard-grid > *:nth-child(4) { animation: fadeUp 0.35s ease 0.18s both; }
 .dashboard-grid > *:nth-child(5) { animation: fadeUp 0.35s ease 0.24s both; }
 
-/* ===== RESPONSIVE ===== */
+/* ===== TABLET (≤900px) ===== */
+
+@media (max-width: 900px) {
+    .stats-layout {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .chart-wrapper {
+        height: 260px;
+    }
+
+    .mini-stats {
+        flex-direction: row;
+    }
+
+    .mini-card {
+        flex: 1;
+        min-width: 0;
+    }
+}
+
+/* ===== MOBILE (≤768px) ===== */
 
 @media (max-width: 768px) {
     .dashboard-container {
-        padding: 16px;
+        padding: 20px 16px;
     }
 
     .page-title {
@@ -242,22 +225,98 @@
         margin-bottom: 20px;
     }
 
-    /* Force single column on mobile */
     .dashboard-grid {
         grid-template-columns: 1fr;
+        gap: 16px;
     }
 
     .dashboard-card {
-        padding: 20px 16px;
+        padding: 18px 16px;
     }
 
+    /* Show W/D/L strip before the chart on mobile using flex order */
+    .chart-card {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .chart-card h3    { order: 0; }
+    .chart-card .record-row   { order: 1; margin-top: 0; padding-top: 0; border-top: none; margin-bottom: 20px; }
+    .chart-card .stats-layout { order: 2; margin-bottom: 0; }
+
     .chart-wrapper {
-        height: 220px;
+        height: 200px;
+    }
+
+    /* Mini stats: 3 compact cards in a row */
+    .mini-stats {
+        flex-direction: row;
+        gap: 10px;
+    }
+
+    .mini-card {
+        flex: 1;
+        min-width: 0;
+        padding: 12px;
+    }
+
+    .mini-name {
+        font-size: 0.85rem;
+    }
+
+    .mini-value {
+        font-size: 0.75rem;
+    }
+
+    .record-value {
+        font-size: 1.6rem;
     }
 }
 
+/* ===== SMALL MOBILE (≤480px) ===== */
+
 @media (max-width: 480px) {
+    .chart-wrapper {
+        height: 180px;
+    }
+
+    /* Stack mini stats back to column on very small screens — 3 across is too tight */
+    .mini-stats {
+        flex-direction: column;
+        gap: 8px;
+    }
+
     .mini-card {
-        padding: 14px;
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 14px;
+    }
+
+    .mini-title {
+        font-size: 0.72rem;
+        margin-bottom: 0;
+        min-width: 80px;
+        flex-shrink: 0;
+    }
+
+    .mini-name {
+        font-size: 0.88rem;
+        flex: 1;
+    }
+
+    .mini-value {
+        font-size: 0.75rem;
+        flex-shrink: 0;
+        color: var(--ballers-primary);
+        font-weight: 700;
+    }
+
+    .record-value {
+        font-size: 1.4rem;
+    }
+
+    .record-label {
+        font-size: 0.65rem;
     }
 }
