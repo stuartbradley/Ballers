@@ -15,6 +15,8 @@
 
 <body>
     <div id="app"></div>
+    <!-- Disable React DevTools hook — prevents import-outside-module errors and console overrides in Blazor WASM -->
+    <script>window.__REACT_DEVTOOLS_GLOBAL_HOOK__ = { isDisabled: true };</script>
     <script src="_framework/blazor.webassembly.js"></script>
     <script src="js/dashboardCharts.js"></script>
 </body>

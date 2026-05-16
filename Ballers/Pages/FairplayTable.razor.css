@@ -1,127 +1,330 @@
-.dashboard-container {
-    max-width: 680px;
-    margin: 0 auto;
-    padding: 30px 20px 60px;
+/* ================================================================
+   FAIRPLAY TABLE — admin standings view
+   ================================================================ */
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
-.page-header {
+@keyframes heroReveal {
+    from { clip-path: inset(100% 0 0 0); opacity: 0; transform: translateY(10px); }
+    to   { clip-path: inset(0% 0 0 0); opacity: 1; transform: translateY(0); }
+}
+
+/* ================================================================
+   PAGE SHELL
+   ================================================================ */
+
+.fairplay-page {
+    min-height: calc(100vh - 71px);
+    background: #07101E;
+}
+
+/* ================================================================
+   HERO
+   ================================================================ */
+
+.fairplay-hero {
+    background: #0B1628;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.fairplay-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        repeating-linear-gradient(90deg, transparent 0px, transparent 79px, rgba(255, 255, 255, 0.015) 79px, rgba(255, 255, 255, 0.015) 80px),
+        repeating-linear-gradient(0deg,  transparent 0px, transparent 79px, rgba(255, 255, 255, 0.015) 79px, rgba(255, 255, 255, 0.015) 80px);
+    pointer-events: none;
+}
+
+.fairplay-hero::after {
+    content: "";
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, var(--ballers-accent) 0%, rgba(250, 204, 21, 0.2) 100%);
+}
+
+.fairplay-hero-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 36px 24px;
+}
+
+.hero-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 24px;
+    margin-bottom: 10px;
 }
 
-.page-title {
-    font-size: 1.6rem;
-    font-weight: 800;
-    color: var(--ballers-text);
-    margin: 0;
+.fairplay-eyebrow {
+    font-family: var(--font-display);
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--ballers-accent);
+    opacity: 0.75;
+    animation: fadeUp 0.4s ease both;
 }
 
 .back-link {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--ballers-primary);
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
     text-decoration: none;
+    transition: color 0.18s;
+    animation: fadeUp 0.4s ease both;
 }
 
-.back-link:hover {
-    text-decoration: underline;
+.back-link:hover { color: var(--ballers-accent); }
+
+.fairplay-hero-inner h1 {
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: white;
+    margin: 0;
+    animation: heroReveal 0.55s 0.1s ease both;
 }
+
+/* ================================================================
+   BODY
+   ================================================================ */
+
+.fairplay-body {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 28px 24px 64px;
+}
+
+/* ================================================================
+   SEASON BAR
+   ================================================================ */
 
 .season-bar {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
     margin-bottom: 20px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--ballers-text-muted);
+    animation: fadeUp 0.35s ease both;
+}
+
+.season-label {
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.35);
+    flex-shrink: 0;
+}
+
+.select-wrapper {
+    position: relative;
+}
+
+.select-wrapper::after {
+    content: "▾";
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.75rem;
+    pointer-events: none;
 }
 
 .season-select {
-    padding: 8px 12px;
+    appearance: none;
+    padding: 9px 36px 9px 14px;
     border-radius: 8px;
-    border: 1.5px solid #e2e8f0;
-    font-family: var(--font-main);
-    font-size: 0.9rem;
-    background: white;
-    color: var(--ballers-text);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    color-scheme: dark;
 }
 
+.season-select:focus {
+    outline: none;
+    border-color: var(--ballers-accent);
+    background: rgba(255, 255, 255, 0.07);
+}
+
+/* ================================================================
+   TABLE CARD
+   ================================================================ */
+
 .fairplay-card {
-    background: var(--ballers-card);
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(15,23,42,0.08);
+    background: #111D33;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
     overflow: hidden;
+    animation: fadeUp 0.4s 0.08s ease both;
 }
 
 .fairplay-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.9rem;
 }
 
+/* ===== HEADER ===== */
+
 .fairplay-table thead tr {
-    background: var(--ballers-surface);
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 .fairplay-table th {
-    padding: 12px 16px;
+    padding: 12px 18px;
     text-align: left;
-    font-size: 0.72rem;
+    font-family: var(--font-display);
+    font-size: 0.6rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--ballers-text-muted);
+    letter-spacing: 0.2em;
+    color: rgba(255, 255, 255, 0.28);
+    white-space: nowrap;
 }
+
+/* ===== ROWS ===== */
 
 .fairplay-table td {
-    padding: 14px 16px;
-    border-bottom: 1px solid var(--ballers-surface);
-}
-
-.fairplay-table tbody tr:last-child td {
-    border-bottom: none;
-}
-
-.fairplay-table tbody tr:hover {
-    background: rgba(30,58,138,0.03);
-}
-
-.pos {
-    font-weight: 700;
-    color: var(--ballers-text-muted);
-    width: 36px;
-}
-
-.team-name {
-    font-weight: 600;
-}
-
-.avg {
-    font-weight: 700;
-    font-size: 0.95rem;
-}
-
-.avg.high { color: #16a34a; }
-.avg.mid  { color: var(--ballers-primary); }
-.avg.low  { color: var(--ballers-danger, #dc2626); }
-
-.empty-row {
-    text-align: center;
-    color: var(--ballers-text-muted);
-    padding: 40px 0;
+    padding: 16px 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.8);
     font-size: 0.9rem;
 }
 
-@media (max-width: 768px) {
-    .dashboard-container {
-        padding: 16px 12px 40px;
-    }
+.fairplay-table tbody tr:last-child td { border-bottom: none; }
 
-    .page-title {
-        font-size: 1.3rem;
-    }
+.fairplay-table tbody tr {
+    border-left: 3px solid transparent;
+    transition: background 0.15s;
+}
+
+.fairplay-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+/* Top 3 rank accents */
+.fairplay-table tbody tr:nth-child(1) { border-left-color: var(--ballers-accent); }
+.fairplay-table tbody tr:nth-child(2) { border-left-color: rgba(203, 213, 225, 0.6); }
+.fairplay-table tbody tr:nth-child(3) { border-left-color: rgba(180, 120, 60, 0.7); }
+
+/* ===== COLUMNS ===== */
+
+.col-pos { width: 40px; }
+.col-num { width: 70px; text-align: center; }
+.col-avg { width: 90px; text-align: center; }
+
+.fairplay-table th.col-num,
+.fairplay-table th.col-avg { text-align: center; }
+
+.pos {
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.35);
+}
+
+/* Gold / silver / bronze position numbers */
+.fairplay-table tbody tr:nth-child(1) .pos { color: var(--ballers-accent); }
+.fairplay-table tbody tr:nth-child(2) .pos { color: #cbd5e1; }
+.fairplay-table tbody tr:nth-child(3) .pos { color: #b47c3c; }
+
+.team-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: white;
+}
+
+.muted { color: rgba(255, 255, 255, 0.38) !important; }
+
+/* ===== AVERAGE RATING BADGE ===== */
+
+.avg {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 4px 12px;
+    border-radius: 100px;
+    border: 1px solid transparent;
+}
+
+.avg.high {
+    background: rgba(74, 222, 128, 0.1);
+    border-color: rgba(74, 222, 128, 0.25);
+    color: #4ade80;
+}
+
+.avg.mid {
+    background: rgba(96, 165, 250, 0.1);
+    border-color: rgba(96, 165, 250, 0.25);
+    color: #60a5fa;
+}
+
+.avg.low {
+    background: rgba(248, 113, 113, 0.1);
+    border-color: rgba(248, 113, 113, 0.25);
+    color: #f87171;
+}
+
+/* ===== EMPTY ===== */
+
+.empty-row {
+    text-align: center;
+    padding: 56px 20px;
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.22);
+}
+
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
+
+@media (max-width: 768px) {
+    .fairplay-hero-inner { padding: 28px 16px; }
+    .fairplay-body { padding: 20px 16px 48px; }
+
+    .fairplay-table th,
+    .fairplay-table td { padding: 14px 12px; }
+
+    .col-num { width: 56px; }
+    .col-avg { width: 72px; }
+}
+
+@media (max-width: 480px) {
+    .fairplay-table th,
+    .fairplay-table td { padding: 12px 10px; font-size: 0.82rem; }
+
+    .team-name { font-size: 0.82rem; }
 }

@@ -1,4 +1,4 @@
-﻿@page "/admin"
+@page "/admin"
 @using Ballers.Models
 @using Ballers.Services
 @using Microsoft.AspNetCore.Authorization
@@ -8,153 +8,150 @@
 
 <PageTitle>Admin</PageTitle>
 
-<div class="dashboard-container">
+<div class="admin-page">
 
-    <h1 class="page-title">Admin Control</h1>
-
-    <div class="admin-links">
-        <a href="/admin/fairplay" class="admin-link-card">
-            <span class="link-icon">⭐</span>
-            <span>Fairplay Table</span>
-        </a>
+    <div class="admin-hero">
+        <div class="admin-hero-inner">
+            <p class="admin-eyebrow">Admin Only</p>
+            <h1>League Control</h1>
+        </div>
     </div>
 
-    <div class="dashboard-grid">
+    <div class="admin-body">
 
-        <!-- CREATE TEAM CARD -->
-        <div class="dashboard-card">
+        <!-- Quick links -->
+        <div class="admin-links">
+            <a href="/admin/fairplay" class="admin-link-card">Fairplay Table</a>
+        </div>
 
-            <h3>Add New Team</h3>
+        <div class="admin-grid">
 
-            <EditForm EditContext="editContext"
-                      OnValidSubmit="CreateTeam">
+            <!-- CREATE TEAM -->
+            <div class="admin-card">
+                <div class="card-header">
+                    <span class="card-label">Team</span>
+                    <h3>Add New Team</h3>
+                </div>
 
-                <DataAnnotationsValidator />
+                <EditForm EditContext="editContext" OnValidSubmit="CreateTeam">
+                    <DataAnnotationsValidator />
+                    <div class="form-group">
+                        <InputText class="form-input"
+                                   placeholder="Team name"
+                                   @bind-Value="createTeamModel.TeamName" />
+                        <ValidationMessage For="@(() => createTeamModel.TeamName)" />
+
+                        <InputText class="form-input"
+                                   placeholder="Manager email"
+                                   @bind-Value="createTeamModel.Email" />
+                        <ValidationMessage For="@(() => createTeamModel.Email)" />
+
+                        <InputText class="form-input"
+                                   type="password"
+                                   placeholder="Password"
+                                   @bind-Value="createTeamModel.Password" />
+                        <div class="validation-wrapper">
+                            <ValidationMessage For="@(() => createTeamModel.Password)" />
+                        </div>
+                    </div>
+
+                    <button type="button" class="primary-btn" @onclick="SubmitForm">
+                        Create Team
+                    </button>
+                </EditForm>
+
+                @if (!string.IsNullOrEmpty(teamMessage))
+                {
+                    <div class="@(teamIsError ? "error-msg" : "success-msg")">@teamMessage</div>
+                }
+            </div>
+
+            <!-- GENERATE FIXTURES -->
+            <div class="admin-card">
+                <div class="card-header">
+                    <span class="card-label blue-label">Fixtures</span>
+                    <h3>Generate Fixtures</h3>
+                </div>
 
                 <div class="form-group">
+                    <label class="input-label">Season start date</label>
+                    <InputDate @bind-Value="seasonStartDate" class="form-input date-input" />
 
-                    <InputText class="form-input"
-                               placeholder="Team Name"
-                               @bind-Value="createTeamModel.TeamName" />
-
-                    <ValidationMessage For="@(() => createTeamModel.TeamName)" />
-
-                    <InputText class="form-input"
-                               placeholder="Manager Email"
-                               @bind-Value="createTeamModel.Email" />
-
-                    <ValidationMessage For="@(() => createTeamModel.Email)" />
-
-                    <InputText class="form-input"
-                               type="password"
-                               placeholder="Password"
-                               @bind-Value="createTeamModel.Password" />
-
-                    <div class="validation-wrapper">
-                        <ValidationMessage For="@(() => createTeamModel.Password)" />
+                    <label class="input-label">Select teams</label>
+                    <div class="team-grid">
+                        @foreach (var t in teams)
+                        {
+                            <label class="team-check-label">
+                                <input type="checkbox"
+                                       value="@t.Id"
+                                       @onchange="(e) => ToggleTeam(t.Id, e.Value)" />
+                                <span>@t.Name</span>
+                            </label>
+                        }
                     </div>
                 </div>
 
-                <button type="button"
-                        class="primary-btn"
-                        @onclick="SubmitForm">
-                    Create Team
+                @if (selectedTeamIds.Count % 2 != 0 && selectedTeamIds.Count >= 3)
+                {
+                    <div class="info-msg">Odd number of teams — one team per round will have a bye week.</div>
+                }
+
+                <button class="primary-btn" @onclick="GenerateFixtures">
+                    Generate Fixtures
                 </button>
 
-            </EditForm>
-
-            @if (!string.IsNullOrEmpty(teamMessage))
-            {
-                <p class="@(teamIsError ? "error-msg" : "success-msg")">@teamMessage</p>
-            }
-
-        </div>
-
-
-        <!-- SEASONS CARD -->
-        <div class="dashboard-card season-card">
-
-            <h3>Seasons</h3>
-
-            @if (!seasons.Any())
-            {
-                <p class="empty-seasons">No seasons created yet.</p>
-            }
-            else
-            {
-                <div class="season-list">
-                    @foreach (var s in seasons.OrderByDescending(x => x.SeasonNumber))
-                    {
-                        <div class="season-row">
-                            <div class="season-info">
-                                <span class="season-name">Season @s.SeasonNumber</span>
-                                <span class="season-dates">@s.StartDate.ToString("dd MMM yyyy") — @s.EndDate.ToString("dd MMM yyyy")</span>
-                            </div>
-                            @if (s.IsActive)
-                            {
-                                <span class="season-badge active">Active</span>
-                            }
-                            else
-                            {
-                                <button class="activate-btn" @onclick="() => ActivateSeason(s.Id)">
-                                    Activate
-                                </button>
-                            }
-                        </div>
-                    }
-                </div>
-            }
-
-            @if (!string.IsNullOrEmpty(seasonMessage))
-            {
-                <p class="@(seasonIsError ? "error-msg" : "success-msg")">@seasonMessage</p>
-            }
-
-        </div>
-
-
-        <!-- GENERATE FIXTURES CARD -->
-        <div class="dashboard-card">
-
-            <h3>Generate Fixtures</h3>
-
-            <div class="form-group">
-
-                <InputDate @bind-Value="seasonStartDate" />
-
-                <div class="team-grid">
-                    @foreach (var t in teams)
-                    {
-                        <label>
-                            <input type="checkbox"
-                            value="@t.Id"
-                            @onchange="(e) => ToggleTeam(t.Id, e.Value)" />
-                            @t.Name
-                        </label>
-                    }
-                </div>
-
+                @if (!string.IsNullOrEmpty(fixtureMessage))
+                {
+                    <div class="@(fixtureIsError ? "error-msg" : "success-msg")">@fixtureMessage</div>
+                }
             </div>
 
-            @if (selectedTeamIds.Count % 2 != 0 && selectedTeamIds.Count >= 3)
-            {
-                <p class="info-msg">Odd number of teams — one team per round will have a bye week.</p>
-            }
+            <!-- SEASONS — full width -->
+            <div class="admin-card season-card">
+                <div class="card-header">
+                    <span class="card-label green-label">History</span>
+                    <h3>Seasons</h3>
+                </div>
 
-            <button class="primary-btn"
-            @onclick="GenerateFixtures">
-                Generate
-            </button>
+                @if (!seasons.Any())
+                {
+                    <p class="empty-seasons">No seasons created yet.</p>
+                }
+                else
+                {
+                    <div class="season-list">
+                        @foreach (var s in seasons.OrderByDescending(x => x.SeasonNumber))
+                        {
+                            <div class="season-row">
+                                <div class="season-info">
+                                    <span class="season-name">Season @s.SeasonNumber</span>
+                                    <span class="season-dates">
+                                        @s.StartDate.ToString("dd MMM yyyy") — @s.EndDate.ToString("dd MMM yyyy")
+                                    </span>
+                                </div>
+                                @if (s.IsActive)
+                                {
+                                    <span class="season-badge active">Active</span>
+                                }
+                                else
+                                {
+                                    <button class="activate-btn" @onclick="() => ActivateSeason(s.Id)">
+                                        Activate
+                                    </button>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
 
-            @if (!string.IsNullOrEmpty(fixtureMessage))
-            {
-                <p class="@(fixtureIsError ? "error-msg" : "success-msg")">@fixtureMessage</p>
-            }
+                @if (!string.IsNullOrEmpty(seasonMessage))
+                {
+                    <div class="@(seasonIsError ? "error-msg" : "success-msg")">@seasonMessage</div>
+                }
+            </div>
 
         </div>
-
     </div>
-
 </div>
 
 @code {
@@ -211,7 +208,6 @@
     void ToggleTeam(int id, object? value)
     {
         var isChecked = (bool)value!;
-
         if (isChecked)
             selectedTeamIds.Add(id);
         else

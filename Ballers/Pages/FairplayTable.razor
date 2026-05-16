@@ -9,68 +9,81 @@
 
 <PageTitle>Fairplay Table</PageTitle>
 
-<div class="dashboard-container">
+<div class="fairplay-page">
 
-    <div class="page-header">
-        <h1 class="page-title">Fairplay Table</h1>
-        <a href="/admin" class="back-link">← Admin</a>
+    <div class="fairplay-hero">
+        <div class="fairplay-hero-inner">
+            <div class="hero-top">
+                <p class="fairplay-eyebrow">Admin</p>
+                <a href="/admin" class="back-link">← Back to Admin</a>
+            </div>
+            <h1>Fairplay Table</h1>
+        </div>
     </div>
 
-    @if (isLoading)
-    {
-        <LoadingSpinner />
-    }
-    else
-    {
-        <div class="season-bar">
-            <label>Season</label>
-            <select class="season-select"
-                    @bind="selectedSeasonId"
-                    @bind:after="LoadTable">
-                @foreach (var s in seasons)
-                {
-                    <option value="@s.Id">Season @s.SeasonNumber</option>
-                }
-            </select>
-        </div>
+    <div class="fairplay-body">
 
-        <div class="fairplay-card">
+        @if (isLoading)
+        {
+            <LoadingSpinner />
+        }
+        else
+        {
+            <div class="season-bar">
+                <span class="season-label">Season</span>
+                <div class="select-wrapper">
+                    <select class="season-select"
+                            @bind="selectedSeasonId"
+                            @bind:after="LoadTable">
+                        @foreach (var s in seasons)
+                        {
+                            <option value="@s.Id">Season @s.SeasonNumber</option>
+                        }
+                    </select>
+                </div>
+            </div>
 
-            <table class="fairplay-table">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Team</th>
-                        <th>Rated</th>
-                        <th>Total</th>
-                        <th>Avg</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (!rows.Any())
-                    {
+            <div class="fairplay-card">
+                <table class="fairplay-table">
+                    <thead>
                         <tr>
-                            <td colspan="5" class="empty-row">No ratings recorded yet.</td>
+                            <th class="col-pos">#</th>
+                            <th>Team</th>
+                            <th class="col-num">Rated</th>
+                            <th class="col-num">Total</th>
+                            <th class="col-avg">Avg</th>
                         </tr>
-                    }
-                    else
-                    {
-                        @foreach (var row in rows)
+                    </thead>
+                    <tbody>
+                        @if (!rows.Any())
                         {
                             <tr>
-                                <td class="pos">@row.Position</td>
-                                <td class="team-name">@row.Team</td>
-                                <td>@row.Rated</td>
-                                <td>@row.TotalRating</td>
-                                <td class="avg @RatingClass(row.AverageRating)">@row.AverageRating.ToString("0.00")</td>
+                                <td colspan="5" class="empty-row">No ratings recorded yet.</td>
                             </tr>
                         }
-                    }
-                </tbody>
-            </table>
+                        else
+                        {
+                            @foreach (var row in rows)
+                            {
+                                <tr>
+                                    <td class="pos">@row.Position</td>
+                                    <td class="team-name">@row.Team</td>
+                                    <td class="col-num muted">@row.Rated</td>
+                                    <td class="col-num muted">@row.TotalRating</td>
+                                    <td class="col-avg">
+                                        <span class="avg @RatingClass(row.AverageRating)">
+                                            @row.AverageRating.ToString("0.00")
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
 
-        </div>
-    }
+    </div>
 
 </div>
 

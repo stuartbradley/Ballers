@@ -1,4 +1,38 @@
-/* ===== TOAST ===== */
+/* ================================================================
+   FIXTURE DETAIL — match page
+   ================================================================ */
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes heroReveal {
+    from { clip-path: inset(100% 0 0 0); opacity: 0; transform: translateY(10px); }
+    to   { clip-path: inset(0% 0 0 0); opacity: 1; transform: translateY(0); }
+}
+
+@keyframes toast-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ================================================================
+   PAGE SHELL
+   ================================================================ */
+
+.fixture-page {
+    min-height: calc(100vh - 71px);
+    background: #07101E;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px 64px;
+}
+
+/* ================================================================
+   TOAST
+   ================================================================ */
 
 .toast-container {
     position: fixed;
@@ -10,66 +44,132 @@
 }
 
 .toast {
-    padding: 12px 24px;
+    padding: 12px 28px;
     border-radius: 10px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-    animation: toast-in 0.25s ease;
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
     white-space: nowrap;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    animation: toast-in 0.25s ease both;
 }
 
 .toast-success {
-    background: #16a34a;
-    color: white;
+    background: rgba(74, 222, 128, 0.15);
+    border: 1px solid rgba(74, 222, 128, 0.35);
+    color: #4ade80;
 }
 
 .toast-error {
-    background: var(--ballers-danger, #dc2626);
-    color: white;
+    background: rgba(248, 113, 113, 0.15);
+    border: 1px solid rgba(248, 113, 113, 0.35);
+    color: #f87171;
 }
 
-@keyframes toast-in {
-    from { opacity: 0; transform: translateY(10px); }
-    to   { opacity: 1; transform: translateY(0); }
+/* ================================================================
+   404 NOT FOUND
+   ================================================================ */
+
+.not-found-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    min-height: 50vh;
+    text-align: center;
 }
 
-/* ===== PAGE CONTAINER ===== */
-
-.dashboard-container {
-    max-width: 860px;
-    margin: 0 auto;
-    padding: 30px 20px 60px;
+.not-found-code {
+    font-family: var(--font-display);
+    font-size: clamp(5rem, 18vw, 10rem);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: rgba(255, 255, 255, 0.06);
+    line-height: 1;
+    user-select: none;
 }
 
-/* ===== CARD ===== */
+.not-found-title {
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.35);
+    margin: 0;
+}
+
+.not-found-btn {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 10px 24px;
+    background: rgba(250, 204, 21, 0.08);
+    border: 1px solid rgba(250, 204, 21, 0.25);
+    border-radius: 8px;
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ballers-accent);
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.not-found-btn:hover {
+    background: rgba(250, 204, 21, 0.14);
+    border-color: rgba(250, 204, 21, 0.4);
+}
+
+/* ================================================================
+   FIXTURE CARD
+   ================================================================ */
 
 .fixture-card {
-    background: var(--ballers-card);
-    border-radius: 20px;
-    box-shadow: 0 4px 30px rgba(15, 23, 42, 0.1);
+    width: 100%;
+    max-width: 860px;
+    background: #111D33;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
     overflow: hidden;
+    animation: fadeUp 0.4s ease both;
 }
 
-/* ===== MATCH HEADER ===== */
+/* ================================================================
+   MATCH HEADER
+   ================================================================ */
 
 .fixture-header {
-    background: linear-gradient(135deg, var(--ballers-primary) 0%, #1e40af 100%);
+    background: #0B1628;
     padding: 44px 40px;
     text-align: center;
     position: relative;
     overflow: hidden;
-    margin-bottom: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-/* Glow overlays */
+/* Pitch grid texture */
 .fixture-header::before {
     content: "";
     position: absolute;
     inset: 0;
     background:
-        radial-gradient(ellipse at 15% 50%, rgba(255,255,255,0.1), transparent 55%),
-        radial-gradient(ellipse at 85% 50%, rgba(250,204,21,0.1), transparent 55%);
+        repeating-linear-gradient(90deg, transparent 0px, transparent 79px, rgba(255, 255, 255, 0.015) 79px, rgba(255, 255, 255, 0.015) 80px),
+        repeating-linear-gradient(0deg,  transparent 0px, transparent 79px, rgba(255, 255, 255, 0.015) 79px, rgba(255, 255, 255, 0.015) 80px);
+    pointer-events: none;
+}
+
+/* Side glow accents */
+.fixture-header::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at 10% 50%, rgba(250, 204, 21, 0.07), transparent 55%),
+        radial-gradient(ellipse at 90% 50%, rgba(250, 204, 21, 0.07), transparent 55%);
     pointer-events: none;
 }
 
@@ -77,184 +177,242 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 28px;
+    gap: 24px;
     position: relative;
     z-index: 1;
 }
 
 .team {
-    color: white;
-    font-size: 1.5rem;
+    font-family: var(--font-display);
+    font-size: clamp(1rem, 3vw, 1.5rem);
     font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: white;
     flex: 1;
     text-align: center;
     line-height: 1.2;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    animation: heroReveal 0.55s 0.1s ease both;
+}
+
+.team.away {
+    animation-delay: 0.18s;
 }
 
 .score {
-    font-size: 3rem;
-    font-weight: 800;
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 6vw, 3.2rem);
+    font-weight: 700;
+    letter-spacing: 0.04em;
     display: flex;
     align-items: center;
     gap: 10px;
     color: var(--ballers-accent);
-    min-width: 130px;
+    min-width: 120px;
     justify-content: center;
-    letter-spacing: -1px;
+    position: relative;
+    z-index: 1;
+    animation: fadeUp 0.4s 0.15s ease both;
 }
 
 .dash {
-    color: rgba(255,255,255,0.35);
+    color: rgba(255, 255, 255, 0.25);
     font-weight: 300;
 }
 
 .vs {
-    font-size: 1.1rem;
-    color: rgba(255,255,255,0.6);
-    font-weight: 500;
-    letter-spacing: 3px;
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.28);
 }
 
-/* ===== TABS ===== */
+/* ================================================================
+   TABS
+   ================================================================ */
 
 .fixture-tabs {
     display: flex;
-    padding: 0 32px;
-    border-bottom: 2px solid var(--ballers-surface);
-    background: var(--ballers-card);
+    background: #0D1B30;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 0 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
 }
+
+.fixture-tabs::-webkit-scrollbar { display: none; }
 
 .tab {
     background: none;
     border: none;
-    border-bottom: 3px solid transparent;
-    margin-bottom: -2px;
-    padding: 16px 22px;
-    font-weight: 600;
-    font-size: 0.9rem;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    padding: 16px 20px;
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
     cursor: pointer;
-    color: var(--ballers-text-muted);
-    transition: color 0.2s;
+    color: rgba(255, 255, 255, 0.35);
+    transition: color 0.18s, border-color 0.18s;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
-    .tab:hover {
-        color: var(--ballers-primary);
-    }
+.tab:hover {
+    color: rgba(255, 255, 255, 0.7);
+}
 
-    .tab.active {
-        color: var(--ballers-primary);
-        border-bottom-color: var(--ballers-accent);
-    }
+.tab.active {
+    color: var(--ballers-accent);
+    border-bottom-color: var(--ballers-accent);
+}
 
-    .tab.disabled {
-        opacity: 0.35;
-        cursor: not-allowed;
-    }
+.tab.disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    pointer-events: none;
+}
 
-/* ===== TAB CONTENT ===== */
+/* ================================================================
+   TAB CONTENT
+   ================================================================ */
 
 .tab-content {
-    padding: 32px 40px;
+    padding: 28px 32px;
+    animation: fadeUp 0.25s ease both;
 }
 
-/* Section sub-headings */
 .tab-content h3 {
-    font-size: 0.75rem;
+    font-family: var(--font-display);
+    font-size: 0.6rem;
     font-weight: 700;
+    letter-spacing: 0.22em;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--ballers-text-muted);
-    margin-bottom: 18px;
+    color: rgba(255, 255, 255, 0.28);
+    margin: 0 0 20px;
 }
 
-/* ===== INFO GRID ===== */
+/* ================================================================
+   OVERVIEW — INFO GRID
+   ================================================================ */
 
 .fixture-info-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    margin-bottom: 32px;
+    gap: 14px;
+    margin-bottom: 28px;
 }
 
 .info-card {
-    background: var(--ballers-surface);
-    padding: 20px;
-    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 20px 16px;
     text-align: center;
-    border-top: 3px solid var(--ballers-primary);
-    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: background 0.15s;
 }
 
-    .info-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 18px rgba(15,23,42,0.08);
-    }
+.info-card:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
 
 .label {
     display: block;
-    font-size: 0.72rem;
+    font-family: var(--font-display);
+    font-size: 0.58rem;
     font-weight: 700;
-    color: var(--ballers-text-muted);
+    letter-spacing: 0.22em;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-bottom: 8px;
+    color: rgba(255, 255, 255, 0.28);
 }
 
-/* ===== STATUS BADGES ===== */
+.info-value {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.75);
+    font-weight: 500;
+}
+
+/* ================================================================
+   STATUS BADGES
+   ================================================================ */
 
 .status {
     display: inline-block;
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 600;
+    padding: 4px 14px;
+    border-radius: 100px;
+    font-family: var(--font-display);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    border: 1px solid transparent;
 }
 
-    .status.awaiting {
-        background: rgba(250,204,21,0.18);
-        color: #92700a;
-    }
+.status.played {
+    background: rgba(74, 222, 128, 0.1);
+    border-color: rgba(74, 222, 128, 0.25);
+    color: #4ade80;
+}
 
-    .status.scheduled {
-        background: rgba(30,58,138,0.12);
-        color: var(--ballers-primary);
-    }
+.status.scheduled {
+    background: rgba(96, 165, 250, 0.1);
+    border-color: rgba(96, 165, 250, 0.25);
+    color: #60a5fa;
+}
 
-    .status.played {
-        background: rgba(22,163,74,0.15);
-        color: var(--ballers-pitch);
-    }
+.status.awaiting {
+    background: rgba(250, 204, 21, 0.08);
+    border-color: rgba(250, 204, 21, 0.2);
+    color: var(--ballers-accent);
+}
 
-/* ===== FAIRPLAY SECTION ===== */
+/* ================================================================
+   FAIRPLAY SECTION
+   ================================================================ */
 
 .fairplay-section {
-    border-top: 1px solid var(--ballers-surface);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
     padding-top: 24px;
     margin-top: 24px;
+}
+
+.fairplay-section h3 {
+    margin-bottom: 16px;
 }
 
 .fairplay-editor {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 16px;
     flex-wrap: wrap;
 }
 
 .fairplay-team {
     display: flex;
     align-items: center;
-    gap: 10px;
-    background: var(--ballers-surface);
-    padding: 10px 16px;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07);
     border-radius: 10px;
+    padding: 12px 16px;
     flex: 1;
     min-width: 160px;
 }
 
 .fairplay-team label {
-    font-weight: 600;
-    font-size: 0.9rem;
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.7);
     flex: 1;
     white-space: nowrap;
     overflow: hidden;
@@ -262,177 +420,219 @@
 }
 
 .fairplay-team .stat-input {
-    width: 60px;
+    width: 64px;
     flex-shrink: 0;
 }
 
-::deep .form-input {
-    padding: 10px 14px;
-    border-radius: 8px;
-    border: 1.5px solid #e2e8f0;
-    font-family: var(--font-main);
-    font-size: var(--text-sm);
-    flex: 1;
-    transition: all 0.2s ease;
-    background: white;
-    color: var(--ballers-text);
-}
-
-    ::deep .form-input:hover {
-        border-color: rgba(30,58,138,0.35);
-    }
-
-    ::deep .form-input:focus {
-        outline: none;
-        border-color: var(--ballers-primary);
-        box-shadow: 0 0 0 3px rgba(30,58,138,0.12);
-    }
-
-/* ===== BUTTONS ===== */
+/* ================================================================
+   BUTTONS
+   ================================================================ */
 
 .primary-btn {
-    background: var(--ballers-primary);
-    color: white;
+    background: var(--ballers-accent);
+    color: #07101E;
     border: none;
-    padding: 10px 22px;
+    padding: 10px 24px;
     border-radius: 8px;
-    font-weight: 600;
+    font-family: var(--font-display);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background 0.18s, transform 0.15s;
     white-space: nowrap;
+    flex-shrink: 0;
 }
 
-    .primary-btn:hover {
-        background: var(--ballers-primary-hover);
-        transform: translateY(-1px);
-    }
+.primary-btn:hover {
+    background: white;
+    transform: translateY(-1px);
+}
 
-    .primary-btn:active {
-        transform: translateY(0);
-    }
+.primary-btn:active { transform: translateY(0); }
 
 .submit-stats-btn {
     display: block;
     width: 100%;
     margin-top: 20px;
-    padding: 13px;
-    background: var(--ballers-primary);
-    color: white;
-    border: none;
+    padding: 14px;
+    background: rgba(250, 204, 21, 0.1);
+    border: 1px solid rgba(250, 204, 21, 0.25);
     border-radius: 10px;
+    font-family: var(--font-display);
+    font-size: 0.7rem;
     font-weight: 700;
-    font-size: 1rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ballers-accent);
     cursor: pointer;
-    transition: 0.2s;
+    transition: background 0.18s, border-color 0.18s, transform 0.15s;
 }
 
-    .submit-stats-btn:hover {
-        background: var(--ballers-primary-hover);
-    }
+.submit-stats-btn:hover {
+    background: rgba(250, 204, 21, 0.16);
+    border-color: rgba(250, 204, 21, 0.4);
+    transform: translateY(-1px);
+}
 
-/* ===== SQUAD TAB ===== */
+.squad-save-btn {
+    margin-top: 18px;
+    width: 100%;
+    padding: 13px;
+}
+
+/* ================================================================
+   SQUAD TAB
+   ================================================================ */
 
 .squad-row {
     display: flex;
     align-items: center;
     gap: 14px;
     padding: 13px 16px;
-    border-radius: 10px;
+    border-radius: 8px;
     margin-bottom: 6px;
-    background: var(--ballers-surface);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
     cursor: pointer;
-    transition: background 0.15s;
+    transition: background 0.15s, border-color 0.15s;
+    user-select: none;
 }
 
-    .squad-row:hover {
-        background: rgba(30,58,138,0.07);
-    }
+.squad-row:hover {
+    background: rgba(255, 255, 255, 0.055);
+    border-color: rgba(255, 255, 255, 0.09);
+}
 
-    .squad-row input[type="checkbox"] {
-        width: 18px;
-        height: 18px;
-        cursor: pointer;
-        accent-color: var(--ballers-primary);
-        flex-shrink: 0;
-    }
+.squad-row:has(input:checked) {
+    background: rgba(250, 204, 21, 0.06);
+    border-color: rgba(250, 204, 21, 0.2);
+}
 
-    .squad-row span {
-        font-weight: 500;
-        font-size: 0.95rem;
-    }
+.squad-row input[type="checkbox"] {
+    width: 17px;
+    height: 17px;
+    cursor: pointer;
+    accent-color: var(--ballers-accent);
+    flex-shrink: 0;
+}
 
-/* ===== STATS TABLE ===== */
+.squad-row span {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.squad-row:has(input:checked) span {
+    color: white;
+}
+
+/* ================================================================
+   STATS TABLE
+   ================================================================ */
 
 .stats-table {
     display: flex;
     flex-direction: column;
+    gap: 6px;
+}
+
+.stats-header,
+.stats-row {
+    display: grid;
+    grid-template-columns: 1fr 64px 72px 56px 64px 56px;
+    align-items: center;
     gap: 8px;
 }
 
 .stats-header {
-    display: grid;
-    grid-template-columns: 1fr 72px 80px 60px 90px 84px;
     padding: 6px 14px;
-    font-size: 0.72rem;
+    font-family: var(--font-display);
+    font-size: 0.57rem;
     font-weight: 700;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--ballers-text-muted);
+    color: rgba(255, 255, 255, 0.25);
+    text-align: center;
+}
+
+.stats-header span:first-child {
+    text-align: left;
 }
 
 .stats-row {
-    display: grid;
-    grid-template-columns: 1fr 72px 80px 60px 90px 84px;
-    align-items: center;
-    background: var(--ballers-surface);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
     padding: 10px 14px;
-    border-radius: 10px;
     transition: background 0.15s;
 }
 
-    .stats-row:hover {
-        background: rgba(30,58,138,0.06);
-    }
+.stats-row:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
 
 .player-name {
-    font-weight: 600;
-    font-size: 0.95rem;
+    font-family: var(--font-display);
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: white;
 }
 
 .stat-input {
-    width: 56px;
-    padding: 6px 8px;
+    width: 100%;
+    padding: 7px 8px;
     border-radius: 6px;
-    border: 1.5px solid #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
     text-align: center;
     font-family: var(--font-main);
-    font-size: 0.9rem;
-    transition: 0.2s;
-    background: white;
+    font-size: 0.88rem;
+    transition: border-color 0.2s, background 0.2s;
+    color-scheme: dark;
 }
 
-    .stat-input:focus {
-        outline: none;
-        border-color: var(--ballers-primary);
-        box-shadow: 0 0 0 2px rgba(30,58,138,0.12);
-    }
+.stat-input:focus {
+    outline: none;
+    border-color: var(--ballers-accent);
+    background: rgba(255, 255, 255, 0.08);
+}
 
 .motm-checkbox {
-    transform: scale(1.25);
-    cursor: pointer;
-    accent-color: var(--ballers-primary);
     display: block;
     margin: 0 auto;
+    width: 17px;
+    height: 17px;
+    cursor: pointer;
+    accent-color: var(--ballers-accent);
 }
 
-/* ===== PENALTIES TAB ===== */
+.yellow-card {
+    accent-color: #facc15;
+}
+
+.red-card {
+    accent-color: #f87171;
+}
+
+/* ================================================================
+   PENALTIES TAB
+   ================================================================ */
 
 .penalty-unavailable,
 .opponent-pending {
     text-align: center;
-    padding: 30px 0;
-    color: var(--ballers-text-muted);
-    font-size: 0.95rem;
+    padding: 48px 20px;
+    font-family: var(--font-display);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.22);
 }
 
 .penalty-table {
@@ -444,197 +644,160 @@
 
 .penalty-header {
     display: grid;
-    grid-template-columns: 36px 1fr 100px;
+    grid-template-columns: 36px 1fr 120px;
     padding: 6px 12px;
-    font-size: 0.72rem;
+    gap: 10px;
+    font-family: var(--font-display);
+    font-size: 0.57rem;
     font-weight: 700;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--ballers-text-muted);
+    color: rgba(255, 255, 255, 0.25);
 }
 
 .penalty-row {
     display: grid;
-    grid-template-columns: 36px 1fr 100px;
+    grid-template-columns: 36px 1fr 120px;
     align-items: center;
-    background: var(--ballers-surface);
-    padding: 10px 12px;
-    border-radius: 10px;
     gap: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 10px 12px;
 }
 
 .kick-order {
+    font-family: var(--font-display);
+    font-size: 0.82rem;
     font-weight: 700;
-    color: var(--ballers-primary);
-    font-size: 0.9rem;
+    color: var(--ballers-accent);
+    text-align: center;
 }
 
 .kick-player {
+    font-size: 0.88rem;
+    color: rgba(255, 255, 255, 0.75);
     font-weight: 500;
-    font-size: 0.9rem;
 }
 
 .penalty-select {
-    padding: 7px 10px;
+    width: 100%;
+    padding: 8px 12px;
     border-radius: 7px;
-    border: 1.5px solid #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
     font-family: var(--font-main);
     font-size: 0.85rem;
-    background: white;
-    color: var(--ballers-text);
-    width: 100%;
-    transition: border-color 0.2s;
+    appearance: none;
+    color-scheme: dark;
+    transition: border-color 0.2s, background 0.2s;
+    cursor: pointer;
 }
 
-    .penalty-select:focus {
-        outline: none;
-        border-color: var(--ballers-primary);
-        box-shadow: 0 0 0 3px rgba(30,58,138,0.1);
-    }
+.penalty-select:focus {
+    outline: none;
+    border-color: var(--ballers-accent);
+    background: rgba(255, 255, 255, 0.08);
+}
 
 .scored-toggle {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     cursor: pointer;
-    font-size: 0.82rem;
-    color: var(--ballers-text-muted);
     user-select: none;
 }
 
-    .scored-toggle input[type="checkbox"] {
-        width: 16px;
-        height: 16px;
-        accent-color: var(--ballers-pitch);
-        cursor: pointer;
-    }
-
-.kick-result {
-    font-size: 0.82rem;
-    font-weight: 600;
+.scored-toggle input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #4ade80;
+    cursor: pointer;
+    flex-shrink: 0;
 }
 
-    .kick-result.scored {
-        color: var(--ballers-pitch);
-    }
+.scored-toggle span {
+    font-family: var(--font-display);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.45);
+}
 
-    .kick-result.missed {
-        color: var(--ballers-danger);
-    }
+.kick-result {
+    font-family: var(--font-display);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.kick-result.scored { color: #4ade80; }
+.kick-result.missed { color: #f87171; }
 
 .opponent-kicks {
     margin-top: 28px;
     padding-top: 24px;
-    border-top: 1px solid var(--ballers-surface);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-/* ===== RESPONSIVE ===== */
+.opponent-kicks h3 {
+    margin-bottom: 14px;
+}
 
-/* Tablet */
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
+
 @media (max-width: 1024px) {
-    .dashboard-container {
-        max-width: 680px;
-        padding: 24px 16px 50px;
-    }
+    .fixture-page { padding: 24px 16px 48px; }
 }
 
-/* Mobile */
 @media (max-width: 768px) {
-    .dashboard-container {
-        padding: 12px 10px 40px;
-    }
+    .fixture-page { padding: 16px 12px 48px; }
 
-    .fixture-header {
-        padding: 30px 20px;
-    }
+    .fixture-header { padding: 32px 20px; }
 
-    .team {
-        font-size: 1.1rem;
-    }
+    .tab-content { padding: 20px 18px; }
 
-    .score {
-        font-size: 2.2rem;
-        min-width: 100px;
-        gap: 8px;
-    }
+    .fixture-info-grid { gap: 10px; }
 
-    .fixture-tabs {
-        padding: 0 16px;
-    }
-
-    .tab {
-        padding: 12px 14px;
-        font-size: 0.83rem;
-        flex: 1;
-        text-align: center;
-    }
-
-    .tab-content {
-        padding: 22px 16px;
-    }
-
-    .fixture-info-grid {
-        gap: 10px;
-    }
-
-    ::deep .form-input {
-        width: 100%;
-    }
-
-    .primary-btn {
-        width: 100%;
-        padding: 12px;
-        text-align: center;
-    }
-
-    /* Stats: tighter columns to avoid scroll on tablet */
     .stats-header,
     .stats-row {
-        grid-template-columns: 1fr 58px 68px 50px 74px 68px;
-        font-size: 0.82rem;
+        grid-template-columns: 1fr 52px 60px 44px 52px 44px;
+        font-size: 0.78rem;
+        gap: 5px;
     }
 
-    .stat-input {
-        width: 48px;
-        font-size: 0.82rem;
-        padding: 5px 6px;
-    }
+    .stats-header { padding: 6px 10px; }
+    .stats-row    { padding: 9px 10px; }
+
+    .stat-input { font-size: 0.82rem; padding: 5px 4px; }
+
+    .penalty-select { font-size: 0.8rem; }
+
+    .fairplay-editor { flex-direction: column; }
+    .fairplay-team   { width: 100%; }
 }
 
-/* Small phones */
 @media (max-width: 480px) {
-    .fixture-header {
-        padding: 24px 14px;
-    }
+    .fixture-header { padding: 24px 14px; }
 
-    .team {
-        font-size: 0.95rem;
-    }
+    .fixture-info-grid { grid-template-columns: 1fr; }
 
-    .score {
-        font-size: 1.9rem;
-        min-width: 80px;
-        gap: 6px;
-    }
+    .tab { padding: 13px 12px; font-size: 0.6rem; }
 
-    /* Info cards stack to single column */
-    .fixture-info-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .tab {
-        padding: 10px 8px;
-        font-size: 0.76rem;
-    }
-
-    /* Stats table: scroll on the smallest screens */
-    .stats-table {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
+    /* Stats scroll on very small screens */
+    .stats-table { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
     .stats-header,
-    .stats-row {
-        min-width: 440px;
-    }
+    .stats-row { min-width: 400px; }
+
+    .penalty-header,
+    .penalty-row { grid-template-columns: 30px 1fr 100px; }
+
+    .submit-stats-btn,
+    .primary-btn { font-size: 0.65rem; }
 }

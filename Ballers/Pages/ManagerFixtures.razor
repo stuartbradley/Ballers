@@ -1,4 +1,4 @@
-﻿@page "/manager-fixtures"
+@page "/manager-fixtures"
 @using Ballers.Client.Auth
 @using Ballers.Models
 @using Ballers.Services
@@ -9,94 +9,97 @@
 @inject AuthService AuthService
 @inject NavigationManager Nav
 
-<div class="dashboard-container">
+<PageTitle>My Fixtures</PageTitle>
 
-    <div class="fixtures-title">
-        <h1>My Fixtures</h1>
+<div class="mgr-page">
+
+    <div class="mgr-hero">
+        <div class="mgr-hero-inner">
+            <p class="mgr-eyebrow">Manager View</p>
+            <h1>My Fixtures</h1>
+        </div>
     </div>
-    <PageTitle>My Fixtures</PageTitle>
 
-    @if (fixtures == null)
-    {
-        <LoadingSpinner />
-    }
-    else if (!fixtures.Any())
-    {
-        <div class="empty-fixtures">
-            <p>No fixtures have been scheduled yet.</p>
-        </div>
-    }
-    else
-    {
-        <div class="fixtures-table">
+    <div class="mgr-body">
 
-            <div class="fixtures-header">
-                <span>Match</span>
-                <span>Fixture</span>
-                <span>Kickoff</span>
-                <span>Location</span>
-                <span>Status</span>
-                <span></span>
+        @if (fixtures == null)
+        {
+            <LoadingSpinner />
+        }
+        else if (!fixtures.Any())
+        {
+            <div class="empty-fixtures">
+                <p>No fixtures have been scheduled yet.</p>
             </div>
+        }
+        else
+        {
+            <div class="fixtures-table">
 
-            @foreach (var fixture in fixtures)
-            {
-                <div class="fixture-row">
-
-                    <span class="match-number">
-                        @fixture.Week
-                    </span>
-
-                    <span class="fixture-teams">
-                        <strong>@fixture.HomeTeam</strong>
-                        <span class="vs">vs</span>
-                        <strong>@fixture.AwayTeam</strong>
-                    </span>
-
-                    <span>
-                        @(fixture.KickOff == null
-                                        ? "Not Set"
-                                        : fixture.KickOff.Value.ToString("dd MMM HH:mm"))
-                    </span>
-
-                    <span>
-                        @(string.IsNullOrEmpty(fixture.Location)
-                                        ? "Not Set"
-                                        : fixture.Location)
-                    </span>
-
-                    <span>
-                        @if (fixture.IsPlayed)
-                        {
-                            <span class="status played">Played</span>
-                        }
-                        else if(fixture.KickOff != null && !string.IsNullOrEmpty(fixture.Location))
-                        {
-                            <span class="status scheduled">Scheduled</span>
-                        }
-                        else
-                        {
-                            <span class="status awaiting">Awaiting</span>
-                        }
-                    </span>
-
-                    <span class="fixture-actions">
-
-                        <button class="@(fixture.IsPlayed ? "view-btn" : "edit-btn")"
-                                @onclick="() => OpenFixture(fixture.Id)">
-                            @(fixture.IsPlayed ? "View" : "Edit")
-                        </button>
-
-                    </span>
-
+                <div class="fixtures-header">
+                    <span>Wk</span>
+                    <span>Match</span>
+                    <span>Kickoff</span>
+                    <span>Location</span>
+                    <span>Status</span>
+                    <span></span>
                 </div>
-            }
 
-        </div>
-    }
+                @foreach (var fixture in fixtures)
+                {
+                    <div class="fixture-row">
+
+                        <span class="match-number">@fixture.Week</span>
+
+                        <span class="fixture-teams">
+                            <strong>@fixture.HomeTeam</strong>
+                            <span class="vs">vs</span>
+                            <strong>@fixture.AwayTeam</strong>
+                        </span>
+
+                        <span class="fixture-detail">
+                            @(fixture.KickOff == null
+                                ? "Not set"
+                                : fixture.KickOff.Value.ToString("dd MMM HH:mm"))
+                        </span>
+
+                        <span class="fixture-detail">
+                            @(string.IsNullOrEmpty(fixture.Location)
+                                ? "Not set"
+                                : fixture.Location)
+                        </span>
+
+                        <span>
+                            @if (fixture.IsPlayed)
+                            {
+                                <span class="status played">Played</span>
+                            }
+                            else if (fixture.KickOff != null && !string.IsNullOrEmpty(fixture.Location))
+                            {
+                                <span class="status scheduled">Scheduled</span>
+                            }
+                            else
+                            {
+                                <span class="status awaiting">Awaiting</span>
+                            }
+                        </span>
+
+                        <span class="fixture-actions">
+                            <button class="@(fixture.IsPlayed ? "view-btn" : "edit-btn")"
+                                    @onclick="() => OpenFixture(fixture.Id)">
+                                @(fixture.IsPlayed ? "View" : "Edit")
+                            </button>
+                        </span>
+
+                    </div>
+                }
+
+            </div>
+        }
+
+    </div>
 
 </div>
-
 
 @code {
 

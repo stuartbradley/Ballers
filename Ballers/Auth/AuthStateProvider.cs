@@ -6,14 +6,19 @@ namespace Ballers.Auth
     public class AuthStateProvider : AuthenticationStateProvider
     {
         private readonly AuthService _authService;
+        private Task<AuthenticationState>? _cachedState;
 
         public AuthStateProvider(AuthService authService)
         {
             _authService = authService;
         }
 
-        public override async Task<AuthenticationState>
-            GetAuthenticationStateAsync()
+        public override Task<AuthenticationState> GetAuthenticationStateAsync()
+        {
+            return _cachedState ??= BuildStateAsync();
+        }
+
+        private async Task<AuthenticationState> BuildStateAsync()
         {
             var userInfo = await _authService.GetCurrentUser();
 
@@ -52,16 +57,17 @@ namespace Ballers.Auth
         }
         public void NotifyUserLogout()
         {
-            NotifyAuthenticationStateChanged(
-                Task.FromResult(
-                    new AuthenticationState(
-                        new ClaimsPrincipal(
-                            new ClaimsIdentity()))));
+            _cachedState = null;
+            var anonymous = Task.FromResult(
+                new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity())));
+            _cachedState = anonymous;
+            NotifyAuthenticationStateChanged(anonymous);
         }
+
         public void NotifyAuthChanged()
         {
-            NotifyAuthenticationStateChanged(
-                GetAuthenticationStateAsync());
+            _cachedState = null;
+            NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
         }
     }
 }

@@ -1,187 +1,404 @@
-﻿/* ===== Container ===== */
+/* ================================================================
+   ADMIN PAGE — league control panel
+   ================================================================ */
 
-.dashboard-container {
-    max-width: 1100px;
-    margin: auto;
-    padding: 20px;
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
-.page-title {
-    margin-bottom: 30px;
-    font-size: var(--text-2xl);
-    font-weight: 700;
-    color: var(--ballers-text);
+@keyframes heroReveal {
+    from { clip-path: inset(100% 0 0 0); opacity: 0; transform: translateY(10px); }
+    to   { clip-path: inset(0% 0 0 0); opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ================================================================
+   PAGE SHELL
+   ================================================================ */
+
+.admin-page {
+    min-height: calc(100vh - 71px);
+    background: #07101E;
+}
+
+/* ================================================================
+   HERO
+   ================================================================ */
+
+.admin-hero {
+    background: #0B1628;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     position: relative;
+    overflow: hidden;
 }
 
-    /* Yellow underline */
-    .page-title::after {
-        content: "";
-        display: block;
-        width: 70px;
-        height: 4px;
-        background: var(--ballers-accent);
-        margin-top: 10px;
-        border-radius: 4px;
-    }
+.admin-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        repeating-linear-gradient(90deg, transparent 0px, transparent 79px, rgba(255, 255, 255, 0.015) 79px, rgba(255, 255, 255, 0.015) 80px),
+        repeating-linear-gradient(0deg,  transparent 0px, transparent 79px, rgba(255, 255, 255, 0.015) 79px, rgba(255, 255, 255, 0.015) 80px);
+    pointer-events: none;
+}
 
-/* ===== Admin Quick Links ===== */
+.admin-hero::after {
+    content: "";
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, var(--ballers-accent) 0%, rgba(250, 204, 21, 0.2) 100%);
+}
+
+.admin-hero-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 36px 24px;
+}
+
+.admin-eyebrow {
+    font-family: var(--font-display);
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--ballers-accent);
+    opacity: 0.75;
+    margin-bottom: 8px;
+    animation: fadeUp 0.4s ease both;
+}
+
+.admin-hero-inner h1 {
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: white;
+    margin: 0;
+    animation: heroReveal 0.55s 0.1s ease both;
+}
+
+/* ================================================================
+   BODY
+   ================================================================ */
+
+.admin-body {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 28px 24px 64px;
+}
+
+/* ================================================================
+   QUICK LINKS
+   ================================================================ */
 
 .admin-links {
     display: flex;
-    gap: 12px;
+    gap: 10px;
     flex-wrap: wrap;
-    margin-bottom: 28px;
+    margin-bottom: 24px;
+    animation: fadeUp 0.35s ease both;
 }
 
 .admin-link-card {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: var(--ballers-card);
-    border: 1.5px solid var(--ballers-surface);
-    border-radius: 12px;
-    padding: 12px 20px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    color: var(--ballers-primary);
+    background: rgba(250, 204, 21, 0.07);
+    border: 1px solid rgba(250, 204, 21, 0.2);
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-family: var(--font-display);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ballers-accent);
     text-decoration: none;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 8px rgba(15,23,42,0.05);
+    transition: background 0.15s, border-color 0.15s, transform 0.15s;
 }
 
 .admin-link-card:hover {
-    border-color: var(--ballers-primary);
-    box-shadow: 0 4px 14px rgba(30,58,138,0.12);
+    background: rgba(250, 204, 21, 0.13);
+    border-color: rgba(250, 204, 21, 0.35);
     transform: translateY(-1px);
 }
 
-.link-icon {
-    font-size: 1rem;
-}
+/* ================================================================
+   GRID
+   ================================================================ */
 
-/* ===== Dashboard Grid ===== */
-
-.dashboard-grid {
+.admin-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
-    gap: 24px;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
 }
 
-/* ===== Card ===== */
+/* ================================================================
+   CARD BASE
+   ================================================================ */
 
-.dashboard-card {
-    background: var(--ballers-card);
-    padding: 30px;
-    border-radius: 16px;
-    box-shadow: var(--ballers-shadow);
+.admin-card {
+    background: #111D33;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 28px;
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 20px;
+    animation: fadeUp 0.4s ease both;
 }
 
-/* ===== Form ===== */
+.admin-card:nth-child(2) { animation-delay: 0.07s; }
+.admin-card:nth-child(3) { animation-delay: 0.14s; }
+
+/* ===== CARD HEADER ===== */
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.card-label {
+    font-family: var(--font-display);
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 100px;
+    background: rgba(250, 204, 21, 0.1);
+    border: 1px solid rgba(250, 204, 21, 0.2);
+    color: var(--ballers-accent);
+    flex-shrink: 0;
+}
+
+.card-label.blue-label {
+    background: rgba(96, 165, 250, 0.1);
+    border-color: rgba(96, 165, 250, 0.2);
+    color: #60a5fa;
+}
+
+.card-label.green-label {
+    background: rgba(74, 222, 128, 0.1);
+    border-color: rgba(74, 222, 128, 0.2);
+    color: #4ade80;
+}
+
+.admin-card h3 {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: white;
+    margin: 0;
+}
+
+/* Seasons spans full width */
+.season-card { grid-column: 1 / -1; }
+
+/* ================================================================
+   FORM GROUP + INPUTS
+   (::deep needed for Blazor InputText / InputDate components)
+   ================================================================ */
 
 .form-group {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 10px;
 }
 
-   ::deep .form-group input,
-    .form-group select {
-        padding: 10px 14px;
-        border-radius: 8px;
-        border: 1px solid var(--ballers-surface);
-        background: white;
-        font-family: var(--font-main);
-        font-size: var(--text-sm);
-    }
+.input-label {
+    font-family: var(--font-display);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.32);
+    margin-top: 4px;
+}
 
-       ::deep .form-group input:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: var(--ballers-primary);
-        }
+::deep .form-input,
+.form-input {
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    font-family: var(--font-main);
+    font-size: 0.92rem;
+    width: 100%;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+}
 
+::deep .form-input::placeholder,
+.form-input::placeholder {
+    color: rgba(255, 255, 255, 0.22);
+}
 
+::deep .form-input:focus,
+.form-input:focus {
+    outline: none;
+    border-color: var(--ballers-accent);
+    background: rgba(255, 255, 255, 0.07);
+    box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.1);
+}
+
+/* Date input — native picker needs colour-scheme hint */
+.date-input {
+    color-scheme: dark;
+}
+
+/* Validation messages */
+::deep .validation-message,
 .validation-message {
-    color: var(--ballers-danger);
-    font-size: 0.8rem;
+    font-size: 0.78rem;
+    color: #f87171;
+    animation: fadeIn 0.2s ease both;
 }
-/* ===== Primary Button ===== */
+
+::deep .validation-wrapper .validation-message {
+    background: rgba(248, 113, 113, 0.08);
+    border-left: 3px solid #f87171;
+    padding: 8px 12px;
+    border-radius: 4px;
+    color: #fca5a5;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+::deep .validation-wrapper .validation-message::before {
+    content: "!";
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+::deep .validation-wrapper {
+    margin-top: 2px;
+}
+
+/* ================================================================
+   PRIMARY BUTTON
+   ================================================================ */
 
 .primary-btn {
-    background: var(--ballers-primary);
-    color: white;
+    background: var(--ballers-accent);
+    color: #07101E;
     border: none;
-    padding: 12px 18px;
-    border-radius: 10px;
-    font-weight: 600;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
     cursor: pointer;
-    transition: 0.2s ease;
     align-self: flex-start;
+    transition: background 0.18s, transform 0.15s;
 }
 
-    .primary-btn:hover {
-        background: var(--ballers-primary-hover);
-        transform: translateY(-2px);
-    }
+.primary-btn:hover {
+    background: white;
+    transform: translateY(-1px);
+}
 
-/* ===== Status Messages ===== */
+.primary-btn:active { transform: translateY(0); }
+
+/* ================================================================
+   STATUS MESSAGES
+   ================================================================ */
 
 .success-msg {
-    margin-top: 8px;
-    font-size: var(--text-sm);
-    color: var(--ballers-pitch);
+    padding: 10px 14px;
+    background: rgba(74, 222, 128, 0.08);
+    border-left: 3px solid #4ade80;
+    border-radius: 4px;
+    font-size: 0.83rem;
+    color: #86efac;
+    font-weight: 500;
 }
 
 .error-msg {
-    margin-top: 8px;
-    font-size: var(--text-sm);
-    color: var(--ballers-danger);
+    padding: 10px 14px;
+    background: rgba(248, 113, 113, 0.08);
+    border-left: 3px solid #f87171;
+    border-radius: 4px;
+    font-size: 0.83rem;
+    color: #fca5a5;
+    font-weight: 500;
 }
 
 .info-msg {
-    margin-top: 4px;
-    font-size: var(--text-sm);
-    color: var(--ballers-primary);
-    background: rgba(30, 58, 138, 0.06);
-    border-left: 3px solid var(--ballers-primary);
-    padding: 8px 12px;
-    border-radius: 6px;
+    padding: 10px 14px;
+    background: rgba(96, 165, 250, 0.08);
+    border-left: 3px solid #60a5fa;
+    border-radius: 4px;
+    font-size: 0.83rem;
+    color: #93c5fd;
+    font-weight: 500;
 }
 
-/* ===== Team Checkbox Grid ===== */
+/* ================================================================
+   TEAM CHECKBOX GRID
+   ================================================================ */
 
 .team-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+}
+
+.team-check-label {
+    display: flex;
+    align-items: center;
     gap: 10px;
-    margin-top: 10px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 10px 12px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.6);
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    user-select: none;
 }
 
-    .team-grid label {
-        background: var(--ballers-surface);
-        padding: 8px 10px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: var(--text-sm);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        transition: 0.2s ease;
-    }
-
-        .team-grid label:hover {
-            background: var(--bg-blue-soft);
-        }
-
-/* ===== Season Management ===== */
-
-.season-card {
-    grid-column: 1 / -1;
+.team-check-label:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: white;
 }
+
+.team-check-label:has(input:checked) {
+    background: rgba(250, 204, 21, 0.08);
+    border-color: rgba(250, 204, 21, 0.25);
+    color: var(--ballers-accent);
+}
+
+.team-check-label input[type="checkbox"] {
+    width: 15px;
+    height: 15px;
+    accent-color: var(--ballers-accent);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+/* ================================================================
+   SEASON LIST
+   ================================================================ */
 
 .season-list {
     display: flex;
@@ -193,87 +410,102 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 14px 16px;
-    background: var(--ballers-surface);
-    border-radius: 10px;
-    gap: 12px;
+    padding: 16px 18px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    gap: 16px;
+    transition: background 0.15s;
 }
+
+.season-row:hover { background: rgba(255, 255, 255, 0.05); }
 
 .season-info {
     display: flex;
     flex-direction: column;
     gap: 3px;
+    min-width: 0;
 }
 
 .season-name {
-    font-weight: 600;
-    font-size: var(--text-sm);
-    color: var(--ballers-text);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: white;
 }
 
 .season-dates {
     font-size: 0.78rem;
-    color: var(--ballers-text-muted);
+    color: rgba(255, 255, 255, 0.35);
 }
 
 .season-badge {
-    font-size: 0.72rem;
+    font-family: var(--font-display);
+    font-size: 0.6rem;
     font-weight: 700;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
     padding: 4px 12px;
-    border-radius: 14px;
+    border-radius: 100px;
     flex-shrink: 0;
 }
 
-    .season-badge.active {
-        background: rgba(22, 163, 74, 0.12);
-        color: var(--ballers-pitch);
-    }
+.season-badge.active {
+    background: rgba(74, 222, 128, 0.1);
+    border: 1px solid rgba(74, 222, 128, 0.25);
+    color: #4ade80;
+}
 
 .activate-btn {
-    background: var(--ballers-primary);
-    color: white;
-    border: none;
-    padding: 6px 14px;
-    border-radius: 8px;
-    font-size: var(--text-sm);
-    font-weight: 600;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 6px 16px;
+    border-radius: 6px;
+    font-family: var(--font-display);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
     cursor: pointer;
-    transition: 0.2s ease;
     flex-shrink: 0;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
-    .activate-btn:hover {
-        background: var(--ballers-primary-hover);
-    }
+.activate-btn:hover {
+    background: rgba(74, 222, 128, 0.1);
+    border-color: rgba(74, 222, 128, 0.3);
+    color: #4ade80;
+}
 
 .empty-seasons {
-    color: var(--ballers-text-muted);
-    font-size: var(--text-sm);
-    font-style: italic;
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.22);
 }
 
-/* ===== Card Entrance Animation ===== */
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
 
-.dashboard-grid > *:nth-child(1) { animation: fadeUp 0.35s ease both; }
-.dashboard-grid > *:nth-child(2) { animation: fadeUp 0.35s ease 0.08s both; }
-.dashboard-grid > *:nth-child(3) { animation: fadeUp 0.35s ease 0.16s both; }
-
-/* ===== Responsive ===== */
-
-@media (max-width: 768px) {
-    .dashboard-container {
-        padding: 16px;
-    }
-
-    .dashboard-grid {
+@media (max-width: 900px) {
+    .admin-grid {
         grid-template-columns: 1fr;
     }
 
-    .dashboard-card {
-        padding: 20px 16px;
-    }
+    .season-card { grid-column: 1; }
+}
+
+@media (max-width: 768px) {
+    .admin-hero-inner { padding: 28px 16px; }
+
+    .admin-body { padding: 20px 16px 48px; }
+
+    .admin-card { padding: 20px 16px; }
 
     .primary-btn {
         width: 100%;
@@ -281,50 +513,15 @@
     }
 
     .team-grid {
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .season-row {
+        flex-wrap: wrap;
+        gap: 10px;
     }
 }
 
 @media (max-width: 480px) {
-    .team-grid {
-        grid-template-columns: 1fr 1fr;
-    }
-}
-/* ===== Fancy Validation Styling ===== */
-
-::deep .validation-wrapper {
-    margin-top: 6px;
-}
-
-    /* Style the actual validation message */
-    ::deep .validation-wrapper .validation-message {
-        background: rgba(239, 68, 68, 0.08);
-        border-left: 4px solid var(--ballers-danger);
-        padding: 8px 12px;
-        border-radius: 6px;
-        font-size: 0.85rem;
-        color: var(--ballers-danger);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        animation: fadeIn 0.2s ease-in-out;
-    }
-
-        /* Add icon automatically */
-        ::deep .validation-wrapper .validation-message::before {
-            content: "⚠";
-            font-size: 0.9rem;
-        }
-
-/* Smooth appearance */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-4px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    .team-grid { grid-template-columns: 1fr 1fr; }
 }
