@@ -39,4 +39,5 @@ builder.Services.AddScoped<LeagueService>();
 builder.Services.AddScoped<StatService>();
 builder.Services.AddScoped<PenaltyService>();
 builder.Services.AddScoped<FairplayService>();
+builder.Services.AddScoped<TeamService>();
 await builder.Build().RunAsync();

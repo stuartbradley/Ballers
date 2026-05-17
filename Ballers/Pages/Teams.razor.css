@@ -1,0 +1,318 @@
+/* ================================================================
+   TEAMS PAGE — meet the clubs
+   ================================================================ */
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes heroReveal {
+    from { clip-path: inset(100% 0 0 0); opacity: 0; transform: translateY(12px); }
+    to   { clip-path: inset(0% 0 0 0); opacity: 1; transform: translateY(0); }
+}
+
+@keyframes eyebrowPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0); }
+    50%       { box-shadow: 0 0 0 6px rgba(250, 204, 21, 0.18); }
+}
+
+/* ================================================================
+   PAGE SHELL
+   ================================================================ */
+
+.teams-page {
+    min-height: calc(100vh - 71px);
+    background: #07101E;
+}
+
+/* ================================================================
+   HERO BANNER
+   ================================================================ */
+
+.teams-hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 28vh;
+    overflow: hidden;
+    background: #0B1628;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.teams-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(135deg, rgba(30, 58, 138, 0.4) 0%, rgba(8, 13, 35, 0.85) 100%),
+        repeating-linear-gradient(
+            90deg,
+            transparent 0px,
+            transparent 59px,
+            rgba(255, 255, 255, 0.018) 59px,
+            rgba(255, 255, 255, 0.018) 60px
+        ),
+        repeating-linear-gradient(
+            0deg,
+            transparent 0px,
+            transparent 59px,
+            rgba(255, 255, 255, 0.018) 59px,
+            rgba(255, 255, 255, 0.018) 60px
+        );
+    pointer-events: none;
+}
+
+.teams-hero::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: 8%;
+    transform: translateY(-50%);
+    width: 380px;
+    height: 380px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    pointer-events: none;
+}
+
+.teams-hero-inner {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    padding: 52px 24px;
+}
+
+.teams-eyebrow {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--ballers-primary);
+    background: var(--ballers-accent);
+    padding: 5px 16px;
+    border-radius: 100px;
+    margin-bottom: 18px;
+    animation: eyebrowPulse 3s 1.2s ease-in-out infinite, fadeUp 0.5s ease both;
+}
+
+.teams-hero-inner h1 {
+    font-family: var(--font-display);
+    font-size: clamp(3.5rem, 8vw, 6rem);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: white;
+    line-height: 1;
+    margin: 0 0 14px;
+    animation: heroReveal 0.65s 0.15s ease both;
+}
+
+.teams-sub {
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+    margin: 0;
+    animation: fadeUp 0.6s 0.4s ease both;
+}
+
+/* ================================================================
+   BODY
+   ================================================================ */
+
+.teams-body {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 56px 32px 80px;
+}
+
+.teams-loading,
+.teams-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40vh;
+}
+
+.teams-empty {
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.3);
+}
+
+/* ================================================================
+   TEAM CARD GRID
+   ================================================================ */
+
+.teams-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+}
+
+/* ================================================================
+   TEAM CARD
+   ================================================================ */
+
+.team-card {
+    background: #111D33;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
+    padding: 0;
+    cursor: pointer;
+    text-align: center;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    animation: fadeUp 0.45s ease both;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: inherit;
+}
+
+.team-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(250, 204, 21, 0.3);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(250, 204, 21, 0.12);
+}
+
+.team-card:focus-visible {
+    outline: 2px solid var(--ballers-accent);
+    outline-offset: 2px;
+}
+
+/* ── Crest area ── */
+
+.team-card-crest-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: linear-gradient(160deg, #0F1E38 0%, #0B1628 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.team-card-crest-wrap::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: linear-gradient(to bottom, transparent, #111D33);
+    pointer-events: none;
+}
+
+.team-card-crest {
+    width: 72%;
+    height: 72%;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.12), 0 8px 32px rgba(0, 0, 0, 0.6);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.team-card:hover .team-card-crest {
+    transform: scale(1.04);
+    box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.28), 0 12px 40px rgba(0, 0, 0, 0.7);
+}
+
+.team-card-placeholder {
+    width: 72%;
+    height: 72%;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1e3a8a 0%, #0B1628 100%);
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.12), 0 8px 32px rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease;
+}
+
+.team-card:hover .team-card-placeholder {
+    transform: scale(1.04);
+}
+
+.team-card-placeholder span {
+    font-family: var(--font-display);
+    font-size: clamp(1.4rem, 3vw, 2rem);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--ballers-accent);
+}
+
+/* ── Info area ── */
+
+.team-card-info {
+    padding: 16px 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.team-card-name {
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: white;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.team-card-manager {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.38);
+    margin: 0;
+    letter-spacing: 0.04em;
+}
+
+/* Stagger card animations */
+.team-card:nth-child(1)  { animation-delay: 0.05s; }
+.team-card:nth-child(2)  { animation-delay: 0.10s; }
+.team-card:nth-child(3)  { animation-delay: 0.15s; }
+.team-card:nth-child(4)  { animation-delay: 0.20s; }
+.team-card:nth-child(5)  { animation-delay: 0.25s; }
+.team-card:nth-child(6)  { animation-delay: 0.30s; }
+.team-card:nth-child(7)  { animation-delay: 0.35s; }
+.team-card:nth-child(8)  { animation-delay: 0.40s; }
+.team-card:nth-child(9)  { animation-delay: 0.45s; }
+.team-card:nth-child(10) { animation-delay: 0.50s; }
+.team-card:nth-child(11) { animation-delay: 0.55s; }
+.team-card:nth-child(12) { animation-delay: 0.60s; }
+
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
+
+@media (max-width: 1024px) {
+    .teams-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 768px) {
+    .teams-hero-inner { padding: 40px 16px; }
+    .teams-body { padding: 36px 20px 60px; }
+    .teams-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+}
+
+@media (max-width: 480px) {
+    .teams-hero-inner { padding: 32px 14px; }
+    .teams-body { padding: 28px 16px 48px; }
+    .teams-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .team-card-info { padding: 12px 12px 16px; }
+    .team-card-name { font-size: 0.75rem; }
+}

@@ -31,7 +31,12 @@
                     }
                     @if (!string.IsNullOrEmpty(match.Location))
                     {
-                        <span class="meta-item">📍 @match.Location</span>
+                        <a class="meta-item meta-link"
+                           href="https://www.google.com/maps/search/?api=1&query=@Uri.EscapeDataString(string.IsNullOrEmpty(match.Postcode) ? match.Location : $"{match.Location} {match.Postcode}")"
+                           target="_blank"
+                           rel="noopener noreferrer">
+                            📍 @match.Location
+                        </a>
                     }
                 </div>
 

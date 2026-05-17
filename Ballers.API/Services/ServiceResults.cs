@@ -6,7 +6,7 @@ namespace Ballers.API.Services
     public record FixtureDetail(
         int Id, string HomeTeam, string AwayTeam,
         int HomeTeamId, int AwayTeamId,
-        DateTime? Kickoff, string? Location, int Week, bool IsPlayed,
+        DateTime? Kickoff, string? Location, string? Postcode, int Week, bool IsPlayed,
         int HomeScore, int AwayScore);
     public record FixtureSummary(
         int Id, string HomeTeam, string AwayTeam, int Week,

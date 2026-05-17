@@ -63,14 +63,21 @@
                         <h3>Season Record</h3>
                         <div class="stats-layout">
 
-                            <div class="chart-wrapper">
-                                <canvas id="winLossChart" style="@(chartReady ? "" : "visibility:hidden")"></canvas>
-                                @if (!chartReady)
-                                {
-                                    <div class="chart-spinner-overlay">
-                                        <LoadingSpinner />
-                                    </div>
-                                }
+                            <div class="chart-col">
+                                <div class="chart-wrapper">
+                                    <canvas id="winLossChart" style="@(chartReady ? "" : "visibility:hidden")"></canvas>
+                                    @if (!chartReady)
+                                    {
+                                        <div class="chart-spinner-overlay">
+                                            <LoadingSpinner />
+                                        </div>
+                                    }
+                                </div>
+                                <div class="chart-legend">
+                                    <span class="legend-item"><span class="legend-dot win-dot"></span>Wins</span>
+                                    <span class="legend-item"><span class="legend-dot draw-dot"></span>Draws</span>
+                                    <span class="legend-item"><span class="legend-dot loss-dot"></span>Losses</span>
+                                </div>
                             </div>
 
                             <div class="mini-stats">
@@ -119,34 +126,43 @@
                     </div>
 
                     <!-- Quick action tiles -->
-                    <NavLink class="dashboard-card action-card fixtures-action" href="/manager-fixtures">
-                        <div class="action-badge">FX</div>
-                        <div class="action-body">
-                            <h3>Fixtures</h3>
-                            <p>View and manage upcoming matches</p>
-                        </div>
-                        <span class="action-arrow">›</span>
-                    </NavLink>
+                    <div class="action-tiles-row">
 
-                    <NavLink class="dashboard-card action-card squad-action" href="/my-squad">
-                        <div class="action-badge squad-badge">SQ</div>
-                        <div class="action-body">
-                            <h3>My Squad</h3>
-                            <p>Manage your team and player list</p>
-                        </div>
-                        <span class="action-arrow">›</span>
-                    </NavLink>
-
-                    <AuthorizeView Roles="Admin">
-                        <NavLink class="dashboard-card action-card admin-action" href="/admin">
-                            <div class="action-badge admin-badge">AD</div>
+                        <NavLink class="dashboard-card action-card myteam-action" href="/my-team">
                             <div class="action-body">
-                                <h3>Admin Panel</h3>
-                                <p>Manage seasons and league setup</p>
+                                <h3>My Team</h3>
+                                <p>Edit profile, crest and contact details</p>
                             </div>
                             <span class="action-arrow">›</span>
                         </NavLink>
-                    </AuthorizeView>
+
+                        <NavLink class="dashboard-card action-card fixtures-action" href="/manager-fixtures">
+                            <div class="action-body">
+                                <h3>Fixtures</h3>
+                                <p>View and manage upcoming matches</p>
+                            </div>
+                            <span class="action-arrow">›</span>
+                        </NavLink>
+
+                        <NavLink class="dashboard-card action-card squad-action" href="/my-squad">
+                            <div class="action-body">
+                                <h3>My Squad</h3>
+                                <p>Manage your team and player list</p>
+                            </div>
+                            <span class="action-arrow">›</span>
+                        </NavLink>
+
+                        <AuthorizeView Roles="Admin">
+                            <NavLink class="dashboard-card action-card admin-action" href="/admin">
+                                <div class="action-body">
+                                    <h3>Admin Panel</h3>
+                                    <p>Manage seasons and league setup</p>
+                                </div>
+                                <span class="action-arrow">›</span>
+                            </NavLink>
+                        </AuthorizeView>
+
+                    </div>
 
                 </div>
             }

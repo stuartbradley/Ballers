@@ -1,0 +1,125 @@
+@page "/team/{TeamId:int}"
+@using Ballers.Models
+@using Ballers.Services
+@inject TeamService TeamService
+@inject HttpClient Http
+
+<PageTitle>@(profile?.Name ?? "Team Profile")</PageTitle>
+
+<div class="team-profile-page">
+
+    @if (isLoading)
+    {
+        <div class="profile-loading">
+            <LoadingSpinner />
+        </div>
+    }
+    else if (profile == null)
+    {
+        <div class="profile-404">
+            <h2>Team not found</h2>
+            <NavLink href="/">Back to home</NavLink>
+        </div>
+    }
+    else
+    {
+        <div class="profile-hero">
+            <div class="profile-hero-inner">
+                <div class="profile-crest-wrap">
+                    @if (!string.IsNullOrEmpty(profile.ProfileImageUrl))
+                    {
+                        <img class="profile-crest"
+                             src="@(Http.BaseAddress!.ToString().TrimEnd('/') + profile.ProfileImageUrl)"
+                             alt="@profile.Name crest" />
+                    }
+                    else
+                    {
+                        <div class="profile-crest-placeholder">
+                            <span>@Initials(profile.Name)</span>
+                        </div>
+                    }
+                </div>
+                <div class="profile-hero-info">
+                    <p class="profile-eyebrow">Club Profile</p>
+                    <h1 class="profile-team-name">@profile.Name</h1>
+                    <div class="profile-meta-pills">
+                        @if (profile.YearFormed.HasValue)
+                        {
+                            <span class="meta-pill">Est. @profile.YearFormed</span>
+                        }
+                        @if (!string.IsNullOrEmpty(profile.ManagerName))
+                        {
+                            <span class="meta-pill">@profile.ManagerName</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-body">
+
+            @if (!string.IsNullOrEmpty(profile.Bio))
+            {
+                <div class="profile-card bio-card">
+                    <h3>About the Club</h3>
+                    <p class="bio-text">@profile.Bio</p>
+                </div>
+            }
+
+            <div class="profile-card contact-card">
+                <h3>Club Info</h3>
+                <div class="info-grid">
+                    @if (!string.IsNullOrEmpty(profile.ManagerName))
+                    {
+                        <div class="info-row">
+                            <span class="info-label">Manager</span>
+                            <span class="info-value">@profile.ManagerName</span>
+                        </div>
+                    }
+                    @if (profile.YearFormed.HasValue)
+                    {
+                        <div class="info-row">
+                            <span class="info-label">Founded</span>
+                            <span class="info-value">@profile.YearFormed</span>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(profile.PhoneNumber))
+                    {
+                        <div class="info-row">
+                            <span class="info-label">Contact</span>
+                            <a class="info-value info-phone" href="tel:@profile.PhoneNumber">@profile.PhoneNumber</a>
+                        </div>
+                    }
+                </div>
+                @if (string.IsNullOrEmpty(profile.ManagerName) && !profile.YearFormed.HasValue && string.IsNullOrEmpty(profile.PhoneNumber))
+                {
+                    <p class="no-info">No club information available yet.</p>
+                }
+            </div>
+
+        </div>
+    }
+
+</div>
+
+@code {
+    [Parameter] public int TeamId { get; set; }
+
+    private TeamProfileDto? profile;
+    private bool isLoading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        profile = await TeamService.GetProfile(TeamId);
+        isLoading = false;
+    }
+
+    static string Initials(string name)
+    {
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length >= 2
+            ? $"{parts[0][0]}{parts[1][0]}".ToUpper()
+            : name.Length >= 2 ? name[..2].ToUpper() : name.ToUpper();
+    }
+}

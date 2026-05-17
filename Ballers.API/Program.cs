@@ -56,6 +56,9 @@ builder.Services.ConfigureApplicationCookie(options =>
     };
 });
 
+builder.Services.AddHttpClient("Anthropic");
+builder.Services.AddSingleton<ImageModerationService>();
+builder.Services.AddScoped<IMatchEventService, MatchEventService>();
 builder.Services.AddScoped<IFairplayService, FairplayService>();
 builder.Services.AddScoped<IPenaltyService, PenaltyService>();
 builder.Services.AddScoped<IStatsService, StatsService>();
@@ -98,6 +101,16 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Ensure wwwroot and uploads directory exist, then serve static files (team profile images)
+var webRoot = app.Environment.WebRootPath
+    ?? Path.Combine(app.Environment.ContentRootPath, "wwwroot");
+Directory.CreateDirectory(Path.Combine(webRoot, "uploads", "teams"));
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(webRoot),
+    RequestPath = ""
+});
 
 app.UseRouting();
 

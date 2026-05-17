@@ -79,7 +79,7 @@ namespace Ballers.API.Controllers
             var fixture = await _fixtures.GetByIdAsync(fixtureId);
             if (fixture == null) return NotFound();
 
-            await _fixtures.UpdateScheduleAsync(fixtureId, request.Location, request.KickOffTime);
+            await _fixtures.UpdateScheduleAsync(fixtureId, request.Location, request.Postcode, request.KickOffTime);
             return Ok();
         }
 

@@ -8,12 +8,21 @@ namespace Ballers.API.Data
     {
         private static readonly Random _rng = new(42);
 
-        private static readonly string[] TeamNames =
+        private static readonly (string Name, string Manager, int YearFormed, string Phone, string Bio)[] TeamData =
         [
-            "Northfield United", "Southgate City", "Eastbrook Rovers",
-            "Westfield Athletic", "Riverside FC", "Hilltop Town",
-            "Parkside Warriors", "Lakeside Dynamos", "Bridgend Rangers", "Moorland Celtic"
+            ("Northfield United",   "Gary Thornton",   2008, "07700 900101", "A community club with a big heart. Northfield United was founded by a group of mates who just wanted a Sunday kickabout and ended up building something special."),
+            ("Southgate City",      "Steve Halliwell",  2011, "07700 900102", "Southgate City play fast, direct football and have finished in the top three for the past two seasons. Ambition is high and the squad is hungry."),
+            ("Eastbrook Rovers",    "Dave Partridge",   2005, "07700 900103", "One of the oldest clubs in the league, Eastbrook Rovers pride themselves on loyalty and a never-say-die attitude. Most of the squad have been together for five-plus years."),
+            ("Westfield Athletic",  "Mark Booker",      2014, "07700 900104", "Westfield Athletic are the entertainers of the division. Free-flowing football, passionate supporters and a knack for the dramatic late winner."),
+            ("Riverside FC",        "Jon Mercer",       2009, "07700 900105", "Based next to the river park, Riverside FC are known for their tight-knit dressing room. They play for each other first and the result takes care of itself."),
+            ("Hilltop Town",        "Carl Fenton",      2016, "07700 900106", "Hilltop Town are the new kids on the block but don't let that fool you. They've hit the ground running since joining the league and are only getting stronger."),
+            ("Parkside Warriors",   "Andy Stokes",      2003, "07700 900107", "The Warriors are steeped in local history. Three league titles to their name, a wall full of trophies and a determination to add to the collection."),
+            ("Lakeside Dynamos",    "Phil Carpenter",   2012, "07700 900108", "Lakeside Dynamos are built on a high-energy pressing style that wears opponents down. Fitness-first, team-first — always a tough afternoon for the opposition."),
+            ("Bridgend Rangers",    "Simon Okafor",     2007, "07700 900109", "Bridgend Rangers have a rich tradition of bringing through young talent. The club is as much about development as it is results."),
+            ("Moorland Celtic",     "Craig Norris",     2010, "07700 900110", "Moorland Celtic play their home games on the best pitch in the league and intend to make it a fortress. Solid, organised and hard to beat.")
         ];
+
+        private static string[] TeamNames => TeamData.Select(t => t.Name).ToArray();
 
         private static readonly string[] FirstNames =
         [
@@ -29,11 +38,16 @@ namespace Ballers.API.Data
             "Wood", "Jackson", "Hughes", "Young", "Green"
         ];
 
-        private static readonly string[] Locations =
+        private static readonly (string Location, string Postcode)[] Venues =
         [
-            "Ashton Gate Park", "Victoria Road Pitch", "Kings Meadow",
-            "Central Sports Ground", "The Rec", "Riverside Complex",
-            "Memorial Ground", "Elmwood Park"
+            ("Ashton Gate Park",       "BS3 2EJ"),
+            ("Victoria Road Pitch",    "M14 7NP"),
+            ("Kings Meadow",           "LE3 9FD"),
+            ("Central Sports Ground",  "B15 2TT"),
+            ("The Rec",                "BA1 1UE"),
+            ("Riverside Complex",      "CF10 5SD"),
+            ("Memorial Ground",        "BS7 9AQ"),
+            ("Elmwood Park",           "NG8 3RR")
         ];
 
         private static readonly string[] PositionTemplate =
@@ -58,7 +72,14 @@ namespace Ballers.API.Data
 
         private static async Task<List<Team>> SeedTeams(ApplicationDbContext db, UserManager<ApplicationUser> userManager)
         {
-            var teams = TeamNames.Select(name => new Team { Name = name }).ToList();
+            var teams = TeamData.Select(t => new Team
+            {
+                Name        = t.Name,
+                ManagerName = t.Manager,
+                YearFormed  = t.YearFormed,
+                PhoneNumber = t.Phone,
+                Bio         = t.Bio
+            }).ToList();
             db.Teams.AddRange(teams);
             await db.SaveChangesAsync();
 
@@ -152,17 +173,19 @@ namespace Ballers.API.Data
                 var windowEnd = windowStart.AddDays(13);
                 var kickoff = windowStart.AddDays(6).Date + TimeSpan.FromHours(14);
 
+                var venue = Venues[_rng.Next(Venues.Length)];
                 fixtures.Add(new Fixture
                 {
-                    HomeTeamId = home.Id,
-                    AwayTeamId = away.Id,
-                    SeasonId = season.Id,
+                    HomeTeamId  = home.Id,
+                    AwayTeamId  = away.Id,
+                    SeasonId    = season.Id,
                     MatchNumber = matchNumber++,
                     WindowStart = windowStart,
-                    WindowEnd = windowEnd,
-                    Kickoff = kickoff,
-                    Location = Locations[_rng.Next(Locations.Length)],
-                    IsPlayed = true
+                    WindowEnd   = windowEnd,
+                    Kickoff     = kickoff,
+                    Location    = venue.Location,
+                    Postcode    = venue.Postcode,
+                    IsPlayed    = true
                 });
             }
 

@@ -9,6 +9,7 @@ namespace Ballers.Shared
     public class UpdateFixtureScheduleRequest
     {
         public string Location { get; set; } = "";
+        public string? Postcode { get; set; }
         public DateTime KickOffTime { get;set;}
     }
 }

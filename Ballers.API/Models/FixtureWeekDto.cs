@@ -15,5 +15,6 @@
         public string Day { get; set; } = "";
         public string Time { get; set; } = "";
         public string Location { get; set; } = "";
+        public string Postcode { get; set; } = "";
     }
 }

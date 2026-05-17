@@ -18,7 +18,7 @@ namespace Ballers.API.Services
         Task UpdateSquadAsync(int fixtureId, List<int> playerIds, int? teamId);
         Task<List<PlayerStatDto>> GetStatsAsync(int fixtureId);
         Task SubmitStatsAsync(int fixtureId, List<PlayerStatDto> stats, int? teamId);
-        Task<bool> UpdateScheduleAsync(int fixtureId, string? location, DateTime kickoff);
+        Task<bool> UpdateScheduleAsync(int fixtureId, string? location, string? postcode, DateTime kickoff);
         Task GenerateFixturesAsync(List<int> teamIds, DateTime startDate);
     }
 
@@ -40,7 +40,7 @@ namespace Ballers.API.Services
             return new FixtureDetail(
                 f.Id, f.HomeTeam!.Name, f.AwayTeam!.Name,
                 f.HomeTeamId, f.AwayTeamId,
-                f.Kickoff, f.Location, f.MatchNumber, f.IsPlayed,
+                f.Kickoff, f.Location, f.Postcode, f.MatchNumber, f.IsPlayed,
                 f.HomeScore, f.AwayScore);
         }
 
@@ -155,7 +155,8 @@ namespace Ballers.API.Services
                     Away = f.AwayTeam!.Name,
                     Day = f.Kickoff?.ToString("dddd") ?? "",
                     Time = f.Kickoff?.ToString("HH:mm") ?? "",
-                    Location = f.Location ?? ""
+                    Location = f.Location ?? "",
+                    Postcode = f.Postcode ?? ""
                 }).ToList(),
                 Byes = byes
             };
@@ -203,7 +204,8 @@ namespace Ballers.API.Services
                             Away = f.AwayTeam!.Name,
                             Day = f.Kickoff?.ToString("dddd") ?? "",
                             Time = f.Kickoff?.ToString("HH:mm") ?? "",
-                            Location = f.Location ?? ""
+                            Location = f.Location ?? "",
+                            Postcode = f.Postcode ?? ""
                         }).ToList(),
                         Byes = byes
                     };
@@ -344,12 +346,13 @@ namespace Ballers.API.Services
             await transaction.CommitAsync();
         }
 
-        public async Task<bool> UpdateScheduleAsync(int fixtureId, string? location, DateTime kickoff)
+        public async Task<bool> UpdateScheduleAsync(int fixtureId, string? location, string? postcode, DateTime kickoff)
         {
             var fixture = await _db.Fixtures.FindAsync(fixtureId);
             if (fixture == null) return false;
 
             fixture.Location = location;
+            fixture.Postcode = postcode;
             fixture.Kickoff = kickoff;
             await _db.SaveChangesAsync();
             return true;

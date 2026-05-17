@@ -1,94 +1,100 @@
-/* ===== WEEK CARD ===== */
+/* ===== WEEK SECTION ===== */
 
 .week-card {
-    background: var(--ballers-card);
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 4px 24px rgba(15,23,42,0.1);
-    border: 1px solid rgba(30,58,138,0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
-/* ===== WEEK HEADER — dark scoreboard strip ===== */
+/* ===== WEEK HEADER ===== */
 
 .week-header {
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 14px 22px;
-    background: var(--ballers-primary);
-    border-bottom: 2px solid var(--ballers-accent);
+    gap: 14px;
+    padding: 0 2px;
+    margin-bottom: 4px;
+}
+
+.week-header::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.07);
 }
 
 .week-badge {
-    background: var(--ballers-accent);
-    color: #080D23;
     font-family: var(--font-display);
-    font-size: 0.68rem;
+    font-size: 0.6rem;
     font-weight: 700;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
+    color: #07101E;
+    background: var(--ballers-accent);
     padding: 4px 12px;
-    border-radius: 2px;
+    border-radius: 3px;
     white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .date-range {
-    font-size: 0.82rem;
-    color: rgba(255,255,255,0.55);
+    font-family: var(--font-display);
+    font-size: 0.7rem;
     font-weight: 500;
-    letter-spacing: 0.04em;
-}
-
-/* ===== FIXTURE GRID ===== */
-
-.fixtures-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 1px;
-    background: rgba(30,58,138,0.06);
+    letter-spacing: 0.06em;
+    color: rgba(255, 255, 255, 0.3);
+    white-space: nowrap;
 }
 
 /* ===== FIXTURE CARD ===== */
 
+.fixtures-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
 .fixture-card {
-    background: white;
-    padding: 24px 24px 18px;
-    transition: background 0.18s;
+    background: #111D33;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 22px 28px 18px;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
 }
 
 .fixture-card:hover {
-    background: rgba(30,58,138,0.025);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+    border-color: rgba(250, 204, 21, 0.18);
 }
 
-/* ===== MATCHUP ROW ===== */
+/* ===== MATCHUP ===== */
 
 .matchup {
     display: grid;
-    grid-template-columns: 1fr 48px 1fr;
+    grid-template-columns: 1fr 52px 1fr;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 14px;
+    gap: 12px;
 }
 
 .team-name {
     font-family: var(--font-display);
-    font-weight: 600;
+    font-weight: 700;
     font-size: 1rem;
-    color: var(--ballers-text);
-    line-height: 1.25;
-    letter-spacing: 0.03em;
+    color: white;
+    line-height: 1.2;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
 }
 
 .home-team { text-align: right; }
 .away-team { text-align: left; }
 
-/* Bold VS ring — yellow ring, navy text */
 .vs-ring {
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    border: 2px solid var(--ballers-accent);
+    border: 1.5px solid rgba(250, 204, 21, 0.28);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -96,10 +102,16 @@
     font-size: 0.6rem;
     font-weight: 700;
     letter-spacing: 0.08em;
-    color: var(--ballers-primary);
-    background: rgba(250,204,21,0.08);
+    color: var(--ballers-accent);
+    background: rgba(250, 204, 21, 0.05);
     flex-shrink: 0;
     margin: 0 auto;
+    transition: border-color 0.18s ease, background 0.18s ease;
+}
+
+.fixture-card:hover .vs-ring {
+    border-color: rgba(250, 204, 21, 0.55);
+    background: rgba(250, 204, 21, 0.1);
 }
 
 /* ===== META INFO ===== */
@@ -108,23 +120,34 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 18px;
+    gap: 20px;
     flex-wrap: wrap;
-    padding-top: 12px;
-    border-top: 1px solid rgba(30,58,138,0.07);
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .meta-item {
-    font-size: 0.78rem;
-    color: var(--ballers-text-muted);
+    font-size: 0.74rem;
+    color: rgba(255, 255, 255, 0.35);
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 5px;
+    letter-spacing: 0.02em;
 }
 
 .meta-item.tbd {
     font-style: italic;
-    opacity: 0.55;
+    opacity: 0.45;
+}
+
+.meta-link {
+    text-decoration: none;
+    transition: color 0.15s;
+}
+
+.meta-link:hover {
+    color: var(--ballers-accent);
 }
 
 /* ===== BYE STRIP ===== */
@@ -133,55 +156,49 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 10px 22px;
-    background: rgba(100,116,139,0.04);
-    border-top: 1px solid rgba(30,58,138,0.06);
+    padding: 10px 4px 0;
     flex-wrap: wrap;
 }
 
 .bye-label {
     font-family: var(--font-display);
-    font-size: 0.62rem;
+    font-size: 0.58rem;
     font-weight: 700;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: var(--ballers-text-muted);
-    background: var(--ballers-surface);
+    color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     padding: 3px 10px;
     border-radius: 3px;
     flex-shrink: 0;
 }
 
 .bye-team {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-weight: 600;
-    color: var(--ballers-text-muted);
+    color: rgba(255, 255, 255, 0.3);
+    letter-spacing: 0.03em;
 }
 
 .bye-team:not(:last-child)::after {
     content: "·";
     margin-left: 10px;
-    opacity: 0.4;
+    opacity: 0.35;
 }
 
 /* ===== RESPONSIVE ===== */
 
 @media (max-width: 768px) {
-    .week-header   { padding: 12px 16px; gap: 10px; }
-    .fixtures-grid { grid-template-columns: 1fr; }
-    .fixture-card  { padding: 18px 16px 14px; }
+    .fixture-card { padding: 18px 18px 14px; }
+    .matchup { grid-template-columns: 1fr 44px 1fr; gap: 10px; }
+    .team-name { font-size: 0.9rem; }
 }
 
 @media (max-width: 480px) {
-    .team-name { font-size: 0.88rem; }
-
-    .vs-ring {
-        width: 38px;
-        height: 38px;
-        font-size: 0.56rem;
-    }
-
-    .matchup {
-        grid-template-columns: 1fr 38px 1fr;
-    }
+    .fixture-card { padding: 16px 14px 13px; }
+    .team-name { font-size: 0.82rem; }
+    .vs-ring { width: 38px; height: 38px; font-size: 0.54rem; }
+    .matchup { grid-template-columns: 1fr 38px 1fr; gap: 8px; }
+    .meta-item { font-size: 0.7rem; }
 }

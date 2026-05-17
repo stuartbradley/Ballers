@@ -6,7 +6,6 @@ namespace Ballers.API.Controllers
 {
     [ApiController]
     [Route("api/teams")]
-    [Authorize(Roles = "Admin")]
     public class TeamsController : ControllerBase
     {
         private readonly ITeamService _teams;
@@ -14,6 +13,7 @@ namespace Ballers.API.Controllers
         public TeamsController(ITeamService teams) => _teams = teams;
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> GetTeams()
             => Ok(await _teams.GetTeamsAsync());
     }

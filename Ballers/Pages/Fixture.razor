@@ -106,7 +106,20 @@
                         </div>
                         <div class="info-card">
                             <span class="label">Location</span>
-                            <span class="info-value">@(fixture.Location ?? "Not set")</span>
+                            <span class="info-value">
+                                @if (!string.IsNullOrEmpty(fixture.Location))
+                                {
+                                    @fixture.Location
+                                    @if (!string.IsNullOrEmpty(fixture.Postcode))
+                                    {
+                                        <span class="info-postcode">, @fixture.Postcode</span>
+                                    }
+                                }
+                                else
+                                {
+                                    @("Not set")
+                                }
+                            </span>
                         </div>
                         <div class="info-card">
                             <span class="label">Kickoff</span>
@@ -116,6 +129,25 @@
 
                     @if (isAdmin)
                     {
+                        <div class="schedule-section">
+                            <h3>Schedule</h3>
+                            <div class="schedule-editor">
+                                <div class="schedule-field">
+                                    <label>Location</label>
+                                    <input type="text" class="stat-input schedule-input" placeholder="Venue name" @bind="scheduleLocation" />
+                                </div>
+                                <div class="schedule-field">
+                                    <label>Postcode</label>
+                                    <input type="text" class="stat-input schedule-input" placeholder="e.g. M1 1AE" @bind="schedulePostcode" />
+                                </div>
+                                <div class="schedule-field">
+                                    <label>Kickoff</label>
+                                    <input type="datetime-local" class="stat-input schedule-input" @bind="scheduleKickoff" />
+                                </div>
+                                <button class="primary-btn" @onclick="SaveSchedule">Save Schedule</button>
+                            </div>
+                        </div>
+
                         <div class="fairplay-section">
                             <h3>Fairplay Ratings</h3>
                             <div class="fairplay-editor">
@@ -288,6 +320,10 @@
     private int fairplayHomeRating = 5;
     private int fairplayAwayRating = 5;
 
+    private string scheduleLocation = "";
+    private string? schedulePostcode;
+    private DateTime scheduleKickoff = DateTime.Now;
+
     private bool toastVisible = false;
     private bool toastSuccess = true;
     private string toastMessage = "";
@@ -410,11 +446,23 @@
 
         if (isAdmin)
         {
+            scheduleLocation = fixture.Location ?? "";
+            schedulePostcode = fixture.Postcode;
+            scheduleKickoff = fixture.Kickoff ?? DateTime.Now;
+
             var fairplay = await FairplayService.GetRatings(fixture.Id);
             fairplayHomeRating = fairplay?.HomeRating ?? 5;
             fairplayAwayRating = fairplay?.AwayRating ?? 5;
         }
     }
+
+    async Task SaveSchedule()
+    {
+        await FixtureService.UpdateFixtureSchedule(fixture!.Id, scheduleLocation, schedulePostcode, scheduleKickoff);
+        fixture = await FixtureService.GetFixture(fixture!.Id);
+        await ShowToast("Schedule saved.");
+    }
+
 
     async Task SaveFairplay()
     {

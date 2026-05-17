@@ -1,0 +1,332 @@
+/* ================================================================
+   MY TEAM — manager edit page
+   ================================================================ */
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.my-team-page {
+    min-height: calc(100vh - 71px);
+    background: #07101E;
+}
+
+.my-team-loading,
+.my-team-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    gap: 16px;
+    color: rgba(255,255,255,0.4);
+}
+
+.my-team-error h2 {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: white;
+}
+
+/* ================================================================
+   HERO
+   ================================================================ */
+
+.my-team-hero {
+    background: #0B1628;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    position: relative;
+    overflow: hidden;
+}
+
+.my-team-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        repeating-linear-gradient(90deg, transparent 0px, transparent 79px, rgba(255,255,255,0.012) 79px, rgba(255,255,255,0.012) 80px),
+        repeating-linear-gradient(0deg,  transparent 0px, transparent 79px, rgba(255,255,255,0.012) 79px, rgba(255,255,255,0.012) 80px);
+    pointer-events: none;
+}
+
+.my-team-hero::after {
+    content: "";
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, var(--ballers-accent) 0%, rgba(250,204,21,0.15) 100%);
+}
+
+.my-team-hero-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 40px 32px;
+    animation: fadeUp 0.4s ease both;
+}
+
+.my-team-eyebrow {
+    font-family: var(--font-display);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--ballers-accent);
+    opacity: 0.7;
+    margin-bottom: 8px;
+}
+
+.my-team-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: white;
+    margin: 0;
+    line-height: 1.05;
+}
+
+/* ================================================================
+   BODY — cards
+   ================================================================ */
+
+.my-team-body {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 32px 32px 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.mt-card {
+    background: #111D33;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 28px 32px;
+    animation: fadeUp 0.4s ease both;
+}
+
+.mt-card h3 {
+    font-family: var(--font-display);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    margin-bottom: 22px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+/* ================================================================
+   IMAGE SECTION
+   ================================================================ */
+
+.image-card { border-left: 3px solid var(--ballers-pitch); }
+
+.image-section {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    flex-wrap: wrap;
+}
+
+.current-image-wrap { flex-shrink: 0; }
+
+.current-image {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255,255,255,0.1);
+    box-shadow: 0 0 0 3px rgba(250,204,21,0.15);
+}
+
+.image-placeholder {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1e3a8a 0%, #0B1628 100%);
+    border: 2px solid rgba(255,255,255,0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.image-placeholder span {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--ballers-accent);
+}
+
+.image-upload-area {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.upload-hint {
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.3);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.file-input {
+    display: none;
+}
+
+.upload-btn {
+    display: inline-block;
+    padding: 9px 22px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 6px;
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.7);
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.upload-btn:hover,
+.upload-btn:focus {
+    background: rgba(255,255,255,0.12);
+    border-color: rgba(255,255,255,0.25);
+    color: white;
+}
+
+.upload-btn.uploading {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ================================================================
+   FORM
+   ================================================================ */
+
+.mt-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    position: relative;
+}
+
+.field-group label {
+    font-family: var(--font-display);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.38);
+}
+
+.field-group input,
+.field-group textarea {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 7px;
+    padding: 11px 14px;
+    font-family: var(--font-main);
+    font-size: 0.9rem;
+    color: white;
+    transition: border-color 0.18s, background 0.18s;
+    outline: none;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.field-group input::placeholder,
+.field-group textarea::placeholder {
+    color: rgba(255,255,255,0.2);
+}
+
+.field-group input:focus,
+.field-group textarea:focus {
+    border-color: var(--ballers-accent);
+    background: rgba(255,255,255,0.06);
+}
+
+.field-group textarea {
+    resize: vertical;
+    min-height: 110px;
+    line-height: 1.6;
+}
+
+.char-count {
+    font-size: 0.7rem;
+    color: rgba(255,255,255,0.2);
+    align-self: flex-end;
+    margin-top: -4px;
+}
+
+.field-error {
+    font-size: 0.8rem;
+    color: #f87171;
+    margin: 0;
+    font-weight: 500;
+}
+
+.field-success {
+    font-size: 0.8rem;
+    color: #4ade80;
+    margin: 0;
+    font-weight: 500;
+}
+
+.save-btn {
+    align-self: flex-start;
+    padding: 12px 36px;
+    background: var(--ballers-accent);
+    color: #07101E;
+    border: none;
+    border-radius: 6px;
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.18s, opacity 0.18s;
+}
+
+.save-btn:hover:not(:disabled) { background: white; }
+.save-btn.saving,
+.save-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
+
+@media (max-width: 768px) {
+    .my-team-hero-inner { padding: 32px 20px; }
+    .my-team-body { padding: 20px 16px 48px; gap: 14px; }
+    .mt-card { padding: 20px 18px; }
+
+    .field-row { grid-template-columns: 1fr; }
+
+    .image-section { flex-direction: column; align-items: flex-start; gap: 16px; }
+}
