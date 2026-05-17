@@ -58,7 +58,6 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 builder.Services.AddHttpClient("Anthropic");
 builder.Services.AddSingleton<ImageModerationService>();
-builder.Services.AddScoped<IMatchEventService, MatchEventService>();
 builder.Services.AddScoped<IFairplayService, FairplayService>();
 builder.Services.AddScoped<IPenaltyService, PenaltyService>();
 builder.Services.AddScoped<IStatsService, StatsService>();
