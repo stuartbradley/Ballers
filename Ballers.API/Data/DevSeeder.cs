@@ -63,11 +63,28 @@ namespace Ballers.API.Data
             var db = services.GetRequiredService<ApplicationDbContext>();
             var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
 
+            await UpdateTeamProfiles(db);
+
             if (await db.Teams.AnyAsync()) return;
 
             var teams = await SeedTeams(db, userManager);
             var players = await SeedPlayers(db, teams);
             await SeedSeason(db, teams, players);
+        }
+
+        private static async Task UpdateTeamProfiles(ApplicationDbContext db)
+        {
+            var existing = await db.Teams.ToListAsync();
+            foreach (var team in existing)
+            {
+                var data = TeamData.FirstOrDefault(t => t.Name == team.Name);
+                if (data == default) continue;
+                team.ManagerName = data.Manager;
+                team.YearFormed  = data.YearFormed;
+                team.PhoneNumber = data.Phone;
+                team.Bio         = data.Bio;
+            }
+            await db.SaveChangesAsync();
         }
 
         private static async Task<List<Team>> SeedTeams(ApplicationDbContext db, UserManager<ApplicationUser> userManager)
