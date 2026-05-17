@@ -289,6 +289,14 @@ namespace Ballers.API.Services
             var fixture = await _db.Fixtures.FindAsync(fixtureId)
                 ?? throw new KeyNotFoundException($"Fixture {fixtureId} not found.");
 
+            // Enforce at most one MOTM per submission
+            bool foundMotm = false;
+            foreach (var s in stats)
+            {
+                if (s.IsManOfTheMatch && !foundMotm) foundMotm = true;
+                else s.IsManOfTheMatch = false;
+            }
+
             var playerIds = stats.Select(s => s.PlayerId).ToList();
 
             // When teamId is supplied only process stats for that team's players

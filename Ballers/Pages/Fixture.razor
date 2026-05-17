@@ -207,7 +207,7 @@
                                 <span class="player-name">@player.Name</span>
                                 <input type="number" min="0" class="stat-input" @bind="player.Goals" />
                                 <input type="number" min="0" class="stat-input" @bind="player.Assists" />
-                                <input type="checkbox" class="motm-checkbox" @bind="player.IsMotm" />
+                                <input type="checkbox" class="motm-checkbox" checked="@player.IsMotm" @onchange="@(() => SelectMotm(player))" />
                                 <input type="checkbox" class="motm-checkbox yellow-card" @bind="player.HasYellowCard" />
                                 <input type="checkbox" class="motm-checkbox red-card" @bind="player.HasRedCard" />
                             </div>
@@ -312,6 +312,7 @@
 
     private int previewHomeScore = 0;
     private int previewAwayScore = 0;
+    private int opponentSavedScore = 0;
     private bool isUserHome = false;
     private List<PenaltyKickViewModel> penaltyKicks = new();
     private List<PenaltyKickResultDto> opponentKicks = new();
@@ -388,6 +389,7 @@
 
         isUserHome = user?.TeamId == fixture.HomeTeamId;
         isAdmin = user?.IsAdmin ?? false;
+        opponentSavedScore = isUserHome ? fixture.AwayScore : fixture.HomeScore;
 
         int teamId = isUserHome ? fixture.HomeTeamId : fixture.AwayTeamId;
 
@@ -478,12 +480,20 @@
 
     void UpdateScorePreview()
     {
-        previewHomeScore = players.Where(x => x.TeamId == fixture.HomeTeamId).Sum(x => x.Goals);
-        previewAwayScore = players.Where(x => x.TeamId == fixture.AwayTeamId).Sum(x => x.Goals);
+        var myGoals = players.Sum(x => x.Goals);
+        if (isUserHome) { previewHomeScore = myGoals; previewAwayScore = opponentSavedScore; }
+        else             { previewHomeScore = opponentSavedScore; previewAwayScore = myGoals; }
         StateHasChanged();
     }
 
     void SelectTab(string tab) => activeTab = tab;
+
+    void SelectMotm(PlayerStatViewModel selected)
+    {
+        bool wasSelected = selected.IsMotm;
+        foreach (var p in players) p.IsMotm = false;
+        if (!wasSelected) selected.IsMotm = true;
+    }
 
     async Task SaveSquad()
     {
@@ -539,6 +549,18 @@
 
     async Task SubmitStats()
     {
+        if (!players.Any(p => p.IsMotm))
+        {
+            await ShowToast("Please select a Man of the Match.", success: false);
+            return;
+        }
+
+        if (players.Any(p => p.Goals < 0 || p.Assists < 0))
+        {
+            await ShowToast("Goals and assists cannot be negative.", success: false);
+            return;
+        }
+
         var stats = players.Select(p => new FixturePlayerStatInput
         {
             PlayerId = p.PlayerId,
