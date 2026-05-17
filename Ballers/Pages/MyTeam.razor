@@ -1,0 +1,223 @@
+@page "/my-team"
+@attribute [Authorize]
+@using Ballers.Models
+@using Ballers.Services
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@inject TeamService TeamService
+@inject HttpClient Http
+@inject AuthenticationStateProvider AuthProvider
+
+<PageTitle>My Team</PageTitle>
+
+<div class="my-team-page">
+
+    @if (isLoading)
+    {
+        <div class="my-team-loading"><LoadingSpinner /></div>
+    }
+    else if (teamId == null)
+    {
+        <div class="my-team-error">
+            <h2>No team assigned</h2>
+            <p>Your account is not linked to a team. Contact an admin.</p>
+        </div>
+    }
+    else
+    {
+        <div class="my-team-hero">
+            <div class="my-team-hero-inner">
+                <p class="my-team-eyebrow">Team Settings</p>
+                <h1 class="my-team-title">@(form.Name.Length > 0 ? form.Name : "My Team")</h1>
+            </div>
+        </div>
+
+        <div class="my-team-body">
+
+            <!-- Profile image -->
+            <div class="mt-card image-card">
+                <h3>Club Crest / Photo</h3>
+                <div class="image-section">
+                    <div class="current-image-wrap">
+                        @if (!string.IsNullOrEmpty(currentImageUrl))
+                        {
+                            <img class="current-image"
+                                 src="@(Http.BaseAddress!.ToString().TrimEnd('/') + currentImageUrl)"
+                                 alt="Club image" />
+                        }
+                        else
+                        {
+                            <div class="image-placeholder">
+                                <span>@Initials(form.Name)</span>
+                            </div>
+                        }
+                    </div>
+                    <div class="image-upload-area">
+                        <p class="upload-hint">JPEG, PNG or WebP · Max 5 MB<br />Images are checked for inappropriate content before saving.</p>
+                        <InputFile OnChange="OnImageSelected" accept="image/jpeg,image/png,image/webp" class="file-input" id="imageInput" />
+                        <label for="imageInput" class="upload-btn @(isUploadingImage ? "uploading" : "")">
+                            @(isUploadingImage ? "Uploading…" : "Choose image")
+                        </label>
+                        @if (!string.IsNullOrEmpty(imageError))
+                        {
+                            <p class="field-error">@imageError</p>
+                        }
+                        @if (imageSuccess)
+                        {
+                            <p class="field-success">Image updated.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile form -->
+            <div class="mt-card">
+                <h3>Club Details</h3>
+                <div class="mt-form">
+
+                    <div class="field-group">
+                        <label>Team Name</label>
+                        <input type="text" @bind="form.Name" @bind:event="oninput" placeholder="e.g. Riverside FC" maxlength="80" />
+                    </div>
+
+                    <div class="field-group">
+                        <label>Manager Name</label>
+                        <input type="text" @bind="form.ManagerName" placeholder="e.g. John Smith" maxlength="80" />
+                    </div>
+
+                    <div class="field-row">
+                        <div class="field-group">
+                            <label>Year Founded</label>
+                            <input type="number" @bind="form.YearFormed" placeholder="e.g. 2018" min="1800" max="2100" />
+                        </div>
+                        <div class="field-group">
+                            <label>Contact Number</label>
+                            <input type="tel" @bind="form.PhoneNumber" placeholder="e.g. 07700 900000" maxlength="20" />
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <label>About the Club</label>
+                        <textarea @bind="form.Bio" placeholder="Tell people about your team — how you formed, your ambitions, who can join…" rows="5" maxlength="1000"></textarea>
+                        <span class="char-count">@((form.Bio?.Length ?? 0)) / 1000</span>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(saveError))
+                    {
+                        <p class="field-error">@saveError</p>
+                    }
+                    @if (saveSuccess)
+                    {
+                        <p class="field-success">Profile saved.</p>
+                    }
+
+                    <button class="save-btn @(isSaving ? "saving" : "")" @onclick="Save" disabled="@isSaving">
+                        @(isSaving ? "Saving…" : "Save Profile")
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    }
+
+</div>
+
+@code {
+    private UpdateTeamProfileRequest form = new();
+    private int? teamId;
+    private string? currentImageUrl;
+    private bool isLoading = true;
+    private bool isSaving = false;
+    private bool isUploadingImage = false;
+    private string? saveError;
+    private string? imageError;
+    private bool saveSuccess = false;
+    private bool imageSuccess = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        var teamIdClaim = authState.User.FindFirst("TeamId")?.Value;
+        if (int.TryParse(teamIdClaim, out var tid))
+            teamId = tid;
+
+        if (teamId.HasValue)
+        {
+            var profile = await TeamService.GetProfile(teamId.Value);
+            if (profile != null)
+            {
+                form.Name = profile.Name;
+                form.ManagerName = profile.ManagerName;
+                form.YearFormed = profile.YearFormed;
+                form.PhoneNumber = profile.PhoneNumber;
+                form.Bio = profile.Bio;
+                currentImageUrl = profile.ProfileImageUrl;
+            }
+        }
+
+        isLoading = false;
+    }
+
+    async Task Save()
+    {
+        saveError = null;
+        saveSuccess = false;
+
+        if (string.IsNullOrWhiteSpace(form.Name))
+        {
+            saveError = "Team name is required.";
+            return;
+        }
+
+        isSaving = true;
+        var result = await TeamService.UpdateProfile(teamId!.Value, form);
+        isSaving = false;
+
+        if (result == null)
+            saveError = "Failed to save. Please try again.";
+        else
+            saveSuccess = true;
+    }
+
+    async Task OnImageSelected(InputFileChangeEventArgs e)
+    {
+        imageError = null;
+        imageSuccess = false;
+
+        var file = e.File;
+        if (file.Size > 5 * 1024 * 1024)
+        {
+            imageError = "Image must be under 5 MB.";
+            return;
+        }
+
+        var allowed = new[] { "image/jpeg", "image/png", "image/webp" };
+        if (!allowed.Contains(file.ContentType))
+        {
+            imageError = "Only JPEG, PNG, and WebP are accepted.";
+            return;
+        }
+
+        isUploadingImage = true;
+        await using var stream = file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
+        var url = await TeamService.UploadImage(teamId!.Value, stream, file.Name, file.ContentType);
+        isUploadingImage = false;
+
+        if (url == null)
+            imageError = "Upload failed. The image may have been flagged for inappropriate content.";
+        else
+        {
+            currentImageUrl = url;
+            imageSuccess = true;
+        }
+    }
+
+    static string Initials(string name)
+    {
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length >= 2
+            ? $"{parts[0][0]}{parts[1][0]}".ToUpper()
+            : name.Length >= 2 ? name[..2].ToUpper() : name.ToUpper();
+    }
+}

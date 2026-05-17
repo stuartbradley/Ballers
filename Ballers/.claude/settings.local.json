@@ -16,7 +16,11 @@
       "Bash(Remove-Item \"C:\\\\git\\\\Ballers\\\\Services\\\\FakeLeagueService.cs\" -Force)",
       "PowerShell(dotnet new xunit *)",
       "Bash(dotnet build *)",
-      "Bash(xargs grep -l \"public record\\\\|public class\")"
+      "Bash(xargs grep -l \"public record\\\\|public class\")",
+      "Bash(dotnet ef *)",
+      "Bash(Remove-Item -Recurse -Force \"C:/git/Ballers/obj\" -ErrorAction SilentlyContinue)",
+      "PowerShell(Stop-Process *)",
+      "mcp__plugin_context-mode_context-mode__ctx_batch_execute"
     ]
   }
 }

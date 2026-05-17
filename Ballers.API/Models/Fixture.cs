@@ -7,6 +7,7 @@
         public int AwayTeamId {  get; set; }
         public DateTime? Kickoff { get; set; }
         public string? Location { get; set; } = "";
+        public string? Postcode { get; set; }
         public bool IsPlayed { get; set; } = false;
         public int SeasonId {  get; set; }
         public Season? Season { get; set; }

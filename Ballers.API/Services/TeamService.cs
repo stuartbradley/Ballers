@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Ballers.API.Services
 {
-    public record TeamSummary(int Id, string Name);
+    public record TeamSummary(int Id, string Name, string? ProfileImageUrl, string? ManagerName);
 
     public interface ITeamService
     {
@@ -18,7 +18,8 @@ namespace Ballers.API.Services
 
         public async Task<List<TeamSummary>> GetTeamsAsync() =>
             await _db.Teams
-                .Select(t => new TeamSummary(t.Id, t.Name))
+                .OrderBy(t => t.Name)
+                .Select(t => new TeamSummary(t.Id, t.Name, t.ProfileImageUrl, t.ManagerName))
                 .ToListAsync();
     }
 }

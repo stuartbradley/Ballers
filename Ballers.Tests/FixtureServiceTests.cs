@@ -302,7 +302,7 @@ namespace Ballers.Tests
         {
             var db = await SeedBase(nameof(UpdateSchedule_NotFound_ReturnsFalse));
             var svc = new FixtureService(db);
-            var result = await svc.UpdateScheduleAsync(99, "Somewhere", DateTime.UtcNow);
+            var result = await svc.UpdateScheduleAsync(99, "Somewhere", null, DateTime.UtcNow);
             Assert.False(result);
         }
 
@@ -315,7 +315,7 @@ namespace Ballers.Tests
 
             var kickoff = DateTime.UtcNow.AddDays(5);
             var svc = new FixtureService(db);
-            var result = await svc.UpdateScheduleAsync(1, "New Ground", kickoff);
+            var result = await svc.UpdateScheduleAsync(1, "New Ground", null, kickoff);
 
             Assert.True(result);
             var fixture = db.Fixtures.Find(1)!;

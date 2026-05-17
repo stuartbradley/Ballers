@@ -16,6 +16,7 @@
         public DateTime? Kickoff { get; set; }
 
         public string? Location { get; set; }
+        public string? Postcode { get; set; }
 
         public int Week { get; set; }
 

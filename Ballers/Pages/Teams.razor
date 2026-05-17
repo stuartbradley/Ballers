@@ -1,0 +1,80 @@
+@page "/teams"
+@using Ballers.Models
+@using Ballers.Services
+@inject TeamService TeamService
+@inject HttpClient Http
+
+<PageTitle>The Teams</PageTitle>
+
+<div class="teams-page">
+
+    <div class="teams-hero">
+        <div class="teams-hero-inner">
+            <p class="teams-eyebrow">Ballers League</p>
+            <h1>The Teams</h1>
+            <p class="teams-sub">Meet the clubs</p>
+        </div>
+    </div>
+
+    <div class="teams-body">
+        @if (isLoading)
+        {
+            <div class="teams-loading"><LoadingSpinner /></div>
+        }
+        else if (!teams.Any())
+        {
+            <div class="teams-empty">No teams registered yet.</div>
+        }
+        else
+        {
+            <div class="teams-grid">
+                @foreach (var team in teams)
+                {
+                    <a class="team-card" href="/team/@team.Id">
+                        <div class="team-card-crest-wrap">
+                            @if (!string.IsNullOrEmpty(team.ProfileImageUrl))
+                            {
+                                <img class="team-card-crest"
+                                     src="@(Http.BaseAddress!.ToString().TrimEnd('/') + team.ProfileImageUrl)"
+                                     alt="@team.Name crest" />
+                            }
+                            else
+                            {
+                                <div class="team-card-placeholder">
+                                    <span>@Initials(team.Name)</span>
+                                </div>
+                            }
+                        </div>
+                        <div class="team-card-info">
+                            <p class="team-card-name">@team.Name</p>
+                            @if (!string.IsNullOrEmpty(team.ManagerName))
+                            {
+                                <p class="team-card-manager">@team.ManagerName</p>
+                            }
+                        </div>
+                    </a>
+                }
+            </div>
+        }
+    </div>
+
+</div>
+
+@code {
+    private List<TeamProfileDto> teams = new();
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        teams = await TeamService.GetAllTeams();
+        isLoading = false;
+    }
+
+    static string Initials(string name)
+    {
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length >= 2
+            ? $"{parts[0][0]}{parts[1][0]}".ToUpper()
+            : name.Length >= 2 ? name[..2].ToUpper() : name.ToUpper();
+    }
+}

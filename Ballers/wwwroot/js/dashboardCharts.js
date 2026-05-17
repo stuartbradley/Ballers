@@ -46,7 +46,7 @@ window.ballersCharts = {
 
                 plugins: {
                     legend: {
-                        position: 'bottom'
+                        display: false
                     },
 
                     tooltip: {

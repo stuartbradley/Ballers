@@ -20,6 +20,7 @@
         <nav class="nav-links">
             <NavLink href="/" Match="NavLinkMatch.All">Home</NavLink>
             <NavLink href="/fixtures">Fixtures</NavLink>
+            <NavLink href="/teams">Teams</NavLink>
             <AuthorizeView>
                 <Authorized>
                     <NavLink href="/dashboard">Dashboard</NavLink>
@@ -59,6 +60,7 @@
     <nav class="mobile-nav">
         <NavLink href="/" Match="NavLinkMatch.All" @onclick="CloseNav">Home</NavLink>
         <NavLink href="/fixtures" @onclick="CloseNav">Fixtures</NavLink>
+        <NavLink href="/teams" @onclick="CloseNav">Teams</NavLink>
         <AuthorizeView>
             <Authorized>
                 <NavLink href="/dashboard" @onclick="CloseNav">Dashboard</NavLink>
