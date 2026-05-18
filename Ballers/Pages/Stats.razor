@@ -49,8 +49,21 @@
                         }
                     </div>
                 </div>
+
+                <div class="filter-group search-group">
+                    <input class="player-search" placeholder="Search player…" @bind="nameSearch" @bind:event="oninput" />
+                </div>
             </div>
 
+            @if (!allPlayers.Any())
+            {
+                <div class="stats-empty">
+                    <p class="stats-empty-title">No stats yet</p>
+                    <p class="stats-empty-sub">Stats will appear here once fixtures have been played and results recorded.</p>
+                </div>
+            }
+            else
+            {
             <div class="stats-card">
                 <table class="stats-leaderboard">
                     <thead>
@@ -101,6 +114,7 @@
                 </table>
             </div>
         }
+        }
 
     </div>
 </div>
@@ -114,11 +128,12 @@
 
     private string sortCol = "goals";
     private bool sortAsc = false;
+    private string nameSearch = "";
 
     private IEnumerable<PlayerLeaderboardDto> Filtered =>
-        selectedPos == "All"
-            ? allPlayers
-            : allPlayers.Where(p => p.Position == selectedPos);
+        allPlayers.Where(p =>
+            (selectedPos == "All" || p.Position == selectedPos) &&
+            (string.IsNullOrEmpty(nameSearch) || p.Name.Contains(nameSearch, StringComparison.OrdinalIgnoreCase)));
 
     private IEnumerable<PlayerLeaderboardDto> Sorted => sortCol switch
     {

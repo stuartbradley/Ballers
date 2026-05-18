@@ -253,6 +253,9 @@
     padding: 0 8px;
     overflow-x: auto;
     scrollbar-width: none;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .fixture-tabs::-webkit-scrollbar { display: none; }

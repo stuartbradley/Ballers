@@ -25,7 +25,17 @@
       "Bash(dotnet new *)",
       "Bash(dotnet sln *)",
       "Bash(dotnet add *)",
-      "Bash(pwsh bin/Debug/net8.0/playwright.ps1 install chromium)"
+      "Bash(pwsh bin/Debug/net8.0/playwright.ps1 install chromium)",
+      "mcp__plugin_context-mode_context-mode__ctx_doctor",
+      "Read(//c/Users/tuey1/.claude/plugins/cache/context-mode/context-mode/1.0.136/**)",
+      "Bash(npm rebuild *)",
+      "Bash(npm install *)",
+      "PowerShell(cd \"C:\\\\Users\\\\tuey1\\\\.claude\\\\plugins\\\\cache\\\\context-mode\\\\context-mode\\\\1.0.136\\\\node_modules\\\\better-sqlite3\"; $pkg = Get-Content package.json | ConvertFrom-Json; Write-Output \"version: $\\($pkg.version\\)\"; $pkg.binary | ConvertTo-Json)",
+      "PowerShell(New-Item *)",
+      "PowerShell($url = \"https://github.com/WiseLibs/better-sqlite3/releases/download/v12.10.0/better-sqlite3-v12.10.0-napi-v6-win32-x64.tar.gz\"; Write-Output \"Trying: $url\"; Invoke-WebRequest -Uri $url -OutFile \"$env:TEMP\\\\bsql3.tar.gz\" -UseBasicParsing 2>&1; Write-Output \"Done: $LASTEXITCODE\")",
+      "PowerShell(Invoke-WebRequest -Uri \"https://api.github.com/repos/WiseLibs/better-sqlite3/releases/tags/v12.10.0\" -UseBasicParsing | Select-Object -ExpandProperty Content | ConvertFrom-Json | Select-Object -ExpandProperty assets | Select-Object name, browser_download_url)",
+      "PowerShell($r = Invoke-RestMethod -Uri \"https://api.github.com/repos/WiseLibs/better-sqlite3/releases/tags/v12.10.0\" -UseBasicParsing; $r.assets | ForEach-Object { $_.name })",
+      "PowerShell(nvm list *)"
     ]
   }
 }
