@@ -27,4 +27,11 @@
     <ProjectReference Include="..\Ballers.Shared\Ballers.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="app_offline.htm">
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </Content>
+  </ItemGroup>
+
 </Project>

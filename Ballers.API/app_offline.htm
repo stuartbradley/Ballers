@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Updating | Blackpool Ballers League</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #07101E;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .crest {
+            width: 52px;
+            height: 60px;
+            background: #1e3a8a;
+            clip-path: polygon(0% 0%, 100% 0%, 100% 65%, 50% 100%, 0% 65%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 28px;
+            position: relative;
+            animation: pulse 2.4s ease-in-out infinite;
+        }
+
+        .crest::before {
+            content: "B";
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: #facc15;
+            letter-spacing: 0;
+            padding-bottom: 12px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%       { opacity: 0.7; transform: scale(0.96); }
+        }
+
+        .wordmark {
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.3);
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: clamp(1.6rem, 5vw, 2.4rem);
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            text-align: center;
+            margin-bottom: 14px;
+            color: white;
+        }
+
+        .accent { color: #facc15; }
+
+        p {
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.45);
+            text-align: center;
+            max-width: 380px;
+            line-height: 1.7;
+            margin-bottom: 48px;
+        }
+
+        .dots {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #1e3a8a;
+            animation: bounce 1.2s ease-in-out infinite;
+        }
+
+        .dot:nth-child(1) { animation-delay: 0s;    background: #facc15; }
+        .dot:nth-child(2) { animation-delay: 0.18s; background: #1e3a8a; }
+        .dot:nth-child(3) { animation-delay: 0.36s; background: #4ade80; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0.7); opacity: 0.4; }
+            40%            { transform: scale(1.1); opacity: 1; }
+        }
+
+        .footer {
+            position: fixed;
+            bottom: 24px;
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.15);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="crest"></div>
+    <div class="wordmark">Blackpool Ballers League</div>
+
+    <h1>Update <span class="accent">In Progress</span></h1>
+    <p>We're rolling out a fresh update. The site will be back shortly — usually less than a minute.</p>
+
+    <div class="dots">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+    </div>
+
+    <div class="footer">Back soon &middot; Ballers League</div>
+
+</body>
+</html>
