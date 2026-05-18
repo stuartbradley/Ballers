@@ -19,7 +19,11 @@ namespace Ballers.API.Services
         Task<List<PlayerStatDto>> GetStatsAsync(int fixtureId);
         Task SubmitStatsAsync(int fixtureId, List<PlayerStatDto> stats, int? teamId);
         Task<bool> UpdateScheduleAsync(int fixtureId, string? location, string? postcode, DateTime kickoff);
+        Task AssignRefereeAsync(int fixtureId, int? refereeId);
         Task GenerateFixturesAsync(List<int> teamIds, DateTime startDate);
+        Task<List<OpponentPlayerStat>> GetOpponentStatsAsync(int fixtureId, int opponentTeamId);
+        Task<List<HeadToHeadResult>> GetHeadToHeadAsync(int homeTeamId, int awayTeamId, int excludeFixtureId);
+        Task SaveCaptaincyAsync(int fixtureId, int teamId, int? captainId, int? viceId);
     }
 
     public class FixtureService : IFixtureService
@@ -33,6 +37,11 @@ namespace Ballers.API.Services
             var f = await _db.Fixtures
                 .Include(x => x.HomeTeam)
                 .Include(x => x.AwayTeam)
+                .Include(x => x.Referee)
+                .Include(x => x.HomeCaptain)
+                .Include(x => x.HomeViceCaptain)
+                .Include(x => x.AwayCaptain)
+                .Include(x => x.AwayViceCaptain)
                 .FirstOrDefaultAsync(x => x.Id == id);
 
             if (f == null) return null;
@@ -41,7 +50,19 @@ namespace Ballers.API.Services
                 f.Id, f.HomeTeam!.Name, f.AwayTeam!.Name,
                 f.HomeTeamId, f.AwayTeamId,
                 f.Kickoff, f.Location, f.Postcode, f.MatchNumber, f.IsPlayed,
-                f.HomeScore, f.AwayScore);
+                f.HomeScore, f.AwayScore,
+                f.RefereeId, f.Referee?.Name,
+                f.WindowStart, f.WindowEnd)
+            {
+                HomeCaptainId      = f.HomeCaptainId,
+                HomeCaptainName    = f.HomeCaptain?.Name,
+                HomeViceCaptainId  = f.HomeViceCaptainId,
+                HomeViceCaptainName = f.HomeViceCaptain?.Name,
+                AwayCaptainId      = f.AwayCaptainId,
+                AwayCaptainName    = f.AwayCaptain?.Name,
+                AwayViceCaptainId  = f.AwayViceCaptainId,
+                AwayViceCaptainName = f.AwayViceCaptain?.Name,
+            };
         }
 
         public async Task<List<FixtureSummary>> GetForUserAsync(bool isAdmin, int? teamId)
@@ -352,6 +373,67 @@ namespace Ballers.API.Services
 
             await _db.SaveChangesAsync();
             await transaction.CommitAsync();
+        }
+
+        public async Task<List<HeadToHeadResult>> GetHeadToHeadAsync(int homeTeamId, int awayTeamId, int excludeFixtureId)
+        {
+            return await _db.Fixtures
+                .Include(f => f.HomeTeam)
+                .Include(f => f.AwayTeam)
+                .Where(f => f.IsPlayed && f.Id != excludeFixtureId &&
+                    ((f.HomeTeamId == homeTeamId && f.AwayTeamId == awayTeamId) ||
+                     (f.HomeTeamId == awayTeamId && f.AwayTeamId == homeTeamId)))
+                .OrderByDescending(f => f.Kickoff ?? f.WindowEnd)
+                .Take(10)
+                .Select(f => new HeadToHeadResult(
+                    f.Id, f.HomeTeam!.Name, f.AwayTeam!.Name,
+                    f.HomeScore, f.AwayScore, f.Kickoff, f.WindowEnd))
+                .ToListAsync();
+        }
+
+        public async Task SaveCaptaincyAsync(int fixtureId, int teamId, int? captainId, int? viceId)
+        {
+            var fixture = await _db.Fixtures.FindAsync(fixtureId);
+            if (fixture == null) return;
+
+            bool isHome = fixture.HomeTeamId == teamId;
+            if (isHome)
+            {
+                fixture.HomeCaptainId     = captainId;
+                fixture.HomeViceCaptainId = viceId;
+            }
+            else
+            {
+                fixture.AwayCaptainId     = captainId;
+                fixture.AwayViceCaptainId = viceId;
+            }
+            await _db.SaveChangesAsync();
+        }
+
+        public async Task<List<OpponentPlayerStat>> GetOpponentStatsAsync(int fixtureId, int opponentTeamId)
+        {
+            var squadIds = await _db.FixturePlayers
+                .Where(fp => fp.FixtureId == fixtureId)
+                .Select(fp => fp.PlayerId)
+                .ToListAsync();
+
+            return await _db.FixturePlayerStats
+                .Include(s => s.Player)
+                .Where(s => s.FixtureId == fixtureId
+                         && squadIds.Contains(s.PlayerId)
+                         && s.Player!.TeamId == opponentTeamId)
+                .Select(s => new OpponentPlayerStat(
+                    s.Player!.Name, s.Goals, s.Assists,
+                    s.ManOfTheMatch, s.YellowCards, s.RedCard))
+                .ToListAsync();
+        }
+
+        public async Task AssignRefereeAsync(int fixtureId, int? refereeId)
+        {
+            var fixture = await _db.Fixtures.FindAsync(fixtureId);
+            if (fixture == null) return;
+            fixture.RefereeId = refereeId;
+            await _db.SaveChangesAsync();
         }
 
         public async Task<bool> UpdateScheduleAsync(int fixtureId, string? location, string? postcode, DateTime kickoff)

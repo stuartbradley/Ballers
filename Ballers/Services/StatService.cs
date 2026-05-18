@@ -27,6 +27,14 @@ namespace Ballers.Services
             return await _http.GetFromJsonAsync<List<PlayerMotmDto>>("api/stats/top-motm") ?? new();
         }
 
+        public async Task<List<PlayerLeaderboardDto>> GetLeaderboard(int? seasonId = null)
+        {
+            var url = seasonId.HasValue
+                ? $"api/stats/leaderboard?seasonId={seasonId}"
+                : "api/stats/leaderboard";
+            return await _http.GetFromJsonAsync<List<PlayerLeaderboardDto>>(url) ?? new();
+        }
+
         public async Task<WinLossDto?> GetWinLoss()
         {
             var response = await _http.GetAsync("api/stats/winloss");

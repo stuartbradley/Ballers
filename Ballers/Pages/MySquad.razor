@@ -19,6 +19,15 @@
 
     <div class="squad-body">
 
+        @if (noTeamAssigned)
+        {
+            <div class="empty-state">
+                <p>Your account doesn't have a team assigned. Squad management is only available to team managers.</p>
+            </div>
+        }
+        else
+        {
+
         <!-- Add Player Form -->
         <div class="form-card">
             <p class="form-card-label">Add Player</p>
@@ -113,6 +122,8 @@
             }
         }
 
+        }
+
     </div>
 
 </div>
@@ -123,6 +134,7 @@
 
     private List<PlayerDto> players = new();
     private bool isLoading = true;
+    private bool noTeamAssigned = false;
     private string newName = "";
     private int newNumber;
     private string newPosition = "MID";
@@ -139,7 +151,14 @@
 
     async Task LoadPlayers()
     {
-        players = await PlayerService.GetMyPlayers();
+        try
+        {
+            players = await PlayerService.GetMyPlayers();
+        }
+        catch
+        {
+            noTeamAssigned = true;
+        }
         isLoading = false;
     }
 

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <TestRunParameters>
+    <Parameter name="BaseUrl" value="https://localhost:57420" />
+    <Parameter name="ApiBaseUrl" value="https://localhost:7075" />
+    <Parameter name="AdminEmail" value="Admin@ballers.com" />
+    <Parameter name="AdminPassword" value="Admin123!" />
+    <Parameter name="ManagerEmail" value="manager1@ballers.com" />
+    <Parameter name="ManagerPassword" value="Manager123!" />
+  </TestRunParameters>
+  <Playwright>
+    <BrowserName>chromium</BrowserName>
+    <ExpectTimeout>10000</ExpectTimeout>
+    <LaunchOptions>
+      <Headless>false</Headless>
+      <SlowMo>300</SlowMo>
+    </LaunchOptions>
+  </Playwright>
+</RunSettings>

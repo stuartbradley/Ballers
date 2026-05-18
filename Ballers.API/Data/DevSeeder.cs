@@ -38,6 +38,15 @@ namespace Ballers.API.Data
             "Wood", "Jackson", "Hughes", "Young", "Green"
         ];
 
+        private static readonly (string Name, string Phone, string Email, string? Notes)[] RefereeData =
+        [
+            ("Mike Fletcher",   "07911 100201", "mike.fletcher@refs.com",   "FA Level 3 qualified. Very reliable, covers the North West."),
+            ("Paul Grady",      "07911 100202", "paul.grady@refs.com",      "Experienced official with 8 years in Sunday league."),
+            ("Chris Bourne",    "07911 100203", "chris.bourne@refs.com",    "Available most Sundays. Prefers morning kickoffs."),
+            ("Tony Hargreaves", "07911 100204", "tony.hargreaves@refs.com", "Strict on dissent. Carries two assistants if required."),
+            ("Lee Slater",      "07911 100205", "lee.slater@refs.com",      "New to the league this season. Keen and well-organised."),
+        ];
+
         private static readonly (string Location, string Postcode)[] Venues =
         [
             ("Ashton Gate Park",       "BS3 2EJ"),
@@ -64,12 +73,15 @@ namespace Ballers.API.Data
             var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
 
             await UpdateTeamProfiles(db);
+            await SeedReferees(db);
+            await AssignRefereesToFixtures(db);
 
             if (await db.Teams.AnyAsync()) return;
 
             var teams = await SeedTeams(db, userManager);
             var players = await SeedPlayers(db, teams);
             await SeedSeason(db, teams, players);
+            await AssignRefereesToFixtures(db);
         }
 
         private static async Task UpdateTeamProfiles(ApplicationDbContext db)
@@ -84,6 +96,39 @@ namespace Ballers.API.Data
                 team.PhoneNumber = data.Phone;
                 team.Bio         = data.Bio;
             }
+            await db.SaveChangesAsync();
+        }
+
+        private static async Task SeedReferees(ApplicationDbContext db)
+        {
+            if (await db.Referees.AnyAsync()) return;
+
+            var referees = RefereeData.Select(r => new Referee
+            {
+                Name        = r.Name,
+                PhoneNumber = r.Phone,
+                Email       = r.Email,
+                Notes       = r.Notes
+            }).ToList();
+
+            db.Referees.AddRange(referees);
+            await db.SaveChangesAsync();
+        }
+
+        private static async Task AssignRefereesToFixtures(ApplicationDbContext db)
+        {
+            var referees = await db.Referees.ToListAsync();
+            if (referees.Count == 0) return;
+
+            var unassigned = await db.Fixtures.Where(f => f.RefereeId == null).ToListAsync();
+            if (unassigned.Count == 0) return;
+
+            foreach (var fixture in unassigned)
+            {
+                if (_rng.Next(3) != 0)
+                    fixture.RefereeId = referees[_rng.Next(referees.Count)].Id;
+            }
+
             await db.SaveChangesAsync();
         }
 
@@ -148,14 +193,20 @@ namespace Ballers.API.Data
             return players;
         }
 
+        private static readonly int[] KickoffHours = [10, 11, 14, 15];
+
         private static async Task SeedSeason(ApplicationDbContext db, List<Team> teams, List<Player> players)
         {
+            // Anchor the season ~16 weeks in the past so roughly half the rounds
+            // are played and the rest are upcoming — giving referees real kickoff
+            // dates to display rather than window ranges.
+            var seasonStart = DateTime.UtcNow.Date.AddDays(-112);
             var season = new Season
             {
                 SeasonNumber = 1,
-                StartDate = new DateTime(2025, 9, 1, 0, 0, 0, DateTimeKind.Utc),
-                EndDate = new DateTime(2026, 5, 31, 23, 59, 59, DateTimeKind.Utc),
-                IsActive = true
+                StartDate = seasonStart,
+                EndDate   = seasonStart.AddDays(252),
+                IsActive  = true
             };
             db.Seasons.Add(season);
             await db.SaveChangesAsync();
@@ -187,8 +238,9 @@ namespace Ballers.API.Data
             foreach (var (home, away, round) in allMatchups)
             {
                 var windowStart = season.StartDate.AddDays(round * 14);
-                var windowEnd = windowStart.AddDays(13);
-                var kickoff = windowStart.AddDays(6).Date + TimeSpan.FromHours(14);
+                var windowEnd   = windowStart.AddDays(13);
+                var kickoff     = windowStart.AddDays(6).Date
+                                  + TimeSpan.FromHours(KickoffHours[_rng.Next(KickoffHours.Length)]);
 
                 var venue = Venues[_rng.Next(Venues.Length)];
                 fixtures.Add(new Fixture
@@ -202,7 +254,7 @@ namespace Ballers.API.Data
                     Kickoff     = kickoff,
                     Location    = venue.Location,
                     Postcode    = venue.Postcode,
-                    IsPlayed    = true
+                    IsPlayed    = kickoff < DateTime.UtcNow
                 });
             }
 
@@ -211,9 +263,9 @@ namespace Ballers.API.Data
 
             var playersByTeam = players.GroupBy(p => p.TeamId).ToDictionary(g => g.Key, g => g.ToList());
             var fixturePlayers = new List<FixturePlayer>();
-            var fixtureStats = new List<FixturePlayerStat>();
+            var fixtureStats   = new List<FixturePlayerStat>();
 
-            foreach (var fixture in fixtures)
+            foreach (var fixture in fixtures.Where(f => f.IsPlayed))
             {
                 var homeSquad = playersByTeam[fixture.HomeTeamId].OrderBy(_ => _rng.Next()).Take(11).ToList();
                 var awaySquad = playersByTeam[fixture.AwayTeamId].OrderBy(_ => _rng.Next()).Take(11).ToList();
@@ -235,18 +287,27 @@ namespace Ballers.API.Data
                                homeSquad.Concat(awaySquad).ToList();
                 var motmId = motmPool[_rng.Next(motmPool.Count)].Id;
 
+                // Assign captain and vice-captain — prefer outfield players
+                var homeOutfield = homeSquad.Where(p => p.Position != "GK").ToList();
+                var awayOutfield = awaySquad.Where(p => p.Position != "GK").ToList();
+                var homeCaptains = homeOutfield.OrderBy(_ => _rng.Next()).Take(2).ToList();
+                var awayCaptains = awayOutfield.OrderBy(_ => _rng.Next()).Take(2).ToList();
+
+                fixture.HomeCaptainId     = homeCaptains.Count > 0 ? homeCaptains[0].Id : null;
+                fixture.HomeViceCaptainId = homeCaptains.Count > 1 ? homeCaptains[1].Id : null;
+                fixture.AwayCaptainId     = awayCaptains.Count > 0 ? awayCaptains[0].Id : null;
+                fixture.AwayViceCaptainId = awayCaptains.Count > 1 ? awayCaptains[1].Id : null;
+
                 foreach (var p in homeSquad)
                 {
                     var (g, a) = homeGoalStats[p.Id];
                     fixtureStats.Add(new FixturePlayerStat
                     {
-                        FixtureId = fixture.Id,
-                        PlayerId = p.Id,
-                        Goals = g,
-                        Assists = a,
+                        FixtureId = fixture.Id, PlayerId = p.Id,
+                        Goals = g, Assists = a,
                         ManOfTheMatch = p.Id == motmId,
                         YellowCards = _rng.Next(12) == 0,
-                        RedCard = _rng.Next(70) == 0
+                        RedCard     = _rng.Next(70) == 0
                     });
                 }
 
@@ -255,13 +316,11 @@ namespace Ballers.API.Data
                     var (g, a) = awayGoalStats[p.Id];
                     fixtureStats.Add(new FixturePlayerStat
                     {
-                        FixtureId = fixture.Id,
-                        PlayerId = p.Id,
-                        Goals = g,
-                        Assists = a,
+                        FixtureId = fixture.Id, PlayerId = p.Id,
+                        Goals = g, Assists = a,
                         ManOfTheMatch = p.Id == motmId,
                         YellowCards = _rng.Next(12) == 0,
-                        RedCard = _rng.Next(70) == 0
+                        RedCard     = _rng.Next(70) == 0
                     });
                 }
             }

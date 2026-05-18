@@ -10,6 +10,7 @@ namespace Ballers.API.Services
         Task<List<PlayerAssistsStat>> GetTopAssistsAsync();
         Task<List<PlayerMotmStat>> GetTopMotmAsync();
         Task<WinLossDrawResult> GetWinLossAsync(int teamId);
+        Task<List<PlayerLeaderboardEntry>> GetLeaderboardAsync(int? seasonId);
     }
 
     public class StatsService : IStatsService
@@ -62,6 +63,47 @@ namespace Ballers.API.Services
                 .Where(x => x.Motm > 0)
                 .OrderByDescending(x => x.Motm)
                 .Take(5)
+                .ToList();
+        }
+
+        public async Task<List<PlayerLeaderboardEntry>> GetLeaderboardAsync(int? seasonId)
+        {
+            var query = _db.FixturePlayerStats
+                .Include(s => s.Player).ThenInclude(p => p!.Team)
+                .Include(s => s.Fixture)
+                .Where(s => s.Fixture!.IsPlayed);
+
+            if (seasonId.HasValue)
+                query = query.Where(s => s.Fixture!.SeasonId == seasonId.Value);
+
+            var allStats = await query.ToListAsync();
+
+            return allStats
+                .GroupBy(s => s.PlayerId)
+                .Select(g =>
+                {
+                    var player = g.First().Player!;
+                    var cleanSheets = player.Position == "GK"
+                        ? g.Count(s =>
+                            (player.TeamId == s.Fixture!.HomeTeamId && s.Fixture.AwayScore == 0) ||
+                            (player.TeamId == s.Fixture!.AwayTeamId && s.Fixture.HomeScore == 0))
+                        : 0;
+
+                    return new PlayerLeaderboardEntry(
+                        player.Id,
+                        player.Name,
+                        player.Team?.Name ?? "",
+                        player.Position,
+                        g.Count(),
+                        g.Sum(s => s.Goals),
+                        g.Sum(s => s.Assists),
+                        cleanSheets,
+                        g.Count(s => s.YellowCards),
+                        g.Count(s => s.RedCard));
+                })
+                .OrderByDescending(e => e.Goals)
+                .ThenByDescending(e => e.Assists)
+                .ThenByDescending(e => e.Appearances)
                 .ToList();
         }
 

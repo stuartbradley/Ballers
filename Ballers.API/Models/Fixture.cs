@@ -18,6 +18,16 @@
         public DateTime WindowEnd { get; set; }
         public int HomeScore { get; set; }
         public int AwayScore { get; set; }
-        
+        public int? RefereeId { get; set; }
+        public Referee? Referee { get; set; }
+
+        public int? HomeCaptainId { get; set; }
+        public Player? HomeCaptain { get; set; }
+        public int? HomeViceCaptainId { get; set; }
+        public Player? HomeViceCaptain { get; set; }
+        public int? AwayCaptainId { get; set; }
+        public Player? AwayCaptain { get; set; }
+        public int? AwayViceCaptainId { get; set; }
+        public Player? AwayViceCaptain { get; set; }
     }
 }

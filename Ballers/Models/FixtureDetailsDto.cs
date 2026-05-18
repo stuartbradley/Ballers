@@ -21,5 +21,19 @@
         public int Week { get; set; }
 
         public bool IsPlayed { get; set; }
+        public int? RefereeId { get; set; }
+        public string? RefereeName { get; set; }
+        public DateTime WindowStart { get; set; }
+        public DateTime WindowEnd { get; set; }
+        public bool IsEditLocked { get; set; }
+
+        public int? HomeCaptainId { get; set; }
+        public string? HomeCaptainName { get; set; }
+        public int? HomeViceCaptainId { get; set; }
+        public string? HomeViceCaptainName { get; set; }
+        public int? AwayCaptainId { get; set; }
+        public string? AwayCaptainName { get; set; }
+        public int? AwayViceCaptainId { get; set; }
+        public string? AwayViceCaptainName { get; set; }
     }
 }

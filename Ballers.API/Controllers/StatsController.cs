@@ -34,6 +34,11 @@ namespace Ballers.API.Controllers
         public async Task<IActionResult> GetTopAssists()
             => Ok(await _stats.GetTopAssistsAsync());
 
+        [AllowAnonymous]
+        [HttpGet("leaderboard")]
+        public async Task<IActionResult> GetLeaderboard([FromQuery] int? seasonId)
+            => Ok(await _stats.GetLeaderboardAsync(seasonId));
+
         [Authorize]
         [HttpGet("winloss")]
         public async Task<IActionResult> GetWinLoss()

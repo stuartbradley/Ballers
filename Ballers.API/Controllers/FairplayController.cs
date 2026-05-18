@@ -11,8 +11,13 @@ namespace Ballers.API.Controllers
     public class FairplayController : ControllerBase
     {
         private readonly IFairplayService _fairplay;
+        private readonly IFixtureService _fixtures;
 
-        public FairplayController(IFairplayService fairplay) => _fairplay = fairplay;
+        public FairplayController(IFairplayService fairplay, IFixtureService fixtures)
+        {
+            _fairplay = fairplay;
+            _fixtures = fixtures;
+        }
 
         [HttpGet("{fixtureId:int}")]
         public async Task<IActionResult> GetRatings(int fixtureId)
@@ -24,6 +29,12 @@ namespace Ballers.API.Controllers
         [HttpPost("{fixtureId:int}")]
         public async Task<IActionResult> SubmitRatings(int fixtureId, [FromBody] SubmitFairplayRequest request)
         {
+            var fixture = await _fixtures.GetByIdAsync(fixtureId);
+            if (fixture == null) return NotFound();
+
+            if (fixture.IsEditLocked)
+                return Conflict("This fixture is locked — more than 2 weeks have passed since it was played.");
+
             try
             {
                 await _fairplay.SubmitRatingsAsync(fixtureId, request.HomeRating, request.AwayRating);

@@ -20,7 +20,12 @@
       "Bash(dotnet ef *)",
       "Bash(Remove-Item -Recurse -Force \"C:/git/Ballers/obj\" -ErrorAction SilentlyContinue)",
       "PowerShell(Stop-Process *)",
-      "mcp__plugin_context-mode_context-mode__ctx_batch_execute"
+      "mcp__plugin_context-mode_context-mode__ctx_batch_execute",
+      "Bash(awk '{print $NF}')",
+      "Bash(dotnet new *)",
+      "Bash(dotnet sln *)",
+      "Bash(dotnet add *)",
+      "Bash(pwsh bin/Debug/net8.0/playwright.ps1 install chromium)"
     ]
   }
 }

@@ -155,6 +155,32 @@ namespace Ballers.Services
 
             return await response.Content.ReadFromJsonAsync<List<PlayerDto>>() ?? new();
         }
+        public async Task<List<HeadToHeadResultDto>> GetHeadToHead(int fixtureId)
+        {
+            var response = await _httpClient.GetAsync($"api/fixtures/{fixtureId}/head-to-head");
+            if (!response.IsSuccessStatusCode) return new();
+            return await response.Content.ReadFromJsonAsync<List<HeadToHeadResultDto>>() ?? new();
+        }
+
+        public async Task SaveCaptaincy(int fixtureId, int? captainId, int? viceId)
+        {
+            await _httpClient.PutAsJsonAsync($"api/fixtures/{fixtureId}/captaincy", new
+            {
+                captainPlayerId = captainId,
+                viceCaptainPlayerId = viceId
+            });
+        }
+
+        public async Task<List<OpponentPlayerStatDto>> GetOpponentStats(int fixtureId, int? teamId = null)
+        {
+            var url = teamId.HasValue
+                ? $"api/fixtures/{fixtureId}/opponent-stats?teamId={teamId}"
+                : $"api/fixtures/{fixtureId}/opponent-stats";
+            var response = await _httpClient.GetAsync(url);
+            if (!response.IsSuccessStatusCode) return new();
+            return await response.Content.ReadFromJsonAsync<List<OpponentPlayerStatDto>>() ?? new();
+        }
+
         public async Task<List<FixtureSquadPlayerDto>> GetFixtureSquad(int fixtureId)
         {
             var request = new HttpRequestMessage(

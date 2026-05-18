@@ -20,6 +20,7 @@ namespace Ballers.API.Data
         public DbSet<PenaltyShootout> PenaltyShootouts => Set<PenaltyShootout>();
         public DbSet<PenaltyKick> PenaltyKicks => Set<PenaltyKick>();
         public DbSet<FairplayRating> FairplayRatings => Set<FairplayRating>();
+        public DbSet<Referee> Referees => Set<Referee>();
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -106,6 +107,25 @@ namespace Ballers.API.Data
             builder.Entity<FairplayRating>()
                 .HasIndex(r => new { r.FixtureId, r.TeamId })
                 .IsUnique();
+
+            builder.Entity<Fixture>()
+                .HasOne(f => f.Referee)
+                .WithMany(r => r.Fixtures)
+                .HasForeignKey(f => f.RefereeId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.Entity<Fixture>()
+                .HasOne(f => f.HomeCaptain).WithMany()
+                .HasForeignKey(f => f.HomeCaptainId).OnDelete(DeleteBehavior.NoAction);
+            builder.Entity<Fixture>()
+                .HasOne(f => f.HomeViceCaptain).WithMany()
+                .HasForeignKey(f => f.HomeViceCaptainId).OnDelete(DeleteBehavior.NoAction);
+            builder.Entity<Fixture>()
+                .HasOne(f => f.AwayCaptain).WithMany()
+                .HasForeignKey(f => f.AwayCaptainId).OnDelete(DeleteBehavior.NoAction);
+            builder.Entity<Fixture>()
+                .HasOne(f => f.AwayViceCaptain).WithMany()
+                .HasForeignKey(f => f.AwayViceCaptainId).OnDelete(DeleteBehavior.NoAction);
         }
 
     }

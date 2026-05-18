@@ -1,0 +1,240 @@
+@page "/referees"
+@attribute [Authorize]
+@using Ballers.Models
+@using Ballers.Services
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@inject RefereeService RefereeService
+@inject AuthenticationStateProvider AuthProvider
+
+<PageTitle>Referees</PageTitle>
+
+<div class="referees-page">
+
+    <div class="referees-hero">
+        <div class="referees-hero-inner">
+            <p class="referees-eyebrow">Ballers League</p>
+            <h1>Referees</h1>
+            <p class="referees-sub">Contact list &amp; availability</p>
+        </div>
+    </div>
+
+    <div class="referees-body">
+
+        @if (isLoading)
+        {
+            <div class="referees-loading"><LoadingSpinner /></div>
+        }
+        else
+        {
+            <!-- ADD / EDIT FORM -->
+            <div class="ref-form-card">
+                <h3>@(editingId.HasValue ? "Edit Referee" : "Add Referee")</h3>
+                <div class="ref-form">
+                    <div class="ref-field-row">
+                        <div class="ref-field">
+                            <label>Name <span class="required">*</span></label>
+                            <input type="text" @bind="form.Name" placeholder="e.g. Mark Hughes" maxlength="80" />
+                        </div>
+                        <div class="ref-field">
+                            <label>Phone</label>
+                            <input type="tel" @bind="form.PhoneNumber" placeholder="e.g. 07700 900123" maxlength="20" />
+                        </div>
+                    </div>
+                    <div class="ref-field-row">
+                        <div class="ref-field">
+                            <label>Email</label>
+                            <input type="email" @bind="form.Email" placeholder="e.g. ref@example.com" maxlength="100" />
+                        </div>
+                        <div class="ref-field">
+                            <label>Notes</label>
+                            <input type="text" @bind="form.Notes" placeholder="Any extra info…" maxlength="200" />
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(formError))
+                    {
+                        <p class="ref-error">@formError</p>
+                    }
+
+                    <div class="ref-form-actions">
+                        <button class="primary-btn @(isSaving ? "saving" : "")" @onclick="Save" disabled="@isSaving">
+                            @(isSaving ? "Saving…" : editingId.HasValue ? "Update" : "Add Referee")
+                        </button>
+                        @if (editingId.HasValue)
+                        {
+                            <button class="cancel-btn" @onclick="CancelEdit">Cancel</button>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- REFEREE LIST -->
+            @if (!referees.Any())
+            {
+                <div class="referees-empty">No referees added yet.</div>
+            }
+            else
+            {
+                <div class="ref-list">
+                    @foreach (var referee in referees)
+                    {
+                        <div class="ref-card @(editingId == referee.Id ? "editing" : "")">
+                            <div class="ref-card-header">
+                                <div class="ref-card-name">@referee.Name</div>
+                                <div class="ref-card-actions">
+                                    <button class="ref-edit-btn" @onclick="() => StartEdit(referee)">Edit</button>
+                                    @if (isAdmin)
+                                    {
+                                        <button class="ref-delete-btn" @onclick="() => Delete(referee.Id)">Delete</button>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="ref-card-contacts">
+                                @if (!string.IsNullOrEmpty(referee.PhoneNumber))
+                                {
+                                    <a href="tel:@referee.PhoneNumber" class="ref-contact-chip phone">
+                                        <span class="chip-icon">📞</span>@referee.PhoneNumber
+                                    </a>
+                                }
+                                @if (!string.IsNullOrEmpty(referee.Email))
+                                {
+                                    <a href="mailto:@referee.Email" class="ref-contact-chip email">
+                                        <span class="chip-icon">✉</span>@referee.Email
+                                    </a>
+                                }
+                                @if (string.IsNullOrEmpty(referee.PhoneNumber) && string.IsNullOrEmpty(referee.Email))
+                                {
+                                    <span class="ref-no-contact">No contact details</span>
+                                }
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(referee.Notes))
+                            {
+                                <p class="ref-notes">@referee.Notes</p>
+                            }
+
+                            @if (referee.UpcomingFixtures.Any())
+                            {
+                                <div class="ref-fixtures">
+                                    <p class="ref-fixtures-label">Upcoming fixtures</p>
+                                    @foreach (var f in referee.UpcomingFixtures)
+                                    {
+                                        <div class="ref-fixture-chip">
+                                            <span class="ref-fixture-teams">@f.HomeTeam vs @f.AwayTeam</span>
+                                            <div class="ref-fixture-when">
+                                                <span class="ref-fixture-date">
+                                                    @(f.Kickoff.HasValue
+                                                        ? f.Kickoff.Value.ToString("ddd d MMM")
+                                                        : $"{f.WindowStart:ddd d MMM} – {f.WindowEnd:ddd d MMM}")
+                                                </span>
+                                                @if (f.Kickoff.HasValue)
+                                                {
+                                                    <span class="ref-fixture-ko">@f.Kickoff.Value.ToString("HH:mm")</span>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="ref-available">Available — no upcoming fixtures assigned</p>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        }
+    </div>
+
+</div>
+
+@code {
+    private List<RefereeDto> referees = new();
+    private SaveRefereeRequest form = new();
+    private int? editingId;
+    private bool isLoading = true;
+    private bool isSaving = false;
+    private bool isAdmin = false;
+    private string? formError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var auth = await AuthProvider.GetAuthenticationStateAsync();
+        isAdmin = auth.User.IsInRole("Admin");
+        referees = await RefereeService.GetAll();
+        isLoading = false;
+    }
+
+    void StartEdit(RefereeDto referee)
+    {
+        editingId = referee.Id;
+        form = new SaveRefereeRequest
+        {
+            Name        = referee.Name,
+            PhoneNumber = referee.PhoneNumber,
+            Email       = referee.Email,
+            Notes       = referee.Notes
+        };
+        formError = null;
+    }
+
+    void CancelEdit()
+    {
+        editingId = null;
+        form = new SaveRefereeRequest();
+        formError = null;
+    }
+
+    async Task Save()
+    {
+        formError = null;
+
+        if (string.IsNullOrWhiteSpace(form.Name))
+        {
+            formError = "Name is required.";
+            return;
+        }
+
+        isSaving = true;
+
+        if (editingId.HasValue)
+        {
+            var updated = await RefereeService.Update(editingId.Value, form);
+            if (updated != null)
+            {
+                var idx = referees.FindIndex(r => r.Id == editingId.Value);
+                if (idx >= 0) referees[idx] = updated;
+                CancelEdit();
+            }
+            else
+            {
+                formError = "Failed to update. Please try again.";
+            }
+        }
+        else
+        {
+            var created = await RefereeService.Create(form);
+            if (created != null)
+            {
+                referees.Add(created);
+                referees = referees.OrderBy(r => r.Name).ToList();
+                form = new SaveRefereeRequest();
+            }
+            else
+            {
+                formError = "Failed to add referee. Please try again.";
+            }
+        }
+
+        isSaving = false;
+    }
+
+    async Task Delete(int id)
+    {
+        await RefereeService.Delete(id);
+        referees.RemoveAll(r => r.Id == id);
+    }
+}

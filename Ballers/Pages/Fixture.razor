@@ -9,6 +9,7 @@
 @inject AuthService AuthService
 @inject PenaltyService PenaltyService
 @inject FairplayService FairplayService
+@inject RefereeService RefereeService
 @inject NavigationManager Nav
 
 <PageTitle>@(fixture != null ? $"{fixture.HomeTeam} vs {fixture.AwayTeam}" : "Fixture")</PageTitle>
@@ -62,6 +63,13 @@
                 </div>
             </div>
 
+            @if (fixture.IsEditLocked)
+            {
+                <div class="fixture-locked-banner">
+                    This fixture is locked — editing closed 2 weeks after the final whistle.
+                </div>
+            }
+
             <!-- TABS -->
             <div class="fixture-tabs">
                 <button class="tab @(activeTab == "overview" ? "active" : "")"
@@ -87,6 +95,44 @@
             @if (activeTab == "overview")
             {
                 <div class="tab-content">
+
+                    @if (isAdmin)
+                    {
+                        @if (fixture.HomeCaptainName != null || fixture.AwayCaptainName != null)
+                        {
+                            <div class="captaincy-bar">
+                                @if (fixture.HomeCaptainName != null)
+                                {
+                                    <span class="captaincy-chip"><span class="cap-badge">C</span>@fixture.HomeTeam: @fixture.HomeCaptainName</span>
+                                }
+                                @if (fixture.HomeViceCaptainName != null)
+                                {
+                                    <span class="captaincy-chip vc"><span class="cap-badge">VC</span>@fixture.HomeViceCaptainName</span>
+                                }
+                                @if (fixture.AwayCaptainName != null)
+                                {
+                                    <span class="captaincy-chip"><span class="cap-badge">C</span>@fixture.AwayTeam: @fixture.AwayCaptainName</span>
+                                }
+                                @if (fixture.AwayViceCaptainName != null)
+                                {
+                                    <span class="captaincy-chip vc"><span class="cap-badge">VC</span>@fixture.AwayViceCaptainName</span>
+                                }
+                            </div>
+                        }
+                    }
+                    else if (!string.IsNullOrEmpty(myCaptainName) || !string.IsNullOrEmpty(myViceName))
+                    {
+                        <div class="captaincy-bar">
+                            @if (!string.IsNullOrEmpty(myCaptainName))
+                            {
+                                <span class="captaincy-chip"><span class="cap-badge">C</span>@myCaptainName</span>
+                            }
+                            @if (!string.IsNullOrEmpty(myViceName))
+                            {
+                                <span class="captaincy-chip vc"><span class="cap-badge">VC</span>@myViceName</span>
+                            }
+                        </div>
+                    }
 
                     <div class="fixture-info-grid">
                         <div class="info-card">
@@ -125,7 +171,30 @@
                             <span class="label">Kickoff</span>
                             <span class="info-value">@(fixture.Kickoff?.ToString("dd MMM HH:mm") ?? "Not set")</span>
                         </div>
+                        <div class="info-card">
+                            <span class="label">Referee</span>
+                            <span class="info-value">@(fixture.RefereeName ?? "Not assigned")</span>
+                        </div>
                     </div>
+
+                    @if (headToHead.Any())
+                    {
+                        <div class="h2h-section">
+                            <h3>Recent Meetings</h3>
+                            @foreach (var m in headToHead)
+                            {
+                                var date = (m.Kickoff ?? m.WindowEnd).ToString("dd MMM yy");
+                                var homeWin = m.HomeScore > m.AwayScore;
+                                var awayWin = m.AwayScore > m.HomeScore;
+                                <div class="h2h-row">
+                                    <span class="h2h-team @(homeWin ? "winner" : "")">@m.HomeTeam</span>
+                                    <span class="h2h-score">@m.HomeScore – @m.AwayScore</span>
+                                    <span class="h2h-team away @(awayWin ? "winner" : "")">@m.AwayTeam</span>
+                                    <span class="h2h-date">@date</span>
+                                </div>
+                            }
+                        </div>
+                    }
 
                     @if (isAdmin)
                     {
@@ -134,18 +203,62 @@
                             <div class="schedule-editor">
                                 <div class="schedule-field">
                                     <label>Location</label>
-                                    <input type="text" class="stat-input schedule-input" placeholder="Venue name" @bind="scheduleLocation" />
+                                    <input type="text" class="stat-input schedule-input" placeholder="Venue name" @bind="scheduleLocation" disabled="@fixture.IsEditLocked" />
                                 </div>
                                 <div class="schedule-field">
                                     <label>Postcode</label>
-                                    <input type="text" class="stat-input schedule-input" placeholder="e.g. M1 1AE" @bind="schedulePostcode" />
+                                    <input type="text" class="stat-input schedule-input" placeholder="e.g. M1 1AE" @bind="schedulePostcode" disabled="@fixture.IsEditLocked" />
                                 </div>
                                 <div class="schedule-field">
                                     <label>Kickoff</label>
-                                    <input type="datetime-local" class="stat-input schedule-input" @bind="scheduleKickoff" />
+                                    <input type="datetime-local" class="stat-input schedule-input" @bind="scheduleKickoff" disabled="@fixture.IsEditLocked" />
                                 </div>
-                                <button class="primary-btn" @onclick="SaveSchedule">Save Schedule</button>
+                                <button class="primary-btn" @onclick="SaveSchedule" disabled="@fixture.IsEditLocked">Save Schedule</button>
                             </div>
+                        </div>
+
+                        <div class="referee-section">
+                            <h3>Referee</h3>
+                            @if (!allReferees.Any())
+                            {
+                                <p class="referee-none">No referees registered yet. <a href="/referees">Add one →</a></p>
+                            }
+                            else
+                            {
+                                <div class="referee-editor">
+                                    <select class="referee-select" @bind="selectedRefereeId" disabled="@fixture.IsEditLocked">
+                                        <option value="">— No referee assigned —</option>
+                                        @foreach (var r in allReferees)
+                                        {
+                                            var booked = r.UpcomingFixtures.Any(f =>
+                                                f.FixtureId != fixture.Id &&
+                                                f.WindowStart <= fixture.WindowEnd &&
+                                                f.WindowEnd   >= fixture.WindowStart);
+                                            <option value="@r.Id">
+                                                @r.Name@(booked ? " (Booked this window)" : "")
+                                            </option>
+                                        }
+                                    </select>
+                                    <button class="primary-btn" @onclick="SaveReferee" disabled="@fixture.IsEditLocked">Save</button>
+                                </div>
+                                @if (selectedRefereeId.HasValue)
+                                {
+                                    var current = allReferees.FirstOrDefault(r => r.Id == selectedRefereeId);
+                                    @if (current != null)
+                                    {
+                                        <div class="referee-contact">
+                                            @if (!string.IsNullOrEmpty(current.PhoneNumber))
+                                            {
+                                                <a href="tel:@current.PhoneNumber" class="referee-contact-link">📞 @current.PhoneNumber</a>
+                                            }
+                                            @if (!string.IsNullOrEmpty(current.Email))
+                                            {
+                                                <a href="mailto:@current.Email" class="referee-contact-link">✉ @current.Email</a>
+                                            }
+                                        </div>
+                                    }
+                                }
+                            }
                         </div>
 
                         <div class="fairplay-section">
@@ -153,13 +266,13 @@
                             <div class="fairplay-editor">
                                 <div class="fairplay-team">
                                     <label>@fixture.HomeTeam</label>
-                                    <input type="number" class="stat-input" min="1" max="10" @bind="fairplayHomeRating" />
+                                    <input type="number" class="stat-input" min="1" max="10" @bind="fairplayHomeRating" disabled="@fixture.IsEditLocked" />
                                 </div>
                                 <div class="fairplay-team">
                                     <label>@fixture.AwayTeam</label>
-                                    <input type="number" class="stat-input" min="1" max="10" @bind="fairplayAwayRating" />
+                                    <input type="number" class="stat-input" min="1" max="10" @bind="fairplayAwayRating" disabled="@fixture.IsEditLocked" />
                                 </div>
-                                <button class="primary-btn" @onclick="SaveFairplay">Save Ratings</button>
+                                <button class="primary-btn" @onclick="SaveFairplay" disabled="@fixture.IsEditLocked">Save Ratings</button>
                             </div>
                         </div>
                     }
@@ -176,12 +289,27 @@
                     @foreach (var player in teamPlayers)
                     {
                         <label class="squad-row">
-                            <input type="checkbox" @bind="player.IsSelected" />
-                            <span>@player.Name</span>
+                            <input type="checkbox" @bind="player.IsSelected" disabled="@fixture.IsEditLocked" />
+                            <span class="squad-name">@player.Name</span>
+                            @if (player.IsSelected && !fixture.IsEditLocked)
+                            {
+                                <button class="cap-toggle @(captainPlayerId == player.PlayerId ? "active" : "")"
+                                        @onclick="() => SetCaptain(player.PlayerId)"
+                                        @onclick:stopPropagation>C</button>
+                                <button class="cap-toggle vc @(vicePlayerId == player.PlayerId ? "active" : "")"
+                                        @onclick="() => SetVice(player.PlayerId)"
+                                        @onclick:stopPropagation>VC</button>
+                            }
                         </label>
                     }
 
-                    <button class="primary-btn squad-save-btn" @onclick="SaveSquad">Save Squad</button>
+                    <div class="squad-actions">
+                        <button class="primary-btn squad-save-btn" @onclick="SaveSquad" disabled="@fixture.IsEditLocked">Save Squad</button>
+                        @if (!fixture.IsEditLocked)
+                        {
+                            <button class="primary-btn squad-save-btn captaincy-save-btn" @onclick="SaveCaptaincy">Save Captaincy</button>
+                        }
+                    </div>
                 </div>
             }
 
@@ -191,30 +319,71 @@
                 <div class="tab-content">
                     <h3>Match Stats</h3>
 
-                    <div class="stats-table">
-                        <div class="stats-header">
-                            <span>Player</span>
-                            <span>Goals</span>
-                            <span>Assists</span>
-                            <span>MOTM</span>
-                            <span>Yellow</span>
-                            <span>Red</span>
-                        </div>
-
-                        @foreach (var player in players)
-                        {
-                            <div class="stats-row">
-                                <span class="player-name">@player.Name</span>
-                                <input type="number" min="0" class="stat-input" @bind="player.Goals" />
-                                <input type="number" min="0" class="stat-input" @bind="player.Assists" />
-                                <input type="checkbox" class="motm-checkbox" checked="@player.IsMotm" @onchange="@(() => SelectMotm(player))" />
-                                <input type="checkbox" class="motm-checkbox yellow-card" @bind="player.HasYellowCard" />
-                                <input type="checkbox" class="motm-checkbox red-card" @bind="player.HasRedCard" />
-                            </div>
-                        }
+                    <div class="stats-team-toggle">
+                        <button class="stats-team-btn @(!viewingOpponent ? "active" : "")"
+                                @onclick="() => viewingOpponent = false">@myTeamLabel</button>
+                        <button class="stats-team-btn @(viewingOpponent ? "active" : "")"
+                                @onclick="LoadOpponentStats">@opponentTeamName</button>
                     </div>
 
-                    <button class="submit-stats-btn" @onclick="SubmitStats">Submit Match Stats</button>
+                    @if (!viewingOpponent)
+                    {
+                        <div class="stats-table">
+                            <div class="stats-header">
+                                <span>Player</span>
+                                <span>Goals</span>
+                                <span>Assists</span>
+                                <span>MOTM</span>
+                                <span>Yellow</span>
+                                <span>Red</span>
+                            </div>
+
+                            @foreach (var player in players)
+                            {
+                                <div class="stats-row">
+                                    <span class="player-name">@player.Name</span>
+                                    <input type="number" min="0" class="stat-input" @bind="player.Goals" disabled="@fixture.IsEditLocked" />
+                                    <input type="number" min="0" class="stat-input" @bind="player.Assists" disabled="@fixture.IsEditLocked" />
+                                    <input type="checkbox" class="motm-checkbox" checked="@player.IsMotm" @onchange="@(() => SelectMotm(player))" disabled="@fixture.IsEditLocked" />
+                                    <input type="checkbox" class="motm-checkbox yellow-card" @bind="player.HasYellowCard" disabled="@fixture.IsEditLocked" />
+                                    <input type="checkbox" class="motm-checkbox red-card" @bind="player.HasRedCard" disabled="@fixture.IsEditLocked" />
+                                </div>
+                            }
+                        </div>
+
+                        <button class="submit-stats-btn" @onclick="SubmitStats" disabled="@fixture.IsEditLocked">Submit Match Stats</button>
+                    }
+                    else
+                    {
+                        @if (opponentStats.Any())
+                        {
+                            <div class="stats-table">
+                                <div class="stats-header">
+                                    <span>Player</span>
+                                    <span>Goals</span>
+                                    <span>Assists</span>
+                                    <span>MOTM</span>
+                                    <span>Yellow</span>
+                                    <span>Red</span>
+                                </div>
+                                @foreach (var p in opponentStats)
+                                {
+                                    <div class="stats-row">
+                                        <span class="player-name">@p.Name</span>
+                                        <span class="stat-value">@p.Goals</span>
+                                        <span class="stat-value">@p.Assists</span>
+                                        <span class="stat-value"><span class="motm-dot @(p.IsMotm ? "on" : "")"></span></span>
+                                        <span class="stat-value"><span class="card-dot yellow @(p.YellowCard ? "on" : "")"></span></span>
+                                        <span class="stat-value"><span class="card-dot red @(p.RedCard ? "on" : "")"></span></span>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="stats-pending">@opponentTeamName have not submitted their stats yet.</p>
+                        }
+                    }
                 </div>
             }
 
@@ -243,7 +412,7 @@
                             {
                                 <div class="penalty-row">
                                     <span class="kick-order">@kick.Order</span>
-                                    <select class="penalty-select" @bind="kick.PlayerId">
+                                    <select class="penalty-select" @bind="kick.PlayerId" disabled="@fixture.IsEditLocked">
                                         <option value="0">Select player…</option>
                                         @foreach (var p in teamPlayers)
                                         {
@@ -251,14 +420,14 @@
                                         }
                                     </select>
                                     <label class="scored-toggle">
-                                        <input type="checkbox" @bind="kick.Scored" />
+                                        <input type="checkbox" @bind="kick.Scored" disabled="@fixture.IsEditLocked" />
                                         <span>@(kick.Scored ? "Scored" : "Missed")</span>
                                     </label>
                                 </div>
                             }
                         </div>
 
-                        <button class="submit-stats-btn" @onclick="SubmitPenalties">Submit Penalties</button>
+                        <button class="submit-stats-btn" @onclick="SubmitPenalties" disabled="@fixture.IsEditLocked">Submit Penalties</button>
 
                         @if (opponentKicks.Any())
                         {
@@ -321,9 +490,26 @@
     private int fairplayHomeRating = 5;
     private int fairplayAwayRating = 5;
 
+    private bool viewingOpponent = false;
+    private List<OpponentPlayerStatDto> opponentStats = new();
+    private bool opponentStatsLoaded = false;
+    private string myTeamLabel => isAdmin ? fixture!.HomeTeam : "My Team";
+    private string opponentTeamName => isAdmin ? fixture!.AwayTeam : (isUserHome ? fixture!.AwayTeam : fixture!.HomeTeam);
+
+    private List<HeadToHeadResultDto> headToHead = new();
+    private bool h2hLoaded = false;
+
+    private int? captainPlayerId;
+    private int? vicePlayerId;
+    private string? myCaptainName => isUserHome ? fixture?.HomeCaptainName : fixture?.AwayCaptainName;
+    private string? myViceName    => isUserHome ? fixture?.HomeViceCaptainName : fixture?.AwayViceCaptainName;
+
     private string scheduleLocation = "";
     private string? schedulePostcode;
     private DateTime scheduleKickoff = DateTime.Now;
+
+    private List<RefereeDto> allReferees = new();
+    private int? selectedRefereeId;
 
     private bool toastVisible = false;
     private bool toastSuccess = true;
@@ -375,6 +561,7 @@
     protected override async Task OnInitializedAsync()
     {
         await LoadFixture();
+        await LoadHeadToHead();
     }
 
     async Task LoadFixture()
@@ -446,6 +633,9 @@
             };
         }).ToList();
 
+        captainPlayerId = (isAdmin || isUserHome) ? fixture.HomeCaptainId : fixture.AwayCaptainId;
+        vicePlayerId    = (isAdmin || isUserHome) ? fixture.HomeViceCaptainId : fixture.AwayViceCaptainId;
+
         if (isAdmin)
         {
             scheduleLocation = fixture.Location ?? "";
@@ -455,7 +645,26 @@
             var fairplay = await FairplayService.GetRatings(fixture.Id);
             fairplayHomeRating = fairplay?.HomeRating ?? 5;
             fairplayAwayRating = fairplay?.AwayRating ?? 5;
+
+            allReferees = await RefereeService.GetAll();
+            selectedRefereeId = fixture.RefereeId;
         }
+    }
+
+    async Task LoadHeadToHead()
+    {
+        if (!h2hLoaded)
+        {
+            headToHead = await FixtureService.GetHeadToHead(fixture!.Id);
+            h2hLoaded = true;
+        }
+    }
+
+    async Task SaveReferee()
+    {
+        await RefereeService.AssignToFixture(fixture!.Id, selectedRefereeId);
+        fixture = await FixtureService.GetFixture(fixture!.Id);
+        await ShowToast("Referee saved.");
     }
 
     async Task SaveSchedule()
@@ -486,7 +695,42 @@
         StateHasChanged();
     }
 
-    void SelectTab(string tab) => activeTab = tab;
+    async Task LoadOpponentStats()
+    {
+        if (!opponentStatsLoaded)
+        {
+            int? overrideTeamId = isAdmin ? fixture!.AwayTeamId : null;
+            opponentStats = await FixtureService.GetOpponentStats(fixture!.Id, overrideTeamId);
+            opponentStatsLoaded = true;
+        }
+        viewingOpponent = true;
+    }
+
+    async Task SelectTab(string tab)
+    {
+        activeTab = tab;
+        viewingOpponent = false;
+        if (tab == "overview") await LoadHeadToHead();
+    }
+
+    void SetCaptain(int playerId)
+    {
+        captainPlayerId = captainPlayerId == playerId ? null : playerId;
+        if (captainPlayerId.HasValue && vicePlayerId == captainPlayerId) vicePlayerId = null;
+    }
+
+    void SetVice(int playerId)
+    {
+        vicePlayerId = vicePlayerId == playerId ? null : playerId;
+        if (vicePlayerId.HasValue && captainPlayerId == vicePlayerId) captainPlayerId = null;
+    }
+
+    async Task SaveCaptaincy()
+    {
+        await FixtureService.SaveCaptaincy(fixture!.Id, captainPlayerId, vicePlayerId);
+        fixture = await FixtureService.GetFixture(fixture!.Id);
+        await ShowToast("Captaincy saved.");
+    }
 
     void SelectMotm(PlayerStatViewModel selected)
     {

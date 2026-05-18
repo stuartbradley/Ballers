@@ -1,0 +1,159 @@
+@page "/stats"
+@using Ballers.Models
+@using Ballers.Services
+
+@inject StatService StatService
+@inject SeasonService SeasonService
+
+<PageTitle>Player Stats | Ballers</PageTitle>
+
+<div class="stats-page">
+
+    <div class="stats-hero">
+        <div class="stats-hero-inner">
+            <p class="stats-eyebrow">Ballers League</p>
+            <h1>Player Stats</h1>
+            <p class="stats-sub">Season statistics for every player</p>
+        </div>
+    </div>
+
+    <div class="stats-body">
+
+        @if (isLoading)
+        {
+            <LoadingSpinner />
+        }
+        else
+        {
+            <div class="stats-filters">
+                <div class="filter-group">
+                    <span class="filter-label">Season</span>
+                    <div class="select-wrapper">
+                        <select class="season-select" @bind="selectedSeasonId" @bind:after="LoadLeaderboard">
+                            <option value="0">All Seasons</option>
+                            @foreach (var s in seasons)
+                            {
+                                <option value="@s.Id">Season @s.SeasonNumber</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <span class="filter-label">Position</span>
+                    <div class="pos-filters">
+                        @foreach (var pos in new[] { "All", "GK", "DEF", "MID", "FWD" })
+                        {
+                            <button class="pos-btn @(selectedPos == pos ? "active" : "")"
+                                    @onclick="() => selectedPos = pos">@pos</button>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-card">
+                <table class="stats-leaderboard">
+                    <thead>
+                        <tr>
+                            <th class="col-rank">#</th>
+                            <th class="col-player @SortClass("name")"   @onclick='() => SortBy("name")'>Player</th>
+                            <th class="col-team  @SortClass("team")"    @onclick='() => SortBy("team")'>Team</th>
+                            <th class="col-pos">Pos</th>
+                            <th class="col-num   @SortClass("apps")"    @onclick='() => SortBy("apps")'>Apps</th>
+                            <th class="col-num   @SortClass("goals")"   @onclick='() => SortBy("goals")'>G</th>
+                            <th class="col-num   @SortClass("assists")" @onclick='() => SortBy("assists")'>A</th>
+                            <th class="col-num   @SortClass("cs")"      @onclick='() => SortBy("cs")'>CS</th>
+                            <th class="col-num   @SortClass("yellow")"  @onclick='() => SortBy("yellow")'>
+                                <span class="card-icon yellow-icon">Y</span>
+                            </th>
+                            <th class="col-num   @SortClass("red")"     @onclick='() => SortBy("red")'>
+                                <span class="card-icon red-icon">R</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Filtered.Any())
+                        {
+                            <tr><td colspan="10" class="empty-row">No stats recorded yet.</td></tr>
+                        }
+                        else
+                        {
+                            int rank = 1;
+                            @foreach (var p in Sorted)
+                            {
+                                <tr>
+                                    <td class="col-rank"><span class="rank-num">@(rank++)</span></td>
+                                    <td class="col-player">@p.Name</td>
+                                    <td class="col-team">@p.Team</td>
+                                    <td class="col-pos">
+                                        <span class="pos-badge pos-@p.Position.ToLower()">@p.Position</span>
+                                    </td>
+                                    <td class="col-num">@p.Appearances</td>
+                                    <td class="col-num goals-col">@p.Goals</td>
+                                    <td class="col-num">@p.Assists</td>
+                                    <td class="col-num">@(p.Position == "GK" ? p.CleanSheets.ToString() : "–")</td>
+                                    <td class="col-num">@(p.YellowCards > 0 ? p.YellowCards.ToString() : "–")</td>
+                                    <td class="col-num @(p.RedCards > 0 ? "red-stat" : "")">@(p.RedCards > 0 ? p.RedCards.ToString() : "–")</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+    </div>
+</div>
+
+@code {
+    private bool isLoading = true;
+    private List<SeasonDto> seasons = new();
+    private int selectedSeasonId = 0;
+    private string selectedPos = "All";
+    private List<PlayerLeaderboardDto> allPlayers = new();
+
+    private string sortCol = "goals";
+    private bool sortAsc = false;
+
+    private IEnumerable<PlayerLeaderboardDto> Filtered =>
+        selectedPos == "All"
+            ? allPlayers
+            : allPlayers.Where(p => p.Position == selectedPos);
+
+    private IEnumerable<PlayerLeaderboardDto> Sorted => sortCol switch
+    {
+        "name"    => sortAsc ? Filtered.OrderBy(x => x.Name)        : Filtered.OrderByDescending(x => x.Name),
+        "team"    => sortAsc ? Filtered.OrderBy(x => x.Team)        : Filtered.OrderByDescending(x => x.Team),
+        "apps"    => sortAsc ? Filtered.OrderBy(x => x.Appearances) : Filtered.OrderByDescending(x => x.Appearances),
+        "goals"   => sortAsc ? Filtered.OrderBy(x => x.Goals)       : Filtered.OrderByDescending(x => x.Goals),
+        "assists" => sortAsc ? Filtered.OrderBy(x => x.Assists)     : Filtered.OrderByDescending(x => x.Assists),
+        "cs"      => sortAsc ? Filtered.OrderBy(x => x.CleanSheets) : Filtered.OrderByDescending(x => x.CleanSheets),
+        "yellow"  => sortAsc ? Filtered.OrderBy(x => x.YellowCards) : Filtered.OrderByDescending(x => x.YellowCards),
+        "red"     => sortAsc ? Filtered.OrderBy(x => x.RedCards)    : Filtered.OrderByDescending(x => x.RedCards),
+        _         => Filtered.OrderByDescending(x => x.Goals).ThenByDescending(x => x.Assists)
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        seasons = await SeasonService.GetSeasons();
+        var current = await SeasonService.GetCurrentSeason();
+        selectedSeasonId = current?.Id ?? 0;
+        await LoadLeaderboard();
+        isLoading = false;
+    }
+
+    async Task LoadLeaderboard()
+    {
+        int? sid = selectedSeasonId > 0 ? selectedSeasonId : null;
+        allPlayers = await StatService.GetLeaderboard(sid);
+    }
+
+    void SortBy(string col)
+    {
+        if (sortCol == col) sortAsc = !sortAsc;
+        else { sortCol = col; sortAsc = false; }
+    }
+
+    string SortClass(string col) =>
+        sortCol == col ? (sortAsc ? "sorted asc" : "sorted desc") : "sortable";
+}

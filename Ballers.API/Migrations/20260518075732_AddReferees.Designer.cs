@@ -4,6 +4,7 @@ using Ballers.API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Ballers.API.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260518075732_AddReferees")]
+    partial class AddReferees
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -130,28 +133,16 @@ namespace Ballers.API.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("AwayCaptainId")
-                        .HasColumnType("int");
-
                     b.Property<int>("AwayScore")
                         .HasColumnType("int");
 
                     b.Property<int>("AwayTeamId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("AwayViceCaptainId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("HomeCaptainId")
-                        .HasColumnType("int");
-
                     b.Property<int>("HomeScore")
                         .HasColumnType("int");
 
                     b.Property<int>("HomeTeamId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("HomeViceCaptainId")
                         .HasColumnType("int");
 
                     b.Property<bool>("IsPlayed")
@@ -183,17 +174,9 @@ namespace Ballers.API.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AwayCaptainId");
-
                     b.HasIndex("AwayTeamId");
 
-                    b.HasIndex("AwayViceCaptainId");
-
-                    b.HasIndex("HomeCaptainId");
-
                     b.HasIndex("HomeTeamId");
-
-                    b.HasIndex("HomeViceCaptainId");
 
                     b.HasIndex("RefereeId");
 
@@ -595,37 +578,17 @@ namespace Ballers.API.Migrations
 
             modelBuilder.Entity("Ballers.API.Models.Fixture", b =>
                 {
-                    b.HasOne("Ballers.API.Models.Player", "AwayCaptain")
-                        .WithMany()
-                        .HasForeignKey("AwayCaptainId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
                     b.HasOne("Ballers.API.Models.Team", "AwayTeam")
                         .WithMany()
                         .HasForeignKey("AwayTeamId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Ballers.API.Models.Player", "AwayViceCaptain")
-                        .WithMany()
-                        .HasForeignKey("AwayViceCaptainId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
-                    b.HasOne("Ballers.API.Models.Player", "HomeCaptain")
-                        .WithMany()
-                        .HasForeignKey("HomeCaptainId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
                     b.HasOne("Ballers.API.Models.Team", "HomeTeam")
                         .WithMany()
                         .HasForeignKey("HomeTeamId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("Ballers.API.Models.Player", "HomeViceCaptain")
-                        .WithMany()
-                        .HasForeignKey("HomeViceCaptainId")
-                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("Ballers.API.Models.Referee", "Referee")
                         .WithMany("Fixtures")
@@ -638,17 +601,9 @@ namespace Ballers.API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("AwayCaptain");
-
                     b.Navigation("AwayTeam");
 
-                    b.Navigation("AwayViceCaptain");
-
-                    b.Navigation("HomeCaptain");
-
                     b.Navigation("HomeTeam");
-
-                    b.Navigation("HomeViceCaptain");
 
                     b.Navigation("Referee");
 

@@ -59,6 +59,9 @@ namespace Ballers.API.Controllers
             if (!isAdmin && user.TeamId != fixture.HomeTeamId && user.TeamId != fixture.AwayTeamId)
                 return Forbid();
 
+            if (fixture.IsEditLocked)
+                return Conflict("This fixture is locked — more than 2 weeks have passed since it was played.");
+
             try
             {
                 await _fixtures.SubmitStatsAsync(fixtureId, request.PlayerStats, isAdmin ? null : user.TeamId);
@@ -73,11 +76,28 @@ namespace Ballers.API.Controllers
             => Ok(await _fixtures.GetTableAsync(seasonId));
 
         [Authorize(Roles = "Admin")]
+        [HttpPut("{fixtureId}/referee")]
+        public async Task<IActionResult> AssignReferee(int fixtureId, [FromBody] AssignRefereeRequest request)
+        {
+            var fixture = await _fixtures.GetByIdAsync(fixtureId);
+            if (fixture == null) return NotFound();
+
+            if (fixture.IsEditLocked)
+                return Conflict("This fixture is locked — more than 2 weeks have passed since it was played.");
+
+            await _fixtures.AssignRefereeAsync(fixtureId, request.RefereeId);
+            return Ok();
+        }
+
+        [Authorize(Roles = "Admin")]
         [HttpPut("{fixtureId}/schedule")]
         public async Task<IActionResult> UpdateSchedule(int fixtureId, UpdateFixtureScheduleRequest request)
         {
             var fixture = await _fixtures.GetByIdAsync(fixtureId);
             if (fixture == null) return NotFound();
+
+            if (fixture.IsEditLocked)
+                return Conflict("This fixture is locked — more than 2 weeks have passed since it was played.");
 
             await _fixtures.UpdateScheduleAsync(fixtureId, request.Location, request.Postcode, request.KickOffTime);
             return Ok();
@@ -120,6 +140,9 @@ namespace Ballers.API.Controllers
             if (!isAdmin && user.TeamId != fixture.HomeTeamId && user.TeamId != fixture.AwayTeamId)
                 return Forbid();
 
+            if (fixture.IsEditLocked)
+                return Conflict("This fixture is locked — more than 2 weeks have passed since it was played.");
+
             await _fixtures.UpdateSquadAsync(fixtureId, request.PlayerIds, isAdmin ? null : user.TeamId);
             return Ok();
         }
@@ -140,6 +163,52 @@ namespace Ballers.API.Controllers
         [HttpGet("{fixtureId}/stats")]
         public async Task<IActionResult> GetFixtureStats(int fixtureId)
             => Ok(await _fixtures.GetStatsAsync(fixtureId));
+
+        [HttpGet("{fixtureId}/opponent-stats")]
+        public async Task<IActionResult> GetOpponentStats(int fixtureId, [FromQuery] int? teamId = null)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
+
+            var fixture = await _fixtures.GetByIdAsync(fixtureId);
+            if (fixture == null) return NotFound();
+
+            bool isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
+            if (!isAdmin && user.TeamId != fixture.HomeTeamId && user.TeamId != fixture.AwayTeamId)
+                return Forbid();
+
+            int opponentTeamId = (isAdmin && teamId.HasValue)
+                ? teamId.Value
+                : (user.TeamId == fixture.HomeTeamId ? fixture.AwayTeamId : fixture.HomeTeamId);
+
+            return Ok(await _fixtures.GetOpponentStatsAsync(fixtureId, opponentTeamId));
+        }
+
+        [HttpGet("{fixtureId}/head-to-head")]
+        public async Task<IActionResult> GetHeadToHead(int fixtureId)
+        {
+            var fixture = await _fixtures.GetByIdAsync(fixtureId);
+            if (fixture == null) return NotFound();
+            return Ok(await _fixtures.GetHeadToHeadAsync(fixture.HomeTeamId, fixture.AwayTeamId, fixtureId));
+        }
+
+        [HttpPut("{fixtureId}/captaincy")]
+        public async Task<IActionResult> SaveCaptaincy(int fixtureId, [FromBody] SaveCaptaincyRequest request)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
+
+            var fixture = await _fixtures.GetByIdAsync(fixtureId);
+            if (fixture == null) return NotFound();
+
+            bool isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
+            if (!isAdmin && user.TeamId != fixture.HomeTeamId && user.TeamId != fixture.AwayTeamId)
+                return Forbid();
+
+            int teamId = (isAdmin || user.TeamId == null) ? fixture.HomeTeamId : user.TeamId.Value;
+            await _fixtures.SaveCaptaincyAsync(fixtureId, teamId, request.CaptainPlayerId, request.ViceCaptainPlayerId);
+            return Ok();
+        }
 
         [AllowAnonymous]
         [HttpGet("next-fixtures")]

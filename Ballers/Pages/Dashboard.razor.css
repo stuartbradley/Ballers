@@ -352,9 +352,13 @@
     border-left-color: #60a5fa;
     animation: fadeUp 0.35s 0.16s ease both;
 }
+.action-tiles-row ::deep .referees-action {
+    border-left-color: #f97316;
+    animation: fadeUp 0.35s 0.20s ease both;
+}
 .action-tiles-row ::deep .admin-action {
     border-left-color: var(--ballers-pitch);
-    animation: fadeUp 0.35s 0.20s ease both;
+    animation: fadeUp 0.35s 0.24s ease both;
 }
 
 .action-tiles-row ::deep .action-card:hover {
@@ -396,6 +400,7 @@
 .action-tiles-row ::deep .myteam-action:hover   .action-arrow { color: #a78bfa;              transform: translateX(4px); }
 .action-tiles-row ::deep .fixtures-action:hover .action-arrow { color: var(--ballers-accent); transform: translateX(4px); }
 .action-tiles-row ::deep .squad-action:hover    .action-arrow { color: #60a5fa;              transform: translateX(4px); }
+.action-tiles-row ::deep .referees-action:hover .action-arrow { color: #f97316;              transform: translateX(4px); }
 .action-tiles-row ::deep .admin-action:hover    .action-arrow { color: var(--ballers-pitch);  transform: translateX(4px); }
 
 /* ================================================================

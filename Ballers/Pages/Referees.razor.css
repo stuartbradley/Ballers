@@ -1,0 +1,410 @@
+/* ================================================================
+   REFEREES PAGE
+   ================================================================ */
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes heroReveal {
+    from { clip-path: inset(100% 0 0 0); opacity: 0; transform: translateY(12px); }
+    to   { clip-path: inset(0% 0 0 0); opacity: 1; transform: translateY(0); }
+}
+
+@keyframes eyebrowPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0); }
+    50%       { box-shadow: 0 0 0 6px rgba(250, 204, 21, 0.18); }
+}
+
+.referees-page {
+    min-height: calc(100vh - 71px);
+    background: #07101E;
+}
+
+/* ── Hero ── */
+
+.referees-hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 28vh;
+    overflow: hidden;
+    background: #0B1628;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.referees-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(135deg, rgba(30, 58, 138, 0.4) 0%, rgba(8, 13, 35, 0.85) 100%),
+        repeating-linear-gradient(90deg, transparent 0px, transparent 59px, rgba(255,255,255,0.018) 59px, rgba(255,255,255,0.018) 60px),
+        repeating-linear-gradient(0deg,  transparent 0px, transparent 59px, rgba(255,255,255,0.018) 59px, rgba(255,255,255,0.018) 60px);
+    pointer-events: none;
+}
+
+.referees-hero-inner {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    padding: 52px 24px;
+}
+
+.referees-eyebrow {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--ballers-primary);
+    background: var(--ballers-accent);
+    padding: 5px 16px;
+    border-radius: 100px;
+    margin-bottom: 18px;
+    animation: eyebrowPulse 3s 1.2s ease-in-out infinite, fadeUp 0.5s ease both;
+}
+
+.referees-hero-inner h1 {
+    font-family: var(--font-display);
+    font-size: clamp(3.5rem, 8vw, 6rem);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: white;
+    line-height: 1;
+    margin: 0 0 14px;
+    animation: heroReveal 0.65s 0.15s ease both;
+}
+
+.referees-sub {
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+    margin: 0;
+    animation: fadeUp 0.6s 0.4s ease both;
+}
+
+/* ── Body ── */
+
+.referees-body {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 40px 32px 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.referees-loading,
+.referees-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 30vh;
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.3);
+}
+
+/* ── Add / Edit form card ── */
+
+.ref-form-card {
+    background: #111D33;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-left: 3px solid var(--ballers-accent);
+    border-radius: 12px;
+    padding: 28px 32px;
+    animation: fadeUp 0.4s ease both;
+}
+
+.ref-form-card h3 {
+    font-family: var(--font-display);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.3);
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ref-form { display: flex; flex-direction: column; gap: 16px; }
+
+.ref-field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.ref-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.ref-field label {
+    font-family: var(--font-display);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.ref-field .required { color: var(--ballers-accent); }
+
+.ref-field input {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: white;
+    font-size: 0.9rem;
+    transition: border-color 0.15s;
+}
+
+.ref-field input:focus {
+    outline: none;
+    border-color: var(--ballers-accent);
+}
+
+.ref-form-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-top: 4px;
+}
+
+.cancel-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    padding: 10px 20px;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+}
+
+.cancel-btn:hover {
+    border-color: rgba(255, 255, 255, 0.25);
+    color: white;
+}
+
+.ref-error {
+    font-size: 0.82rem;
+    color: #f87171;
+    margin: 0;
+}
+
+/* ── Referee list ── */
+
+.ref-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.ref-card {
+    background: #111D33;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 24px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    animation: fadeUp 0.4s ease both;
+    transition: border-color 0.2s;
+}
+
+.ref-card.editing {
+    border-color: rgba(250, 204, 21, 0.3);
+}
+
+.ref-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.ref-card-name {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: white;
+}
+
+.ref-card-actions { display: flex; gap: 8px; }
+
+.ref-edit-btn,
+.ref-delete-btn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.15s;
+}
+
+.ref-edit-btn {
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.ref-edit-btn:hover { opacity: 0.75; }
+
+.ref-delete-btn {
+    background: rgba(239, 68, 68, 0.12);
+    color: #f87171;
+}
+
+.ref-delete-btn:hover { opacity: 0.75; }
+
+/* ── Contacts ── */
+
+.ref-card-contacts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.ref-contact-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 100px;
+    padding: 5px 14px 5px 10px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.ref-contact-chip.phone { color: var(--ballers-accent); }
+.ref-contact-chip.email { color: #60a5fa; }
+
+.ref-contact-chip:hover {
+    background: rgba(255, 255, 255, 0.09);
+    border-color: rgba(255, 255, 255, 0.16);
+}
+
+.chip-icon { font-size: 0.85rem; }
+
+.ref-no-contact {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.22);
+    font-style: italic;
+}
+
+/* ── Notes ── */
+
+.ref-notes {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.45);
+    line-height: 1.6;
+    margin: 0;
+    padding-top: 4px;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+/* ── Upcoming fixtures ── */
+
+.ref-fixtures-label {
+    font-family: var(--font-display);
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.25);
+    margin: 0 0 8px;
+}
+
+.ref-fixtures {
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.ref-fixture-chip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    margin-bottom: 6px;
+    gap: 12px;
+}
+
+.ref-fixture-chip:last-child { margin-bottom: 0; }
+
+.ref-fixture-teams {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.ref-fixture-when {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.ref-fixture-date {
+    font-family: var(--font-display);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.55);
+    white-space: nowrap;
+}
+
+.ref-fixture-ko {
+    background: var(--ballers-accent);
+    color: var(--ballers-primary);
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    padding: 3px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.ref-available {
+    font-size: 0.78rem;
+    color: #4ade80;
+    margin: 0;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 768px) {
+    .referees-hero-inner { padding: 40px 16px; }
+    .referees-body { padding: 28px 16px 60px; }
+    .ref-form-card { padding: 20px 20px; }
+    .ref-field-row { grid-template-columns: 1fr; }
+    .ref-card { padding: 18px 20px; }
+}
