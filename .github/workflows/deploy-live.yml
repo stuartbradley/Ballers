@@ -53,6 +53,15 @@ jobs:
           local-dir: publish/api/
           server-dir: /api.blackpoolballersleague.co.uk/
 
+      - name: Force upload API config files
+        run: |
+          curl --ssl-reqd --insecure -T publish/api/appsettings.json \
+            "ftp://${{ secrets.FTP_SERVER }}/api.blackpoolballersleague.co.uk/appsettings.json" \
+            -u "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}"
+          curl --ssl-reqd --insecure -T publish/api/appsettings.Production.json \
+            "ftp://${{ secrets.FTP_SERVER }}/api.blackpoolballersleague.co.uk/appsettings.Production.json" \
+            -u "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}"
+
       - name: Bring API back online
         if: always()
         run: |
