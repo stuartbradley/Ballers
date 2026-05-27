@@ -1,0 +1,867 @@
+{
+  "C:\\git\\Ballers\\.claude\\settings.local.json": {
+    "mtime": 1779782662.6732798,
+    "ast_hash": "c1670b6fefd9866c86379c582f6da648",
+    "semantic_hash": "c1670b6fefd9866c86379c582f6da648"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\appsettings.Development.json": {
+    "mtime": 1779577235.0042245,
+    "ast_hash": "03399a36cb692a5c686b54e0e386d1d7",
+    "semantic_hash": "03399a36cb692a5c686b54e0e386d1d7"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\appsettings.json": {
+    "mtime": 1779577224.220884,
+    "ast_hash": "6d3ad86944cfe878f2a811cc3bfba234",
+    "semantic_hash": "6d3ad86944cfe878f2a811cc3bfba234"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\appsettings.Live.json": {
+    "mtime": 1779577259.5129337,
+    "ast_hash": "7182410d3dff2359e1767c8e9607e415",
+    "semantic_hash": "7182410d3dff2359e1767c8e9607e415"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\appsettings.Testing.json": {
+    "mtime": 1779095968.4910402,
+    "ast_hash": "d1cab2dba5af98ecadb85d346f215644",
+    "semantic_hash": "d1cab2dba5af98ecadb85d346f215644"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Program.cs": {
+    "mtime": 1779577270.817294,
+    "ast_hash": "a6985d3690ac69e668e14ce6da0e971a",
+    "semantic_hash": "a6985d3690ac69e668e14ce6da0e971a"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\BackgroundServices\\NotificationBackgroundService.cs": {
+    "mtime": 1779454759.8074677,
+    "ast_hash": "82b850477dfc3bc1b1f59ab398792c1d",
+    "semantic_hash": "82b850477dfc3bc1b1f59ab398792c1d"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Controllers\\AdminController.cs": {
+    "mtime": 1779575728.5275576,
+    "ast_hash": "e8b75c20380cf5a69600c4c5c9124162",
+    "semantic_hash": "e8b75c20380cf5a69600c4c5c9124162"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Controllers\\AuthController.cs": {
+    "mtime": 1779449305.4708807,
+    "ast_hash": "2772c49e231c8e1270b6f47cf20548e6",
+    "semantic_hash": "2772c49e231c8e1270b6f47cf20548e6"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Controllers\\FairplayController.cs": {
+    "mtime": 1779102335.300632,
+    "ast_hash": "75f627208bec0d84527c15c766293091",
+    "semantic_hash": "75f627208bec0d84527c15c766293091"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Controllers\\FixturesController.cs": {
+    "mtime": 1779453473.8260746,
+    "ast_hash": "f91a160ec04b04882c8161980f481ffe",
+    "semantic_hash": "f91a160ec04b04882c8161980f481ffe"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Controllers\\KnockoutController.cs": {
+    "mtime": 1779575680.3692114,
+    "ast_hash": "4361fcc322b1fa786848bf38f1f33ea2",
+    "semantic_hash": "4361fcc322b1fa786848bf38f1f33ea2"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Controllers\\NotificationsController.cs": {
+    "mtime": 1779453165.9817083,
+    "ast_hash": "d59aab4bea0b0171eee8d0a7bb1c240d",
+    "semantic_hash": "d59aab4bea0b0171eee8d0a7bb1c240d"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Controllers\\PenaltyController.cs": {
+    "mtime": 1778691447.0062897,
+    "ast_hash": "8ee380de9536d374374c09d701aa6eee",
+    "semantic_hash": "8ee380de9536d374374c09d701aa6eee"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Controllers\\PlayersController.cs": {
+    "mtime": 1779481630.5546267,
+    "ast_hash": "c66582f4360921e11ff7e5dfe4563fcb",
+    "semantic_hash": "c66582f4360921e11ff7e5dfe4563fcb"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Controllers\\RefereesController.cs": {
+    "mtime": 1779100923.4909606,
+    "ast_hash": "bcce4ac463850e83843ebf88d244d401",
+    "semantic_hash": "bcce4ac463850e83843ebf88d244d401"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Controllers\\SeasonsController.cs": {
+    "mtime": 1779575761.6076627,
+    "ast_hash": "626e8942a51dd782e689c58026d2acdd",
+    "semantic_hash": "626e8942a51dd782e689c58026d2acdd"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Controllers\\StatsController.cs": {
+    "mtime": 1779109670.6883254,
+    "ast_hash": "c202868a543a678323a6caac0040a1f8",
+    "semantic_hash": "c202868a543a678323a6caac0040a1f8"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Controllers\\StatusController.cs": {
+    "mtime": 1776187017.536822,
+    "ast_hash": "509da4c684d7f3cd72990b85923505b9",
+    "semantic_hash": "509da4c684d7f3cd72990b85923505b9"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Controllers\\TeamProfileController.cs": {
+    "mtime": 1779481693.3454516,
+    "ast_hash": "bdc44ce8be6d1a86d57d5d367cbdda6e",
+    "semantic_hash": "bdc44ce8be6d1a86d57d5d367cbdda6e"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Controllers\\TeamsController.cs": {
+    "mtime": 1779056265.5823715,
+    "ast_hash": "29af2fab7c554c2d034a5d79a865f5e8",
+    "semantic_hash": "29af2fab7c554c2d034a5d79a865f5e8"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Controllers\\TestController.cs": {
+    "mtime": 1779613333.0045106,
+    "ast_hash": "074a1eb11d58698001a357de542d969a",
+    "semantic_hash": "074a1eb11d58698001a357de542d969a"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Data\\ApplicationDbContext.cs": {
+    "mtime": 1779575568.204051,
+    "ast_hash": "a222dfdc47563921e42d281758ba3e7a",
+    "semantic_hash": "a222dfdc47563921e42d281758ba3e7a"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Data\\DbSeeder.cs": {
+    "mtime": 1779453225.3371997,
+    "ast_hash": "eba58d78dc8bbb61beacab553a39b30a",
+    "semantic_hash": "eba58d78dc8bbb61beacab553a39b30a"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Data\\DevSeeder.cs": {
+    "mtime": 1779106585.6878476,
+    "ast_hash": "e6b2ab30735e146e0848187f7c8e1d53",
+    "semantic_hash": "e6b2ab30735e146e0848187f7c8e1d53"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260227124954_InitialCreate.cs": {
+    "mtime": 1772196594.6521337,
+    "ast_hash": "104ce766451a3f01f81f59001350c74c",
+    "semantic_hash": "104ce766451a3f01f81f59001350c74c"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260227124954_InitialCreate.Designer.cs": {
+    "mtime": 1772196594.6531339,
+    "ast_hash": "e39d5993d39e2a60f43b4bb073b123b9",
+    "semantic_hash": "e39d5993d39e2a60f43b4bb073b123b9"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260227210135_AddSeasons.cs": {
+    "mtime": 1772226096.0160158,
+    "ast_hash": "401df676ce16f45ef294a0a3edd35e4a",
+    "semantic_hash": "401df676ce16f45ef294a0a3edd35e4a"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260227210135_AddSeasons.Designer.cs": {
+    "mtime": 1772226096.0170174,
+    "ast_hash": "1ca898b275a8cba99e23fad721eb8b89",
+    "semantic_hash": "1ca898b275a8cba99e23fad721eb8b89"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260301142851_spelling_mistake.cs": {
+    "mtime": 1772375331.3434775,
+    "ast_hash": "b41ad1908cf07bb0ab7165b5019a2b38",
+    "semantic_hash": "b41ad1908cf07bb0ab7165b5019a2b38"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260301142851_spelling_mistake.Designer.cs": {
+    "mtime": 1772375331.3444786,
+    "ast_hash": "a62aadf831f2087fc12924fb95f3ae5e",
+    "semantic_hash": "a62aadf831f2087fc12924fb95f3ae5e"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260302101926_Players.cs": {
+    "mtime": 1772446767.0348315,
+    "ast_hash": "22bf179e232c9f79ae5bebc7fc7a7c27",
+    "semantic_hash": "22bf179e232c9f79ae5bebc7fc7a7c27"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260302101926_Players.Designer.cs": {
+    "mtime": 1772446767.0348315,
+    "ast_hash": "a9a4a8ec4fdd396fb9d76f23355f9af6",
+    "semantic_hash": "a9a4a8ec4fdd396fb9d76f23355f9af6"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260302121926_Playerpositions.cs": {
+    "mtime": 1772453966.7273283,
+    "ast_hash": "512378d13ec630e1ae5fda3630a843f2",
+    "semantic_hash": "512378d13ec630e1ae5fda3630a843f2"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260302121926_Playerpositions.Designer.cs": {
+    "mtime": 1772453966.7273283,
+    "ast_hash": "216ebd0074ed0ea02ae78662e2461560",
+    "semantic_hash": "216ebd0074ed0ea02ae78662e2461560"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260302134251_FixturePlayerStats.cs": {
+    "mtime": 1772458971.3145492,
+    "ast_hash": "5ca5fd43b0c8450e7c8136573df7aea2",
+    "semantic_hash": "5ca5fd43b0c8450e7c8136573df7aea2"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260302134251_FixturePlayerStats.Designer.cs": {
+    "mtime": 1772458971.3155496,
+    "ast_hash": "ef3acb2513d1cc6cd5ee0cc51914d435",
+    "semantic_hash": "ef3acb2513d1cc6cd5ee0cc51914d435"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260304203241_fixedNullableFixtures.cs": {
+    "mtime": 1772656361.4979286,
+    "ast_hash": "f86bac728dbf5e9f463ae93981b7532a",
+    "semantic_hash": "f86bac728dbf5e9f463ae93981b7532a"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260304203241_fixedNullableFixtures.Designer.cs": {
+    "mtime": 1772656361.4979286,
+    "ast_hash": "82095035c0d91d23c0bdc8020679c3e9",
+    "semantic_hash": "82095035c0d91d23c0bdc8020679c3e9"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260310145423_seasonNumbers.cs": {
+    "mtime": 1773154463.480746,
+    "ast_hash": "4ccd8438cb8917cd4154fb87a097a601",
+    "semantic_hash": "4ccd8438cb8917cd4154fb87a097a601"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260310145423_seasonNumbers.Designer.cs": {
+    "mtime": 1773154463.4817472,
+    "ast_hash": "2bd8a86ed646e697095b81e7b1863593",
+    "semantic_hash": "2bd8a86ed646e697095b81e7b1863593"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260310154646_matchNumber.cs": {
+    "mtime": 1773157606.6785583,
+    "ast_hash": "1988c32249d1034560e3204c34ca1fc9",
+    "semantic_hash": "1988c32249d1034560e3204c34ca1fc9"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260310154646_matchNumber.Designer.cs": {
+    "mtime": 1773157606.679559,
+    "ast_hash": "1565efe6e5d8292d78d7102827d18eae",
+    "semantic_hash": "1565efe6e5d8292d78d7102827d18eae"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260317202857_multipleFixes.cs": {
+    "mtime": 1773779337.8768427,
+    "ast_hash": "cf354a6d92e5a0c8eff17935ec7f3935",
+    "semantic_hash": "cf354a6d92e5a0c8eff17935ec7f3935"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260317202857_multipleFixes.Designer.cs": {
+    "mtime": 1773779337.8768427,
+    "ast_hash": "7e017331bd761b5ab1c265cb52327721",
+    "semantic_hash": "7e017331bd761b5ab1c265cb52327721"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260318204729_fixturePlayers.cs": {
+    "mtime": 1773866869.617368,
+    "ast_hash": "cb262d9ea58576b2e627dfeb796c6d39",
+    "semantic_hash": "cb262d9ea58576b2e627dfeb796c6d39"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260318204729_fixturePlayers.Designer.cs": {
+    "mtime": 1773866849.1673272,
+    "ast_hash": "7c9a43afb7607ae01fd376274451b790",
+    "semantic_hash": "7c9a43afb7607ae01fd376274451b790"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260419194759_fixYellowAndRedCards.cs": {
+    "mtime": 1776628079.2620497,
+    "ast_hash": "13aa1755e41a0e99b88e0ec969da78e7",
+    "semantic_hash": "13aa1755e41a0e99b88e0ec969da78e7"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260419194759_fixYellowAndRedCards.Designer.cs": {
+    "mtime": 1776628079.2630506,
+    "ast_hash": "bdb09fdf0d14226f968b39bbbeab4bdc",
+    "semantic_hash": "bdb09fdf0d14226f968b39bbbeab4bdc"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260513134656_AddPenaltyShootout.cs": {
+    "mtime": 1778680016.960037,
+    "ast_hash": "55bfbcdf53baff2411f55f877c49c5fd",
+    "semantic_hash": "55bfbcdf53baff2411f55f877c49c5fd"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260513134656_AddPenaltyShootout.Designer.cs": {
+    "mtime": 1778680016.9610379,
+    "ast_hash": "4fcbe1fdff3378f2ebe2b6057a38563f",
+    "semantic_hash": "4fcbe1fdff3378f2ebe2b6057a38563f"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260513141045_AddFairplayRating.cs": {
+    "mtime": 1778681445.8024068,
+    "ast_hash": "56336b978239e3447e8614dfb113a808",
+    "semantic_hash": "56336b978239e3447e8614dfb113a808"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260513141045_AddFairplayRating.Designer.cs": {
+    "mtime": 1778681445.8024068,
+    "ast_hash": "2044592b8476ecf8fa9f968a6202e0c8",
+    "semantic_hash": "2044592b8476ecf8fa9f968a6202e0c8"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260513170414_CleanupFixtureFields.cs": {
+    "mtime": 1778691854.541264,
+    "ast_hash": "778fa0d1182ca7792b90c90b5dc518a7",
+    "semantic_hash": "778fa0d1182ca7792b90c90b5dc518a7"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260513170414_CleanupFixtureFields.Designer.cs": {
+    "mtime": 1778691854.5422647,
+    "ast_hash": "f1737bdaab62884d2a68735ddea31059",
+    "semantic_hash": "f1737bdaab62884d2a68735ddea31059"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260517130532_AddTeamProfileFields.cs": {
+    "mtime": 1779056265.5843732,
+    "ast_hash": "bc76be1de2af8f2ceb35e2e433e1655a",
+    "semantic_hash": "bc76be1de2af8f2ceb35e2e433e1655a"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260517130532_AddTeamProfileFields.Designer.cs": {
+    "mtime": 1779056265.583372,
+    "ast_hash": "ee41671a30ed0979cb05becc4a32e0c4",
+    "semantic_hash": "ee41671a30ed0979cb05becc4a32e0c4"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260517200538_AddFixturePostcode.cs": {
+    "mtime": 1779056265.585374,
+    "ast_hash": "911daab9c30df0753ce668da9afc6ded",
+    "semantic_hash": "911daab9c30df0753ce668da9afc6ded"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260517200538_AddFixturePostcode.Designer.cs": {
+    "mtime": 1779056265.585374,
+    "ast_hash": "9a1083abc0d851fecb0a4cb4f42144af",
+    "semantic_hash": "9a1083abc0d851fecb0a4cb4f42144af"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260518075732_AddReferees.cs": {
+    "mtime": 1779091052.159793,
+    "ast_hash": "6bf0f06d5c82a85cbf2ee50cae2500de",
+    "semantic_hash": "6bf0f06d5c82a85cbf2ee50cae2500de"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260518075732_AddReferees.Designer.cs": {
+    "mtime": 1779091052.1607935,
+    "ast_hash": "7a4b6a1aacd63e009afd6ce9a1e99deb",
+    "semantic_hash": "7a4b6a1aacd63e009afd6ce9a1e99deb"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260518120000_AddFixtureCaptaincy.cs": {
+    "mtime": 1779104900.6793933,
+    "ast_hash": "0769a4e54a8f8faecc0e003d5fcbebed",
+    "semantic_hash": "0769a4e54a8f8faecc0e003d5fcbebed"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260518120000_AddFixtureCaptaincy.Designer.cs": {
+    "mtime": 1779106702.622169,
+    "ast_hash": "d5855daa421f0e21a2d3830d2b3e96df",
+    "semantic_hash": "d5855daa421f0e21a2d3830d2b3e96df"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260522123834_AddNotifications.cs": {
+    "mtime": 1779453515.007534,
+    "ast_hash": "d77046673fcc64c2a726c13ee672e903",
+    "semantic_hash": "d77046673fcc64c2a726c13ee672e903"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260522123834_AddNotifications.Designer.cs": {
+    "mtime": 1779453515.007534,
+    "ast_hash": "1cac16109eea26e224715c1856d9df30",
+    "semantic_hash": "1cac16109eea26e224715c1856d9df30"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260522205659_PlayerProfileImage.cs": {
+    "mtime": 1779483419.3124952,
+    "ast_hash": "d4f3d7331d5cc497eb0692843f31b334",
+    "semantic_hash": "d4f3d7331d5cc497eb0692843f31b334"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260522205659_PlayerProfileImage.Designer.cs": {
+    "mtime": 1779483419.3134966,
+    "ast_hash": "6444a507673a2bbb4bd8f34b622ed499",
+    "semantic_hash": "6444a507673a2bbb4bd8f34b622ed499"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\20260523120000_AddKnockoutBracket.cs": {
+    "mtime": 1779576909.6522508,
+    "ast_hash": "b2c0093ddeb6b14631e388663ab181fd",
+    "semantic_hash": "b2c0093ddeb6b14631e388663ab181fd"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Migrations\\ApplicationDbContextModelSnapshot.cs": {
+    "mtime": 1779483419.3154984,
+    "ast_hash": "80357db0dbc7807aaa6cb20d4ef7e7c3",
+    "semantic_hash": "80357db0dbc7807aaa6cb20d4ef7e7c3"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Models\\ApplicationUser.cs": {
+    "mtime": 1772191266.1209402,
+    "ast_hash": "37535e58acdda33313d6530370a23d77",
+    "semantic_hash": "37535e58acdda33313d6530370a23d77"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Models\\FairplayRating.cs": {
+    "mtime": 1778681076.6328244,
+    "ast_hash": "cca837e7d4953480900df7f6b44474c9",
+    "semantic_hash": "cca837e7d4953480900df7f6b44474c9"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Models\\Fixture.cs": {
+    "mtime": 1779104865.2579956,
+    "ast_hash": "79e558685d40fab028fd4b823c373917",
+    "semantic_hash": "79e558685d40fab028fd4b823c373917"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Models\\FixturePlayer.cs": {
+    "mtime": 1778691393.9611523,
+    "ast_hash": "0249792cee5d4237f1c3f707e587360e",
+    "semantic_hash": "0249792cee5d4237f1c3f707e587360e"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Models\\FixturePlayerStat.cs": {
+    "mtime": 1776627897.4500625,
+    "ast_hash": "b2e125670d466215f68db46273695053",
+    "semantic_hash": "b2e125670d466215f68db46273695053"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Models\\FixtureWeekDto.cs": {
+    "mtime": 1779056265.5878797,
+    "ast_hash": "80165257caebd03c42be178262b40f6e",
+    "semantic_hash": "80165257caebd03c42be178262b40f6e"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Models\\KnockoutFixture.cs": {
+    "mtime": 1779575521.0236053,
+    "ast_hash": "f58074629f2289addf928a4696018919",
+    "semantic_hash": "f58074629f2289addf928a4696018919"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Models\\Notification.cs": {
+    "mtime": 1779453105.2327,
+    "ast_hash": "35658da286f62f6b20c78ee3f5046fc2",
+    "semantic_hash": "35658da286f62f6b20c78ee3f5046fc2"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Models\\PenaltyKick.cs": {
+    "mtime": 1778679746.3398201,
+    "ast_hash": "1567e4db76afca152d844e0e38020e91",
+    "semantic_hash": "1567e4db76afca152d844e0e38020e91"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Models\\PenaltyShootout.cs": {
+    "mtime": 1778679744.8082716,
+    "ast_hash": "a44c78473c3fcbdfdd5eae3cc2cd461a",
+    "semantic_hash": "a44c78473c3fcbdfdd5eae3cc2cd461a"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Models\\Player.cs": {
+    "mtime": 1779481541.459955,
+    "ast_hash": "eb80be83a7a33665cdc5b862d76142b3",
+    "semantic_hash": "eb80be83a7a33665cdc5b862d76142b3"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Models\\Referee.cs": {
+    "mtime": 1779058275.6621418,
+    "ast_hash": "98d2f416f97a9af65e73e77aa3badb3f",
+    "semantic_hash": "98d2f416f97a9af65e73e77aa3badb3f"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Models\\Season.cs": {
+    "mtime": 1779575535.17258,
+    "ast_hash": "466f8fd7b0fde3b8290493c55cabdbb9",
+    "semantic_hash": "466f8fd7b0fde3b8290493c55cabdbb9"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Models\\Team.cs": {
+    "mtime": 1779056265.5888817,
+    "ast_hash": "881085eee2c8b189c5249aaef2a20756",
+    "semantic_hash": "881085eee2c8b189c5249aaef2a20756"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Models\\Requests\\AssignRefereeRequest.cs": {
+    "mtime": 1779058398.4544814,
+    "ast_hash": "8e8d07a2439f433ee08dc5c2fe0938f8",
+    "semantic_hash": "8e8d07a2439f433ee08dc5c2fe0938f8"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Models\\Requests\\CreatePlayerRequest.cs": {
+    "mtime": 1772454011.869464,
+    "ast_hash": "ed8aa1cf5b943170c8801598ccadbdd2",
+    "semantic_hash": "ed8aa1cf5b943170c8801598ccadbdd2"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Models\\Requests\\CreateTeamRequest.cs": {
+    "mtime": 1772629930.9794986,
+    "ast_hash": "7446e4f0674a141ea4e9efb449a8377d",
+    "semantic_hash": "7446e4f0674a141ea4e9efb449a8377d"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Models\\Requests\\GenerateFixturesRequest.cs": {
+    "mtime": 1773153239.445104,
+    "ast_hash": "127579ee58fee01d44388fd6df478195",
+    "semantic_hash": "127579ee58fee01d44388fd6df478195"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Models\\Requests\\SubmitFixtureStatsRequest.cs": {
+    "mtime": 1776120415.5975707,
+    "ast_hash": "0c2f2ca75ebe999f8d87163dfcdd66c0",
+    "semantic_hash": "0c2f2ca75ebe999f8d87163dfcdd66c0"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Models\\Requests\\SubmitPenaltyKicksRequest.cs": {
+    "mtime": 1778679747.5063884,
+    "ast_hash": "93449920f443ff2d486517a5bf2d5fe2",
+    "semantic_hash": "93449920f443ff2d486517a5bf2d5fe2"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Models\\Requests\\UploadPlayerImageRequest.cs": {
+    "mtime": 1779481551.6257415,
+    "ast_hash": "10ad66e5cf08820de6fac05f82571256",
+    "semantic_hash": "10ad66e5cf08820de6fac05f82571256"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Properties\\launchSettings.json": {
+    "mtime": 1779095980.8728466,
+    "ast_hash": "b20bbe36384f95b00c879be6958ffbd4",
+    "semantic_hash": "b20bbe36384f95b00c879be6958ffbd4"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Services\\AdminService.cs": {
+    "mtime": 1778702009.1390755,
+    "ast_hash": "038bb39ac62b503941f538c05f844d6d",
+    "semantic_hash": "038bb39ac62b503941f538c05f844d6d"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Services\\EmailService.cs": {
+    "mtime": 1779449245.1766117,
+    "ast_hash": "f1d9277f3eb9b97da73c43e37533c426",
+    "semantic_hash": "f1d9277f3eb9b97da73c43e37533c426"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Services\\FairplayService.cs": {
+    "mtime": 1778682510.8109627,
+    "ast_hash": "3a3e116f86f25369a542a075ccb63744",
+    "semantic_hash": "3a3e116f86f25369a542a075ccb63744"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Services\\FixtureService.cs": {
+    "mtime": 1779104939.7051494,
+    "ast_hash": "22fbedf0e8b25818b62523d409728e11",
+    "semantic_hash": "22fbedf0e8b25818b62523d409728e11"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Services\\ImageModerationService.cs": {
+    "mtime": 1779056265.5908847,
+    "ast_hash": "3f6c16fde7f95ddf2d503e2eccfc66b6",
+    "semantic_hash": "3f6c16fde7f95ddf2d503e2eccfc66b6"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Services\\KnockoutService.cs": {
+    "mtime": 1779575655.9738655,
+    "ast_hash": "160d53ae82c7917c0c795708a8ca29db",
+    "semantic_hash": "160d53ae82c7917c0c795708a8ca29db"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Services\\NotificationChecker.cs": {
+    "mtime": 1779454746.9953203,
+    "ast_hash": "3ac8b760095d5ffad2dec14be63644e6",
+    "semantic_hash": "3ac8b760095d5ffad2dec14be63644e6"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Services\\NotificationService.cs": {
+    "mtime": 1779453126.5382025,
+    "ast_hash": "0acbcd06a9e6574e4858c3252b141a23",
+    "semantic_hash": "0acbcd06a9e6574e4858c3252b141a23"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Services\\PenaltyService.cs": {
+    "mtime": 1778939556.0378885,
+    "ast_hash": "4a1c8e1b2e294d812207d4926eeb7d49",
+    "semantic_hash": "4a1c8e1b2e294d812207d4926eeb7d49"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Services\\PlayerService.cs": {
+    "mtime": 1779481588.4708982,
+    "ast_hash": "d41ff067b245971a186594b2902b5268",
+    "semantic_hash": "d41ff067b245971a186594b2902b5268"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Services\\SeasonService.cs": {
+    "mtime": 1778702019.7910974,
+    "ast_hash": "6ae016f6078d6cba966c00e326e5e086",
+    "semantic_hash": "6ae016f6078d6cba966c00e326e5e086"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Services\\ServiceResults.cs": {
+    "mtime": 1779481516.3285751,
+    "ast_hash": "312d54b76ae29b3ac39a779b6aca85f5",
+    "semantic_hash": "312d54b76ae29b3ac39a779b6aca85f5"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Services\\StatsService.cs": {
+    "mtime": 1779109665.5607245,
+    "ast_hash": "132ec96702f35675bcbf679485573e4d",
+    "semantic_hash": "132ec96702f35675bcbf679485573e4d"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Services\\TeamService.cs": {
+    "mtime": 1779056265.592887,
+    "ast_hash": "dab6a919fe4fe1c6d40c9b3621451751",
+    "semantic_hash": "dab6a919fe4fe1c6d40c9b3621451751"
+  },
+  "C:\\git\\Ballers\\Ballers.API\\Services\\UserService.cs": {
+    "mtime": 1778702010.997757,
+    "ast_hash": "a738210ef43c9fa1c98ecc389d0d69fe",
+    "semantic_hash": "a738210ef43c9fa1c98ecc389d0d69fe"
+  },
+  "C:\\git\\Ballers\\Ballers.Shared\\FairplayDtos.cs": {
+    "mtime": 1778681078.0573864,
+    "ast_hash": "c9fabcabca551621db4852fd868ee85d",
+    "semantic_hash": "c9fabcabca551621db4852fd868ee85d"
+  },
+  "C:\\git\\Ballers\\Ballers.Shared\\KnockoutDtos.cs": {
+    "mtime": 1779575599.5377023,
+    "ast_hash": "a99b59b904406a4464076726eb91b151",
+    "semantic_hash": "a99b59b904406a4464076726eb91b151"
+  },
+  "C:\\git\\Ballers\\Ballers.Shared\\LeagueTableRowDto.cs": {
+    "mtime": 1778674957.6986728,
+    "ast_hash": "3fbb9670b21c46500c1dc794fc845021",
+    "semantic_hash": "3fbb9670b21c46500c1dc794fc845021"
+  },
+  "C:\\git\\Ballers\\Ballers.Shared\\NotificationDtos.cs": {
+    "mtime": 1779453098.289899,
+    "ast_hash": "2614a3f191e09dcc8a893dab71994edc",
+    "semantic_hash": "2614a3f191e09dcc8a893dab71994edc"
+  },
+  "C:\\git\\Ballers\\Ballers.Shared\\PenaltyTableRowDto.cs": {
+    "mtime": 1778679749.31709,
+    "ast_hash": "734ddd524aaa4fc2a74a287c8fb63574",
+    "semantic_hash": "734ddd524aaa4fc2a74a287c8fb63574"
+  },
+  "C:\\git\\Ballers\\Ballers.Shared\\RefereeDto.cs": {
+    "mtime": 1779058343.9746132,
+    "ast_hash": "c37e8efd4b674d3060a748ac0416c376",
+    "semantic_hash": "c37e8efd4b674d3060a748ac0416c376"
+  },
+  "C:\\git\\Ballers\\Ballers.Shared\\SaveCaptaincyRequest.cs": {
+    "mtime": 1779104957.4807818,
+    "ast_hash": "37bc1efe364f2ddd50db1f4c24f027fa",
+    "semantic_hash": "37bc1efe364f2ddd50db1f4c24f027fa"
+  },
+  "C:\\git\\Ballers\\Ballers.Shared\\TeamProfileDto.cs": {
+    "mtime": 1779461500.1485238,
+    "ast_hash": "90d6604d1759fd2a0510a286bd2aee4c",
+    "semantic_hash": "90d6604d1759fd2a0510a286bd2aee4c"
+  },
+  "C:\\git\\Ballers\\Ballers.Shared\\UpdateFixtureScheduleRequest.cs": {
+    "mtime": 1779056265.5938873,
+    "ast_hash": "e5818cf34932fe92a4ff1be6ed62a57f",
+    "semantic_hash": "e5818cf34932fe92a4ff1be6ed62a57f"
+  },
+  "C:\\git\\Ballers\\Ballers.Shared\\UpdateFixtureSquadRequest.cs": {
+    "mtime": 1778675324.664317,
+    "ast_hash": "80b5c0d119061f38fcd8f9f41f5db100",
+    "semantic_hash": "80b5c0d119061f38fcd8f9f41f5db100"
+  },
+  "C:\\git\\Ballers\\Ballers.Tests\\DtoTests.cs": {
+    "mtime": 1778681861.8909183,
+    "ast_hash": "1593d8d3f0e7ef0d8132c94541202e66",
+    "semantic_hash": "1593d8d3f0e7ef0d8132c94541202e66"
+  },
+  "C:\\git\\Ballers\\Ballers.Tests\\FairplayServiceTests.cs": {
+    "mtime": 1778690262.5034668,
+    "ast_hash": "02aa1a85cd56f7a9ffd44e4b6fbddb11",
+    "semantic_hash": "02aa1a85cd56f7a9ffd44e4b6fbddb11"
+  },
+  "C:\\git\\Ballers\\Ballers.Tests\\FixtureServiceTests.cs": {
+    "mtime": 1779123692.704287,
+    "ast_hash": "62cec6cc7b84929e842364191565235d",
+    "semantic_hash": "62cec6cc7b84929e842364191565235d"
+  },
+  "C:\\git\\Ballers\\Ballers.Tests\\PenaltyServiceTests.cs": {
+    "mtime": 1778690295.0932286,
+    "ast_hash": "b4f6d3043bcd205fd85188d7f3c26ef7",
+    "semantic_hash": "b4f6d3043bcd205fd85188d7f3c26ef7"
+  },
+  "C:\\git\\Ballers\\Ballers.Tests\\PlayerServiceTests.cs": {
+    "mtime": 1778690329.3594067,
+    "ast_hash": "8b9336763a03ae1f4cf75e0b945ece90",
+    "semantic_hash": "8b9336763a03ae1f4cf75e0b945ece90"
+  },
+  "C:\\git\\Ballers\\Ballers.Tests\\StatsServiceTests.cs": {
+    "mtime": 1779123651.6955135,
+    "ast_hash": "398391d93d476e97261622813f0cfbf9",
+    "semantic_hash": "398391d93d476e97261622813f0cfbf9"
+  },
+  "C:\\git\\Ballers\\Ballers.Tests\\Helpers\\DbContextFactory.cs": {
+    "mtime": 1779123805.0068674,
+    "ast_hash": "0c9508aa9c1bda25927ff481a817bfdb",
+    "semantic_hash": "0c9508aa9c1bda25927ff481a817bfdb"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Program.cs": {
+    "mtime": 1779575797.0552435,
+    "ast_hash": "4b8c7a331654338bca9f833a18cd9b9d",
+    "semantic_hash": "4b8c7a331654338bca9f833a18cd9b9d"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Auth\\AuthService.cs": {
+    "mtime": 1779449335.9619644,
+    "ast_hash": "54ecbde93b45821156a5df20ee1cb66b",
+    "semantic_hash": "54ecbde93b45821156a5df20ee1cb66b"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Auth\\AuthStateProvider.cs": {
+    "mtime": 1778958563.4601324,
+    "ast_hash": "a88eab04f00329b23664dd9440e1256e",
+    "semantic_hash": "a88eab04f00329b23664dd9440e1256e"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Infrastructure\\CredentialsHandler.cs": {
+    "mtime": 1772210161.9553547,
+    "ast_hash": "6fa9715b93891907dbba868f26f20e4c",
+    "semantic_hash": "6fa9715b93891907dbba868f26f20e4c"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Models\\ChangePasswordRequest.cs": {
+    "mtime": 1779442478.9849863,
+    "ast_hash": "c0324469f8929fae4c61a2db2af815aa",
+    "semantic_hash": "c0324469f8929fae4c61a2db2af815aa"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Models\\CreateTeamViewModel.cs": {
+    "mtime": 1772630794.665517,
+    "ast_hash": "792aa01a754ad116163b4e4a0ed0cee0",
+    "semantic_hash": "792aa01a754ad116163b4e4a0ed0cee0"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Models\\FixtureDetailsDto.cs": {
+    "mtime": 1779104977.9696984,
+    "ast_hash": "474b240849c8ae42f68964bbe4ecbfae",
+    "semantic_hash": "474b240849c8ae42f68964bbe4ecbfae"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Models\\FixtureDto.cs": {
+    "mtime": 1779056265.6004214,
+    "ast_hash": "817c576c16f59968a4874e2360252b3e",
+    "semantic_hash": "817c576c16f59968a4874e2360252b3e"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Models\\FixturePlayerStatInput.cs": {
+    "mtime": 1776628475.0953784,
+    "ast_hash": "e5214de4372e5269bbc22b5a7d2eb324",
+    "semantic_hash": "e5214de4372e5269bbc22b5a7d2eb324"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Models\\FixtureSquadPlayerDto.cs": {
+    "mtime": 1778670012.3916087,
+    "ast_hash": "cac73eebac6bf1a78fdfdc95e607eeac",
+    "semantic_hash": "cac73eebac6bf1a78fdfdc95e607eeac"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Models\\FixtureWeekDto.cs": {
+    "mtime": 1779056265.6014118,
+    "ast_hash": "80165257caebd03c42be178262b40f6e",
+    "semantic_hash": "80165257caebd03c42be178262b40f6e"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Models\\ForgotPasswordRequest.cs": {
+    "mtime": 1779449316.3067968,
+    "ast_hash": "11ca362399db2c6b810bcb7ac84e5e4e",
+    "semantic_hash": "11ca362399db2c6b810bcb7ac84e5e4e"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Models\\HeadToHeadResultDto.cs": {
+    "mtime": 1779104970.4142463,
+    "ast_hash": "6e85df81189db99d516680e4ad0d901f",
+    "semantic_hash": "6e85df81189db99d516680e4ad0d901f"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Models\\LeagueTableRowDto.cs": {
+    "mtime": 1778670012.5617628,
+    "ast_hash": "7c57a609858e7079decf1789a8dc7b35",
+    "semantic_hash": "7c57a609858e7079decf1789a8dc7b35"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Models\\LoginRequest.cs": {
+    "mtime": 1772126289.2651687,
+    "ast_hash": "893772ed003b50f0fa6bf63a766cd840",
+    "semantic_hash": "893772ed003b50f0fa6bf63a766cd840"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Models\\OpponentPlayerStatDto.cs": {
+    "mtime": 1779103033.404193,
+    "ast_hash": "7598693045c193941e3c3604b3ad5121",
+    "semantic_hash": "7598693045c193941e3c3604b3ad5121"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Models\\PenaltyModels.cs": {
+    "mtime": 1778679784.7963202,
+    "ast_hash": "1aac0f61b90852db6ae36d7e7b066214",
+    "semantic_hash": "1aac0f61b90852db6ae36d7e7b066214"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Models\\PlayerAssistDto.cs": {
+    "mtime": 1778670012.4256396,
+    "ast_hash": "614033571242201af186827226306a7e",
+    "semantic_hash": "614033571242201af186827226306a7e"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Models\\PlayerDto.cs": {
+    "mtime": 1779481706.6196694,
+    "ast_hash": "c7c4fbcc4e21b66ca8f3f6b64d735c76",
+    "semantic_hash": "c7c4fbcc4e21b66ca8f3f6b64d735c76"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Models\\PlayerGoalsDto.cs": {
+    "mtime": 1778670012.465676,
+    "ast_hash": "c6f3a9dbcbb846810a6e7bcd65f60b60",
+    "semantic_hash": "c6f3a9dbcbb846810a6e7bcd65f60b60"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Models\\PlayerLeaderboardDto.cs": {
+    "mtime": 1779109676.4976923,
+    "ast_hash": "ef23fa7375cab9e1333320104400eeb3",
+    "semantic_hash": "ef23fa7375cab9e1333320104400eeb3"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Models\\PlayerMotmDto.cs": {
+    "mtime": 1778670012.508715,
+    "ast_hash": "bcac5cd61733199f249afdb5be1a4c82",
+    "semantic_hash": "bcac5cd61733199f249afdb5be1a4c82"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Models\\PlayerStatsDto.cs": {
+    "mtime": 1776625436.24139,
+    "ast_hash": "9eda7bd55b6b27ee2b7c32bc49a7e32c",
+    "semantic_hash": "9eda7bd55b6b27ee2b7c32bc49a7e32c"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Models\\ResetPasswordRequest.cs": {
+    "mtime": 1779449323.8277187,
+    "ast_hash": "f837999ebae78a895e910926e02c4157",
+    "semantic_hash": "f837999ebae78a895e910926e02c4157"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Models\\SeasonDto.cs": {
+    "mtime": 1779575772.688473,
+    "ast_hash": "2e9f358d45e318ecd74a1f6c461fe965",
+    "semantic_hash": "2e9f358d45e318ecd74a1f6c461fe965"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Models\\TeamDto.cs": {
+    "mtime": 1778670012.5447476,
+    "ast_hash": "45cbd79f9f99a22e9af267eeb00fddbb",
+    "semantic_hash": "45cbd79f9f99a22e9af267eeb00fddbb"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Models\\UserInfo.cs": {
+    "mtime": 1772214467.3277826,
+    "ast_hash": "e5f8c549712a997426609a3f8d76238b",
+    "semantic_hash": "e5f8c549712a997426609a3f8d76238b"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Models\\WinLossDto.cs": {
+    "mtime": 1772399275.9983988,
+    "ast_hash": "b554458c40cc61305d41273d121ba445",
+    "semantic_hash": "b554458c40cc61305d41273d121ba445"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Properties\\launchSettings.json": {
+    "mtime": 1772202972.0108645,
+    "ast_hash": "ff86f261e783773e5fe9cf7620acc943",
+    "semantic_hash": "ff86f261e783773e5fe9cf7620acc943"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Services\\AdminService.cs": {
+    "mtime": 1778701237.373099,
+    "ast_hash": "8be5a34b3ff03dcd0ac8cdeaf12e556f",
+    "semantic_hash": "8be5a34b3ff03dcd0ac8cdeaf12e556f"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Services\\FairplayService.cs": {
+    "mtime": 1778681103.3270433,
+    "ast_hash": "5a98e106df3c90c1e85857167ba14552",
+    "semantic_hash": "5a98e106df3c90c1e85857167ba14552"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Services\\FixtureService.cs": {
+    "mtime": 1779104984.8921077,
+    "ast_hash": "1a2ad4018fa30e3874514432258d8002",
+    "semantic_hash": "1a2ad4018fa30e3874514432258d8002"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Services\\KnockoutService.cs": {
+    "mtime": 1779575786.6111863,
+    "ast_hash": "9f3e7a4f285792cf15f6c34e612d8e69",
+    "semantic_hash": "9f3e7a4f285792cf15f6c34e612d8e69"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Services\\LeagueService.cs": {
+    "mtime": 1773175152.522364,
+    "ast_hash": "f26a55c872dfb961ca52892355ff9780",
+    "semantic_hash": "f26a55c872dfb961ca52892355ff9780"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Services\\NotificationService.cs": {
+    "mtime": 1779453528.3684118,
+    "ast_hash": "8a7b6d643cadc2bced5c989235521b81",
+    "semantic_hash": "8a7b6d643cadc2bced5c989235521b81"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Services\\PenaltyService.cs": {
+    "mtime": 1778679790.7380269,
+    "ast_hash": "0d065fedaf5141e1955413aabc5eb233",
+    "semantic_hash": "0d065fedaf5141e1955413aabc5eb233"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Services\\PlayerService.cs": {
+    "mtime": 1779481750.4810126,
+    "ast_hash": "525b2f7ea3c68e0f7072dd9bb48d56ad",
+    "semantic_hash": "525b2f7ea3c68e0f7072dd9bb48d56ad"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Services\\RefereeService.cs": {
+    "mtime": 1779058421.5501938,
+    "ast_hash": "e7c1d2c41cf100507cbfd4f9a923d41e",
+    "semantic_hash": "e7c1d2c41cf100507cbfd4f9a923d41e"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Services\\SeasonService.cs": {
+    "mtime": 1778692431.4836042,
+    "ast_hash": "902e8d9b29f04159e5f340f4f56d0f71",
+    "semantic_hash": "902e8d9b29f04159e5f340f4f56d0f71"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Services\\StatService.cs": {
+    "mtime": 1779109682.3089914,
+    "ast_hash": "8cdb35dc03133a2f90f19ffe43da656f",
+    "semantic_hash": "8cdb35dc03133a2f90f19ffe43da656f"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\Services\\TeamService.cs": {
+    "mtime": 1779461534.7455423,
+    "ast_hash": "f5c5f2dd9debf79f44e6cbfccea1a368",
+    "semantic_hash": "f5c5f2dd9debf79f44e6cbfccea1a368"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\wwwroot\\appsettings.json": {
+    "mtime": 1778880965.2726758,
+    "ast_hash": "7525ad78fc3987a300f16a79f3ee52f4",
+    "semantic_hash": "7525ad78fc3987a300f16a79f3ee52f4"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\wwwroot\\js\\dashboardCharts.js": {
+    "mtime": 1779056265.614928,
+    "ast_hash": "e358b9b74aa2d4d05c4ad90fae155862",
+    "semantic_hash": "e358b9b74aa2d4d05c4ad90fae155862"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\wwwroot\\js\\imageCrop.js": {
+    "mtime": 1779487834.6089692,
+    "ast_hash": "71b4db27cb334f6a26d34715a94fdf24",
+    "semantic_hash": "71b4db27cb334f6a26d34715a94fdf24"
+  },
+  "C:\\git\\Ballers\\.playwright-mcp\\page-2026-05-22T15-07-59-636Z.yml": {
+    "mtime": 1779462479.6395452,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\wwwroot\\index.html": {
+    "mtime": 1779484419.755486,
+    "ast_hash": "9b9de152188d6da8af3407d9377f19c1",
+    "semantic_hash": "9b9de152188d6da8af3407d9377f19c1"
+  },
+  "C:\\git\\Ballers\\.playwright-mcp\\page-2026-05-22T15-08-48-179Z.png": {
+    "mtime": 1779462528.181076,
+    "ast_hash": "c02e6bd1a10a761f4d1af01a8cf02570",
+    "semantic_hash": "c02e6bd1a10a761f4d1af01a8cf02570"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\wwwroot\\images\\card-bronze.png": {
+    "mtime": 1779577774.1534457,
+    "ast_hash": "1a450f0fa49ad2644836f4028d2b9db7",
+    "semantic_hash": "1a450f0fa49ad2644836f4028d2b9db7"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\wwwroot\\images\\card-gold.png": {
+    "mtime": 1779478698.0149443,
+    "ast_hash": "1e1b68a22d0b39f4554589f8140f878f",
+    "semantic_hash": "1e1b68a22d0b39f4554589f8140f878f"
+  },
+  "C:\\git\\Ballers\\Ballers.UI\\wwwroot\\images\\silver-card.png": {
+    "mtime": 1779577852.761891,
+    "ast_hash": "5ce8beb3afd310f72106bb2753e2f53f",
+    "semantic_hash": "5ce8beb3afd310f72106bb2753e2f53f"
+  }
+}

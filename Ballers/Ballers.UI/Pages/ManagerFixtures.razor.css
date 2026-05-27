@@ -1,0 +1,426 @@
+/* ================================================================
+   MANAGER FIXTURES — dark match list
+   ================================================================ */
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes heroReveal {
+    from { clip-path: inset(100% 0 0 0); opacity: 0; transform: translateY(10px); }
+    to   { clip-path: inset(0% 0 0 0); opacity: 1; transform: translateY(0); }
+}
+
+/* ================================================================
+   PAGE SHELL
+   ================================================================ */
+
+.mgr-page {
+    min-height: calc(100vh - 71px);
+    background: #07101E;
+}
+
+/* ================================================================
+   HERO
+   ================================================================ */
+
+.mgr-hero {
+    background: #0B1628;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.mgr-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        repeating-linear-gradient(90deg, transparent 0px, transparent 79px, rgba(255, 255, 255, 0.015) 79px, rgba(255, 255, 255, 0.015) 80px),
+        repeating-linear-gradient(0deg,  transparent 0px, transparent 79px, rgba(255, 255, 255, 0.015) 79px, rgba(255, 255, 255, 0.015) 80px);
+    pointer-events: none;
+}
+
+.mgr-hero::after {
+    content: "";
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, var(--ballers-accent) 0%, rgba(250, 204, 21, 0.2) 100%);
+}
+
+.mgr-hero-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 36px 24px;
+}
+
+.mgr-eyebrow {
+    font-family: var(--font-display);
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--ballers-accent);
+    opacity: 0.75;
+    margin-bottom: 8px;
+    animation: fadeUp 0.4s ease both;
+}
+
+.mgr-hero-inner h1 {
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: white;
+    margin: 0;
+    animation: heroReveal 0.55s 0.1s ease both;
+}
+
+/* ================================================================
+   BODY
+   ================================================================ */
+
+.mgr-body {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 24px 64px;
+}
+
+/* ================================================================
+   TABLE
+   ================================================================ */
+
+.fixtures-table {
+    background: #111D33;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    overflow: hidden;
+    animation: fadeUp 0.4s 0.1s ease both;
+}
+
+.fixtures-header {
+    display: grid;
+    grid-template-columns: 56px 1.6fr 140px 1fr 110px 90px;
+    padding: 12px 20px;
+    font-family: var(--font-display);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.28);
+    background: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.fixture-row {
+    display: grid;
+    grid-template-columns: 56px 1.6fr 140px 1fr 110px 90px;
+    padding: 18px 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    align-items: center;
+    transition: background 0.15s ease;
+}
+
+.fixture-row:first-of-type { border-top: none; }
+
+.fixture-row:hover { background: rgba(255, 255, 255, 0.03); }
+
+/* Week number */
+.match-number {
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--ballers-accent);
+    letter-spacing: 0.04em;
+}
+
+/* Teams */
+.fixture-teams {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: white;
+    text-transform: uppercase;
+}
+
+.vs {
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    color: rgba(255, 255, 255, 0.25);
+}
+
+/* Kickoff / location */
+.fixture-detail {
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.45);
+    font-weight: 500;
+}
+
+/* ================================================================
+   STATUS BADGES
+   ================================================================ */
+
+.status {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-family: var(--font-display);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.status.played {
+    background: rgba(74, 222, 128, 0.1);
+    color: #4ade80;
+    border: 1px solid rgba(74, 222, 128, 0.2);
+}
+
+.status.scheduled {
+    background: rgba(96, 165, 250, 0.1);
+    color: #60a5fa;
+    border: 1px solid rgba(96, 165, 250, 0.2);
+}
+
+.status.awaiting {
+    background: rgba(250, 204, 21, 0.08);
+    color: var(--ballers-accent);
+    border: 1px solid rgba(250, 204, 21, 0.2);
+}
+
+.status.awaiting-stats {
+    background: rgba(251, 146, 60, 0.1);
+    color: #fb923c;
+    border: 1px solid rgba(251, 146, 60, 0.25);
+}
+
+.status.stats-done {
+    background: rgba(74, 222, 128, 0.08);
+    color: #4ade80;
+    border: 1px solid rgba(74, 222, 128, 0.18);
+}
+
+.status.awaiting-squad {
+    background: rgba(167, 139, 250, 0.1);
+    color: #a78bfa;
+    border: 1px solid rgba(167, 139, 250, 0.25);
+}
+
+.status-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+}
+
+/* ================================================================
+   ACTION BUTTONS
+   ================================================================ */
+
+.fixture-actions { text-align: right; }
+
+.edit-btn,
+.view-btn {
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    transition: background 0.18s, transform 0.18s;
+}
+
+.edit-btn {
+    background: var(--ballers-accent);
+    color: #07101E;
+}
+
+.edit-btn:hover {
+    background: white;
+    transform: translateY(-1px);
+}
+
+.view-btn {
+    background: transparent;
+    color: rgba(255, 255, 255, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.view-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* ================================================================
+   KNOCKOUT ROW
+   ================================================================ */
+
+.knockout-row {
+    border-left: 3px solid var(--ballers-accent);
+    background: rgba(250, 204, 21, 0.02);
+}
+
+.knockout-row:hover {
+    background: rgba(250, 204, 21, 0.04);
+}
+
+.knockout-label {
+    font-family: var(--font-display);
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ballers-accent);
+    display: block;
+    line-height: 1;
+}
+
+.knockout-round-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 100px;
+    font-family: var(--font-display);
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: rgba(250, 204, 21, 0.12);
+    color: var(--ballers-accent);
+    border: 1px solid rgba(250, 204, 21, 0.25);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* ================================================================
+   EMPTY STATE
+   ================================================================ */
+
+.empty-fixtures {
+    text-align: center;
+    padding: 80px 24px;
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.28);
+    animation: fadeUp 0.4s ease both;
+}
+
+/* ================================================================
+   TABLET (≤1024px)
+   ================================================================ */
+
+@media (max-width: 1024px) {
+    .fixtures-header,
+    .fixture-row {
+        grid-template-columns: 50px 1.4fr 130px 1fr 100px 80px;
+    }
+}
+
+/* ================================================================
+   MOBILE (≤768px) — rows become cards
+   ================================================================ */
+
+@media (max-width: 768px) {
+    .mgr-hero-inner { padding: 28px 16px; }
+
+    .mgr-body { padding: 20px 16px 48px; }
+
+    .fixtures-header { display: none; }
+
+    .fixtures-table {
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .fixture-row {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        padding: 0;
+        border-top: none;
+        border-radius: 10px;
+        background: #111D33;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        overflow: hidden;
+    }
+
+    .fixture-row:hover { background: #111D33; }
+
+    .knockout-row { border-left: 3px solid var(--ballers-accent); }
+
+    /* Week banner at the top of each card */
+    .match-number {
+        display: block;
+        padding: 8px 16px;
+        font-size: 0.6rem;
+        letter-spacing: 0.22em;
+        color: rgba(255, 255, 255, 0.35);
+        background: rgba(255, 255, 255, 0.03);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .match-number::before { content: "Week "; }
+
+    /* Teams: large, prominent */
+    .fixture-teams {
+        padding: 14px 16px 10px;
+        font-size: 1rem;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    /* Kickoff + location: detail row */
+    .fixture-detail {
+        padding: 0 16px;
+        font-size: 0.8rem;
+        line-height: 1.8;
+    }
+
+    /* Status badge row */
+    .fixture-row > span:nth-child(5) {
+        padding: 10px 16px 0;
+    }
+
+    /* Action button: full-width at bottom */
+    .fixture-actions {
+        padding: 12px 16px 14px;
+        text-align: left;
+    }
+
+    .edit-btn,
+    .view-btn {
+        width: 100%;
+        padding: 11px;
+        text-align: center;
+        border-radius: 7px;
+    }
+}
+
+/* ================================================================
+   SMALL MOBILE (≤480px)
+   ================================================================ */
+
+@media (max-width: 480px) {
+    .fixture-teams { font-size: 0.9rem; }
+}

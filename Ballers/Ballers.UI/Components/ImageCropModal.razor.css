@@ -1,0 +1,294 @@
+/* ================================================================
+   ImageCropModal — full-screen overlay with card crop preview
+   ================================================================ */
+
+.crop-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.78);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.crop-modal {
+    background: #111D33;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 24px;
+    width: 100%;
+    max-width: 360px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* ── Header ── */
+
+.crop-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.crop-modal-title {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.crop-modal-close {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: color 0.15s;
+}
+
+.crop-modal-close:hover { color: white; }
+
+.crop-modal-hint {
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.3);
+    text-align: center;
+    margin: 0;
+}
+
+/* ── Raw image crop zone ── */
+
+.crop-raw-container {
+    position: relative;
+    width: 100%;
+    max-height: 280px;
+    overflow: hidden;
+    background: #000;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+}
+
+.crop-raw-container img {
+    display: block;
+    max-width: 100%;
+    max-height: 280px;
+    pointer-events: none;
+}
+
+/* ── Card preview ── */
+
+.crop-card-preview {
+    width: 200px;
+    aspect-ratio: 516 / 716;
+    background-image: url('/images/card-gold.png');
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    margin: 0 auto;
+    box-shadow: 0 8px 30px rgba(80, 50, 0, 0.5);
+    font-family: 'Saira Semi Condensed', sans-serif;
+}
+
+.crop-card-preview.gk  { filter: hue-rotate(100deg) saturate(0.85) brightness(0.9); }
+.crop-card-preview.def { filter: hue-rotate(205deg) saturate(0.9) brightness(0.95); }
+.crop-card-preview.fwd { filter: hue-rotate(-25deg) saturate(1.1) brightness(0.95); }
+
+.crop-card-top {
+    flex: 0 0 65%;
+    position: relative;
+    overflow: hidden;
+}
+
+.crop-master-info {
+    position: absolute;
+    top: 38%;
+    left: 20%;
+    z-index: 2;
+    text-align: center;
+    color: #7a4e00;
+    line-height: 1.1;
+}
+
+.crop-rating {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.crop-pos {
+    font-size: 0.55rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* Photo drop zone — draggable area */
+.crop-photo-zone {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 70%;
+    height: 70%;
+    overflow: hidden;
+    cursor: grab;
+}
+
+.crop-photo-zone:active { cursor: grabbing; }
+
+.crop-photo-zone img {
+    /* Sized and positioned entirely by JS — do not set width/height here */
+    display: block;
+}
+
+.crop-empty-hint {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.crop-empty-hint svg {
+    width: 45%;
+    opacity: 0.22;
+    color: #7a4e00;
+}
+
+.crop-card-bottom {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 8% 20%;
+}
+
+.crop-player-name {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #5a3200;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+/* ── Controls ── */
+
+.crop-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.crop-choose-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 16px;
+    background: rgba(250, 204, 21, 0.1);
+    border: 1px solid rgba(250, 204, 21, 0.3);
+    border-radius: 8px;
+    color: var(--ballers-accent);
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.crop-choose-btn:hover { background: rgba(250, 204, 21, 0.18); }
+
+.crop-reset-btn {
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.5);
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.crop-reset-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+/* ── Processing ── */
+
+.crop-processing {
+    padding: 10px 14px;
+    background: rgba(250, 204, 21, 0.06);
+    border-left: 3px solid rgba(250, 204, 21, 0.4);
+    border-radius: 4px;
+    font-size: 0.8rem;
+    color: rgba(250, 204, 21, 0.7);
+    font-weight: 500;
+}
+
+.crop-choose-btn.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* ── Error ── */
+
+.crop-error {
+    padding: 10px 14px;
+    background: rgba(248, 113, 113, 0.08);
+    border-left: 3px solid #f87171;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    color: #fca5a5;
+    font-weight: 500;
+}
+
+/* ── Save button ── */
+
+.crop-save-btn {
+    width: 100%;
+    padding: 13px;
+    background: var(--ballers-accent);
+    color: #07101E;
+    border: none;
+    border-radius: 10px;
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.18s, transform 0.15s;
+}
+
+.crop-save-btn:hover:not(:disabled) {
+    background: white;
+    transform: translateY(-1px);
+}
+
+.crop-save-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}

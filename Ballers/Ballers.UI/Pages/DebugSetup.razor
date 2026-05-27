@@ -1,0 +1,159 @@
+@page "/debug"
+@using Microsoft.AspNetCore.Components.WebAssembly.Hosting
+@inject HttpClient Http
+@inject IWebAssemblyHostEnvironment HostEnv
+
+@if (!HostEnv.IsDevelopment())
+{
+    <div class="debug-unavailable">
+        <h2>Not Available</h2>
+        <p>This page is only accessible in Development mode.</p>
+    </div>
+}
+else
+{
+    <div class="debug-page">
+        <h1 class="debug-title">Debug Setup</h1>
+        <p class="debug-warn">This page is only available in Development. Use it to quickly seed different data states.</p>
+
+        <div class="debug-grid">
+
+            <div class="debug-card">
+                <h3>Clear Database</h3>
+                <p>Drops and recreates the database. Admin user is recreated. No teams or fixtures.</p>
+                <button class="debug-btn danger" @onclick='() => RunAction("clear")' disabled="@IsLoading">
+                    @(ActiveAction == "clear" ? "Clearing..." : "Clear DB")
+                </button>
+            </div>
+
+            <div class="debug-card">
+                <h3>Setup Teams Only</h3>
+                <p>Creates 10 teams with 15 players each and 5 referees. No season or fixtures.</p>
+                <button class="debug-btn" @onclick='() => RunAction("setup-teams")' disabled="@IsLoading">
+                    @(ActiveAction == "setup-teams" ? "Setting up..." : "Setup Teams")
+                </button>
+            </div>
+
+            <div class="debug-card">
+                <h3>Setup Teams + Fixtures</h3>
+                <p>Full squad setup plus a complete fixture schedule. All matches are unplayed.</p>
+                <button class="debug-btn" @onclick='() => RunAction("setup-teams-fixtures")' disabled="@IsLoading">
+                    @(ActiveAction == "setup-teams-fixtures" ? "Setting up..." : "Setup Teams + Fixtures")
+                </button>
+            </div>
+
+            <div class="debug-card">
+                <h3>Almost Complete Season</h3>
+                <p>All fixtures played except the last one. Returns the teams and manager credentials so you can log in and complete it.</p>
+                <button class="debug-btn" @onclick='() => RunAction("setup-almost-complete")' disabled="@IsLoading">
+                    @(ActiveAction == "setup-almost-complete" ? "Setting up..." : "Almost Complete")
+                </button>
+            </div>
+
+            <div class="debug-card">
+                <h3>Setup Full Season</h3>
+                <p>All fixtures played with scores and stats. Knockout bracket fully completed (Cup &amp; Plate semis and finals).</p>
+                <button class="debug-btn" @onclick='() => RunAction("setup-full-season")' disabled="@IsLoading">
+                    @(ActiveAction == "setup-full-season" ? "Setting up..." : "Setup Full Season")
+                </button>
+            </div>
+
+            <div class="debug-card">
+                <h3>Create Next Season</h3>
+                <p>Deactivates the current season and creates the next one with a fresh unplayed fixture schedule. Teams and players are kept.</p>
+                <button class="debug-btn" @onclick='() => RunAction("setup-next-season")' disabled="@IsLoading">
+                    @(ActiveAction == "setup-next-season" ? "Creating..." : "Create Next Season")
+                </button>
+            </div>
+
+        </div>
+
+        @if (!string.IsNullOrEmpty(StatusMessage))
+        {
+            <div class="debug-status @(IsError ? "error" : "success")">
+                @StatusMessage
+            </div>
+        }
+
+        @if (LastFixture != null)
+        {
+            <div class="fixture-creds">
+                <div class="creds-label">Last Fixture — log in to complete</div>
+                <div class="creds-matchup">@LastFixture.HomeTeam <span>vs</span> @LastFixture.AwayTeam</div>
+                <div class="creds-grid">
+                    <div class="creds-team">
+                        <div class="creds-role">Home Manager</div>
+                        <div class="creds-email">@LastFixture.HomeManager</div>
+                    </div>
+                    <div class="creds-team">
+                        <div class="creds-role">Away Manager</div>
+                        <div class="creds-email">@LastFixture.AwayManager</div>
+                    </div>
+                </div>
+                <div class="creds-password">Password: <strong>@LastFixture.Password</strong></div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private string? ActiveAction;
+    private string StatusMessage = "";
+    private bool IsError;
+    private bool IsLoading => ActiveAction != null;
+    private AlmostCompleteResult? LastFixture;
+
+    private async Task RunAction(string action)
+    {
+        ActiveAction = action;
+        StatusMessage = "";
+        IsError = false;
+        LastFixture = null;
+
+        var endpoint = action switch
+        {
+            "clear"                  => "api/debug/clear",
+            "setup-teams"            => "api/debug/setup-teams",
+            "setup-teams-fixtures"   => "api/debug/setup-teams-fixtures",
+            "setup-almost-complete"  => "api/debug/setup-almost-complete",
+            "setup-full-season"      => "api/debug/setup-full-season",
+            "setup-next-season"      => "api/debug/setup-next-season",
+            _                        => throw new ArgumentException($"Unknown action: {action}")
+        };
+
+        try
+        {
+            var response = await Http.PostAsync(endpoint, null);
+            var raw = await response.Content.ReadAsStringAsync();
+            var opts = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+            IsError = !response.IsSuccessStatusCode;
+
+            if (action == "setup-almost-complete" && response.IsSuccessStatusCode)
+            {
+                var result = System.Text.Json.JsonSerializer.Deserialize<AlmostCompleteResult>(raw, opts);
+                StatusMessage = result?.Message ?? "Done.";
+                LastFixture = result;
+            }
+            else
+            {
+                string? message = null;
+                try { message = System.Text.Json.JsonSerializer.Deserialize<DebugResult>(raw, opts)?.Message; }
+                catch { message = raw; }
+                StatusMessage = message ?? (response.IsSuccessStatusCode ? "Done." : $"Failed ({(int)response.StatusCode})");
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Error: {ex.Message}";
+            IsError = true;
+        }
+        finally
+        {
+            ActiveAction = null;
+        }
+    }
+
+    private record DebugResult(string Message);
+    private record AlmostCompleteResult(string Message, string HomeTeam, string AwayTeam, string HomeManager, string AwayManager, string Password);
+}

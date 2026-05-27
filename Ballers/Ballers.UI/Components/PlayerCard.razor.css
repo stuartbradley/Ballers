@@ -1,0 +1,231 @@
+/* ================================================================
+   PlayerCard — gold1.png template
+   Layout: flex column, top 65% = photo, bottom 35% = stats
+   ================================================================ */
+
+.fut-player-card {
+    container-type: inline-size;
+    position: relative;
+    width: 100%;
+    aspect-ratio: 516 / 716;
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Saira Semi Condensed', sans-serif;
+    font-weight: 400;
+    transition: transform 200ms ease-in, box-shadow 200ms ease-in;
+    cursor: default;
+    overflow: hidden;
+}
+
+.fut-player-card.card-gold   { background-image: url('/images/card-gold.png');   box-shadow: 0 8px 30px rgba(80, 50, 0, 0.5); }
+.fut-player-card.card-silver { background-image: url('/images/silver-card.png'); box-shadow: 0 8px 30px rgba(80, 90, 110, 0.5); }
+.fut-player-card.card-bronze { background-image: url('/images/card-bronze.png'); box-shadow: 0 8px 30px rgba(60, 35, 10, 0.5); }
+
+.fut-player-card:hover {
+    transform: translateY(-8px) scale(1.04);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+}
+
+/* ── Top section: photo zone (fan-pattern area) ── */
+
+.fut-player-card .player-card-top {
+    flex: 0 0 65%;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Rating + position — top-left overlay on photo */
+.fut-player-card .player-card-top .player-master-info {
+    position: absolute;
+    top: 38%;
+    left: 20%;
+    z-index: 2;
+    text-align: center;
+    color: #7a4e00;
+    text-shadow: 0 1px 0 rgba(255, 220, 100, 0.5);
+    line-height: 1.1;
+}
+
+.fut-player-card .player-card-top .player-master-info .player-rating {
+    font-size: 8cqi;
+    font-weight: 700;
+    display: block;
+}
+
+.fut-player-card .player-card-top .player-master-info .player-position {
+    font-size: 4.5cqi;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    display: block;
+}
+
+/* Photo — 70% of top zone, bottom-aligned */
+.fut-player-card .player-card-top .player-picture {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 70%;
+    height: 70%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.fut-player-card .player-card-top .player-picture img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    display: block;
+}
+
+.fut-player-card .player-card-top .player-picture .player-silhouette {
+    width: 65%;
+    height: 85%;
+    display: block;
+    margin: 0 auto;
+    align-self: flex-end;
+    color: rgba(120, 80, 0, 0.35);
+}
+
+/* ── Bottom section: name + stats (lighter gold band) ── */
+
+.fut-player-card .player-card-bottom {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 8% 20%;
+}
+
+.fut-player-card .player-card-bottom .player-info {
+    width: 100%;
+    text-align: center;
+    color: #5a3200;
+}
+
+.fut-player-card .player-card-bottom .player-info .player-name {
+    display: block;
+    font-size: 6cqi;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-bottom: 4%;
+    margin-bottom: 4%;
+    border-bottom: 1px solid rgba(90, 50, 0, 0.18);
+}
+
+.fut-player-card .player-card-bottom .player-info .player-name span {
+    display: block;
+}
+
+.fut-player-card .player-card-bottom .player-info .player-features {
+    display: flex;
+    justify-content: center;
+}
+
+.fut-player-card .player-card-bottom .player-info .player-features .player-features-col {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px solid rgba(90, 50, 0, 0.15);
+}
+
+.fut-player-card .player-card-bottom .player-info .player-features .player-features-col:last-child {
+    border-right: none;
+}
+
+.fut-player-card .player-card-bottom .player-info .player-features .player-features-col span {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+}
+
+.fut-player-card .player-card-bottom .player-info .player-features .player-features-col span .player-feature-value {
+    font-size: 6.5cqi;
+    font-weight: 700;
+    line-height: 1;
+    color: #5a3200;
+}
+
+.fut-player-card .player-card-bottom .player-info .player-features .player-features-col span .player-feature-title {
+    font-size: 3.8cqi;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: rgba(90, 50, 0, 0.65);
+}
+
+/* ── Edit photo button — top-left, appears on hover ── */
+
+.card-edit-photo-btn {
+    position: absolute;
+    top: 4%;
+    left: 8%;
+    z-index: 10;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(233, 204, 116, 0.45);
+    color: rgba(233, 204, 116, 0.85);
+    font-size: 0.6rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.18s, background 0.15s;
+    font-family: sans-serif;
+    padding: 0;
+    line-height: 1;
+}
+
+.fut-player-card:hover .card-edit-photo-btn { opacity: 1; }
+
+.card-edit-photo-btn:hover {
+    background: rgba(250, 204, 21, 0.9);
+    border-color: rgba(250, 204, 21, 1);
+    color: #07101E;
+}
+
+/* ── Remove button ── */
+
+.card-remove-btn {
+    position: absolute;
+    top: 4%;
+    right: 8%;
+    z-index: 10;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(233, 204, 116, 0.45);
+    color: rgba(233, 204, 116, 0.85);
+    font-size: 0.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.18s, background 0.15s, color 0.15s;
+    font-family: sans-serif;
+}
+
+.fut-player-card:hover .card-remove-btn { opacity: 1; }
+
+.card-remove-btn:hover {
+    background: rgba(220, 38, 38, 0.85);
+    border-color: #fca5a5;
+    color: white;
+}

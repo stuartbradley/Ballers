@@ -1,0 +1,213 @@
+.match-card {
+    background: #111D33;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: border-color 0.15s;
+}
+
+.match-card.played {
+    border-color: rgba(74, 222, 128, 0.15);
+}
+
+.match-card.final-card {
+    border-color: rgba(250, 204, 21, 0.15);
+    background: #0F1C35;
+}
+
+.final-label {
+    font-family: var(--font-display);
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ballers-accent);
+    opacity: 0.7;
+}
+
+.match-teams {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.team-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    transition: background 0.15s;
+}
+
+.team-row.winner {
+    background: rgba(74, 222, 128, 0.08);
+}
+
+.team-name {
+    font-family: var(--font-display);
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: rgba(255, 255, 255, 0.75);
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.team-row.winner .team-name {
+    color: #86efac;
+}
+
+.match-divider {
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.2);
+    text-align: center;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    padding: 0 8px;
+}
+
+.team-score {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    color: white;
+    min-width: 20px;
+    text-align: right;
+}
+
+.team-row.winner .team-score {
+    color: #4ade80;
+}
+
+.match-result-badge {
+    font-family: var(--font-display);
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #4ade80;
+    opacity: 0.7;
+    text-align: right;
+}
+
+.awaiting-badge {
+    font-family: var(--font-display);
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.2);
+    text-align: right;
+}
+
+/* ================================================================
+   RESULT FORM (admin)
+   ================================================================ */
+
+.result-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    padding-top: 10px;
+}
+
+.score-inputs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.score-input {
+    width: 52px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-align: center;
+    transition: border-color 0.2s;
+    -moz-appearance: textfield;
+}
+
+.score-input::-webkit-inner-spin-button,
+.score-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+}
+
+.score-input:focus {
+    outline: none;
+    border-color: var(--ballers-accent);
+}
+
+.score-sep {
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.submit-result-btn {
+    background: transparent;
+    color: var(--ballers-accent);
+    border: 1px solid rgba(250, 204, 21, 0.25);
+    padding: 7px 14px;
+    border-radius: 6px;
+    font-family: var(--font-display);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    align-self: flex-start;
+}
+
+.submit-result-btn:hover {
+    background: rgba(250, 204, 21, 0.08);
+    border-color: rgba(250, 204, 21, 0.4);
+}
+
+.goal-scorers {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 2px 8px 4px;
+}
+
+.goal-scorer {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.45);
+    font-weight: 500;
+}
+
+.stats-link {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.45);
+    text-decoration: none;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    padding: 5px 10px;
+    transition: color 0.18s, border-color 0.18s, background 0.18s;
+}
+
+.stats-link:hover {
+    color: white;
+    border-color: rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.05);
+}

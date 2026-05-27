@@ -1,0 +1,85 @@
+name: Deploy to Live
+
+on:
+  push:
+    branches: [ release ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Write API Live config
+        run: |
+          cat > Ballers.API/appsettings.Production.json << 'EOF'
+          {
+            "ConnectionStrings": {
+              "Default": "${{ secrets.LIVE_DB_CONNECTION }}"
+            },
+            "Cors": {
+              "AllowedOrigins": ["https://blackpoolballersleague.co.uk", "https://www.blackpoolballersleague.co.uk"]
+            },
+            "AdminSeedPassword": "${{ secrets.ADMIN_SEED_PASSWORD }}"
+          }
+          EOF
+
+      - name: Publish API
+        run: dotnet publish Ballers.API/Ballers.API.csproj -c Release -o publish/api --nologo --self-contained true -r win-x86
+
+      - name: Ensure Live config is in publish output
+        run: |
+          cp Ballers.API/appsettings.Production.json publish/api/appsettings.Production.json
+
+      - name: Set Blazor API URL for Live
+        run: echo '{"ApiBaseUrl":"https://api.blackpoolballersleague.co.uk/","IsUAT":false}' > Ballers.UI/wwwroot/appsettings.json
+
+      - name: Publish Blazor
+        run: dotnet publish Ballers.UI/Ballers.UI.csproj -c Release -o publish/blazor --nologo
+
+      - name: Take API offline
+        run: |
+          echo "<html><body>Deploying update, back in a moment...</body></html>" | \
+          curl --ssl-reqd --insecure -T - \
+            "ftp://${{ secrets.FTP_SERVER }}/api.blackpoolballersleague.co.uk/app_offline.htm" \
+            -u "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}"
+          sleep 5
+
+      - name: Deploy API via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          security: loose
+          local-dir: publish/api/
+          server-dir: /api.blackpoolballersleague.co.uk/
+
+      - name: Bring API back online
+        if: always()
+        run: |
+          curl --ssl-reqd --insecure \
+            "ftp://${{ secrets.FTP_SERVER }}" \
+            -u "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}" \
+            -Q "DELE /api.blackpoolballersleague.co.uk/app_offline.htm" \
+            --fail-with-body \
+            -v 2>&1 || echo "Warning: could not delete app_offline.htm — delete it manually via FTP"
+
+      - name: Deploy Blazor via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          security: loose
+          local-dir: publish/blazor/wwwroot/
+          server-dir: /blackpoolballersleague.co.uk/wwwroot/
+          dangerous-clean-slate: true

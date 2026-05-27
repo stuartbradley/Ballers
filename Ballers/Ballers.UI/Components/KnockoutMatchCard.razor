@@ -1,0 +1,112 @@
+@using Ballers.Shared
+
+<div class="match-card @(Fixture.IsPlayed ? "played" : "") @(IsFinal ? "final-card" : "")">
+    @if (IsFinal)
+    {
+        <div class="final-label">FINAL</div>
+    }
+    <div class="match-teams">
+        <div class="team-row @(IsWinner(true) ? "winner" : "")">
+            <span class="team-name">@Fixture.HomeTeamName</span>
+            @if (Fixture.IsPlayed)
+            {
+                <span class="team-score">@Fixture.HomeScore</span>
+            }
+        </div>
+        @if (Fixture.IsPlayed && Fixture.HomeGoalScorers.Any())
+        {
+            <div class="goal-scorers">
+                @foreach (var g in Fixture.HomeGoalScorers)
+                {
+                    <span class="goal-scorer">&#x26BD; @g.PlayerName@(g.Goals > 1 ? $" x{g.Goals}" : "")</span>
+                }
+            </div>
+        }
+        <div class="match-divider">vs</div>
+        <div class="team-row @(IsWinner(false) ? "winner" : "")">
+            <span class="team-name">@Fixture.AwayTeamName</span>
+            @if (Fixture.IsPlayed)
+            {
+                <span class="team-score">@Fixture.AwayScore</span>
+            }
+        </div>
+        @if (Fixture.IsPlayed && Fixture.AwayGoalScorers.Any())
+        {
+            <div class="goal-scorers">
+                @foreach (var g in Fixture.AwayGoalScorers)
+                {
+                    <span class="goal-scorer">&#x26BD; @g.PlayerName@(g.Goals > 1 ? $" x{g.Goals}" : "")</span>
+                }
+            </div>
+        }
+    </div>
+
+    @if (Fixture.IsPlayed)
+    {
+        <div class="match-result-badge">FT</div>
+    }
+    else if (TeamsKnown() && IsAdmin)
+    {
+        <div class="result-form">
+            <div class="score-inputs">
+                <input type="number" min="0" class="score-input" @bind="homeScore" placeholder="0" />
+                <span class="score-sep">–</span>
+                <input type="number" min="0" class="score-input" @bind="awayScore" placeholder="0" />
+            </div>
+            <button class="submit-result-btn" @onclick="SubmitResult">Save Result</button>
+        </div>
+        @if (Fixture.LinkedFixtureId.HasValue)
+        {
+            <a class="stats-link" href="/fixture/@Fixture.LinkedFixtureId">Enter Stats</a>
+        }
+    }
+    else if (!TeamsKnown())
+    {
+        <div class="awaiting-badge">Awaiting semis</div>
+    }
+    else
+    {
+        @if (Fixture.LinkedFixtureId.HasValue && IsOnThisFixture())
+        {
+            <a class="stats-link" href="/fixture/@Fixture.LinkedFixtureId">Enter Stats</a>
+        }
+        else if (!Fixture.LinkedFixtureId.HasValue)
+        {
+            <div class="awaiting-badge">Not played</div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public KnockoutFixtureDto Fixture { get; set; } = null!;
+    [Parameter] public bool IsAdmin { get; set; }
+    [Parameter] public bool IsFinal { get; set; }
+    [Parameter] public int? UserTeamId { get; set; }
+    [Parameter] public EventCallback<(int Id, int HomeScore, int AwayScore)> OnResultSubmit { get; set; }
+
+    private int homeScore;
+    private int awayScore;
+
+    protected override void OnParametersSet()
+    {
+        homeScore = 0;
+        awayScore = 0;
+    }
+
+    private bool TeamsKnown()
+        => Fixture.HomeTeamName != "TBD" && Fixture.AwayTeamName != "TBD";
+
+    private bool IsOnThisFixture()
+        => IsAdmin || UserTeamId == Fixture.HomeTeamId || UserTeamId == Fixture.AwayTeamId;
+
+    private bool IsWinner(bool isHome)
+    {
+        if (!Fixture.IsPlayed) return false;
+        return isHome
+            ? Fixture.HomeScore > Fixture.AwayScore
+            : Fixture.AwayScore > Fixture.HomeScore;
+    }
+
+    private async Task SubmitResult()
+        => await OnResultSubmit.InvokeAsync((Fixture.Id, homeScore, awayScore));
+}

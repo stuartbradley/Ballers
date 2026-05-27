@@ -3,15 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.13.35931.197
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballers", "Ballers.csproj", "{CBD662D4-EF09-20A8-91DB-1734F0A5F5A6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballers.UI", "Ballers.UI\Ballers.UI.csproj", "{CBD662D4-EF09-20A8-91DB-1734F0A5F5A6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballers.API", "..\Ballers.API\Ballers.API.csproj", "{E0EE8A4D-549C-4B12-888A-C0AB3082F3FA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballers.API", "Ballers.API\Ballers.API.csproj", "{E0EE8A4D-549C-4B12-888A-C0AB3082F3FA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballers.Shared", "..\Ballers.Shared\Ballers.Shared.csproj", "{7F61BDEB-8A7A-4F3E-A57F-02EB553DDE0C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballers.Shared", "Ballers.Shared\Ballers.Shared.csproj", "{7F61BDEB-8A7A-4F3E-A57F-02EB553DDE0C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballers.Tests", "..\Ballers.Tests\Ballers.Tests.csproj", "{FBE18140-45D7-44A8-8B04-A46DF2571095}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballers.Tests", "Ballers.Tests\Ballers.Tests.csproj", "{FBE18140-45D7-44A8-8B04-A46DF2571095}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballers.E2E", "..\Ballers.E2E\Ballers.E2E.csproj", "{3136F13D-49CB-438F-9FE0-3D2C3CF07CEF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballers.E2E", "Ballers.E2E\Ballers.E2E.csproj", "{3136F13D-49CB-438F-9FE0-3D2C3CF07CEF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

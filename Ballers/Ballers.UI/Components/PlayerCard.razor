@@ -1,0 +1,74 @@
+<div class="fut-player-card @Position?.ToLower() card-@CardTier">
+    <div class="player-card-top">
+        <div class="player-master-info">
+            <div class="player-rating"><span>@Number</span></div>
+            <div class="player-position"><span>@Position</span></div>
+        </div>
+        <div class="player-picture">
+            @if (!string.IsNullOrEmpty(ImageUrl))
+            {
+                <img src="@ImageUrl" alt="@Name" draggable="false" />
+            }
+            else
+            {
+                <svg class="player-silhouette" viewBox="0 0 60 90" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+                    <circle cx="30" cy="14" r="12" />
+                    <path d="M10 36 L3 55 L15 59 L18 46 L18 78 L42 78 L42 46 L45 59 L57 55 L50 36 C46 31 38 27 30 27 C22 27 14 31 10 36Z" />
+                </svg>
+            }
+        </div>
+    </div>
+    <div class="player-card-bottom">
+        <div class="player-info">
+            <div class="player-name"><span>@Name</span></div>
+            @if (Goals.HasValue || Assists.HasValue || Motm.HasValue)
+            {
+                <div class="player-features">
+                    <div class="player-features-col">
+                        <span>
+                            <div class="player-feature-value">@(Goals ?? 0)</div>
+                            <div class="player-feature-title">GOL</div>
+                        </span>
+                    </div>
+                    <div class="player-features-col">
+                        <span>
+                            <div class="player-feature-value">@(Assists ?? 0)</div>
+                            <div class="player-feature-title">AST</div>
+                        </span>
+                    </div>
+                    <div class="player-features-col">
+                        <span>
+                            <div class="player-feature-value">@(Motm ?? 0)</div>
+                            <div class="player-feature-title">MOTM</div>
+                        </span>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+    @if (OnRemove.HasDelegate)
+    {
+        <button type="button" class="card-remove-btn" @onclick="OnRemove" title="Remove player">✕</button>
+    }
+    @if (OnEditPhoto.HasDelegate)
+    {
+        <button type="button" class="card-edit-photo-btn" @onclick="OnEditPhoto" title="Edit photo">📷</button>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Name { get; set; } = "";
+    [Parameter, EditorRequired] public int Number { get; set; }
+    [Parameter, EditorRequired] public string Position { get; set; } = "";
+    [Parameter] public int? Goals { get; set; }
+    [Parameter] public int? Assists { get; set; }
+    [Parameter] public int? Motm { get; set; }
+    [Parameter] public string? ImageUrl { get; set; }
+    [Parameter] public EventCallback OnRemove { get; set; }
+    [Parameter] public EventCallback OnEditPhoto { get; set; }
+
+    private string CardTier =>
+        (Goals ?? 0) >= 1 && (Assists ?? 0) >= 1 ? "gold" :
+        (Goals ?? 0) >= 1 || (Assists ?? 0) >= 1 ? "silver" :
+        "bronze";
+}

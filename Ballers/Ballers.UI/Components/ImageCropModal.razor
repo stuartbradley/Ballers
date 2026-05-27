@@ -1,0 +1,258 @@
+@using Ballers.Services
+@using Microsoft.AspNetCore.Components.Forms
+@inject IJSRuntime JS
+@inject PlayerService PlayerService
+
+@if (IsVisible)
+{
+    <div class="crop-backdrop" @onclick="Close">
+        <div class="crop-modal" @onclick:stopPropagation>
+
+            <div class="crop-modal-header">
+                <span class="crop-modal-title">
+                    @if (_showCropping) { <span>Crop Photo</span> }
+                    else { <span>Set Player Photo</span> }
+                </span>
+                <button class="crop-modal-close" type="button" @onclick="Close">✕</button>
+            </div>
+
+            @if (_showCropping)
+            {
+                <!-- Raw image crop phase -->
+                <p class="crop-modal-hint">Drag handles to crop &middot; Drag inside to move</p>
+
+                <div class="crop-raw-container" id="@_rawId">
+                    <img src="@_rawDataUrl" draggable="false" alt="" />
+                </div>
+
+                <div class="crop-controls">
+                    <button class="crop-choose-btn" type="button" @onclick="ApplyCrop">Crop &amp; Continue</button>
+                    <button class="crop-reset-btn" type="button" @onclick="SkipCrop">Skip</button>
+                </div>
+            }
+            else
+            {
+                <!-- Card positioning phase -->
+                <p class="crop-modal-hint">Drag to position &middot; Scroll or pinch to zoom</p>
+
+                <!-- Card preview -->
+                <div class="crop-card-preview @Position?.ToLower()">
+                    <div class="crop-card-top">
+                        <div class="crop-master-info">
+                            <div class="crop-rating">@Number</div>
+                            <div class="crop-pos">@Position</div>
+                        </div>
+                        <div class="crop-photo-zone" id="@_zoneId">
+                            @if (_dataUrl != null)
+                            {
+                                <img src="@_dataUrl" draggable="false" alt="" />
+                            }
+                            else
+                            {
+                                <div class="crop-empty-hint">
+                                    <svg viewBox="0 0 60 90" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                        <circle cx="30" cy="14" r="12" />
+                                        <path d="M10 36 L3 55 L15 59 L18 46 L18 78 L42 78 L42 46 L45 59 L57 55 L50 36 C46 31 38 27 30 27 C22 27 14 31 10 36Z" />
+                                    </svg>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    <div class="crop-card-bottom">
+                        <div class="crop-player-name">@Name</div>
+                    </div>
+                </div>
+
+                <!-- Controls -->
+                <div class="crop-controls">
+                    <label class="crop-choose-btn @(_processing ? "disabled" : "")">
+                        Choose Photo
+                        <InputFile OnChange="OnFileSelected" accept="image/*" style="display:none;" disabled="@_processing" />
+                    </label>
+                    @if (_dataUrl != null && !_processing)
+                    {
+                        <button class="crop-reset-btn" type="button" @onclick="Reset">Reset</button>
+                    }
+                </div>
+
+                @if (_processing)
+                {
+                    <div class="crop-processing">Removing background&hellip;</div>
+                }
+
+                @if (_error != null)
+                {
+                    <div class="crop-error">@_error</div>
+                }
+
+                <button class="crop-save-btn" type="button" @onclick="Save"
+                        disabled="@(_dataUrl == null || _saving || _processing)">
+                    @(_saving ? "Saving..." : "Save Photo")
+                </button>
+            }
+
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback OnSaved { get; set; }
+    [Parameter] public int PlayerId { get; set; }
+    [Parameter] public string Name { get; set; } = "";
+    [Parameter] public int Number { get; set; }
+    [Parameter] public string Position { get; set; } = "";
+
+    private readonly string _zoneId = "cropPhotoZone";
+    private readonly string _rawId = "cropRawZone";
+
+    private string? _rawDataUrl;
+    private string? _dataUrl;
+    private string? _error;
+    private bool _saving;
+    private bool _processing;
+    private bool _showCropping;
+    private bool _needsCropInit;
+    private bool _needsJsInit;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_needsCropInit)
+        {
+            _needsCropInit = false;
+            await Task.Delay(50);
+            await JS.InvokeVoidAsync("imageCrop.initCropBox", _rawId);
+        }
+        if (_needsJsInit && _dataUrl != null)
+        {
+            _needsJsInit = false;
+            await Task.Delay(50);
+            await JS.InvokeVoidAsync("imageCrop.init", _zoneId);
+        }
+    }
+
+    private async Task OnFileSelected(InputFileChangeEventArgs e)
+    {
+        _error = null;
+        var file = e.File;
+        if (file == null) return;
+
+        if (file.Size > 10 * 1024 * 1024)
+        {
+            _error = "Image must be under 10 MB.";
+            return;
+        }
+
+        try
+        {
+            await JS.InvokeVoidAsync("imageCrop.destroy", _zoneId);
+            await JS.InvokeVoidAsync("imageCrop.destroyCropBox", _rawId);
+
+            using var stream = file.OpenReadStream(10 * 1024 * 1024);
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            _rawDataUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(ms.ToArray())}";
+
+            _dataUrl = null;
+            _showCropping = true;
+            _needsCropInit = true;
+        }
+        catch
+        {
+            _error = "Could not load image.";
+        }
+    }
+
+    private async Task ApplyCrop()
+    {
+        var cropped = await JS.InvokeAsync<string?>("imageCrop.getCroppedDataUrl", _rawId);
+        await JS.InvokeVoidAsync("imageCrop.destroyCropBox", _rawId);
+        _showCropping = false;
+        StateHasChanged();
+        await Task.Delay(1); // flush render before heavy processing
+        await ProcessImage(cropped ?? _rawDataUrl!);
+    }
+
+    private async Task SkipCrop()
+    {
+        await JS.InvokeVoidAsync("imageCrop.destroyCropBox", _rawId);
+        _showCropping = false;
+        StateHasChanged();
+        await Task.Delay(1);
+        await ProcessImage(_rawDataUrl!);
+    }
+
+    private async Task ProcessImage(string dataUrl)
+    {
+        _processing = true;
+        StateHasChanged();
+        try
+        {
+            _dataUrl = await JS.InvokeAsync<string>("imageCrop.removeBackground", dataUrl);
+            _needsJsInit = true;
+        }
+        catch
+        {
+            _error = "Could not process image.";
+        }
+        finally
+        {
+            _processing = false;
+        }
+    }
+
+    private async Task Reset()
+    {
+        await JS.InvokeVoidAsync("imageCrop.reset", _zoneId);
+    }
+
+    private async Task Save()
+    {
+        _error = null;
+        _saving = true;
+        StateHasChanged();
+
+        try
+        {
+            var base64 = await JS.InvokeAsync<string?>("imageCrop.getBase64", _zoneId);
+            if (string.IsNullOrEmpty(base64))
+            {
+                _error = "Could not process image. Try again.";
+                return;
+            }
+
+            await PlayerService.UploadPlayerImage(PlayerId, base64);
+            await OnSaved.InvokeAsync();
+            await CloseInternal();
+        }
+        catch
+        {
+            _error = "Failed to save. Please try again.";
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task Close()
+    {
+        await CloseInternal();
+        await OnClose.InvokeAsync();
+    }
+
+    private async Task CloseInternal()
+    {
+        await JS.InvokeVoidAsync("imageCrop.destroy", _zoneId);
+        await JS.InvokeVoidAsync("imageCrop.destroyCropBox", _rawId);
+        _rawDataUrl = null;
+        _dataUrl = null;
+        _showCropping = false;
+        _needsCropInit = false;
+        _needsJsInit = false;
+        _error = null;
+        _saving = false;
+        _processing = false;
+    }
+}

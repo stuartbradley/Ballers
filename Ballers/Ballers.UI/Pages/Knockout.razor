@@ -1,0 +1,231 @@
+@page "/knockout"
+@using Ballers.Models
+@using Ballers.Services
+@using Ballers.Shared
+@using Microsoft.AspNetCore.Components.Authorization
+@inject KnockoutService KnockoutSvc
+@inject SeasonService SeasonSvc
+@inject AuthenticationStateProvider AuthProvider
+
+<PageTitle>Knockout</PageTitle>
+
+<div class="knockout-page">
+
+    <div class="knockout-hero">
+        <div class="knockout-hero-inner">
+            <p class="knockout-eyebrow">Ballers League</p>
+            <h1>Knockout Stage</h1>
+            @if (bracket != null && bracket.Generated)
+            {
+                <p class="knockout-sub">Season @bracket.SeasonNumber</p>
+            }
+        </div>
+    </div>
+
+    <div class="knockout-body">
+        @if (isLoading)
+        {
+            <LoadingSpinner />
+        }
+        else if (bracket == null || !bracket.Generated)
+        {
+            <div class="knockout-pending">
+                <div class="pending-icon">&#x1F3C6;</div>
+                <h2>Knockout Stage Not Yet Started</h2>
+                <p>The bracket will appear once the regular season concludes.</p>
+
+                @if (isAdmin)
+                {
+                    <div class="admin-generate">
+                        <p class="generate-hint">Generate the bracket from the current standings.</p>
+                        <button class="generate-btn" @onclick="GenerateKnockout" disabled="@isGenerating">
+                            @(isGenerating ? "Generating..." : "Generate Knockout Bracket")
+                        </button>
+                        @if (!string.IsNullOrEmpty(generateMessage))
+                        {
+                            <div class="@(generateIsError ? "ko-error" : "ko-success")">@generateMessage</div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            @if (!string.IsNullOrEmpty(resultMessage))
+            {
+                <div class="@(resultIsError ? "ko-error" : "ko-success") result-toast">@resultMessage</div>
+            }
+
+            <div class="tournaments">
+
+                <div class="tournament-section">
+                    <div class="tournament-header">
+                        <span class="tournament-badge cup-badge">Cup</span>
+                        <div class="tournament-title-block">
+                            <h2>Cup</h2>
+                            <p>Top 4 teams · 1st plays 4th, 2nd plays 3rd</p>
+                        </div>
+                    </div>
+                    <div class="bracket">
+                        <div class="bracket-col semis-col">
+                            <span class="round-label">Semi-Finals</span>
+                            @foreach (var sf in GetSemifinals("Cup"))
+                            {
+                                <KnockoutMatchCard Fixture="sf" IsAdmin="isAdmin" UserTeamId="userTeamId" OnResultSubmit="HandleResultSubmit" />
+                            }
+                        </div>
+                        <div class="bracket-arrows">
+                            <div class="arrow-line top-arrow"></div>
+                            <div class="arrow-line bot-arrow"></div>
+                        </div>
+                        <div class="bracket-col final-col">
+                            <span class="round-label">Final</span>
+                            @{ var cupFinal = GetFinal("Cup"); }
+                            @if (cupFinal != null)
+                            {
+                                <KnockoutMatchCard Fixture="cupFinal" IsAdmin="isAdmin" IsFinal="true" UserTeamId="userTeamId" OnResultSubmit="HandleResultSubmit" />
+                            }
+                        </div>
+                    </div>
+                    @{ var cupWinner = GetWinner("Cup"); }
+                    @if (cupWinner != null)
+                    {
+                        <div class="tournament-winner cup-winner">
+                            <span class="winner-trophy">&#x1F3C6;</span>
+                            <div class="winner-text">
+                                <span class="winner-label">Cup Winners</span>
+                                <span class="winner-name">@cupWinner</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div class="tournament-section">
+                    <div class="tournament-header">
+                        <span class="tournament-badge plate-badge">Plate</span>
+                        <div class="tournament-title-block">
+                            <h2>Plate</h2>
+                            <p>Bottom 4 teams · 5th plays 8th, 6th plays 7th</p>
+                        </div>
+                    </div>
+                    <div class="bracket">
+                        <div class="bracket-col semis-col">
+                            <span class="round-label">Semi-Finals</span>
+                            @foreach (var sf in GetSemifinals("Plate"))
+                            {
+                                <KnockoutMatchCard Fixture="sf" IsAdmin="isAdmin" UserTeamId="userTeamId" OnResultSubmit="HandleResultSubmit" />
+                            }
+                        </div>
+                        <div class="bracket-arrows">
+                            <div class="arrow-line top-arrow"></div>
+                            <div class="arrow-line bot-arrow"></div>
+                        </div>
+                        <div class="bracket-col final-col">
+                            <span class="round-label">Final</span>
+                            @{ var plateFinal = GetFinal("Plate"); }
+                            @if (plateFinal != null)
+                            {
+                                <KnockoutMatchCard Fixture="plateFinal" IsAdmin="isAdmin" IsFinal="true" UserTeamId="userTeamId" OnResultSubmit="HandleResultSubmit" />
+                            }
+                        </div>
+                    </div>
+                    @{ var plateWinner = GetWinner("Plate"); }
+                    @if (plateWinner != null)
+                    {
+                        <div class="tournament-winner plate-winner">
+                            <span class="winner-trophy">&#x1F947;</span>
+                            <div class="winner-text">
+                                <span class="winner-label">Plate Winners</span>
+                                <span class="winner-name">@plateWinner</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private KnockoutBracketDto? bracket;
+    private bool isLoading = true;
+    private bool isAdmin = false;
+    private int? userTeamId = null;
+    private bool isGenerating = false;
+    private string generateMessage = "";
+    private bool generateIsError = false;
+    private string resultMessage = "";
+    private bool resultIsError = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        isAdmin = authState.User.IsInRole("Admin");
+        var teamIdClaim = authState.User.FindFirst("TeamId")?.Value;
+        if (teamIdClaim != null && int.TryParse(teamIdClaim, out var tid))
+            userTeamId = tid;
+
+        var season = await SeasonSvc.GetCurrentSeason();
+        if (season != null)
+            bracket = await KnockoutSvc.GetBracketAsync(season.Id);
+
+        isLoading = false;
+    }
+
+    private List<KnockoutFixtureDto> GetSemifinals(string tournament)
+        => bracket?.Fixtures
+            .Where(f => f.Tournament == tournament && f.Round == "Semifinal")
+            .OrderBy(f => f.Slot)
+            .ToList() ?? new();
+
+    private KnockoutFixtureDto? GetFinal(string tournament)
+        => bracket?.Fixtures.FirstOrDefault(f => f.Tournament == tournament && f.Round == "Final");
+
+    private string? GetWinner(string tournament)
+    {
+        var final = GetFinal(tournament);
+        if (final == null || !final.IsPlayed) return null;
+        return final.HomeScore > final.AwayScore ? final.HomeTeamName : final.AwayTeamName;
+    }
+
+    private async Task GenerateKnockout()
+    {
+        isGenerating = true;
+        generateMessage = "";
+        try
+        {
+            var season = await SeasonSvc.GetCurrentSeason();
+            if (season == null) throw new Exception("No active season found.");
+            await KnockoutSvc.GenerateKnockoutAsync(season.Id);
+            bracket = await KnockoutSvc.GetBracketAsync(season.Id);
+            generateMessage = "Knockout bracket generated.";
+            generateIsError = false;
+        }
+        catch (Exception ex)
+        {
+            generateMessage = ex.Message;
+            generateIsError = true;
+        }
+        isGenerating = false;
+    }
+
+    private async Task HandleResultSubmit((int Id, int HomeScore, int AwayScore) result)
+    {
+        resultMessage = "";
+        try
+        {
+            await KnockoutSvc.SubmitResultAsync(result.Id, result.HomeScore, result.AwayScore);
+            var season = await SeasonSvc.GetCurrentSeason();
+            if (season != null)
+                bracket = await KnockoutSvc.GetBracketAsync(season.Id);
+            resultMessage = "Result saved.";
+            resultIsError = false;
+        }
+        catch (Exception ex)
+        {
+            resultMessage = ex.Message;
+            resultIsError = true;
+        }
+    }
+}

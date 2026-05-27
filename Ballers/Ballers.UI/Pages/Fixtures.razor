@@ -1,0 +1,82 @@
+@page "/fixtures"
+@using Ballers.Components
+@using Ballers.Models
+@using Ballers.Services
+@inject FixtureService FixtureService
+@inject SeasonService SeasonService
+
+<PageTitle>Fixtures</PageTitle>
+
+<div class="fixtures-page">
+
+    <div class="fixtures-hero">
+        <div class="fixtures-hero-inner">
+            <p class="fixtures-eyebrow">Ballers League</p>
+            <h1>Fixtures</h1>
+            <p class="fixtures-sub">Full Season Schedule</p>
+        </div>
+    </div>
+
+    <div class="fixtures-body">
+
+        <div class="season-selector-bar">
+            <label class="season-selector-label">Season</label>
+            <select class="season-selector" value="@selectedSeasonId" @onchange="OnSeasonChanged">
+                @foreach (var s in seasons)
+                {
+                    <option value="@s.Id">Season @s.SeasonNumber</option>
+                }
+            </select>
+        </div>
+
+        @if (isLoading)
+        {
+            <LoadingSpinner />
+        }
+        else if (!FixtureWeeks.Any())
+        {
+            <div class="empty-state">No fixtures scheduled yet.</div>
+        }
+        else
+        {
+            @foreach (var week in FixtureWeeks)
+            {
+                <FixtureWeekCard Week="week" />
+            }
+        }
+    </div>
+
+</div>
+
+@code {
+    private List<FixtureWeekDto> FixtureWeeks = new();
+    private List<SeasonDto> seasons = new();
+    private int selectedSeasonId;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        seasons = await SeasonService.GetSeasons();
+        var current = seasons.FirstOrDefault(s => s.IsActive) ?? seasons.LastOrDefault();
+        selectedSeasonId = current?.Id ?? 0;
+        await LoadFixtures();
+    }
+
+    private async Task OnSeasonChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var id))
+        {
+            selectedSeasonId = id;
+            await LoadFixtures();
+        }
+    }
+
+    private async Task LoadFixtures()
+    {
+        isLoading = true;
+        FixtureWeeks = selectedSeasonId > 0
+            ? await FixtureService.GetFixtureWeeks(selectedSeasonId)
+            : new();
+        isLoading = false;
+    }
+}

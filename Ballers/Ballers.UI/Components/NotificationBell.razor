@@ -1,0 +1,119 @@
+@using Ballers.Client.Services
+@using Ballers.Shared
+@inject NotificationService NotificationSvc
+@inject NavigationManager Nav
+@implements IDisposable
+
+<div class="notif-bell-wrapper">
+    <button class="notif-bell-btn" @onclick="ToggleDropdown" title="Notifications">
+        <span class="notif-bell-icon">&#x1F514;</span>
+        @if (unreadCount > 0)
+        {
+            <span class="notif-badge">@(unreadCount > 9 ? "9+" : unreadCount.ToString())</span>
+        }
+    </button>
+
+    @if (open)
+    {
+        <div class="notif-dropdown">
+            <div class="notif-dropdown-header">
+                <span>Notifications</span>
+                @if (unreadCount > 0)
+                {
+                    <button class="notif-mark-all" @onclick="MarkAllRead">Mark all read</button>
+                }
+            </div>
+
+            @if (notifications.Count == 0)
+            {
+                <div class="notif-empty">No notifications</div>
+            }
+            else
+            {
+                @foreach (var n in notifications)
+                {
+                    <div class="notif-item @(n.IsRead ? "notif-read" : "notif-unread")"
+                         @onclick="() => OnNotificationClick(n)">
+                        <span class="notif-msg">@n.Message</span>
+                        <span class="notif-time">@FormatTime(n.CreatedAt)</span>
+                    </div>
+                }
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<NotificationDto> notifications = new();
+    private int unreadCount;
+    private bool open;
+    private System.Threading.Timer? _timer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+        _timer = new System.Threading.Timer(async _ =>
+        {
+            await LoadAsync();
+            await InvokeAsync(StateHasChanged);
+        }, null, TimeSpan.FromSeconds(60), TimeSpan.FromSeconds(60));
+    }
+
+    private async Task LoadAsync()
+    {
+        var result = await NotificationSvc.GetAsync();
+        if (result != null)
+        {
+            notifications = result.Notifications;
+            unreadCount = result.UnreadCount;
+        }
+    }
+
+    private void ToggleDropdown() => open = !open;
+
+    private async Task OnNotificationClick(NotificationDto n)
+    {
+        open = false;
+        if (!n.IsRead)
+        {
+            await NotificationSvc.MarkReadAsync(n.Id);
+            n.IsRead = true;
+            unreadCount = Math.Max(0, unreadCount - 1);
+        }
+        if (!string.IsNullOrEmpty(n.Link))
+            Nav.NavigateTo(n.Link);
+    }
+
+    private async Task MarkAllRead()
+    {
+        await NotificationSvc.MarkAllReadAsync();
+        foreach (var n in notifications) n.IsRead = true;
+        unreadCount = 0;
+    }
+
+    private static string FormatTime(DateTime dt)
+    {
+        var diff = DateTime.UtcNow - dt;
+        if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes}m ago";
+        if (diff.TotalHours < 24) return $"{(int)diff.TotalHours}h ago";
+        return $"{(int)diff.TotalDays}d ago";
+    }
+
+    public void Dispose() => _timer?.Dispose();
+}
+
+<style>
+    .notif-bell-wrapper { position: relative; display: inline-block; }
+    .notif-bell-btn { background: none; border: none; cursor: pointer; position: relative; padding: 4px 8px; font-size: 1.2rem; }
+    .notif-badge { position: absolute; top: -2px; right: 0; background: #e53e3e; color: #fff; border-radius: 999px; font-size: 0.65rem; font-weight: 700; min-width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; padding: 0 3px; }
+    .notif-dropdown { position: absolute; right: 0; top: calc(100% + 8px); width: 320px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.12); z-index: 1000; overflow: hidden; }
+    .notif-dropdown-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid #e2e8f0; font-weight: 600; font-size: 0.85rem; }
+    .notif-mark-all { background: none; border: none; color: #3182ce; cursor: pointer; font-size: 0.78rem; }
+    .notif-item { display: flex; flex-direction: column; padding: 10px 14px; cursor: pointer; border-bottom: 1px solid #f0f0f0; transition: background 0.15s; }
+    .notif-item:hover { background: #f7fafc; }
+    .notif-unread { background: #ebf8ff; }
+    .notif-read { background: #fff; }
+    .notif-msg { font-size: 0.82rem; color: #2d3748; line-height: 1.4; }
+    .notif-time { font-size: 0.72rem; color: #a0aec0; margin-top: 3px; }
+    .notif-empty { padding: 20px 14px; font-size: 0.82rem; color: #a0aec0; text-align: center; }
+</style>

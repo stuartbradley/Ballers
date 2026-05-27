@@ -1,0 +1,166 @@
+.debug-page {
+    max-width: 960px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+}
+
+.debug-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.debug-warn {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 6px;
+    padding: 0.65rem 1rem;
+    font-size: 0.9rem;
+    margin-bottom: 1.75rem;
+}
+
+.debug-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.debug-card {
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.debug-card h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 0.4rem;
+}
+
+.debug-card p {
+    font-size: 0.85rem;
+    color: #6c757d;
+    flex: 1;
+    margin: 0 0 1rem;
+    line-height: 1.4;
+}
+
+.debug-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    background: #0d6efd;
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+
+.debug-btn:hover:not(:disabled) {
+    opacity: 0.85;
+}
+
+.debug-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.debug-btn.danger {
+    background: #dc3545;
+}
+
+.debug-status {
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.debug-status.success {
+    background: #d1e7dd;
+    border: 1px solid #a3cfbb;
+    color: #0a3622;
+}
+
+.debug-status.error {
+    background: #f8d7da;
+    border: 1px solid #f1aeb5;
+    color: #58151c;
+}
+
+.debug-unavailable {
+    max-width: 400px;
+    margin: 4rem auto;
+    text-align: center;
+    color: #6c757d;
+}
+
+.fixture-creds {
+    margin-top: 1.25rem;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+}
+
+.creds-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #6c757d;
+    margin-bottom: 0.6rem;
+}
+
+.creds-matchup {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: #212529;
+}
+
+.creds-matchup span {
+    font-weight: 400;
+    color: #6c757d;
+    margin: 0 0.4rem;
+}
+
+.creds-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+}
+
+.creds-team {
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 0.65rem 0.9rem;
+}
+
+.creds-role {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.25rem;
+}
+
+.creds-email {
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: #0d6efd;
+    word-break: break-all;
+}
+
+.creds-password {
+    font-size: 0.875rem;
+    color: #495057;
+}
