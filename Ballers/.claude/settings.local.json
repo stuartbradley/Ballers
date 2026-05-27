@@ -81,7 +81,10 @@
       "PowerShell(netstat *)",
       "Bash(grep -v \"^  All\\\\|^  Ballers\\\\|Time Elapsed\\\\|Determining\\\\|^$\")",
       "PowerShell(dotnet build *)",
-      "Bash(git checkout *)"
+      "Bash(git checkout *)",
+      "Bash(git config *)",
+      "Bash(ls Ballers/)",
+      "Bash(git ls-tree *)"
     ]
   }
 }
