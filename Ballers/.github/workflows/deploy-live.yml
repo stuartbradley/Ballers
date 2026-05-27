@@ -17,18 +17,20 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Write API Live config
+        env:
+          DB_CONN: ${{ secrets.LIVE_DB_CONNECTION }}
+          ADMIN_PASS: ${{ secrets.ADMIN_SEED_PASSWORD }}
         run: |
-          cat > Ballers.API/appsettings.Production.json << 'EOF'
-          {
-            "ConnectionStrings": {
-              "Default": "${{ secrets.LIVE_DB_CONNECTION }}"
-            },
-            "Cors": {
-              "AllowedOrigins": ["https://blackpoolballersleague.co.uk", "https://www.blackpoolballersleague.co.uk"]
-            },
-            "AdminSeedPassword": "${{ secrets.ADMIN_SEED_PASSWORD }}"
+          python3 - << 'PYEOF'
+          import os, json
+          cfg = {
+            "ConnectionStrings": {"Default": os.environ["DB_CONN"]},
+            "Cors": {"AllowedOrigins": ["https://blackpoolballersleague.co.uk", "https://www.blackpoolballersleague.co.uk"]},
+            "AdminSeedPassword": os.environ["ADMIN_PASS"]
           }
-          EOF
+          with open("Ballers.API/appsettings.Production.json", "w") as f:
+            json.dump(cfg, f, indent=2)
+          PYEOF
 
       - name: Publish API
         run: dotnet publish Ballers.API/Ballers.API.csproj -c Release -o publish/api --nologo --self-contained true -r win-x86

@@ -1,0 +1,5 @@
+# Force LF line endings for files that run on Linux (GitHub Actions, shell scripts)
+*.yml linguist-language=YAML
+*.yml text eol=lf
+*.yaml text eol=lf
+*.sh text eol=lf
