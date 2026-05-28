@@ -20,7 +20,7 @@ jobs:
         env:
           DB_CONN: ${{ secrets.UAT_DB_CONNECTION }}
           ADMIN_PASS: ${{ secrets.ADMIN_SEED_PASSWORD }}
-        run: python3 -c "import os,json; open('Ballers/Ballers.API/appsettings.Production.json','w').write(json.dumps({'ConnectionStrings':{'Default':os.environ['DB_CONN']},'Cors':{'AllowedOrigins':['https://bristonlyfans.co.uk','https://www.bristonlyfans.co.uk']},'AdminSeedPassword':os.environ['ADMIN_PASS']},indent=2))"
+        run: python3 -c "import os,json; open('Ballers/Ballers.API/appsettings.Production.json','w').write(json.dumps({'ConnectionStrings':{'Default':os.environ['DB_CONN']},'Cors':{'AllowedOrigins':['https://bristonlyfans.co.uk','https://www.bristonlyfans.co.uk']},'AdminSeedPassword':os.environ['ADMIN_PASS'],'IsUAT':True},indent=2))"
 
       - name: Publish API
         run: dotnet publish Ballers/Ballers.API/Ballers.API.csproj -c Release -o publish/api --nologo --self-contained true -r win-x86

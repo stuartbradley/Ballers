@@ -13,22 +13,26 @@ namespace Ballers.API.Controllers
     public class DebugController : ControllerBase
     {
         private readonly IWebHostEnvironment _env;
+        private readonly IConfiguration _config;
         private readonly ApplicationDbContext _db;
         private readonly IServiceProvider _sp;
         private readonly IKnockoutService _knockout;
 
-        public DebugController(IWebHostEnvironment env, ApplicationDbContext db, IServiceProvider sp, IKnockoutService knockout)
+        public DebugController(IWebHostEnvironment env, IConfiguration config, ApplicationDbContext db, IServiceProvider sp, IKnockoutService knockout)
         {
             _env = env;
+            _config = config;
             _db = db;
             _sp = sp;
             _knockout = knockout;
         }
 
+        private bool IsDebugAllowed() => _env.IsDevelopment() || _config.GetValue<bool>("IsUAT");
+
         [HttpPost("clear")]
         public async Task<IActionResult> Clear()
         {
-            if (!_env.IsDevelopment()) return NotFound();
+            if (!IsDebugAllowed()) return NotFound();
             try
             {
                 await ResetDatabaseAsync();
@@ -40,7 +44,7 @@ namespace Ballers.API.Controllers
         [HttpPost("setup-teams")]
         public async Task<IActionResult> SetupTeams()
         {
-            if (!_env.IsDevelopment()) return NotFound();
+            if (!IsDebugAllowed()) return NotFound();
             try
             {
                 await ResetDatabaseAsync();
@@ -54,7 +58,7 @@ namespace Ballers.API.Controllers
         [HttpPost("setup-teams-fixtures")]
         public async Task<IActionResult> SetupTeamsAndFixtures()
         {
-            if (!_env.IsDevelopment()) return NotFound();
+            if (!IsDebugAllowed()) return NotFound();
             try
             {
                 await ResetDatabaseAsync();
@@ -68,7 +72,7 @@ namespace Ballers.API.Controllers
         [HttpPost("setup-full-season")]
         public async Task<IActionResult> SetupFullSeason()
         {
-            if (!_env.IsDevelopment()) return NotFound();
+            if (!IsDebugAllowed()) return NotFound();
             try
             {
                 await ResetDatabaseAsync();
@@ -84,7 +88,7 @@ namespace Ballers.API.Controllers
         [HttpPost("setup-almost-complete")]
         public async Task<IActionResult> SetupAlmostComplete()
         {
-            if (!_env.IsDevelopment()) return NotFound();
+            if (!IsDebugAllowed()) return NotFound();
             try
             {
                 await ResetDatabaseAsync();
@@ -114,7 +118,7 @@ namespace Ballers.API.Controllers
         [HttpPost("setup-next-season")]
         public async Task<IActionResult> SetupNextSeason()
         {
-            if (!_env.IsDevelopment()) return NotFound();
+            if (!IsDebugAllowed()) return NotFound();
             try
             {
                 if (!await _db.Teams.AnyAsync())
