@@ -6,6 +6,7 @@
 @using Ballers.Services
 @inject IWebAssemblyHostEnvironment HostEnv
 @inject SeasonService SeasonSvc
+@inject IConfiguration Config
 
 @inherits LayoutComponentBase
 
@@ -77,7 +78,7 @@
         }
         <NavLink href="/teams" @onclick="CloseNav">Teams</NavLink>
         <NavLink href="/stats" @onclick="CloseNav">Stats</NavLink>
-        @if (HostEnv.IsDevelopment())
+        @if (HostEnv.IsDevelopment() || Config.GetValue<bool>("IsUAT"))
         {
             <NavLink href="/debug" class="debug-nav-link" @onclick="CloseNav">Debug</NavLink>
         }
