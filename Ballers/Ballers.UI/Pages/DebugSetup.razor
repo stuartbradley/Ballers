@@ -2,8 +2,9 @@
 @using Microsoft.AspNetCore.Components.WebAssembly.Hosting
 @inject HttpClient Http
 @inject IWebAssemblyHostEnvironment HostEnv
+@inject IConfiguration Config
 
-@if (!HostEnv.IsDevelopment())
+@if (!HostEnv.IsDevelopment() && !Config.GetValue<bool>("IsUAT"))
 {
     <div class="debug-unavailable">
         <h2>Not Available</h2>

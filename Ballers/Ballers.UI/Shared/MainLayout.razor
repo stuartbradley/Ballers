@@ -32,6 +32,10 @@
             }
             <NavLink href="/teams">Teams</NavLink>
             <NavLink href="/stats">Stats</NavLink>
+            @if (HostEnv.IsDevelopment() || Config.GetValue<bool>("IsUAT"))
+            {
+                <NavLink href="/debug" class="debug-nav-link">Debug</NavLink>
+            }
             <AuthorizeView>
                 <Authorized>
                     <NavLink href="/dashboard">Dashboard</NavLink>
@@ -78,10 +82,6 @@
         }
         <NavLink href="/teams" @onclick="CloseNav">Teams</NavLink>
         <NavLink href="/stats" @onclick="CloseNav">Stats</NavLink>
-        @if (HostEnv.IsDevelopment() || Config.GetValue<bool>("IsUAT"))
-        {
-            <NavLink href="/debug" class="debug-nav-link" @onclick="CloseNav">Debug</NavLink>
-        }
         <AuthorizeView>
             <Authorized>
                 <NavLink href="/dashboard" @onclick="CloseNav">Dashboard</NavLink>
