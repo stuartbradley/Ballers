@@ -135,11 +135,59 @@ namespace Ballers.API.Controllers
 
         private async Task ResetDatabaseAsync()
         {
-            await _db.Database.EnsureDeletedAsync();
-            Microsoft.Data.SqlClient.SqlConnection.ClearAllPools();
-            await _db.Database.MigrateAsync();
+            if (_env.IsDevelopment())
+            {
+                await _db.Database.EnsureDeletedAsync();
+                Microsoft.Data.SqlClient.SqlConnection.ClearAllPools();
+                await _db.Database.MigrateAsync();
+            }
+            else
+            {
+                await WipeAllDataAsync();
+            }
             _db.ChangeTracker.Clear();
             await DbSeeder.Seed(_sp);
+        }
+
+        private async Task WipeAllDataAsync()
+        {
+            _db.PenaltyKicks.RemoveRange(await _db.PenaltyKicks.ToListAsync());
+            await _db.SaveChangesAsync();
+            _db.FairplayRatings.RemoveRange(await _db.FairplayRatings.ToListAsync());
+            await _db.SaveChangesAsync();
+            _db.FixturePlayerStats.RemoveRange(await _db.FixturePlayerStats.ToListAsync());
+            await _db.SaveChangesAsync();
+            _db.FixturePlayers.RemoveRange(await _db.FixturePlayers.ToListAsync());
+            await _db.SaveChangesAsync();
+            _db.PenaltyShootouts.RemoveRange(await _db.PenaltyShootouts.ToListAsync());
+            await _db.SaveChangesAsync();
+            _db.KnockoutFixtures.RemoveRange(await _db.KnockoutFixtures.ToListAsync());
+            await _db.SaveChangesAsync();
+            _db.Notifications.RemoveRange(await _db.Notifications.ToListAsync());
+            await _db.SaveChangesAsync();
+            _db.Fixtures.RemoveRange(await _db.Fixtures.ToListAsync());
+            await _db.SaveChangesAsync();
+            _db.Seasons.RemoveRange(await _db.Seasons.ToListAsync());
+            await _db.SaveChangesAsync();
+            _db.Players.RemoveRange(await _db.Players.ToListAsync());
+            await _db.SaveChangesAsync();
+            _db.Teams.RemoveRange(await _db.Teams.ToListAsync());
+            await _db.SaveChangesAsync();
+            _db.Referees.RemoveRange(await _db.Referees.ToListAsync());
+            await _db.SaveChangesAsync();
+            _db.UserRoles.RemoveRange(await _db.UserRoles.ToListAsync());
+            await _db.SaveChangesAsync();
+            _db.UserClaims.RemoveRange(await _db.UserClaims.ToListAsync());
+            await _db.SaveChangesAsync();
+            _db.UserLogins.RemoveRange(await _db.UserLogins.ToListAsync());
+            await _db.SaveChangesAsync();
+            _db.UserTokens.RemoveRange(await _db.UserTokens.ToListAsync());
+            await _db.SaveChangesAsync();
+            _db.Users.RemoveRange(await _db.Users.ToListAsync());
+            await _db.SaveChangesAsync();
+            _db.Roles.RemoveRange(await _db.Roles.ToListAsync());
+            await _db.SaveChangesAsync();
+            _db.ChangeTracker.Clear();
         }
 
         private async Task RemoveSeasonDataAsync()
