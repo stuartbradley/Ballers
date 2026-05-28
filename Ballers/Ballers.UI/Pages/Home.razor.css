@@ -257,6 +257,13 @@
     border-radius: 1px;
 }
 
+.about-logo {
+    height: 480px;
+    width: auto;
+    display: block;
+    margin: 0 auto 32px;
+}
+
 .about-intro {
     max-width: 640px;
     margin: 28px auto 56px;

@@ -96,15 +96,15 @@ body {
 /* LOGO */
 
 .logo {
-    font-size: 1.4rem;
-    font-weight: 800;
-    color: var(--ballers-primary);
-    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
 }
 
-    .logo span {
-        margin-left: 6px;
-    }
+.logo-img {
+    height: 64px;
+    width: auto;
+    display: block;
+}
 
 /* NAVIGATION */
 
