@@ -171,10 +171,7 @@ namespace Ballers.API.Controllers
             await _db.SaveChangesAsync();
             _db.Players.RemoveRange(await _db.Players.ToListAsync());
             await _db.SaveChangesAsync();
-            _db.Teams.RemoveRange(await _db.Teams.ToListAsync());
-            await _db.SaveChangesAsync();
-            _db.Referees.RemoveRange(await _db.Referees.ToListAsync());
-            await _db.SaveChangesAsync();
+            // Identity tables before Teams — AspNetUsers.TeamId references Teams
             _db.UserRoles.RemoveRange(await _db.UserRoles.ToListAsync());
             await _db.SaveChangesAsync();
             _db.UserClaims.RemoveRange(await _db.UserClaims.ToListAsync());
@@ -186,6 +183,10 @@ namespace Ballers.API.Controllers
             _db.Users.RemoveRange(await _db.Users.ToListAsync());
             await _db.SaveChangesAsync();
             _db.Roles.RemoveRange(await _db.Roles.ToListAsync());
+            await _db.SaveChangesAsync();
+            _db.Teams.RemoveRange(await _db.Teams.ToListAsync());
+            await _db.SaveChangesAsync();
+            _db.Referees.RemoveRange(await _db.Referees.ToListAsync());
             await _db.SaveChangesAsync();
             _db.ChangeTracker.Clear();
         }

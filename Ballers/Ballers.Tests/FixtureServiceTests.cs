@@ -3,6 +3,7 @@ using Ballers.API.Models;
 using Ballers.API.Models.Requests;
 using Ballers.API.Services;
 using Ballers.Tests.Helpers;
+using Moq;
 
 namespace Ballers.Tests
 {
@@ -42,7 +43,7 @@ namespace Ballers.Tests
         public async Task GetById_NotFound_ReturnsNull()
         {
             var db = await SeedBase(nameof(GetById_NotFound_ReturnsNull));
-            var svc = new FixtureService(db);
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
             var result = await svc.GetByIdAsync(99);
             Assert.Null(result);
         }
@@ -62,7 +63,7 @@ namespace Ballers.Tests
             });
             await db.SaveChangesAsync();
 
-            var svc = new FixtureService(db);
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
             var result = await svc.GetByIdAsync(1);
 
             Assert.NotNull(result);
@@ -87,7 +88,7 @@ namespace Ballers.Tests
                 MakeFixture(2, 2, 3));
             await db.SaveChangesAsync();
 
-            var svc = new FixtureService(db);
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
             var result = await svc.GetForUserAsync(isAdmin: true, teamId: null);
             Assert.Equal(2, result.Count);
         }
@@ -102,7 +103,7 @@ namespace Ballers.Tests
                 MakeFixture(2, 2, 3));  // does not involve team 1
             await db.SaveChangesAsync();
 
-            var svc = new FixtureService(db);
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
             var result = await svc.GetForUserAsync(isAdmin: false, teamId: 1);
 
             Assert.Single(result);
@@ -120,7 +121,7 @@ namespace Ballers.Tests
                 new Fixture { Id = 2, HomeTeamId = 1, AwayTeamId = 2, SeasonId = 1, IsPlayed = true, HomeScore = 1, AwayScore = 1, WindowStart = DateTime.UtcNow, WindowEnd = DateTime.UtcNow });
             await db.SaveChangesAsync();
 
-            var svc = new FixtureService(db);
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
             var table = await svc.GetTableAsync(1);
 
             var home = table.First(r => r.Team == "Home FC");
@@ -148,7 +149,7 @@ namespace Ballers.Tests
             });
             await db.SaveChangesAsync();
 
-            var svc = new FixtureService(db);
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
             var table = await svc.GetTableAsync(1);
             Assert.All(table, r => Assert.Equal(0, r.Played));
         }
@@ -167,7 +168,7 @@ namespace Ballers.Tests
             });
             await db.SaveChangesAsync();
 
-            var svc = new FixtureService(db);
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
             var result = await svc.GetCurrentWeekAsync();
             Assert.Null(result);
         }
@@ -184,7 +185,7 @@ namespace Ballers.Tests
             });
             await db.SaveChangesAsync();
 
-            var svc = new FixtureService(db);
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
             var result = await svc.GetCurrentWeekAsync();
 
             Assert.NotNull(result);
@@ -207,7 +208,7 @@ namespace Ballers.Tests
                 new FixturePlayer { FixtureId = 1, PlayerId = 2 });
             await db.SaveChangesAsync();
 
-            var svc = new FixtureService(db);
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
             var result = await svc.GetSquadAsync(1);
 
             Assert.Equal(2, result.Count);
@@ -227,7 +228,7 @@ namespace Ballers.Tests
             db.FixturePlayers.Add(new FixturePlayer { FixtureId = 1, PlayerId = 1 });
             await db.SaveChangesAsync();
 
-            var svc = new FixtureService(db);
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
             await svc.UpdateSquadAsync(1, new List<int> { 2, 3 }, teamId: null);
 
             var squad = db.FixturePlayers.Where(fp => fp.FixtureId == 1).ToList();
@@ -247,7 +248,7 @@ namespace Ballers.Tests
                 new Player { Id = 2, Name = "AwayStriker", TeamId = 2 });
             await db.SaveChangesAsync();
 
-            var svc = new FixtureService(db);
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
             await svc.SubmitStatsAsync(1, new List<PlayerStatDto>
             {
                 new() { PlayerId = 1, Goals = 2, Assists = 1, IsManOfTheMatch = true },
@@ -274,7 +275,7 @@ namespace Ballers.Tests
             db.FixturePlayerStats.Add(new FixturePlayerStat { FixtureId = 1, PlayerId = 1, Goals = 1 });
             await db.SaveChangesAsync();
 
-            var svc = new FixtureService(db);
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
             await svc.SubmitStatsAsync(1, new List<PlayerStatDto>
             {
                 new() { PlayerId = 1, Goals = 3, Assists = 2 }
@@ -290,7 +291,7 @@ namespace Ballers.Tests
         public async Task SubmitStats_UnknownFixture_ThrowsKeyNotFoundException()
         {
             var db = await SeedBase(nameof(SubmitStats_UnknownFixture_ThrowsKeyNotFoundException));
-            var svc = new FixtureService(db);
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
             await Assert.ThrowsAsync<KeyNotFoundException>(() =>
                 svc.SubmitStatsAsync(99, new List<PlayerStatDto>(), teamId: null));
         }
@@ -301,7 +302,7 @@ namespace Ballers.Tests
         public async Task UpdateSchedule_NotFound_ReturnsFalse()
         {
             var db = await SeedBase(nameof(UpdateSchedule_NotFound_ReturnsFalse));
-            var svc = new FixtureService(db);
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
             var result = await svc.UpdateScheduleAsync(99, "Somewhere", null, DateTime.UtcNow);
             Assert.False(result);
         }
@@ -314,7 +315,7 @@ namespace Ballers.Tests
             await db.SaveChangesAsync();
 
             var kickoff = DateTime.UtcNow.AddDays(5);
-            var svc = new FixtureService(db);
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
             var result = await svc.UpdateScheduleAsync(1, "New Ground", null, kickoff);
 
             Assert.True(result);
@@ -330,7 +331,7 @@ namespace Ballers.Tests
             db.Fixtures.Add(MakeFixture(1));
             await db.SaveChangesAsync();
 
-            var svc = new FixtureService(db);
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
             await svc.UpdateScheduleAsync(1, "Bloomfield Road", "FY1 6JJ", DateTime.UtcNow.AddDays(3));
 
             var fixture = db.Fixtures.Find(1)!;
@@ -349,7 +350,7 @@ namespace Ballers.Tests
                 new Player { Id = 11, Name = "Vice", TeamId = 1 });
             await db.SaveChangesAsync();
 
-            var svc = new FixtureService(db);
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
             await svc.SaveCaptaincyAsync(fixtureId: 1, teamId: 1, captainId: 10, viceId: 11);
 
             var fixture = db.Fixtures.Find(1)!;
@@ -369,7 +370,7 @@ namespace Ballers.Tests
                 new Player { Id = 21, Name = "AwayVice", TeamId = 2 });
             await db.SaveChangesAsync();
 
-            var svc = new FixtureService(db);
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
             await svc.SaveCaptaincyAsync(fixtureId: 1, teamId: 2, captainId: 20, viceId: 21);
 
             var fixture = db.Fixtures.Find(1)!;
@@ -389,7 +390,7 @@ namespace Ballers.Tests
             db.Fixtures.Add(fixture);
             await db.SaveChangesAsync();
 
-            var svc = new FixtureService(db);
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
             await svc.SaveCaptaincyAsync(fixtureId: 1, teamId: 1, captainId: null, viceId: null);
 
             var updated = db.Fixtures.Find(1)!;
@@ -401,7 +402,7 @@ namespace Ballers.Tests
         public async Task SaveCaptaincy_UnknownFixture_DoesNotThrow()
         {
             var db = await SeedBase(nameof(SaveCaptaincy_UnknownFixture_DoesNotThrow));
-            var svc = new FixtureService(db);
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
             // Should return silently rather than throw
             var ex = await Record.ExceptionAsync(() =>
                 svc.SaveCaptaincyAsync(fixtureId: 999, teamId: 1, captainId: 1, viceId: null));
@@ -419,7 +420,7 @@ namespace Ballers.Tests
                 new Fixture { Id = 11, HomeTeamId = 2, AwayTeamId = 1, SeasonId = 1, IsPlayed = true, HomeScore = 0, AwayScore = 2, WindowStart = DateTime.UtcNow, WindowEnd = DateTime.UtcNow });
             await db.SaveChangesAsync();
 
-            var svc = new FixtureService(db);
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
             var result = await svc.GetHeadToHeadAsync(homeTeamId: 1, awayTeamId: 2, excludeFixtureId: 0);
 
             Assert.Equal(2, result.Count);
@@ -434,7 +435,7 @@ namespace Ballers.Tests
                 new Fixture { Id = 11, HomeTeamId = 1, AwayTeamId = 2, SeasonId = 1, IsPlayed = true, HomeScore = 2, AwayScore = 1, WindowStart = DateTime.UtcNow, WindowEnd = DateTime.UtcNow });
             await db.SaveChangesAsync();
 
-            var svc = new FixtureService(db);
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
             var result = await svc.GetHeadToHeadAsync(homeTeamId: 1, awayTeamId: 2, excludeFixtureId: 10);
 
             Assert.Single(result);
@@ -450,7 +451,7 @@ namespace Ballers.Tests
                 new Fixture { Id = 11, HomeTeamId = 1, AwayTeamId = 2, SeasonId = 1, IsPlayed = false, HomeScore = 0, AwayScore = 0, WindowStart = DateTime.UtcNow, WindowEnd = DateTime.UtcNow });
             await db.SaveChangesAsync();
 
-            var svc = new FixtureService(db);
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
             var result = await svc.GetHeadToHeadAsync(homeTeamId: 1, awayTeamId: 2, excludeFixtureId: 0);
 
             Assert.Single(result);
@@ -466,7 +467,7 @@ namespace Ballers.Tests
                 new Fixture { Id = 11, HomeTeamId = 1, AwayTeamId = 3, SeasonId = 1, IsPlayed = true, HomeScore = 2, AwayScore = 2, WindowStart = DateTime.UtcNow, WindowEnd = DateTime.UtcNow });
             await db.SaveChangesAsync();
 
-            var svc = new FixtureService(db);
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
             var result = await svc.GetHeadToHeadAsync(homeTeamId: 1, awayTeamId: 2, excludeFixtureId: 0);
 
             Assert.Single(result);
@@ -487,7 +488,7 @@ namespace Ballers.Tests
                 });
             await db.SaveChangesAsync();
 
-            var svc = new FixtureService(db);
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
             var result = await svc.GetHeadToHeadAsync(homeTeamId: 1, awayTeamId: 2, excludeFixtureId: 0);
 
             Assert.Equal(10, result.Count);
