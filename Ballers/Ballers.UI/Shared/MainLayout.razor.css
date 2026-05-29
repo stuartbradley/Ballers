@@ -10,8 +10,7 @@
 /* ===== PAGE SHELL ===== */
 
 .main-content {
-    height: calc(100vh - 71px);
-    overflow-y: auto;
+    min-height: calc(100vh - 71px);
 }
 
 /* ===== HEADER ===== */
