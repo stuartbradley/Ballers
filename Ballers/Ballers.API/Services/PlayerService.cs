@@ -12,6 +12,7 @@ namespace Ballers.API.Services
         Task AddPlayerAsync(int teamId, CreatePlayerRequest request);
         Task<bool> DeactivatePlayerAsync(int playerId, int? requestingTeamId, bool isAdmin);
         Task UploadPlayerImageAsync(int playerId, int? requestingTeamId, bool isAdmin, string imageBase64);
+        Task<bool> UpdatePlayerAsync(int playerId, int? requestingTeamId, bool isAdmin, UpdatePlayerRequest request);
     }
 
     public class PlayerService : IPlayerService
@@ -60,6 +61,20 @@ namespace Ballers.API.Services
                 throw new UnauthorizedAccessException("You do not have permission to remove this player.");
 
             player.IsActive = false;
+            await _db.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> UpdatePlayerAsync(int playerId, int? requestingTeamId, bool isAdmin, UpdatePlayerRequest request)
+        {
+            var player = await _db.Players.FindAsync(playerId);
+            if (player == null) return false;
+            if (!isAdmin && player.TeamId != requestingTeamId)
+                throw new UnauthorizedAccessException();
+
+            player.Name = request.Name;
+            player.Number = request.Number;
+            player.Position = request.Position;
             await _db.SaveChangesAsync();
             return true;
         }

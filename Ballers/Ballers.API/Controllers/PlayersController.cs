@@ -52,6 +52,20 @@ namespace Ballers.API.Controllers
             catch (UnauthorizedAccessException) { return Forbid(); }
         }
 
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdatePlayer(int id, UpdatePlayerRequest request)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
+
+            try
+            {
+                var found = await _players.UpdatePlayerAsync(id, user.TeamId, user.IsAdmin, request);
+                return found ? Ok() : NotFound();
+            }
+            catch (UnauthorizedAccessException) { return Forbid(); }
+        }
+
         [HttpPut("{id}/image")]
         public async Task<IActionResult> UploadImage(int id, [FromBody] UploadPlayerImageRequest request)
         {

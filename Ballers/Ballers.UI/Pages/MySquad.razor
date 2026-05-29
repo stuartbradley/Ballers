@@ -6,6 +6,33 @@
 
 @inject PlayerService PlayerService
 
+@if (_editPlayer != null)
+{
+    <div class="edit-player-overlay" @onclick="CloseEditModal">
+        <div class="edit-player-modal" @onclick:stopPropagation>
+            <h3>Edit Player</h3>
+            <div class="position-toggle">
+                <button type="button" class="pos-btn @(_editPosition == "GK"  ? "active GK"  : "")" @onclick='() => _editPosition = "GK"'>GK</button>
+                <button type="button" class="pos-btn @(_editPosition == "DEF" ? "active DEF" : "")" @onclick='() => _editPosition = "DEF"'>DEF</button>
+                <button type="button" class="pos-btn @(_editPosition == "MID" ? "active MID" : "")" @onclick='() => _editPosition = "MID"'>MID</button>
+                <button type="button" class="pos-btn @(_editPosition == "FWD" ? "active FWD" : "")" @onclick='() => _editPosition = "FWD"'>FWD</button>
+            </div>
+            <div class="add-player-row">
+                <input class="form-input name-input" placeholder="Player name" @bind="_editName" autocomplete="off" />
+                <input class="form-input number-input" type="number" placeholder="No." min="1" @bind="_editNumber" />
+            </div>
+            @if (!string.IsNullOrEmpty(_editError))
+            {
+                <div class="form-error">@_editError</div>
+            }
+            <div class="edit-modal-actions">
+                <button class="add-btn" @onclick="SaveEdit">Save</button>
+                <button class="remove-btn" @onclick="CloseEditModal">Cancel</button>
+            </div>
+        </div>
+    </div>
+}
+
 <ImageCropModal IsVisible="_showCropModal"
                 PlayerId="_cropPlayer?.Id ?? 0"
                 Name="@(_cropPlayer?.Name ?? "")"
@@ -121,7 +148,8 @@
                                             Position="@p.Position"
                                             ImageUrl="@p.ImageUrl"
                                             OnRemove="@(() => RemovePlayer(p.Id))"
-                                            OnEditPhoto="@(() => OpenCropModal(p))" />
+                                            OnEditPhoto="@(() => OpenCropModal(p))"
+                                            OnEdit="@(() => OpenEditModal(p))" />
                         }
                     </div>
                 </div>
@@ -148,6 +176,12 @@
 
     private bool _showCropModal;
     private PlayerDto? _cropPlayer;
+
+    private PlayerDto? _editPlayer;
+    private string _editName = "";
+    private int _editNumber;
+    private string _editPosition = "MID";
+    private string _editError = "";
 
     private IEnumerable<IGrouping<string, PlayerDto>> GroupedPlayers =>
         players.GroupBy(p => p.Position)
@@ -217,6 +251,39 @@
     {
         _cropPlayer = player;
         _showCropModal = true;
+    }
+
+    void OpenEditModal(PlayerDto player)
+    {
+        _editPlayer = player;
+        _editName = player.Name;
+        _editNumber = player.Number;
+        _editPosition = player.Position;
+        _editError = "";
+    }
+
+    void CloseEditModal()
+    {
+        _editPlayer = null;
+        _editError = "";
+    }
+
+    async Task SaveEdit()
+    {
+        _editError = "";
+        if (string.IsNullOrWhiteSpace(_editName)) { _editError = "Name is required."; return; }
+        if (_editNumber <= 0) { _editError = "Valid squad number required."; return; }
+
+        try
+        {
+            await PlayerService.UpdatePlayer(_editPlayer!.Id, _editName, _editNumber, _editPosition);
+            _editPlayer = null;
+            await LoadPlayers();
+        }
+        catch
+        {
+            _editError = "Failed to save. Please try again.";
+        }
     }
 
     async Task OnPhotoSaved()

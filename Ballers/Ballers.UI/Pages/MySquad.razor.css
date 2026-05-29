@@ -390,3 +390,58 @@
 
     .squad-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
 }
+
+/* ================================================================
+   EDIT PLAYER MODAL
+   ================================================================ */
+
+.edit-player-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.edit-player-modal {
+    background: #0f1f35;
+    border: 1px solid rgba(233, 204, 116, 0.2);
+    border-radius: 12px;
+    padding: 28px 24px;
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.edit-player-modal h3 {
+    color: var(--ballers-accent);
+    font-family: var(--font-display);
+    font-size: 1rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+.edit-modal-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.remove-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: transparent;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.remove-btn:hover { background: rgba(255, 255, 255, 0.06); }
