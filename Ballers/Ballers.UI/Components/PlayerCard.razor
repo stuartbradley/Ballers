@@ -54,6 +54,10 @@
     {
         <button type="button" class="card-edit-photo-btn" @onclick="OnEditPhoto" title="Edit photo">📷</button>
     }
+    @if (OnEdit.HasDelegate)
+    {
+        <button type="button" class="card-edit-btn" @onclick="OnEdit" title="Edit player">✏️</button>
+    }
 </div>
 
 @code {
@@ -66,6 +70,7 @@
     [Parameter] public string? ImageUrl { get; set; }
     [Parameter] public EventCallback OnRemove { get; set; }
     [Parameter] public EventCallback OnEditPhoto { get; set; }
+    [Parameter] public EventCallback OnEdit { get; set; }
 
     private string CardTier =>
         (Goals ?? 0) >= 1 && (Assists ?? 0) >= 1 ? "gold" :

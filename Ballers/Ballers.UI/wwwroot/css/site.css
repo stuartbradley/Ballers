@@ -103,6 +103,7 @@ body {
 .logo-img {
     height: 64px;
     width: auto;
+    max-width: 180px;
     display: block;
 }
 

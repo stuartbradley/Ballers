@@ -49,6 +49,12 @@ namespace Ballers.Services
             response.EnsureSuccessStatusCode();
         }
 
+        public async Task UpdatePlayer(int id, string name, int number, string position)
+        {
+            var response = await _httpClient.PutAsJsonAsync($"api/players/{id}", new { name, number, position });
+            response.EnsureSuccessStatusCode();
+        }
+
         public async Task UploadPlayerImage(int id, string imageBase64)
         {
             var response = await _httpClient.PutAsJsonAsync($"api/players/{id}/image", new { imageBase64 });

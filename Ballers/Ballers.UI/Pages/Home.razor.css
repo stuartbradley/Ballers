@@ -258,8 +258,9 @@
 }
 
 .about-logo {
-    height: 480px;
-    width: auto;
+    width: 480px;
+    max-width: 90vw;
+    height: auto;
     display: block;
     margin: 0 auto 32px;
 }

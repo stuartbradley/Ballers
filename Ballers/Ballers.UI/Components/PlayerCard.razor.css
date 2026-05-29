@@ -229,3 +229,36 @@
     border-color: #fca5a5;
     color: white;
 }
+
+/* ── Edit details button — bottom-left, appears on hover ── */
+
+.card-edit-btn {
+    position: absolute;
+    bottom: 4%;
+    left: 8%;
+    z-index: 10;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(233, 204, 116, 0.45);
+    color: rgba(233, 204, 116, 0.85);
+    font-size: 0.6rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.18s, background 0.15s;
+    font-family: sans-serif;
+    padding: 0;
+    line-height: 1;
+}
+
+.fut-player-card:hover .card-edit-btn { opacity: 1; }
+
+.card-edit-btn:hover {
+    background: rgba(250, 204, 21, 0.9);
+    border-color: rgba(250, 204, 21, 1);
+    color: #07101E;
+}
