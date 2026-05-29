@@ -81,5 +81,5 @@ jobs:
           protocol: ftps
           security: loose
           local-dir: publish/blazor/wwwroot/
-          server-dir: /blackpoolballersleague.co.uk/wwwroot/
+          server-dir: /blackpoolballersleague.co.uk/
           dangerous-clean-slate: true
