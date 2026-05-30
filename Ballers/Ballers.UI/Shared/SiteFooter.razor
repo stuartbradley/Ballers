@@ -1,0 +1,32 @@
+@using System.Reflection
+
+<footer class="site-footer">
+    <div class="footer-inner">
+        <span class="footer-credit">
+            Created by Stuart Bradley ·
+            <a href="mailto:stuartbradleyDeveloper@gmail.com">stuartbradleyDeveloper@gmail.com</a>
+        </span>
+        <span class="footer-version">v@version</span>
+    </div>
+</footer>
+
+@code {
+    private string version = "dev";
+
+    protected override void OnInitialized()
+    {
+        var info = typeof(App).Assembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+            .InformationalVersion;
+
+        if (!string.IsNullOrWhiteSpace(info))
+        {
+            var plus = info.IndexOf('+');
+            version = plus > 0 ? info[..plus] : info;
+        }
+        else
+        {
+            version = typeof(App).Assembly.GetName().Version?.ToString(3) ?? "dev";
+        }
+    }
+}

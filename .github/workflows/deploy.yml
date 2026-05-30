@@ -21,7 +21,10 @@ jobs:
       - name: Resolve deploy target
         id: target
         run: |
+          SHORT_SHA="${GITHUB_SHA::7}"
           if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+            VERSION="${TAG#v}"
             echo "env_name=Production"          >> "$GITHUB_OUTPUT"
             echo "is_uat=false"                 >> "$GITHUB_OUTPUT"
             echo "appsettings_file=appsettings.Production.json" >> "$GITHUB_OUTPUT"
@@ -29,6 +32,7 @@ jobs:
             echo "web_host=blackpoolballersleague.co.uk"        >> "$GITHUB_OUTPUT"
             echo "www_host=www.blackpoolballersleague.co.uk"    >> "$GITHUB_OUTPUT"
             echo "blazor_remote_dir=/blackpoolballersleague.co.uk/" >> "$GITHUB_OUTPUT"
+            echo "version=${VERSION}"           >> "$GITHUB_OUTPUT"
           else
             echo "env_name=UAT"                 >> "$GITHUB_OUTPUT"
             echo "is_uat=true"                  >> "$GITHUB_OUTPUT"
@@ -37,6 +41,7 @@ jobs:
             echo "web_host=bristonlyfans.co.uk"                 >> "$GITHUB_OUTPUT"
             echo "www_host=www.bristonlyfans.co.uk"             >> "$GITHUB_OUTPUT"
             echo "blazor_remote_dir=/bristonlyfans.co.uk/wwwroot/" >> "$GITHUB_OUTPUT"
+            echo "version=0.0.0-uat.${SHORT_SHA}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Write API config
@@ -65,7 +70,7 @@ jobs:
           PY
 
       - name: Publish API
-        run: dotnet publish Ballers/Ballers.API/Ballers.API.csproj -c Release -o publish/api --nologo --self-contained true -r win-x86 /p:EnvironmentName=${{ steps.target.outputs.env_name }}
+        run: dotnet publish Ballers/Ballers.API/Ballers.API.csproj -c Release -o publish/api --nologo --self-contained true -r win-x86 /p:EnvironmentName=${{ steps.target.outputs.env_name }} /p:InformationalVersion=${{ steps.target.outputs.version }}
 
       - name: Ensure config in publish output
         env:
@@ -80,7 +85,7 @@ jobs:
           python3 -c "import os,json; open('Ballers/Ballers.UI/wwwroot/appsettings.json','w').write(json.dumps({'ApiBaseUrl':f'https://{os.environ[\"API_HOST\"]}/','IsUAT':os.environ['IS_UAT']=='true'}))"
 
       - name: Publish Blazor
-        run: dotnet publish Ballers/Ballers.UI/Ballers.UI.csproj -c Release -o publish/blazor --nologo
+        run: dotnet publish Ballers/Ballers.UI/Ballers.UI.csproj -c Release -o publish/blazor --nologo /p:InformationalVersion=${{ steps.target.outputs.version }}
 
       - name: Take API offline
         env:

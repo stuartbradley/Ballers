@@ -1,0 +1,51 @@
+@using Microsoft.JSInterop
+@inject IJSRuntime JS
+
+@if (!dismissed && loaded)
+{
+    <div class="cookie-banner" role="region" aria-label="Cookie notice">
+        <div class="cookie-banner-inner">
+            <p class="cookie-text">
+                We use a single strictly-necessary cookie to keep you signed in.
+                No tracking or analytics cookies are used.
+                See our <a href="/privacy">privacy notice</a>.
+            </p>
+            <button class="cookie-accept" @onclick="Accept">OK</button>
+        </div>
+    </div>
+}
+
+@code {
+    private const string StorageKey = "bbl.cookieNoticeAck";
+    private bool dismissed = false;
+    private bool loaded = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        try
+        {
+            var ack = await JS.InvokeAsync<string?>("localStorage.getItem", StorageKey);
+            dismissed = ack == "1";
+        }
+        catch
+        {
+            dismissed = true;
+        }
+
+        loaded = true;
+        StateHasChanged();
+    }
+
+    private async Task Accept()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("localStorage.setItem", StorageKey, "1");
+        }
+        catch { }
+
+        dismissed = true;
+    }
+}
