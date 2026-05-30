@@ -1,39 +1,104 @@
 .site-footer {
-    border-top: 1px solid rgba(15, 23, 42, 0.08);
-    background: rgba(255, 255, 255, 0.97);
-    padding: 14px 24px;
-    font-size: 0.85rem;
-    color: rgba(15, 23, 42, 0.65);
+    margin-top: 60px;
+    background: #07101E;
+    color: rgba(255, 255, 255, 0.78);
+    position: relative;
+}
+
+.site-footer::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg,
+        var(--ballers-accent) 0%,
+        var(--ballers-accent) 33%,
+        var(--ballers-primary) 33%,
+        var(--ballers-primary) 66%,
+        #16a34a 66%,
+        #16a34a 100%);
 }
 
 .footer-inner {
     max-width: 1200px;
     margin: 0 auto;
+    padding: 28px 24px 24px;
     display: flex;
     flex-wrap: wrap;
-    gap: 8px 16px;
+    gap: 16px 24px;
     align-items: center;
     justify-content: space-between;
 }
 
+.footer-credit {
+    font-family: "Inter", system-ui, sans-serif;
+    font-size: 0.92rem;
+    letter-spacing: 0.01em;
+}
+
+.footer-credit strong {
+    color: #ffffff;
+    font-weight: 700;
+}
+
 .footer-credit a {
-    color: inherit;
-    text-decoration: underline;
+    color: var(--ballers-accent);
+    text-decoration: none;
+    border-bottom: 1px dotted rgba(250, 204, 21, 0.5);
+    padding-bottom: 1px;
 }
 
 .footer-credit a:hover {
-    color: #0f172a;
+    border-bottom-color: var(--ballers-accent);
+}
+
+.footer-links {
+    display: flex;
+    gap: 18px;
+    font-size: 0.85rem;
+}
+
+.footer-links a {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+}
+
+.footer-links a:hover {
+    color: #ffffff;
 }
 
 .footer-version {
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 0.8rem;
-    color: rgba(15, 23, 42, 0.5);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(250, 204, 21, 0.12);
+    color: var(--ballers-accent);
+    border: 1px solid rgba(250, 204, 21, 0.4);
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
 }
 
-@media (max-width: 600px) {
+.footer-version::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ballers-accent);
+    box-shadow: 0 0 6px rgba(250, 204, 21, 0.7);
+}
+
+@media (max-width: 700px) {
     .footer-inner {
         flex-direction: column;
         text-align: center;
+        gap: 14px;
     }
+    .footer-links { justify-content: center; }
 }
