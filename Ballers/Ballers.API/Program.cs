@@ -6,6 +6,9 @@ using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Events;
 
+// Create wwwroot + uploads/teams BEFORE CreateBuilder so WebRootFileProvider doesn't throw
+Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "teams"));
+
 var builder = WebApplication.CreateBuilder(args);
 
 var logDir = Path.Combine(AppContext.BaseDirectory, "logs");
@@ -100,9 +103,6 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
-// Ensure wwwroot + uploads exist BEFORE Build so PhysicalFileProvider doesn't throw
-Directory.CreateDirectory(Path.Combine(builder.Environment.ContentRootPath, "wwwroot", "uploads", "teams"));
 
 var app = builder.Build();
 

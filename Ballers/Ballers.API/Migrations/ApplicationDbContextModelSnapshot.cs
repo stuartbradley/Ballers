@@ -562,69 +562,6 @@ namespace Ballers.API.Migrations
                     b.ToTable("Teams");
                 });
 
-            modelBuilder.Entity("Ballers.API.Models.TeamOfTheWeek", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("GeneratedAtUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("MatchNumber")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SeasonId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SeasonId", "MatchNumber")
-                        .IsUnique();
-
-                    b.ToTable("TeamOfTheWeeks");
-                });
-
-            modelBuilder.Entity("Ballers.API.Models.TeamOfTheWeekPlayer", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("Assists")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("CleanSheets")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Goals")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("GoalsConceded")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsGoalkeeper")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("PlayerId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TeamOfTheWeekId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PlayerId");
-
-                    b.HasIndex("TeamOfTheWeekId");
-
-                    b.ToTable("TeamOfTheWeekPlayers");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -978,36 +915,6 @@ namespace Ballers.API.Migrations
                     b.Navigation("Team");
                 });
 
-            modelBuilder.Entity("Ballers.API.Models.TeamOfTheWeek", b =>
-                {
-                    b.HasOne("Ballers.API.Models.Season", "Season")
-                        .WithMany()
-                        .HasForeignKey("SeasonId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Season");
-                });
-
-            modelBuilder.Entity("Ballers.API.Models.TeamOfTheWeekPlayer", b =>
-                {
-                    b.HasOne("Ballers.API.Models.Player", "Player")
-                        .WithMany()
-                        .HasForeignKey("PlayerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Ballers.API.Models.TeamOfTheWeek", "TeamOfTheWeek")
-                        .WithMany("Players")
-                        .HasForeignKey("TeamOfTheWeekId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Player");
-
-                    b.Navigation("TeamOfTheWeek");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -1079,10 +986,6 @@ namespace Ballers.API.Migrations
                     b.Navigation("Fixtures");
                 });
 
-            modelBuilder.Entity("Ballers.API.Models.TeamOfTheWeek", b =>
-                {
-                    b.Navigation("Players");
-                });
 #pragma warning restore 612, 618
         }
     }
