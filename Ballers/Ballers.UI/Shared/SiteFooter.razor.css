@@ -1,5 +1,5 @@
 .site-footer {
-    margin-top: 60px;
+    margin-top: 0;
     background: #07101E;
     color: rgba(255, 255, 255, 0.78);
     position: relative;
@@ -24,7 +24,7 @@
 .footer-inner {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 28px 24px 24px;
+    padding: 48px 24px 32px;
     display: flex;
     flex-wrap: wrap;
     gap: 16px 24px;
