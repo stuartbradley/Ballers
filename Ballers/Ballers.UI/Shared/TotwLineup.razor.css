@@ -1,0 +1,61 @@
+.totw-lineup {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    padding: 32px 16px;
+    background:
+        radial-gradient(ellipse at center top, rgba(250, 204, 21, 0.10), transparent 60%),
+        linear-gradient(180deg, #0b1426 0%, #0f1f3d 100%);
+    border-radius: 18px;
+    position: relative;
+    overflow: hidden;
+}
+
+.totw-lineup::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+        repeating-linear-gradient(90deg,
+            rgba(255, 255, 255, 0.03) 0,
+            rgba(255, 255, 255, 0.03) 1px,
+            transparent 1px,
+            transparent 60px);
+    pointer-events: none;
+}
+
+.totw-row {
+    display: grid;
+    gap: 18px;
+    justify-items: center;
+    position: relative;
+    z-index: 1;
+}
+
+.totw-row-gk {
+    grid-template-columns: minmax(160px, 220px);
+    justify-content: center;
+}
+
+.totw-row-outfield {
+    grid-template-columns: repeat(5, 1fr);
+}
+
+.totw-empty {
+    padding: 40px 16px;
+    text-align: center;
+    color: rgba(15, 23, 42, 0.6);
+    font-style: italic;
+}
+
+@media (max-width: 900px) {
+    .totw-row-outfield {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 540px) {
+    .totw-row-outfield {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

@@ -2,6 +2,7 @@
 @using Ballers.Components
 @using Ballers.Models
 @using Ballers.Services
+@using Ballers.Shared
 
 <PageTitle>Blackpool Ballers League</PageTitle>
 
@@ -10,7 +11,9 @@
 @inject FixtureService FixtureService;
 @inject StatService StatService;
 @inject PenaltyService PenaltyService;
+@inject TotwService TotwService;
 @inject IJSRuntime JS;
+@inject NavigationManager Nav;
 
 <section class="hero">
     <div class="hero-overlay">
@@ -179,6 +182,22 @@
     </div>
 </section>
 
+@if (currentTotw != null)
+{
+    <section class="totw-section">
+        <div class="container">
+            <div class="totw-section-header">
+                <div>
+                    <h2>Team of the Week</h2>
+                    <p class="totw-section-sub">Match Week @currentTotw.MatchNumber · @currentTotw.GeneratedAtUtc.ToLocalTime().ToString("d MMM yyyy")</p>
+                </div>
+                <button class="totw-section-link" @onclick="@(() => Nav.NavigateTo("/totw"))">View all weeks →</button>
+            </div>
+            <TotwLineup Totw="currentTotw" />
+        </div>
+    </section>
+}
+
 <section class="stats">
     <div class="stats-header">
         <h2>Player Stats</h2>
@@ -278,6 +297,7 @@
     private List<PlayerAssistDto> topAssists = new();
     private List<PlayerMotmDto> topMotm = new();
     private List<PenaltyTableRowDto> penaltyTable = new();
+    private TeamOfTheWeekDto? currentTotw;
     private bool isLoading = true;
 
     protected override async Task OnInitializedAsync()
@@ -290,14 +310,16 @@
             var weekTask = FixtureService.GetCurrentWeek();
             var seasonsTask = SeasonService.GetSeasons();
             var currentSeasonTask = SeasonService.GetCurrentSeason();
+            var totwTask = TotwService.GetCurrent();
 
-            await Task.WhenAll(scorersTask, assistsTask, motmTask, weekTask, seasonsTask, currentSeasonTask);
+            await Task.WhenAll(scorersTask, assistsTask, motmTask, weekTask, seasonsTask, currentSeasonTask, totwTask);
 
             topScorers = scorersTask.Result;
             topAssists = assistsTask.Result;
             topMotm = motmTask.Result;
             currentWeek = weekTask.Result;
             seasons = seasonsTask.Result;
+            currentTotw = totwTask.Result;
 
             var currentSeason = currentSeasonTask.Result;
             selectedSeasonId = currentSeason?.Id ?? seasons.FirstOrDefault()?.Id ?? 0;

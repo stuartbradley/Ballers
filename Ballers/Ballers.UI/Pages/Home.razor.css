@@ -678,3 +678,54 @@ tbody tr:hover {
     .card         { padding: 20px 16px; }
     th, td        { padding: 8px 5px; font-size: 0.72rem; }
 }
+
+.totw-section {
+    padding: 60px 16px 50px;
+    background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+}
+
+.totw-section .container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.totw-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 22px;
+    padding-bottom: 14px;
+    border-bottom: 2px solid rgba(15, 23, 42, 0.08);
+}
+
+.totw-section-header h2 {
+    margin: 0;
+    font-size: clamp(1.6rem, 3vw, 2rem);
+    color: var(--ballers-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.totw-section-sub {
+    margin: 4px 0 0;
+    color: rgba(15, 23, 42, 0.6);
+    font-size: 0.92rem;
+}
+
+.totw-section-link {
+    background: transparent;
+    border: 1px solid var(--ballers-primary);
+    color: var(--ballers-primary);
+    border-radius: 999px;
+    padding: 8px 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.totw-section-link:hover {
+    background: var(--ballers-primary);
+    color: white;
+}

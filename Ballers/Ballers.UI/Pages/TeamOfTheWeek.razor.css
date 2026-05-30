@@ -1,0 +1,98 @@
+.totw-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 16px 64px;
+}
+
+.totw-page-header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.totw-page-header h1 {
+    font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+    margin: 0 0 8px;
+    color: var(--ballers-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.totw-page-sub {
+    color: rgba(15, 23, 42, 0.65);
+    max-width: 640px;
+    margin: 0 auto;
+}
+
+.totw-week-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 28px;
+    padding: 8px;
+    background: rgba(15, 23, 42, 0.04);
+    border-radius: 12px;
+}
+
+.totw-week-tab {
+    background: white;
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    border-radius: 8px;
+    padding: 8px 14px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.2;
+    transition: all 0.18s ease;
+    min-width: 88px;
+}
+
+.totw-week-tab:hover {
+    border-color: var(--ballers-primary);
+    transform: translateY(-1px);
+}
+
+.totw-week-tab.is-active {
+    background: var(--ballers-primary);
+    border-color: var(--ballers-primary);
+    color: white;
+    box-shadow: 0 6px 14px rgba(30, 58, 138, 0.3);
+}
+
+.totw-week-tab-mw {
+    font-weight: 800;
+    font-size: 0.95rem;
+}
+
+.totw-week-tab-date {
+    font-size: 0.7rem;
+    opacity: 0.75;
+    margin-top: 2px;
+}
+
+.totw-page-section {
+    margin-top: 8px;
+}
+
+.totw-page-section-title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 18px;
+    color: var(--ballers-primary);
+}
+
+.totw-page-section-date {
+    font-size: 0.95rem;
+    color: rgba(15, 23, 42, 0.6);
+    font-weight: 500;
+}
+
+.totw-loading, .totw-empty {
+    text-align: center;
+    padding: 48px 16px;
+    color: rgba(15, 23, 42, 0.55);
+    font-style: italic;
+}

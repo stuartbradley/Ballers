@@ -44,4 +44,5 @@ builder.Services.AddScoped<TeamService>();
 builder.Services.AddScoped<RefereeService>();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<KnockoutService>();
+builder.Services.AddScoped<TotwService>();
 await builder.Build().RunAsync();

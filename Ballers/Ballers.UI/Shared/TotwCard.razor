@@ -1,0 +1,54 @@
+@using Ballers.Shared
+
+<div class="totw-card @(Player.IsGoalkeeper ? "is-gk" : "")">
+    <img src="/images/card-TOTW.png" alt="" class="totw-card-bg" />
+    <div class="totw-card-content">
+        <div class="totw-card-top">
+            <div class="totw-position">@PositionLabel</div>
+        </div>
+
+        <div class="totw-card-photo">
+            @if (!string.IsNullOrWhiteSpace(Player.ProfileImageBase64))
+            {
+                <img src="@Player.ProfileImageBase64" alt="@Player.Name" />
+            }
+            else
+            {
+                <div class="totw-photo-fallback">@Initials</div>
+            }
+        </div>
+
+        <div class="totw-card-name">@Player.Name</div>
+        <div class="totw-card-team">@Player.TeamName</div>
+
+        <div class="totw-card-stats">
+            @if (Player.IsGoalkeeper)
+            {
+                <div class="totw-stat"><span class="totw-stat-val">@(Player.GoalsConceded ?? 0)</span><span class="totw-stat-lbl">GA</span></div>
+                <div class="totw-stat"><span class="totw-stat-val">@(Player.CleanSheets ?? 0)</span><span class="totw-stat-lbl">CS</span></div>
+            }
+            else
+            {
+                <div class="totw-stat"><span class="totw-stat-val">@Player.Goals</span><span class="totw-stat-lbl">G</span></div>
+                <div class="totw-stat"><span class="totw-stat-val">@Player.Assists</span><span class="totw-stat-lbl">A</span></div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public TotwPlayerDto Player { get; set; } = default!;
+
+    private string PositionLabel => string.IsNullOrEmpty(Player.Position) ? "—" : Player.Position;
+
+    private string Initials
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(Player.Name)) return "?";
+            var parts = Player.Name.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 1) return parts[0][..Math.Min(2, parts[0].Length)].ToUpper();
+            return $"{parts[0][0]}{parts[^1][0]}".ToUpper();
+        }
+    }
+}

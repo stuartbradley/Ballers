@@ -1,0 +1,58 @@
+@page "/totw"
+@using Ballers.Shared
+@using Ballers.Services
+@inject TotwService TotwSvc
+
+<PageTitle>Team of the Week — Blackpool Ballers League</PageTitle>
+
+<div class="totw-page">
+    <header class="totw-page-header">
+        <h1>Team of the Week</h1>
+        <p class="totw-page-sub">Each week's standout XI — Man of the Match winners plus the league's best goalkeeper.</p>
+    </header>
+
+    @if (loading)
+    {
+        <p class="totw-loading">Loading…</p>
+    }
+    else if (history.Count == 0)
+    {
+        <p class="totw-empty">No Teams of the Week have been published yet.</p>
+    }
+    else
+    {
+        <nav class="totw-week-tabs">
+            @foreach (var t in history)
+            {
+                <button class="totw-week-tab @(selected?.Id == t.Id ? "is-active" : "")"
+                        @onclick="() => Select(t)">
+                    <span class="totw-week-tab-mw">MW @t.MatchNumber</span>
+                    <span class="totw-week-tab-date">@t.GeneratedAtUtc.ToLocalTime().ToString("d MMM yyyy")</span>
+                </button>
+            }
+        </nav>
+
+        <section class="totw-page-section">
+            <h2 class="totw-page-section-title">
+                Match Week @selected!.MatchNumber
+                <span class="totw-page-section-date">@selected.GeneratedAtUtc.ToLocalTime().ToString("dddd, d MMMM yyyy")</span>
+            </h2>
+            <TotwLineup Totw="selected" />
+        </section>
+    }
+</div>
+
+@code {
+    private bool loading = true;
+    private List<TeamOfTheWeekDto> history = new();
+    private TeamOfTheWeekDto? selected;
+
+    protected override async Task OnInitializedAsync()
+    {
+        history = await TotwSvc.GetHistory();
+        selected = history.FirstOrDefault();
+        loading = false;
+    }
+
+    private void Select(TeamOfTheWeekDto t) => selected = t;
+}

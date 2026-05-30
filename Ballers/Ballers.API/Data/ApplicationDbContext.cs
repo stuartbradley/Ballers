@@ -25,6 +25,8 @@ namespace Ballers.API.Data
         public DbSet<KnockoutFixture> KnockoutFixtures => Set<KnockoutFixture>();
         public DbSet<Notification> Notifications => Set<Notification>();
         public DbSet<NotificationSetting> NotificationSettings => Set<NotificationSetting>();
+        public DbSet<TeamOfTheWeek> TeamOfTheWeeks => Set<TeamOfTheWeek>();
+        public DbSet<TeamOfTheWeekPlayer> TeamOfTheWeekPlayers => Set<TeamOfTheWeekPlayer>();
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -162,6 +164,28 @@ namespace Ballers.API.Data
             builder.Entity<Fixture>()
                 .HasOne(f => f.AwayViceCaptain).WithMany()
                 .HasForeignKey(f => f.AwayViceCaptainId).OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<TeamOfTheWeek>()
+                .HasOne(t => t.Season)
+                .WithMany()
+                .HasForeignKey(t => t.SeasonId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<TeamOfTheWeek>()
+                .HasIndex(t => new { t.SeasonId, t.MatchNumber })
+                .IsUnique();
+
+            builder.Entity<TeamOfTheWeekPlayer>()
+                .HasOne(tp => tp.TeamOfTheWeek)
+                .WithMany(t => t.Players)
+                .HasForeignKey(tp => tp.TeamOfTheWeekId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<TeamOfTheWeekPlayer>()
+                .HasOne(tp => tp.Player)
+                .WithMany()
+                .HasForeignKey(tp => tp.PlayerId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
 
     }

@@ -1,0 +1,126 @@
+.totw-card {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 280 / 420;
+    max-width: 220px;
+    margin: 0 auto;
+    color: #1a1a1a;
+    font-family: "Saira Semi Condensed", "Inter", sans-serif;
+    filter: drop-shadow(0 12px 28px rgba(15, 23, 42, 0.35));
+    transition: transform 0.25s ease;
+}
+
+.totw-card:hover {
+    transform: translateY(-6px) scale(1.02);
+}
+
+.totw-card-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+    user-select: none;
+}
+
+.totw-card-content {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 14% 12% 10%;
+    text-align: center;
+}
+
+.totw-card-top {
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+    font-weight: 800;
+    font-size: clamp(0.7rem, 1.6vw, 0.95rem);
+    letter-spacing: 0.08em;
+}
+
+.totw-position {
+    color: rgba(15, 23, 42, 0.85);
+}
+
+.totw-card-photo {
+    width: 56%;
+    aspect-ratio: 1 / 1;
+    margin: 4% auto 6%;
+    border-radius: 50%;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+}
+
+.totw-card-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.totw-photo-fallback {
+    font-size: clamp(1.2rem, 3vw, 1.8rem);
+    font-weight: 800;
+    color: rgba(15, 23, 42, 0.55);
+}
+
+.totw-card-name {
+    font-weight: 800;
+    font-size: clamp(0.85rem, 1.9vw, 1.05rem);
+    line-height: 1.1;
+    margin-bottom: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.totw-card-team {
+    font-size: clamp(0.65rem, 1.4vw, 0.78rem);
+    color: rgba(15, 23, 42, 0.65);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: auto;
+}
+
+.totw-card-stats {
+    display: flex;
+    gap: 14%;
+    justify-content: center;
+    margin-top: 6%;
+    padding-top: 4%;
+    border-top: 1px solid rgba(15, 23, 42, 0.15);
+    width: 70%;
+}
+
+.totw-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
+}
+
+.totw-stat-val {
+    font-weight: 800;
+    font-size: clamp(0.95rem, 2.2vw, 1.2rem);
+    color: #1a1a1a;
+}
+
+.totw-stat-lbl {
+    font-size: clamp(0.55rem, 1.1vw, 0.7rem);
+    color: rgba(15, 23, 42, 0.55);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-top: 2px;
+}
