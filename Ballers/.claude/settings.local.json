@@ -89,7 +89,20 @@
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
       "Bash(git push *)",
-      "Bash(Remove-Item *)"
+      "Bash(Remove-Item *)",
+      "Bash(curl -k -s -o /dev/null -w \"API:%{http_code}\\\\n\" https://localhost:7075/api/test/reset -X POST)",
+      "Bash(curl -k -s -o /dev/null -w \"UI:%{http_code}\\\\n\" https://localhost:57420/)",
+      "Bash(curl -k -s -f -o /dev/null https://localhost:7075/swagger/v1/swagger.json)",
+      "Bash(curl -k -s -f -o /dev/null https://localhost:57420/)",
+      "Bash(curl -k -s -o /dev/null -w \"API_swagger:%{http_code}\\\\n\" https://localhost:7075/swagger/v1/swagger.json -m 3)",
+      "Bash(curl -k -s -o /dev/null -w \"API_test_reset:%{http_code}\\\\n\" https://localhost:7075/api/test/reset -X POST -m 3)",
+      "Bash(curl -k -s -o /dev/null -w \"UI:%{http_code}\\\\n\" https://localhost:57420/ -m 3)",
+      "Bash(powershell *)",
+      "Bash(curl -k -s -o /dev/null -w \"API:%{http_code}\\\\n\" https://localhost:7075/api/test/reset -X POST -m 5)",
+      "Bash(curl -k -s -o /dev/null -w \"UI:%{http_code}\\\\n\" https://localhost:57420/ -m 5)",
+      "Bash(curl -k -s -f -o /dev/null -X POST https://localhost:7075/api/test/reset)",
+      "PowerShell($urls = @\\(\"https://images.unsplash.com/photo-1517747614396-d21a78b850e8?q=80&w=1920&auto=format&fit=crop\",\"https://images.unsplash.com/photo-1517747614396-d21a78b850e8?fm=webp&q=55&w=1920&fit=crop\",\"https://images.unsplash.com/photo-1517747614396-d21a78b850e8?fm=webp&q=45&w=1600&fit=crop\"\\); foreach \\($u in $urls\\) { $r = Invoke-WebRequest -Uri $u -Method Head -UseBasicParsing; $len = [int]$r.Headers['Content-Length']; $kb = [math]::Round\\($len/1024\\); $ct = $r.Headers['Content-Type']; Write-Output \"$kb KB  $ct  ::  $u\" })",
+      "PowerShell($urls = @\\(\"https://images.unsplash.com/photo-1517747614396-d21a78b850e8?fm=webp&q=40&w=1600&fit=crop\",\"https://images.unsplash.com/photo-1517747614396-d21a78b850e8?fm=webp&q=35&w=1600&fit=crop\",\"https://images.unsplash.com/photo-1517747614396-d21a78b850e8?fm=webp&q=40&w=1200&fit=crop\",\"https://images.unsplash.com/photo-1517747614396-d21a78b850e8?fm=avif&q=45&w=1600&fit=crop\"\\); foreach \\($u in $urls\\) { $r = Invoke-WebRequest -Uri $u -Method Head -UseBasicParsing; $len = [int]$r.Headers['Content-Length']; $kb = [math]::Round\\($len/1024\\); $ct = $r.Headers['Content-Type']; Write-Output \"$kb KB  $ct  ::  $u\" })"
     ]
   }
 }

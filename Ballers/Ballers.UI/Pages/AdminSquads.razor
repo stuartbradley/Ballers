@@ -1,0 +1,229 @@
+@page "/admin/squads"
+@page "/admin/squads/{TeamId:int}"
+@using Ballers.Components
+@using Ballers.Models
+@using Ballers.Services
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Admin")]
+
+@inject TeamService TeamSvc
+@inject PlayerService PlayerSvc
+@inject NavigationManager Nav
+
+<PageTitle>Squad Management — Admin</PageTitle>
+
+<div class="admin-squads-page">
+
+    <div class="admin-squads-hero">
+        <div class="admin-squads-hero-inner">
+            <p class="admin-squads-eyebrow">Admin Only</p>
+            <h1>@(TeamId.HasValue ? (currentTeam?.Name ?? "Loading…") : "Squad Management")</h1>
+            @if (TeamId.HasValue)
+            {
+                <a class="admin-squads-back" href="/admin/squads">← All teams</a>
+            }
+        </div>
+    </div>
+
+    <div class="admin-squads-body">
+
+        @if (loading)
+        {
+            <LoadingSpinner />
+        }
+        else if (!TeamId.HasValue)
+        {
+            <!-- List of all teams -->
+            <div class="admin-squads-grid">
+                @foreach (var team in teams)
+                {
+                    <a class="team-tile" href="@($"/admin/squads/{team.Id}")">
+                        <div class="team-tile-image">
+                            @if (!string.IsNullOrEmpty(team.ProfileImageUrl))
+                            {
+                                <img src="@team.ProfileImageUrl" alt="@team.Name" />
+                            }
+                            else
+                            {
+                                <div class="team-tile-fallback">@TeamInitials(team.Name)</div>
+                            }
+                        </div>
+                        <div class="team-tile-name">@team.Name</div>
+                    </a>
+                }
+            </div>
+        }
+        else
+        {
+            <!-- Players for selected team -->
+
+            @if (_editPlayer != null)
+            {
+                <div class="edit-player-overlay" @onclick="CloseEditModal">
+                    <div class="edit-player-modal" @onclick:stopPropagation>
+                        <h3>Edit Player</h3>
+                        <div class="position-toggle">
+                            <button type="button" class="pos-btn @(_editPosition == "GK"  ? "active GK"  : "")" @onclick='() => _editPosition = "GK"'>GK</button>
+                            <button type="button" class="pos-btn @(_editPosition == "DEF" ? "active DEF" : "")" @onclick='() => _editPosition = "DEF"'>DEF</button>
+                            <button type="button" class="pos-btn @(_editPosition == "MID" ? "active MID" : "")" @onclick='() => _editPosition = "MID"'>MID</button>
+                            <button type="button" class="pos-btn @(_editPosition == "FWD" ? "active FWD" : "")" @onclick='() => _editPosition = "FWD"'>FWD</button>
+                        </div>
+                        <div class="add-player-row">
+                            <input class="form-input name-input" placeholder="Player name" @bind="_editName" autocomplete="off" />
+                            <input class="form-input number-input" type="number" placeholder="No." min="1" @bind="_editNumber" />
+                        </div>
+                        @if (!string.IsNullOrEmpty(_editError))
+                        {
+                            <div class="form-error">@_editError</div>
+                        }
+                        <div class="edit-modal-actions">
+                            <button class="add-btn" @onclick="SaveEdit">Save</button>
+                            <button class="remove-btn" @onclick="CloseEditModal">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <ImageCropModal IsVisible="_showCropModal"
+                            PlayerId="_cropPlayer?.Id ?? 0"
+                            Name="@(_cropPlayer?.Name ?? "")"
+                            Number="@(_cropPlayer?.Number ?? 0)"
+                            Position="@(_cropPlayer?.Position ?? "MID")"
+                            OnClose="@(() => _showCropModal = false)"
+                            OnSaved="OnPhotoSaved" />
+
+            @if (players.Count == 0)
+            {
+                <div class="empty-state">
+                    <p>This team has no players.</p>
+                </div>
+            }
+            else
+            {
+                @foreach (var group in GroupedPlayers)
+                {
+                    <div class="position-group">
+                        <div class="group-header">
+                            <span class="group-badge @group.Key">@group.Key</span>
+                            <span class="group-count">@group.Count() player@(group.Count() == 1 ? "" : "s")</span>
+                        </div>
+                        <div class="squad-grid">
+                            @foreach (var p in group.OrderBy(x => x.Number))
+                            {
+                                <PlayerCard Name="@p.Name"
+                                            Number="@p.Number"
+                                            Position="@p.Position"
+                                            ImageUrl="@p.ImageUrl"
+                                            OnEditPhoto="@(() => OpenCropModal(p))"
+                                            OnEdit="@(() => OpenEditModal(p))" />
+                            }
+                        </div>
+                    </div>
+                }
+            }
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public int? TeamId { get; set; }
+
+    private static readonly string[] PositionOrder = ["GK", "DEF", "MID", "FWD"];
+
+    private bool loading = true;
+    private List<TeamProfileDto> teams = new();
+    private TeamProfileDto? currentTeam;
+    private List<PlayerCardDto> players = new();
+
+    private bool _showCropModal;
+    private PlayerCardDto? _cropPlayer;
+
+    private PlayerCardDto? _editPlayer;
+    private string _editName = "";
+    private int _editNumber;
+    private string _editPosition = "MID";
+    private string _editError = "";
+
+    private IEnumerable<IGrouping<string, PlayerCardDto>> GroupedPlayers =>
+        players.GroupBy(p => p.Position)
+               .OrderBy(g => Array.IndexOf(PositionOrder, g.Key) is int i && i >= 0 ? i : 99);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        loading = true;
+        if (TeamId.HasValue)
+        {
+            var profile = TeamSvc.GetProfile(TeamId.Value);
+            var squad = TeamSvc.GetSquad(TeamId.Value);
+            await Task.WhenAll(profile, squad);
+            currentTeam = profile.Result;
+            players = squad.Result;
+        }
+        else
+        {
+            teams = (await TeamSvc.GetAllTeams())
+                .OrderBy(t => t.Name)
+                .ToList();
+        }
+        loading = false;
+    }
+
+    private static string TeamInitials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "?";
+        var parts = name.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1) return parts[0][..Math.Min(2, parts[0].Length)].ToUpper();
+        return $"{parts[0][0]}{parts[^1][0]}".ToUpper();
+    }
+
+    private void OpenCropModal(PlayerCardDto player)
+    {
+        _cropPlayer = player;
+        _showCropModal = true;
+    }
+
+    private void OpenEditModal(PlayerCardDto player)
+    {
+        _editPlayer = player;
+        _editName = player.Name;
+        _editNumber = player.Number;
+        _editPosition = player.Position;
+        _editError = "";
+    }
+
+    private void CloseEditModal()
+    {
+        _editPlayer = null;
+        _editError = "";
+    }
+
+    private async Task SaveEdit()
+    {
+        _editError = "";
+        if (string.IsNullOrWhiteSpace(_editName)) { _editError = "Name is required."; return; }
+        if (_editNumber <= 0) { _editError = "Valid squad number required."; return; }
+
+        try
+        {
+            await PlayerSvc.UpdatePlayer(_editPlayer!.Id, _editName, _editNumber, _editPosition);
+            _editPlayer = null;
+            await ReloadSquad();
+        }
+        catch
+        {
+            _editError = "Failed to save. Please try again.";
+        }
+    }
+
+    private async Task OnPhotoSaved()
+    {
+        _showCropModal = false;
+        await ReloadSquad();
+    }
+
+    private async Task ReloadSquad()
+    {
+        if (!TeamId.HasValue) return;
+        players = await TeamSvc.GetSquad(TeamId.Value);
+    }
+}

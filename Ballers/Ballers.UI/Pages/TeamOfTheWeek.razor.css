@@ -1,98 +1,206 @@
-.totw-page {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 32px 16px 64px;
+/* ================================================================
+   TOTW PAGE — MATCH DAY AESTHETIC
+   Deep navy + yellow accent. Same language as Home / About sections.
+   ================================================================ */
+
+@keyframes totwFadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
+
+.totw-page {
+    background: #07101E;
+    color: white;
+    min-height: 80vh;
+    padding: 0 0 80px;
+}
+
+/* ── Hero band ── */
 
 .totw-page-header {
     text-align: center;
-    margin-bottom: 32px;
+    padding: 90px 20px 50px;
+    position: relative;
+    background:
+        radial-gradient(ellipse at top, rgba(250, 204, 21, 0.08), transparent 55%),
+        #07101E;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .totw-page-header h1 {
-    font-size: clamp(1.8rem, 3.5vw, 2.6rem);
-    margin: 0 0 8px;
-    color: var(--ballers-primary);
+    color: white;
+    font-size: clamp(2rem, 4vw, 2.8rem);
+    letter-spacing: 0.18em;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    margin: 0 0 6px;
+    font-weight: 800;
+    animation: totwFadeUp 0.6s ease both;
+}
+
+.totw-page-header h1::after {
+    content: "";
+    display: block;
+    height: 3px;
+    width: 56px;
+    margin: 16px auto 0;
+    background: var(--ballers-accent);
+    border-radius: 1px;
 }
 
 .totw-page-sub {
-    color: rgba(15, 23, 42, 0.65);
-    max-width: 640px;
-    margin: 0 auto;
+    max-width: 620px;
+    margin: 22px auto 0;
+    font-size: 0.95rem;
+    line-height: 1.85;
+    color: rgba(255, 255, 255, 0.5);
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    animation: totwFadeUp 0.65s 0.12s ease both;
 }
 
-.totw-week-tabs {
+/* ── Container ── */
+
+.totw-page .totw-selector,
+.totw-page .totw-page-section {
+    max-width: 1100px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* ── Selector ── */
+
+.totw-selector {
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+    align-items: center;
     justify-content: center;
-    margin-bottom: 28px;
-    padding: 8px;
-    background: rgba(15, 23, 42, 0.04);
-    border-radius: 12px;
+    gap: 18px;
+    padding: 0 20px;
+    margin-top: 50px;
+    margin-bottom: 38px;
+    animation: totwFadeUp 0.65s 0.2s ease both;
 }
 
-.totw-week-tab {
-    background: white;
-    border: 1px solid rgba(15, 23, 42, 0.1);
-    border-radius: 8px;
-    padding: 8px 14px;
+.totw-arrow {
+    flex-shrink: 0;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--ballers-accent);
+    font-size: 1.25rem;
+    font-weight: 800;
     cursor: pointer;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    line-height: 1.2;
+    justify-content: center;
     transition: all 0.18s ease;
-    min-width: 88px;
 }
 
-.totw-week-tab:hover {
-    border-color: var(--ballers-primary);
-    transform: translateY(-1px);
+.totw-arrow:hover:not(:disabled) {
+    background: var(--ballers-accent);
+    color: #07101E;
+    border-color: var(--ballers-accent);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(250, 204, 21, 0.3);
 }
 
-.totw-week-tab.is-active {
-    background: var(--ballers-primary);
-    border-color: var(--ballers-primary);
-    color: white;
-    box-shadow: 0 6px 14px rgba(30, 58, 138, 0.3);
+.totw-arrow:disabled {
+    opacity: 0.25;
+    cursor: not-allowed;
 }
 
-.totw-week-tab-mw {
+.totw-pill {
+    flex: 1;
+    max-width: 460px;
+    min-width: 0;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    padding: 18px 24px;
+    text-align: center;
+    position: relative;
+}
+
+.totw-pill::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 56px;
+    height: 2px;
+    background: var(--ballers-accent);
+}
+
+.totw-pill-mw {
+    font-family: "Saira Semi Condensed", "Inter", sans-serif;
     font-weight: 800;
-    font-size: 0.95rem;
+    font-size: clamp(1.1rem, 2.4vw, 1.4rem);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    line-height: 1;
+    color: white;
 }
 
-.totw-week-tab-date {
-    font-size: 0.7rem;
-    opacity: 0.75;
-    margin-top: 2px;
+.totw-pill-mw .totw-pill-num {
+    color: var(--ballers-accent);
+    margin-left: 4px;
 }
+
+.totw-pill-date {
+    margin-top: 10px;
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.55);
+    letter-spacing: 0.04em;
+}
+
+.totw-pill-count {
+    margin-top: 6px;
+    font-size: 0.68rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.3);
+}
+
+/* ── Lineup section ── */
 
 .totw-page-section {
-    margin-top: 8px;
+    padding: 0 20px;
+    transition: opacity 0.18s ease;
+    animation: totwFadeUp 0.7s 0.3s ease both;
 }
 
-.totw-page-section-title {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 12px;
-    margin-bottom: 18px;
-    color: var(--ballers-primary);
+.totw-page-section.is-fetching {
+    opacity: 0.45;
+    pointer-events: none;
 }
 
-.totw-page-section-date {
-    font-size: 0.95rem;
-    color: rgba(15, 23, 42, 0.6);
-    font-weight: 500;
-}
+/* Empty / loading states */
 
-.totw-loading, .totw-empty {
+.totw-loading,
+.totw-empty {
     text-align: center;
-    padding: 48px 16px;
-    color: rgba(15, 23, 42, 0.55);
+    padding: 80px 20px;
+    color: rgba(255, 255, 255, 0.45);
     font-style: italic;
+    letter-spacing: 0.04em;
+}
+
+/* ── Mobile ── */
+
+@media (max-width: 720px) {
+    .totw-page-header { padding: 60px 16px 40px; }
+    .totw-selector { gap: 12px; }
+    .totw-arrow {
+        width: 44px;
+        height: 44px;
+        font-size: 1rem;
+    }
+    .totw-pill {
+        padding: 14px 18px;
+    }
+    .totw-pill-mw { font-size: 1.05rem; }
+    .totw-pill-date { font-size: 0.78rem; }
 }

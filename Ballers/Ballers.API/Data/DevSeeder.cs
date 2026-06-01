@@ -350,14 +350,17 @@ namespace Ballers.API.Data
                 var homeGoalStats = DistributeGoals(homeSquad, homeGoals);
                 var awayGoalStats = DistributeGoals(awaySquad, awayGoals);
 
-                var motmPool = homeGoals > awayGoals ? homeSquad :
-                               awayGoals > homeGoals ? awaySquad :
-                               homeSquad.Concat(awaySquad).ToList();
-                var motmId = motmPool[_rng.Next(motmPool.Count)].Id;
-
-                // Assign captain and vice-captain — prefer outfield players
+                // One MOTM per team — outfield only
                 var homeOutfield = homeSquad.Where(p => p.Position != "GK").ToList();
                 var awayOutfield = awaySquad.Where(p => p.Position != "GK").ToList();
+                var homeMotmId = homeOutfield.Count > 0
+                    ? homeOutfield[_rng.Next(homeOutfield.Count)].Id
+                    : -1;
+                var awayMotmId = awayOutfield.Count > 0
+                    ? awayOutfield[_rng.Next(awayOutfield.Count)].Id
+                    : -1;
+
+                // Assign captain and vice-captain — prefer outfield players
                 var homeCaptains = homeOutfield.OrderBy(_ => _rng.Next()).Take(2).ToList();
                 var awayCaptains = awayOutfield.OrderBy(_ => _rng.Next()).Take(2).ToList();
 
@@ -373,7 +376,7 @@ namespace Ballers.API.Data
                     {
                         FixtureId = fixture.Id, PlayerId = p.Id,
                         Goals = g, Assists = a,
-                        ManOfTheMatch = p.Id == motmId,
+                        ManOfTheMatch = p.Id == homeMotmId,
                         YellowCards = _rng.Next(12) == 0,
                         RedCard     = _rng.Next(70) == 0
                     });
@@ -386,7 +389,7 @@ namespace Ballers.API.Data
                     {
                         FixtureId = fixture.Id, PlayerId = p.Id,
                         Goals = g, Assists = a,
-                        ManOfTheMatch = p.Id == motmId,
+                        ManOfTheMatch = p.Id == awayMotmId,
                         YellowCards = _rng.Next(12) == 0,
                         RedCard     = _rng.Next(70) == 0
                     });

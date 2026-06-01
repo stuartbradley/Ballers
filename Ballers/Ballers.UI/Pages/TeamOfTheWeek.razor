@@ -1,6 +1,7 @@
 @page "/totw"
 @using Ballers.Shared
 @using Ballers.Services
+@implements IDisposable
 @inject TotwService TotwSvc
 
 <PageTitle>Team of the Week — Blackpool Ballers League</PageTitle>
@@ -15,44 +16,136 @@
     {
         <p class="totw-loading">Loading…</p>
     }
-    else if (history.Count == 0)
+    else if (weeks.Count == 0 || current == null)
     {
         <p class="totw-empty">No Teams of the Week have been published yet.</p>
     }
     else
     {
-        <nav class="totw-week-tabs">
-            @foreach (var t in history)
-            {
-                <button class="totw-week-tab @(selected?.Id == t.Id ? "is-active" : "")"
-                        @onclick="() => Select(t)">
-                    <span class="totw-week-tab-mw">MW @t.MatchNumber</span>
-                    <span class="totw-week-tab-date">@t.GeneratedAtUtc.ToLocalTime().ToString("d MMM yyyy")</span>
-                </button>
-            }
-        </nav>
+        <div class="totw-selector">
+            <button class="totw-arrow"
+                    @onclick="GoNewer"
+                    disabled="@(!CanGoNewer || fetching)"
+                    aria-label="Newer week">
+                ◄
+            </button>
 
-        <section class="totw-page-section">
-            <h2 class="totw-page-section-title">
-                Match Week @selected!.MatchNumber
-                <span class="totw-page-section-date">@selected.GeneratedAtUtc.ToLocalTime().ToString("dddd, d MMMM yyyy")</span>
-            </h2>
-            <TotwLineup Totw="selected" />
+            <div class="totw-pill">
+                <div class="totw-pill-mw">Match Week <span class="totw-pill-num">@current.MatchNumber</span></div>
+                <div class="totw-pill-date">@current.GeneratedAtUtc.ToLocalTime().ToString("dddd, d MMMM yyyy")</div>
+                <div class="totw-pill-count">@(currentIndex + 1) of @weeks.Count</div>
+            </div>
+
+            <button class="totw-arrow"
+                    @onclick="GoOlder"
+                    disabled="@(!CanGoOlder || fetching)"
+                    aria-label="Older week">
+                ►
+            </button>
+        </div>
+
+        <section class="totw-page-section @(fetching ? "is-fetching" : "")">
+            <TotwLineup Totw="current" />
         </section>
     }
 </div>
 
 @code {
     private bool loading = true;
-    private List<TeamOfTheWeekDto> history = new();
-    private TeamOfTheWeekDto? selected;
+    private bool fetching = false;
+    private List<TotwWeekRefDto> weeks = new();
+    private TeamOfTheWeekDto? current;
+    private int currentIndex = 0;
+
+    private readonly Dictionary<int, TeamOfTheWeekDto> cache = new();
+    private CancellationTokenSource? prefetchCts;
+
+    private bool CanGoNewer => currentIndex > 0;
+    private bool CanGoOlder => currentIndex < weeks.Count - 1;
 
     protected override async Task OnInitializedAsync()
     {
-        history = await TotwSvc.GetHistory();
-        selected = history.FirstOrDefault();
+        var weeksTask = TotwSvc.GetWeeks();
+        var currentTask = TotwSvc.GetCurrent();
+        await Task.WhenAll(weeksTask, currentTask);
+
+        weeks = weeksTask.Result;
+        current = currentTask.Result;
+
+        if (current != null)
+        {
+            cache[current.MatchNumber] = current;
+            var idx = weeks.FindIndex(w => w.MatchNumber == current.MatchNumber);
+            currentIndex = idx >= 0 ? idx : 0;
+        }
+
         loading = false;
+
+        prefetchCts = new CancellationTokenSource();
+        _ = PrefetchOthersAsync(prefetchCts.Token);
     }
 
-    private void Select(TeamOfTheWeekDto t) => selected = t;
+    private async Task PrefetchOthersAsync(CancellationToken ct)
+    {
+        var ordered = weeks
+            .Select((w, i) => (Week: w, Distance: Math.Abs(i - currentIndex)))
+            .Where(x => !cache.ContainsKey(x.Week.MatchNumber))
+            .OrderBy(x => x.Distance)
+            .Select(x => x.Week)
+            .ToList();
+
+        foreach (var w in ordered)
+        {
+            if (ct.IsCancellationRequested) return;
+            if (cache.ContainsKey(w.MatchNumber)) continue;
+
+            var dto = await TotwSvc.GetWeek(w.MatchNumber);
+            if (dto != null) cache[w.MatchNumber] = dto;
+        }
+    }
+
+    private async Task GoNewer()
+    {
+        if (!CanGoNewer) return;
+        await Select(currentIndex - 1);
+    }
+
+    private async Task GoOlder()
+    {
+        if (!CanGoOlder) return;
+        await Select(currentIndex + 1);
+    }
+
+    private async Task Select(int newIndex)
+    {
+        if (newIndex < 0 || newIndex >= weeks.Count) return;
+
+        var matchNumber = weeks[newIndex].MatchNumber;
+
+        if (cache.TryGetValue(matchNumber, out var hit))
+        {
+            current = hit;
+            currentIndex = newIndex;
+            return;
+        }
+
+        fetching = true;
+        StateHasChanged();
+
+        var dto = await TotwSvc.GetWeek(matchNumber);
+        if (dto != null)
+        {
+            cache[matchNumber] = dto;
+            current = dto;
+            currentIndex = newIndex;
+        }
+
+        fetching = false;
+    }
+
+    public void Dispose()
+    {
+        prefetchCts?.Cancel();
+        prefetchCts?.Dispose();
+    }
 }

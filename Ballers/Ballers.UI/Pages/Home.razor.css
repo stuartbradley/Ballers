@@ -76,7 +76,11 @@
     content: "";
     position: absolute;
     inset: -5%;
-    background: url("https://images.unsplash.com/photo-1517747614396-d21a78b850e8?q=80&w=1920&auto=format&fit=crop") center 35% / cover no-repeat;
+    background: image-set(
+        url("https://images.unsplash.com/photo-1517747614396-d21a78b850e8?fm=webp&q=45&w=1600&fit=crop") type("image/webp") 1x,
+        url("https://images.unsplash.com/photo-1517747614396-d21a78b850e8?fm=webp&q=40&w=2400&fit=crop") type("image/webp") 1.5x,
+        url("https://images.unsplash.com/photo-1517747614396-d21a78b850e8?q=60&w=1600&fit=crop") 1x
+    ) center 35% / cover no-repeat;
     opacity: 0.38;
     z-index: 1;
     animation: kenBurns 24s ease-in-out infinite alternate;

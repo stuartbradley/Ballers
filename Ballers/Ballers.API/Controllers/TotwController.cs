@@ -23,5 +23,19 @@ namespace Ballers.API.Controllers
             var list = await _svc.GetHistoryAsync();
             return Ok(list);
         }
+
+        [HttpGet("weeks")]
+        public async Task<IActionResult> GetWeeks()
+        {
+            var weeks = await _svc.GetWeeksAsync();
+            return Ok(weeks);
+        }
+
+        [HttpGet("{matchNumber:int}")]
+        public async Task<IActionResult> GetWeek(int matchNumber)
+        {
+            var dto = await _svc.GetWeekAsync(matchNumber);
+            return dto == null ? NotFound() : Ok(dto);
+        }
     }
 }

@@ -1,37 +1,60 @@
 @using Ballers.Shared
 
-<div class="totw-card @(Player.IsGoalkeeper ? "is-gk" : "")">
-    <img src="/images/card-TOTW.png" alt="" class="totw-card-bg" />
-    <div class="totw-card-content">
-        <div class="totw-card-top">
-            <div class="totw-position">@PositionLabel</div>
+<div class="totw-fut-card @(Player.IsGoalkeeper ? "is-gk" : "")">
+    <div class="totw-card-top">
+        <div class="totw-master-info">
+            <div class="totw-position-label"><span>@PositionLabel</span></div>
         </div>
-
-        <div class="totw-card-photo">
+        <div class="totw-picture">
             @if (!string.IsNullOrWhiteSpace(Player.ProfileImageBase64))
             {
-                <img src="@Player.ProfileImageBase64" alt="@Player.Name" />
+                <img src="@Player.ProfileImageBase64" alt="@Player.Name" draggable="false" />
             }
             else
             {
-                <div class="totw-photo-fallback">@Initials</div>
+                <svg class="totw-silhouette" viewBox="0 0 60 90" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+                    <circle cx="30" cy="14" r="12" />
+                    <path d="M10 36 L3 55 L15 59 L18 46 L18 78 L42 78 L42 46 L45 59 L57 55 L50 36 C46 31 38 27 30 27 C22 27 14 31 10 36Z" />
+                </svg>
             }
         </div>
-
-        <div class="totw-card-name">@Player.Name</div>
-        <div class="totw-card-team">@Player.TeamName</div>
-
-        <div class="totw-card-stats">
-            @if (Player.IsGoalkeeper)
-            {
-                <div class="totw-stat"><span class="totw-stat-val">@(Player.GoalsConceded ?? 0)</span><span class="totw-stat-lbl">GA</span></div>
-                <div class="totw-stat"><span class="totw-stat-val">@(Player.CleanSheets ?? 0)</span><span class="totw-stat-lbl">CS</span></div>
-            }
-            else
-            {
-                <div class="totw-stat"><span class="totw-stat-val">@Player.Goals</span><span class="totw-stat-lbl">G</span></div>
-                <div class="totw-stat"><span class="totw-stat-val">@Player.Assists</span><span class="totw-stat-lbl">A</span></div>
-            }
+    </div>
+    <div class="totw-card-bottom">
+        <div class="totw-info">
+            <div class="totw-name"><span>@Player.Name</span></div>
+            <div class="totw-team"><span>@Player.TeamName</span></div>
+            <div class="totw-features">
+                @if (Player.IsGoalkeeper)
+                {
+                    <div class="totw-features-col">
+                        <span>
+                            <div class="totw-feature-value">@(Player.GoalsConceded ?? 0)</div>
+                            <div class="totw-feature-title">GA</div>
+                        </span>
+                    </div>
+                    <div class="totw-features-col">
+                        <span>
+                            <div class="totw-feature-value">@(Player.CleanSheets ?? 0)</div>
+                            <div class="totw-feature-title">CS</div>
+                        </span>
+                    </div>
+                }
+                else
+                {
+                    <div class="totw-features-col">
+                        <span>
+                            <div class="totw-feature-value">@Player.Goals</div>
+                            <div class="totw-feature-title">GOL</div>
+                        </span>
+                    </div>
+                    <div class="totw-features-col">
+                        <span>
+                            <div class="totw-feature-value">@Player.Assists</div>
+                            <div class="totw-feature-title">AST</div>
+                        </span>
+                    </div>
+                }
+            </div>
         </div>
     </div>
 </div>
@@ -40,15 +63,4 @@
     [Parameter, EditorRequired] public TotwPlayerDto Player { get; set; } = default!;
 
     private string PositionLabel => string.IsNullOrEmpty(Player.Position) ? "—" : Player.Position;
-
-    private string Initials
-    {
-        get
-        {
-            if (string.IsNullOrWhiteSpace(Player.Name)) return "?";
-            var parts = Player.Name.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length == 1) return parts[0][..Math.Min(2, parts[0].Length)].ToUpper();
-            return $"{parts[0][0]}{parts[^1][0]}".ToUpper();
-        }
-    }
 }

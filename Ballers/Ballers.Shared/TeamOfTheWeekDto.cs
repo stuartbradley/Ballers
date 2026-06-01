@@ -1,5 +1,7 @@
 namespace Ballers.Shared
 {
+    public record TotwWeekRefDto(int MatchNumber, DateTime Date);
+
     public record TeamOfTheWeekDto(
         int Id,
         int SeasonId,

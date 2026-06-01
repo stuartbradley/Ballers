@@ -17,5 +17,15 @@ namespace Ballers.Services
 
         public async Task<List<TeamOfTheWeekDto>> GetHistory()
             => await _http.GetFromJsonAsync<List<TeamOfTheWeekDto>>("api/totw/history") ?? new();
+
+        public async Task<List<TotwWeekRefDto>> GetWeeks()
+            => await _http.GetFromJsonAsync<List<TotwWeekRefDto>>("api/totw/weeks") ?? new();
+
+        public async Task<TeamOfTheWeekDto?> GetWeek(int matchNumber)
+        {
+            var resp = await _http.GetAsync($"api/totw/{matchNumber}");
+            if (!resp.IsSuccessStatusCode) return null;
+            return await resp.Content.ReadFromJsonAsync<TeamOfTheWeekDto>();
+        }
     }
 }

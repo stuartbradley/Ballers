@@ -137,8 +137,7 @@ namespace Ballers.API.Controllers
         {
             if (_env.IsDevelopment())
             {
-                await _db.Database.EnsureDeletedAsync();
-                Microsoft.Data.SqlClient.SqlConnection.ClearAllPools();
+                await ForceDropDatabaseAsync();
                 await _db.Database.MigrateAsync();
             }
             else
@@ -147,6 +146,35 @@ namespace Ballers.API.Controllers
             }
             _db.ChangeTracker.Clear();
             await DbSeeder.Seed(_sp);
+        }
+
+        private async Task ForceDropDatabaseAsync()
+        {
+            var connStr = _db.Database.GetConnectionString()
+                ?? throw new InvalidOperationException("No connection string.");
+            var builder = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(connStr);
+            var dbName = builder.InitialCatalog;
+            if (string.IsNullOrWhiteSpace(dbName))
+                throw new InvalidOperationException("No InitialCatalog in connection string.");
+
+            // Reject odd db names to avoid identifier injection.
+            if (dbName.Contains(']') || dbName.Contains('"'))
+                throw new InvalidOperationException("Unsafe database name.");
+
+            await _db.Database.CloseConnectionAsync();
+            Microsoft.Data.SqlClient.SqlConnection.ClearAllPools();
+
+            builder.InitialCatalog = "master";
+            await using var conn = new Microsoft.Data.SqlClient.SqlConnection(builder.ConnectionString);
+            await conn.OpenAsync();
+            await using var cmd = conn.CreateCommand();
+            cmd.CommandText = $@"
+                IF DB_ID(N'{dbName}') IS NOT NULL
+                BEGIN
+                    ALTER DATABASE [{dbName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+                    DROP DATABASE [{dbName}];
+                END";
+            await cmd.ExecuteNonQueryAsync();
         }
 
         private async Task WipeAllDataAsync()
@@ -264,10 +292,14 @@ namespace Ballers.API.Controllers
                 f.AwayCaptainId = awayCaps.Count > 0 ? awayCaps[0].Id : null;
                 f.AwayViceCaptainId = awayCaps.Count > 1 ? awayCaps[1].Id : null;
 
-                var motmPool = homeGoals > awayGoals ? homeSquad
-                             : awayGoals > homeGoals ? awaySquad
-                             : homeSquad.Concat(awaySquad).ToList();
-                var motmId = motmPool[rng.Next(motmPool.Count)].Id;
+                var homeOutfieldForMotm = homeSquad.Where(p => p.Position != "GK").ToList();
+                var awayOutfieldForMotm = awaySquad.Where(p => p.Position != "GK").ToList();
+                var homeMotmId = homeOutfieldForMotm.Count > 0
+                    ? homeOutfieldForMotm[rng.Next(homeOutfieldForMotm.Count)].Id
+                    : -1;
+                var awayMotmId = awayOutfieldForMotm.Count > 0
+                    ? awayOutfieldForMotm[rng.Next(awayOutfieldForMotm.Count)].Id
+                    : -1;
 
                 foreach (var p in homeSquad.Concat(awaySquad))
                     newFps.Add(new FixturePlayer { FixtureId = f.Id, PlayerId = p.Id });
@@ -282,7 +314,7 @@ namespace Ballers.API.Controllers
                     {
                         FixtureId = f.Id, PlayerId = p.Id,
                         Goals = g, Assists = a,
-                        ManOfTheMatch = p.Id == motmId,
+                        ManOfTheMatch = p.Id == homeMotmId,
                         YellowCards = rng.Next(12) == 0,
                         RedCard = rng.Next(70) == 0
                     });
@@ -294,7 +326,7 @@ namespace Ballers.API.Controllers
                     {
                         FixtureId = f.Id, PlayerId = p.Id,
                         Goals = g, Assists = a,
-                        ManOfTheMatch = p.Id == motmId,
+                        ManOfTheMatch = p.Id == awayMotmId,
                         YellowCards = rng.Next(12) == 0,
                         RedCard = rng.Next(70) == 0
                     });

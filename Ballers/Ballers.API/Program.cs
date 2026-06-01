@@ -71,6 +71,7 @@ builder.Services.AddScoped<ITeamService, TeamService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<IKnockoutService, KnockoutService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddMemoryCache();
 builder.Services.AddScoped<ITotwService, TotwService>();
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"));
 builder.Services.AddScoped<IEmailService, EmailService>();
@@ -104,6 +105,13 @@ builder.Services.AddCors(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddResponseCompression(opts =>
+{
+    opts.EnableForHttps = true;
+    opts.Providers.Add<Microsoft.AspNetCore.ResponseCompression.BrotliCompressionProvider>();
+    opts.Providers.Add<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProvider>();
+});
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -112,6 +120,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseResponseCompression();
 app.UseHttpsRedirection();
 
 var webRoot = app.Environment.WebRootPath
