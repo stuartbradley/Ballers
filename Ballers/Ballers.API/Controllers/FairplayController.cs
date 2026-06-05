@@ -7,7 +7,7 @@ namespace Ballers.API.Controllers
 {
     [ApiController]
     [Route("api/fairplay")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Referee")]
     public class FairplayController : ControllerBase
     {
         private readonly IFairplayService _fairplay;

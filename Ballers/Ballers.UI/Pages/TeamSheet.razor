@@ -1,0 +1,137 @@
+@page "/team-sheet/{Id:int}"
+@using Ballers.Models
+@using Ballers.Services
+@using Ballers.Components
+@using Ballers.Client.Auth
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+
+@inject FixtureService FixtureService
+@inject TeamService TeamService
+@inject AuthService AuthService
+@inject HttpClient Http
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+
+<PageTitle>Team Sheet</PageTitle>
+
+<div class="ts-page">
+
+    <div class="ts-toolbar">
+        <button class="ts-back" @onclick="@(() => Nav.NavigateTo("/manager-fixtures"))">← Back</button>
+
+        <div class="ts-variant-select">
+            <button class="ts-variant-btn @(variant == 1 ? "active" : "")" @onclick="() => variant = 1">Street</button>
+            <button class="ts-variant-btn @(variant == 2 ? "active" : "")" @onclick="() => variant = 2">Split</button>
+            <button class="ts-variant-btn @(variant == 4 ? "active" : "")" @onclick="() => variant = 4">Graffiti</button>
+            <button class="ts-variant-btn @(variant == 5 ? "active" : "")" @onclick="() => variant = 5">Community</button>
+        </div>
+
+        @if (fixture != null)
+        {
+            <button class="ts-download" @onclick="DownloadImage" disabled="@isDownloading">
+                @(isDownloading ? "Saving…" : "⬇ Download")
+            </button>
+        }
+    </div>
+
+    @if (isLoading)
+    {
+        <LoadingSpinner />
+    }
+    else if (fixture == null)
+    {
+        <div class="ts-error">Fixture not found.</div>
+    }
+    else
+    {
+        <div id="poster-capture" class="ts-capture">
+            @if (variant == 1)
+            {
+                <TeamSheetClassic Fixture="fixture" HomeBadge="homeBadge" AwayBadge="awayBadge"
+                                  SheetTeamName="sheetTeamName" Squad="squad" />
+            }
+            else if (variant == 2)
+            {
+                <TeamSheetSplit Fixture="fixture" HomeBadge="homeBadge" AwayBadge="awayBadge"
+                                SheetTeamName="sheetTeamName" Squad="squad" />
+            }
+            else if (variant == 3)
+            {
+                <TeamSheetVintage Fixture="fixture" HomeBadge="homeBadge" AwayBadge="awayBadge"
+                                  SheetTeamName="sheetTeamName" Squad="squad" />
+            }
+            else if (variant == 4)
+            {
+                <TeamSheetGraffiti Fixture="fixture" HomeBadge="homeBadge" AwayBadge="awayBadge"
+                                   SheetTeamName="sheetTeamName" Squad="squad" />
+            }
+            else
+            {
+                <TeamSheetCommunity Fixture="fixture" HomeBadge="homeBadge" AwayBadge="awayBadge"
+                                    SheetTeamName="sheetTeamName" Squad="squad" />
+            }
+        </div>
+    }
+
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private FixtureDetailsDto? fixture;
+    private List<PlayerCardDto> squad = new();
+    private string? homeBadge;
+    private string? awayBadge;
+    private string sheetTeamName = "";
+    private bool isLoading = true;
+    private bool isDownloading = false;
+    private int variant = 1;
+
+    private async Task DownloadImage()
+    {
+        if (fixture == null) return;
+        isDownloading = true;
+        try
+        {
+            var filename = $"{Safe(fixture.HomeTeam)}-vs-{Safe(fixture.AwayTeam)}-teamsheet.png";
+            await JS.InvokeVoidAsync("teamSheetExport.download", "poster-capture", filename);
+        }
+        finally
+        {
+            isDownloading = false;
+        }
+    }
+
+    private static string Safe(string? s)
+    {
+        var bad = Path.GetInvalidFileNameChars().Concat(new[] { ' ' }).ToArray();
+        return string.Join("-", (s ?? "").Split(bad, StringSplitOptions.RemoveEmptyEntries));
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        fixture = await FixtureService.GetFixture(Id);
+        if (fixture == null) { isLoading = false; return; }
+
+        var user = await AuthService.GetCurrentUser();
+        // The sheet is for the logged-in manager's team; fall back to the home team
+        // (e.g. admin/referee viewing) so the page always renders something useful.
+        var sheetTeamId = user?.TeamId ?? fixture.HomeTeamId;
+        sheetTeamName = sheetTeamId == fixture.AwayTeamId ? fixture.AwayTeam : fixture.HomeTeam;
+
+        var homeTask = TeamService.GetProfile(fixture.HomeTeamId);
+        var awayTask = TeamService.GetProfile(fixture.AwayTeamId);
+        var squadTask = TeamService.GetSquad(sheetTeamId);
+        await Task.WhenAll(homeTask, awayTask, squadTask);
+
+        homeBadge = Abs(homeTask.Result?.ProfileImageUrl);
+        awayBadge = Abs(awayTask.Result?.ProfileImageUrl);
+        squad = squadTask.Result.OrderBy(p => p.Number).ToList();
+
+        isLoading = false;
+    }
+
+    private string? Abs(string? url)
+        => string.IsNullOrEmpty(url) ? null : Http.BaseAddress!.ToString().TrimEnd('/') + url;
+}

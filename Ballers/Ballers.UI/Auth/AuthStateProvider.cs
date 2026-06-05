@@ -46,6 +46,8 @@ namespace Ballers.Auth
 
             if (userInfo.IsAdmin)
                 claims.Add(new Claim(ClaimTypes.Role, "Admin"));
+            else if (userInfo.IsReferee)
+                claims.Add(new Claim(ClaimTypes.Role, "Referee"));
             else
                 claims.Add(new Claim(ClaimTypes.Role, "Manager"));
 

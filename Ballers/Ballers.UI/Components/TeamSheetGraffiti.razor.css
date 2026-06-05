@@ -1,0 +1,214 @@
+/* ============================================================
+   STYLE 4 — GRAFFITI / CONCRETE
+   Concrete wall, spray-paint stencil, paint drips, caution
+   tape, tag scrawl. Navy-charcoal + gold spray.
+   ============================================================ */
+
+.gf-poster {
+    --wall:   #11151C;
+    --wall-2: #0A0D12;
+    --gold:   #FACC15;
+    --gold-2: #E0A400;
+    --spray:  #ffe14d;
+    --chalk:  #ECE7DA;
+
+    position: relative;
+    width: 100%;
+    max-width: 640px;
+    color: var(--chalk);
+    background:
+        radial-gradient(circle at 18% 8%, rgba(250,204,21,0.10), transparent 38%),
+        radial-gradient(circle at 86% 96%, rgba(30,58,138,0.30), transparent 46%),
+        linear-gradient(162deg, #181D26 0%, #0E121A 55%, #090C11 100%);
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 46px 120px rgba(0,0,0,0.75), inset 0 0 0 1px rgba(255,255,255,0.05);
+    isolation: isolate;
+    animation: gfRise 0.5s cubic-bezier(0.22,0.9,0.3,1) both;
+}
+@keyframes gfRise { from { opacity:0; transform: translateY(24px);} to { opacity:1; transform:none; } }
+
+/* Concrete grain */
+.gf-noise {
+    position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    opacity: 0.6; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.7'/%3E%3C/svg%3E");
+}
+
+/* Big sprayed tag watermark */
+.gf-bigtag {
+    position: absolute; z-index: 0; top: 38%; left: -4%;
+    font-family: 'Permanent Marker', cursive;
+    font-size: 8rem; line-height: 1; color: transparent;
+    -webkit-text-stroke: 2px rgba(250,204,21,0.05);
+    transform: rotate(-8deg); white-space: nowrap; pointer-events: none; user-select: none;
+}
+
+.gf-poster > *:not(.gf-noise):not(.gf-bigtag) { position: relative; z-index: 1; }
+
+/* ── Masthead ── */
+.gf-head { padding: 28px 24px 0; text-align: center; position: relative; }
+.gf-logo { display: block; height: 256px; width: auto; max-width: 100%; margin: 0 auto 12px; filter: drop-shadow(0 0 14px rgba(250,204,21,0.4)); }
+.gf-stencil {
+    display: inline-block;
+    font-family: 'Anton', sans-serif;
+    font-size: 1.4rem; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--gold);
+    text-shadow: 0 0 18px rgba(250,204,21,0.55), 3px 3px 0 rgba(0,0,0,0.5);
+    transform: rotate(-1.5deg);
+}
+.gf-mw {
+    display: block; margin-top: 8px;
+    font-family: 'Permanent Marker', cursive; font-size: 0.95rem;
+    color: rgba(255,255,255,0.55); transform: rotate(-1deg);
+}
+/* paint drips */
+.gf-drips { display: flex; justify-content: center; gap: 12px; margin-top: 6px; height: 26px; }
+.gf-drips i {
+    width: 3px; background: var(--gold);
+    border-radius: 0 0 3px 3px;
+    box-shadow: 0 0 8px rgba(250,204,21,0.5);
+    opacity: 0.8;
+}
+.gf-drips i:nth-child(1){ height: 14px; }
+.gf-drips i:nth-child(2){ height: 24px; }
+.gf-drips i:nth-child(3){ height: 9px; }
+.gf-drips i:nth-child(4){ height: 20px; }
+.gf-drips i:nth-child(5){ height: 12px; }
+.gf-drips i:nth-child(6){ height: 17px; }
+
+/* ── Fixture ── */
+.gf-fixture { display: grid; grid-template-columns: 1fr auto 1fr; align-items: start; gap: 6px; padding: 18px 20px 28px; }
+.gf-side { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.gf-side:first-of-type { transform: rotate(-1.5deg); animation: gfL 0.5s 0.12s ease both; }
+.gf-side:last-of-type  { transform: rotate(1.5deg);  animation: gfR 0.5s 0.12s ease both; }
+@keyframes gfL { from { opacity:0; transform: rotate(-1.5deg) translateX(-20px);} to { opacity:1; } }
+@keyframes gfR { from { opacity:0; transform: rotate(1.5deg) translateX(20px);} to { opacity:1; } }
+
+.gf-badge {
+    width: 110px; height: 110px; border-radius: 50%;
+    background: radial-gradient(circle at 32% 26%, rgba(255,255,255,0.12), rgba(255,255,255,0.02));
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+    border: 2px solid var(--gold);
+    box-shadow: 0 0 0 4px rgba(250,204,21,0.12), 0 0 26px rgba(250,204,21,0.35), 5px 7px 0 rgba(0,0,0,0.4);
+}
+.gf-badge img { width: 100%; height: 100%; object-fit: cover; }
+.gf-badge-fallback { font-family: 'Anton', sans-serif; font-size: 2.6rem; color: var(--gold); text-shadow: 0 0 16px rgba(250,204,21,0.5); }
+
+.gf-name {
+    margin: 0; font-family: 'Anton', sans-serif;
+    font-size: clamp(1.5rem, 6.4vw, 2.5rem); line-height: 0.88;
+    text-transform: uppercase; text-align: center; color: var(--chalk);
+    transform: skewX(-6deg);
+    text-shadow: 3px 3px 0 rgba(0,0,0,0.55), 0 0 22px rgba(255,255,255,0.06);
+    max-width: 210px;
+}
+
+.gf-vs {
+    align-self: center; margin-top: 24px;
+    width: 80px; height: 80px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Permanent Marker', cursive; font-size: 2rem; color: var(--wall);
+    background: radial-gradient(circle at 45% 40%, var(--spray), var(--gold-2) 70%);
+    box-shadow: 0 0 30px rgba(250,204,21,0.6), 0 0 0 8px rgba(250,204,21,0.1);
+    transform: rotate(-8deg);
+    animation: gfPop 0.5s 0.42s cubic-bezier(0.34,1.56,0.5,1) both;
+}
+@keyframes gfPop { from { opacity:0; transform: rotate(-8deg) scale(0.3);} to { opacity:1; transform: rotate(-8deg) scale(1);} }
+
+/* ── Caution-tape info strip ── */
+.gf-strip {
+    display: grid; grid-template-columns: 1fr 1fr;
+    background:
+        repeating-linear-gradient(45deg, var(--gold) 0 22px, #14181F 22px 44px);
+    position: relative;
+}
+.gf-strip::before {
+    content: ""; position: absolute; inset: 6px;
+    background: #0C1016;
+}
+.gf-strip-cell { position: relative; padding: 14px 22px; display: flex; flex-direction: column; gap: 2px; }
+.gf-strip-label {
+    font-family: 'Anton', sans-serif; font-size: 0.72rem;
+    letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold);
+}
+.gf-strip-value {
+    font-family: 'Saira Semi Condensed', sans-serif; font-weight: 700;
+    font-size: 0.95rem; text-transform: uppercase; color: var(--chalk);
+}
+
+/* ── Squad ── */
+.gf-sheet { padding: 30px 26px 8px; }
+.gf-sheet-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 16px; }
+.gf-sheet-tag {
+    font-family: 'Permanent Marker', cursive; font-size: 1.8rem;
+    color: var(--gold); text-shadow: 0 0 16px rgba(250,204,21,0.5);
+    transform: rotate(-2deg);
+}
+.gf-sheet-club {
+    font-family: 'Saira Semi Condensed', sans-serif; font-weight: 700;
+    font-size: 0.9rem; letter-spacing: 0.1em; text-transform: uppercase;
+    color: rgba(255,255,255,0.5); margin-left: auto;
+}
+.gf-empty { color: rgba(255,255,255,0.4); font-family: 'Permanent Marker', cursive; padding: 8px 0 18px; }
+
+.gf-players { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 2px 24px; }
+.gf-row {
+    display: flex; align-items: center; gap: 13px; padding: 9px 2px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    animation: gfFade 0.4s ease both;
+}
+.gf-players .gf-row:nth-child(1){animation-delay:.26s}
+.gf-players .gf-row:nth-child(2){animation-delay:.30s}
+.gf-players .gf-row:nth-child(3){animation-delay:.34s}
+.gf-players .gf-row:nth-child(4){animation-delay:.38s}
+.gf-players .gf-row:nth-child(5){animation-delay:.42s}
+.gf-players .gf-row:nth-child(6){animation-delay:.46s}
+.gf-players .gf-row:nth-child(7){animation-delay:.50s}
+.gf-players .gf-row:nth-child(8){animation-delay:.54s}
+.gf-players .gf-row:nth-child(n+9){animation-delay:.58s}
+@keyframes gfFade { from { opacity:0; transform: translateY(6px);} to { opacity:1; } }
+
+.gf-num {
+    flex-shrink: 0; min-width: 42px; text-align: center;
+    font-family: 'Anton', sans-serif; font-size: 1.85rem; line-height: 1;
+    color: var(--gold); text-shadow: 0 0 14px rgba(250,204,21,0.55);
+    transform: rotate(-4deg);
+}
+.gf-pname {
+    font-family: 'Permanent Marker', cursive; font-size: 0.96rem;
+    letter-spacing: 0.01em; color: rgba(255,255,255,0.92);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ── Sponsor ── */
+.gf-sponsor {
+    margin-top: 24px; padding: 22px 24px 28px;
+    border-top: 3px solid var(--gold);
+    background:
+        repeating-linear-gradient(45deg, rgba(0,0,0,0.3) 0 16px, rgba(0,0,0,0.18) 16px 32px);
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+}
+.gf-sponsor-label {
+    font-family: 'Permanent Marker', cursive; font-size: 1.1rem;
+    color: var(--gold); transform: rotate(-2deg); text-shadow: 0 0 14px rgba(250,204,21,0.5);
+}
+.gf-sponsor-plate {
+    background: var(--chalk); border-radius: 6px; padding: 12px 22px;
+    box-shadow: 0 10px 26px rgba(0,0,0,0.5);
+}
+.gf-sponsor-img { width: 200px; height: 150px; background-size: contain; background-repeat: no-repeat; background-position: center; }
+.gf-sponsor-name {
+    font-family: 'Anton', sans-serif; font-size: 1.6rem;
+    text-transform: uppercase; color: var(--chalk);
+}
+
+@media (max-width: 560px) {
+    .gf-badge { width: 84px; height: 84px; }
+    .gf-name { font-size: clamp(1.3rem, 8vw, 2rem); }
+    .gf-vs { width: 62px; height: 62px; font-size: 1.5rem; }
+    .gf-bigtag { font-size: 5.5rem; }
+    .gf-players { grid-template-columns: 1fr; }
+    .gf-sheet { padding-left: 18px; padding-right: 18px; }
+    .gf-sponsor-plate img { height: 100px; }
+}

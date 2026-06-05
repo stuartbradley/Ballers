@@ -29,14 +29,14 @@
                     <div class="dashboard-hero-inner">
 
                         <div class="dash-greeting-block">
-                            <p class="dash-eyebrow">@(isAdmin ? "Admin Dashboard" : "Manager Dashboard")</p>
+                            <p class="dash-eyebrow">@(isAdmin ? "Admin Dashboard" : isReferee ? "Referee Dashboard" : "Manager Dashboard")</p>
                             <h1 class="dash-greeting">
                                 Welcome back,
-                                <span class="dash-team">@(isAdmin ? "Admin" : (auth.User.FindFirst("TeamName")?.Value ?? "Manager"))</span>
+                                <span class="dash-team">@(isAdmin ? "Admin" : isReferee ? "Referee" : (auth.User.FindFirst("TeamName")?.Value ?? "Manager"))</span>
                             </h1>
                         </div>
 
-                        @if (!isAdmin && stats != null)
+                        @if (!isAdmin && !isReferee && stats != null)
                         {
                             <div class="dash-record">
                                 <div class="dash-stat-box dash-win">
@@ -62,7 +62,7 @@
                 <div class="dashboard-grid">
 
                     <!-- Season chart + player stats -->
-                    @if (!isAdmin)
+                    @if (!isAdmin && !isReferee)
                     {
                     <div class="dashboard-card chart-card">
                         <h3>Season Record</h3>
@@ -134,29 +134,35 @@
                     <!-- Quick action tiles -->
                     <div class="action-tiles-row">
 
-                        <NavLink class="dashboard-card action-card myteam-action" href="/my-team">
-                            <div class="action-body">
-                                <h3>My Team</h3>
-                                <p>Edit profile, crest and contact details</p>
-                            </div>
-                            <span class="action-arrow">›</span>
-                        </NavLink>
+                        @if (!isReferee)
+                        {
+                            <NavLink class="dashboard-card action-card myteam-action" href="/my-team">
+                                <div class="action-body">
+                                    <h3>My Team</h3>
+                                    <p>Edit profile, crest and contact details</p>
+                                </div>
+                                <span class="action-arrow">›</span>
+                            </NavLink>
+                        }
 
                         <NavLink class="dashboard-card action-card fixtures-action" href="/manager-fixtures">
                             <div class="action-body">
                                 <h3>Fixtures</h3>
-                                <p>View and manage upcoming matches</p>
+                                <p>@(isReferee ? "View and update all fixtures" : "View and manage upcoming matches")</p>
                             </div>
                             <span class="action-arrow">›</span>
                         </NavLink>
 
-                        <NavLink class="dashboard-card action-card squad-action" href="/my-squad">
-                            <div class="action-body">
-                                <h3>My Squad</h3>
-                                <p>Manage your team and player list</p>
-                            </div>
-                            <span class="action-arrow">›</span>
-                        </NavLink>
+                        @if (!isReferee)
+                        {
+                            <NavLink class="dashboard-card action-card squad-action" href="/my-squad">
+                                <div class="action-body">
+                                    <h3>My Squad</h3>
+                                    <p>Manage your team and player list</p>
+                                </div>
+                                <span class="action-arrow">›</span>
+                            </NavLink>
+                        }
 
                         <NavLink class="dashboard-card action-card referees-action" href="/referees">
                             <div class="action-body">
@@ -214,6 +220,7 @@
     private PlayerMotmDto? topPlayer;
     private bool isLoading = true;
     private bool isAdmin = false;
+    private bool isReferee = false;
     private bool chartRendered = false;
     private bool chartReady = false;
 
@@ -221,6 +228,7 @@
     {
         var authState = await AuthProvider.GetAuthenticationStateAsync();
         isAdmin = authState.User.IsInRole("Admin");
+        isReferee = authState.User.IsInRole("Referee");
 
         var summary = await StatService.GetSummary();
 

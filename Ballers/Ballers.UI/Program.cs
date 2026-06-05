@@ -45,4 +45,5 @@ builder.Services.AddScoped<RefereeService>();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<KnockoutService>();
 builder.Services.AddScoped<TotwService>();
+builder.Services.AddScoped<LeagueSettingsService>();
 await builder.Build().RunAsync();

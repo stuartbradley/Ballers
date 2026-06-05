@@ -1,10 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace Ballers.Models
 {
-    public class CreateTeamViewModel
+    public class CreateTeamViewModel : IValidatableObject
     {
-        [Required]
         public string TeamName { get; set; } = "";
 
         [Required]
@@ -16,5 +15,13 @@ namespace Ballers.Models
         [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$",
             ErrorMessage = "Password must contain upper, lower, number and special character.")]
         public string Password { get; set; } = "";
+
+        public bool IsReferee { get; set; }
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (!IsReferee && string.IsNullOrWhiteSpace(TeamName))
+                yield return new ValidationResult("The TeamName field is required.", new[] { nameof(TeamName) });
+        }
     }
 }

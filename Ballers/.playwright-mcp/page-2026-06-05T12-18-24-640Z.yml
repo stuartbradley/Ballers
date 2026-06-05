@@ -1,0 +1,58 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e4]:
+      - img "BBL Logo" [ref=e7]
+      - navigation [ref=e8]:
+        - link "Home" [ref=e9] [cursor=pointer]:
+          - /url: /
+        - link "Fixtures" [ref=e10] [cursor=pointer]:
+          - /url: /fixtures
+        - link "Teams" [ref=e11] [cursor=pointer]:
+          - /url: /teams
+        - link "Stats" [ref=e12] [cursor=pointer]:
+          - /url: /stats
+        - link "TOTW" [ref=e13] [cursor=pointer]:
+          - /url: /totw
+        - link "Debug" [ref=e14] [cursor=pointer]:
+          - /url: /debug
+        - link "Login" [ref=e15] [cursor=pointer]:
+          - /url: /login
+  - generic [ref=e17]:
+    - generic [ref=e19]:
+      - heading "Manager Login" [level=1] [ref=e20]
+      - paragraph [ref=e21]: Access your team dashboard
+      - generic [ref=e22]:
+        - generic [ref=e23]: Email
+        - textbox "manager@team.com" [active] [ref=e24]
+      - generic [ref=e25]:
+        - generic [ref=e26]: Password
+        - textbox [ref=e27]
+      - button "Sign In" [ref=e28] [cursor=pointer]
+      - link "Forgot password?" [ref=e30] [cursor=pointer]:
+        - /url: /forgot-password
+    - generic [ref=e33]:
+      - generic [ref=e34]:
+        - generic [ref=e35]: Blackpool
+        - generic [ref=e36]: Ballers
+        - generic [ref=e37]: League
+      - paragraph [ref=e38]: Blackpool's Premier 11-a-Side Competition
+  - contentinfo [ref=e39]:
+    - generic [ref=e40]:
+      - generic [ref=e41]:
+        - text: Created by
+        - strong [ref=e42]: Stuart Bradley
+        - text: ·
+        - link "stuartbradleyDeveloper@gmail.com" [ref=e43] [cursor=pointer]:
+          - /url: mailto:stuartbradleyDeveloper@gmail.com
+      - navigation [ref=e44]:
+        - link "Privacy" [ref=e45] [cursor=pointer]:
+          - /url: /privacy
+      - generic "Build version" [ref=e46]: v@version
+  - region "Cookie notice" [ref=e47]:
+    - generic [ref=e48]:
+      - paragraph [ref=e49]:
+        - text: We use a single strictly-necessary cookie to keep you signed in. No tracking or analytics cookies are used. See our
+        - link "privacy notice" [ref=e50] [cursor=pointer]:
+          - /url: /privacy
+        - text: .
+      - button "OK" [ref=e51] [cursor=pointer]

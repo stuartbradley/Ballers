@@ -1,0 +1,103 @@
+@using Ballers.Models
+
+<div class="cm-poster">
+    <div class="cm-pitch"></div>
+
+    <header class="cm-head">
+        <img class="cm-logo" src="/images/BBL-Logo.png" alt="Ballers League" />
+        <span class="cm-league">Blackpool Ballers League</span>
+        <span class="cm-tag">Local &middot; All Welcome &middot; Grassroots Football</span>
+    </header>
+
+    <div class="cm-occasion">@(Fixture.IsKnockout ? Fixture.KnockoutRound : $"Match Week {Fixture.Week}")</div>
+
+    <!-- Face-off -->
+    <div class="cm-faceoff">
+        <div class="cm-card">
+            <div class="cm-badge">
+                @if (!string.IsNullOrEmpty(HomeBadge))
+                {
+                    <img src="@HomeBadge" alt="@Fixture.HomeTeam" />
+                }
+                else
+                {
+                    <span class="cm-badge-fallback">@Initials(Fixture.HomeTeam)</span>
+                }
+            </div>
+            <span class="cm-name">@Fixture.HomeTeam</span>
+        </div>
+
+        <div class="cm-vs">vs</div>
+
+        <div class="cm-card">
+            <div class="cm-badge">
+                @if (!string.IsNullOrEmpty(AwayBadge))
+                {
+                    <img src="@AwayBadge" alt="@Fixture.AwayTeam" />
+                }
+                else
+                {
+                    <span class="cm-badge-fallback">@Initials(Fixture.AwayTeam)</span>
+                }
+            </div>
+            <span class="cm-name">@Fixture.AwayTeam</span>
+        </div>
+    </div>
+
+    <!-- Info pills -->
+    <div class="cm-info">
+        <span class="cm-pill">📍 @(string.IsNullOrEmpty(Fixture.Location) ? "TBD" : Fixture.Location)@(string.IsNullOrEmpty(Fixture.Postcode) ? "" : $", {Fixture.Postcode}")</span>
+        <span class="cm-pill">🕐 @(Fixture.Kickoff?.ToString("ddd d MMM · HH:mm") ?? "TBD")</span>
+    </div>
+
+    <!-- Team sheet -->
+    <div class="cm-sheet">
+        <div class="cm-sheet-head">
+            <h3>Team Sheet</h3>
+            <span class="cm-sheet-club">@SheetTeamName</span>
+        </div>
+
+        @if (!Squad.Any())
+        {
+            <p class="cm-empty">No players registered yet — everyone's welcome to join!</p>
+        }
+        else
+        {
+            <ul class="cm-players">
+                @foreach (var p in Squad)
+                {
+                    <li class="cm-row">
+                        <span class="cm-num">@p.Number</span>
+                        <span class="cm-pname">@p.Name</span>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+
+    <!-- Sponsor -->
+    <footer class="cm-sponsor">
+        <span class="cm-sponsor-label">Proudly supported by</span>
+        <img class="cm-sponsor-logo" src="/images/RimmingtonRoofing.png" alt="Rimmington Roofing" />
+        <span class="cm-sponsor-name">Rimmington Roofing</span>
+    </footer>
+
+    <div class="cm-ribbon">Everyone gets a game ⚽</div>
+</div>
+
+@code {
+    [Parameter] public FixtureDetailsDto Fixture { get; set; } = default!;
+    [Parameter] public string? HomeBadge { get; set; }
+    [Parameter] public string? AwayBadge { get; set; }
+    [Parameter] public string SheetTeamName { get; set; } = "";
+    [Parameter] public List<PlayerCardDto> Squad { get; set; } = new();
+
+    private static string Initials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "?";
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length == 1
+            ? parts[0][..Math.Min(2, parts[0].Length)].ToUpper()
+            : (parts[0][0].ToString() + parts[^1][0]).ToUpper();
+    }
+}

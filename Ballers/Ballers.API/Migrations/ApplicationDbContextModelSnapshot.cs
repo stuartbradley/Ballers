@@ -44,6 +44,9 @@ namespace Ballers.API.Migrations
                     b.Property<bool>("IsAdmin")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsReferee")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
 
@@ -327,6 +330,22 @@ namespace Ballers.API.Migrations
                     b.HasIndex("SeasonId");
 
                     b.ToTable("KnockoutFixtures");
+                });
+
+            modelBuilder.Entity("Ballers.API.Models.LeagueSetting", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("PlayersLocked")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("LeagueSettings");
                 });
 
             modelBuilder.Entity("Ballers.API.Models.Notification", b =>
@@ -985,7 +1004,6 @@ namespace Ballers.API.Migrations
                 {
                     b.Navigation("Fixtures");
                 });
-
 #pragma warning restore 612, 618
         }
     }

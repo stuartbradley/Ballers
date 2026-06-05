@@ -9,6 +9,7 @@
 @inject AdminService AdminService
 @inject NotificationService NotificationSvc
 @inject KnockoutService KnockoutSvc
+@inject LeagueSettingsService LeagueSettingsSvc
 
 <PageTitle>Admin</PageTitle>
 
@@ -35,20 +36,30 @@
             <!-- CREATE TEAM -->
             <div class="admin-card">
                 <div class="card-header">
-                    <span class="card-label">Team</span>
-                    <h3>Add New Team</h3>
+                    <span class="card-label">@(createTeamModel.IsReferee ? "Referee" : "Team")</span>
+                    <h3>@(createTeamModel.IsReferee ? "Add Referee" : "Add New Team")</h3>
                 </div>
 
                 <EditForm EditContext="editContext" OnValidSubmit="CreateTeam">
                     <DataAnnotationsValidator />
                     <div class="form-group">
-                        <InputText class="form-input"
-                                   placeholder="Team name"
-                                   @bind-Value="createTeamModel.TeamName" />
-                        <ValidationMessage For="@(() => createTeamModel.TeamName)" />
+                        <label class="team-check-label" style="margin-bottom:12px;">
+                            <input type="checkbox"
+                                   checked="@createTeamModel.IsReferee"
+                                   @onchange="(e) => createTeamModel.IsReferee = (bool)e.Value!" />
+                            <span>Referee account</span>
+                        </label>
+
+                        @if (!createTeamModel.IsReferee)
+                        {
+                            <InputText class="form-input"
+                                       placeholder="Team name"
+                                       @bind-Value="createTeamModel.TeamName" />
+                            <ValidationMessage For="@(() => createTeamModel.TeamName)" />
+                        }
 
                         <InputText class="form-input"
-                                   placeholder="Manager email"
+                                   placeholder="@(createTeamModel.IsReferee ? "Referee email" : "Manager email")"
                                    @bind-Value="createTeamModel.Email" />
                         <ValidationMessage For="@(() => createTeamModel.Email)" />
 
@@ -62,7 +73,7 @@
                     </div>
 
                     <button type="button" class="primary-btn" @onclick="SubmitForm">
-                        Create Team
+                        @(createTeamModel.IsReferee ? "Create Referee" : "Create Team")
                     </button>
                 </EditForm>
 
@@ -172,6 +183,34 @@
                 }
             </div>
 
+            <!-- PLAYER REGISTRATION — full width -->
+            <div class="admin-card season-card">
+                <div class="card-header">
+                    <span class="card-label" style="background:#dc2626;color:#fff;">Registration</span>
+                    <h3>Player Registration</h3>
+                </div>
+
+                <div class="season-list">
+                    <div class="season-row">
+                        <div class="season-info">
+                            <span class="season-name">Lock player registration</span>
+                            <span class="season-dates">When locked, managers can no longer add new players to their squads. Admins can still add players.</span>
+                        </div>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                            <input type="checkbox"
+                                   checked="@playersLocked"
+                                   @onchange="(e) => TogglePlayersLocked((bool)e.Value!)" />
+                            <span>@(playersLocked ? "Locked" : "Open")</span>
+                        </label>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(playersLockMessage))
+                {
+                    <div class="@(playersLockIsError ? "error-msg" : "success-msg")">@playersLockMessage</div>
+                }
+            </div>
+
             <!-- NOTIFICATION SETTINGS — full width -->
             <div class="admin-card season-card">
                 <div class="card-header">
@@ -219,6 +258,10 @@
     private bool seasonIsError;
     private bool knockoutIsError;
 
+    private bool playersLocked;
+    private string playersLockMessage = "";
+    private bool playersLockIsError;
+
     private List<TeamDto> teams = new();
     private List<SeasonDto> seasons = new();
     private List<NotificationSettingDto> notifSettings = new();
@@ -241,22 +284,51 @@
         var teamsTask = AdminService.GetTeams();
         var seasonsTask = AdminService.GetSeasons();
         var notifTask = NotificationSvc.GetSettingsAsync();
-        await Task.WhenAll(teamsTask, seasonsTask, notifTask);
+        var leagueTask = LeagueSettingsSvc.Get();
+        await Task.WhenAll(teamsTask, seasonsTask, notifTask, leagueTask);
         teams = teamsTask.Result;
         seasons = seasonsTask.Result;
         notifSettings = notifTask.Result;
+        playersLocked = leagueTask.Result.PlayersLocked;
+    }
+
+    async Task TogglePlayersLocked(bool locked)
+    {
+        playersLockMessage = "";
+        try
+        {
+            await LeagueSettingsSvc.SetPlayersLocked(locked);
+            playersLocked = locked;
+            playersLockIsError = false;
+            playersLockMessage = locked
+                ? "Player registration locked."
+                : "Player registration open.";
+        }
+        catch (Exception ex)
+        {
+            playersLockIsError = true;
+            playersLockMessage = ex.Message;
+        }
     }
 
     async Task CreateTeam()
     {
         try
         {
-            await AdminService.CreateTeam(createTeamModel.TeamName, createTeamModel.Email, createTeamModel.Password);
-            teamMessage = "Team created successfully.";
+            if (createTeamModel.IsReferee)
+            {
+                await AdminService.CreateReferee(createTeamModel.Email, createTeamModel.Password);
+                teamMessage = "Referee created successfully.";
+            }
+            else
+            {
+                await AdminService.CreateTeam(createTeamModel.TeamName, createTeamModel.Email, createTeamModel.Password);
+                teamMessage = "Team created successfully.";
+                teams = await AdminService.GetTeams();
+            }
             teamIsError = false;
             createTeamModel = new();
             editContext = new EditContext(createTeamModel);
-            teams = await AdminService.GetTeams();
         }
         catch (Exception ex)
         {

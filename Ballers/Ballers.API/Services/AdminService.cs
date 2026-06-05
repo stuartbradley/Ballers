@@ -8,6 +8,7 @@ namespace Ballers.API.Services
     public interface IAdminService
     {
         Task CreateTeamAsync(string teamName, string email, string password);
+        Task CreateRefereeAsync(string email, string password);
     }
 
     public class AdminService : IAdminService
@@ -49,6 +50,23 @@ namespace Ballers.API.Services
 
             await _userManager.AddToRoleAsync(user, "Manager");
             await transaction.CommitAsync();
+        }
+
+        public async Task CreateRefereeAsync(string email, string password)
+        {
+            var user = new ApplicationUser
+            {
+                UserName = email,
+                Email = email,
+                IsReferee = true,
+            };
+
+            var result = await _userManager.CreateAsync(user, password);
+            if (!result.Succeeded)
+                throw new InvalidOperationException(
+                    string.Join("; ", result.Errors.Select(e => e.Description)));
+
+            await _userManager.AddToRoleAsync(user, "Referee");
         }
     }
 }

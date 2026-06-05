@@ -180,7 +180,10 @@
     margin: 0;
 }
 
-.file-input {
+/* InputFile renders its <input> under its own CSS-isolation scope, so a plain
+   scoped `.file-input` rule never matches it (the native file button would show
+   alongside the styled label = two buttons). ::deep pierces the child scope. */
+::deep .file-input {
     display: none;
 }
 

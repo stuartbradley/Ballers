@@ -581,7 +581,7 @@
         var user = await AuthService.GetCurrentUser();
 
         isUserHome = user?.TeamId == fixture.HomeTeamId;
-        isAdmin = user?.IsAdmin ?? false;
+        isAdmin = (user?.IsAdmin ?? false) || (user?.IsReferee ?? false);
         opponentSavedScore = isUserHome ? fixture.AwayScore : fixture.HomeScore;
 
         int teamId = isUserHome ? fixture.HomeTeamId : fixture.AwayTeamId;

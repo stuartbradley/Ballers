@@ -1,0 +1,111 @@
+@using Ballers.Models
+
+<div class="vt-poster">
+    <div class="vt-halftone"></div>
+    <div class="vt-frame"></div>
+
+    <img class="vt-logo" src="/images/BBL-Logo.png" alt="Ballers League" />
+    <header class="vt-head">
+        <span class="vt-rule"></span>
+        <span class="vt-league">Blackpool Ballers League</span>
+        <span class="vt-rule"></span>
+    </header>
+    <div class="vt-occasion">&#9670; @(Fixture.IsKnockout ? Fixture.KnockoutRound : $"Match Week {Fixture.Week}") &#9670;</div>
+
+    <!-- Face-off -->
+    <div class="vt-faceoff">
+        <div class="vt-team">
+            <div class="vt-badge">
+                @if (!string.IsNullOrEmpty(HomeBadge))
+                {
+                    <img src="@HomeBadge" alt="@Fixture.HomeTeam" />
+                }
+                else
+                {
+                    <span class="vt-badge-fallback">@Initials(Fixture.HomeTeam)</span>
+                }
+            </div>
+            <h2 class="vt-name">@Fixture.HomeTeam</h2>
+        </div>
+
+        <div class="vt-vs">VS</div>
+
+        <div class="vt-team">
+            <div class="vt-badge">
+                @if (!string.IsNullOrEmpty(AwayBadge))
+                {
+                    <img src="@AwayBadge" alt="@Fixture.AwayTeam" />
+                }
+                else
+                {
+                    <span class="vt-badge-fallback">@Initials(Fixture.AwayTeam)</span>
+                }
+            </div>
+            <h2 class="vt-name">@Fixture.AwayTeam</h2>
+        </div>
+    </div>
+
+    <!-- Meta -->
+    <div class="vt-meta">
+        <div class="vt-meta-item">
+            <span class="vt-meta-label">Venue</span>
+            <span class="vt-meta-value">@(string.IsNullOrEmpty(Fixture.Location) ? "TBD" : Fixture.Location)@(string.IsNullOrEmpty(Fixture.Postcode) ? "" : $", {Fixture.Postcode}")</span>
+        </div>
+        <span class="vt-meta-sep">&#9670;</span>
+        <div class="vt-meta-item">
+            <span class="vt-meta-label">Kickoff</span>
+            <span class="vt-meta-value">@(Fixture.Kickoff?.ToString("ddd d MMM · HH:mm") ?? "TBD")</span>
+        </div>
+    </div>
+
+    <!-- Team sheet -->
+    <div class="vt-sheet">
+        <div class="vt-sheet-head">
+            <span class="vt-line"></span>
+            <h3>Team Sheet</h3>
+            <span class="vt-line"></span>
+        </div>
+        <div class="vt-sheet-club">@SheetTeamName</div>
+
+        @if (!Squad.Any())
+        {
+            <p class="vt-empty">No players registered.</p>
+        }
+        else
+        {
+            <ul class="vt-players">
+                @foreach (var p in Squad)
+                {
+                    <li class="vt-row">
+                        <span class="vt-num">@p.Number</span>
+                        <span class="vt-pname">@p.Name</span>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+
+    <!-- Sponsor -->
+    <footer class="vt-sponsor">
+        <span class="vt-sponsor-label">In association with</span>
+        <img class="vt-sponsor-logo" src="/images/RimmingtonRoofing.png" alt="Rimmington Roofing" />
+        <span class="vt-sponsor-name">Rimmington Roofing</span>
+    </footer>
+</div>
+
+@code {
+    [Parameter] public FixtureDetailsDto Fixture { get; set; } = default!;
+    [Parameter] public string? HomeBadge { get; set; }
+    [Parameter] public string? AwayBadge { get; set; }
+    [Parameter] public string SheetTeamName { get; set; } = "";
+    [Parameter] public List<PlayerCardDto> Squad { get; set; } = new();
+
+    private static string Initials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "?";
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length == 1
+            ? parts[0][..Math.Min(2, parts[0].Length)].ToUpper()
+            : (parts[0][0].ToString() + parts[^1][0]).ToUpper();
+    }
+}

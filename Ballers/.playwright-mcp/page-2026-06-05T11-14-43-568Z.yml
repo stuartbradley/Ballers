@@ -1,0 +1,117 @@
+- generic [ref=e2]:
+  - banner [ref=e52]:
+    - generic [ref=e53]:
+      - generic [ref=e54]:
+        - img "BBL Logo" [ref=e56]
+        - generic [ref=e57]: Hello Northfield United
+      - navigation [ref=e58]:
+        - link "Home" [ref=e59] [cursor=pointer]:
+          - /url: /
+        - link "Fixtures" [ref=e60] [cursor=pointer]:
+          - /url: /fixtures
+        - link "Teams" [ref=e61] [cursor=pointer]:
+          - /url: /teams
+        - link "Stats" [ref=e62] [cursor=pointer]:
+          - /url: /stats
+        - link "TOTW" [ref=e63] [cursor=pointer]:
+          - /url: /totw
+        - link "Debug" [ref=e64] [cursor=pointer]:
+          - /url: /debug
+        - link "Dashboard" [ref=e65] [cursor=pointer]:
+          - /url: /dashboard
+        - button "🔔" [ref=e67] [cursor=pointer]
+        - generic [ref=e68] [cursor=pointer]: Logout
+  - text: ›
+  - generic [ref=e70]:
+    - generic [ref=e72]:
+      - generic [ref=e73]:
+        - paragraph [ref=e74]: Manager Dashboard
+        - heading "Welcome back, Northfield United" [level=1] [ref=e75]
+      - generic [ref=e76]:
+        - generic [ref=e77]:
+          - generic [ref=e78]: "3"
+          - generic [ref=e79]: Wins
+        - generic [ref=e81]:
+          - generic [ref=e82]: "1"
+          - generic [ref=e83]: Draws
+        - generic [ref=e85]:
+          - generic [ref=e86]: "4"
+          - generic [ref=e87]: Losses
+    - generic [ref=e88]:
+      - generic [ref=e89]:
+        - heading "Season Record" [level=3] [ref=e90]
+        - generic [ref=e91]:
+          - generic [ref=e95]:
+            - generic [ref=e96]: Wins
+            - generic [ref=e98]: Draws
+            - generic [ref=e100]: Losses
+          - generic [ref=e102]:
+            - generic [ref=e103]:
+              - generic [ref=e104]: Top Goalscorer
+              - generic [ref=e105]: Harry Hughes
+              - generic [ref=e106]: 6 Goals
+            - generic [ref=e107]:
+              - generic [ref=e108]: Top Assists
+              - generic [ref=e109]: Lee Davies
+              - generic [ref=e110]: 3 Assists
+            - generic [ref=e111]:
+              - generic [ref=e112]: Top Player
+              - generic [ref=e113]: Josh Green
+              - generic [ref=e114]: 3 MOTMs
+      - generic [ref=e115]:
+        - link "My Team Edit profile, crest and contact details ›" [ref=e116] [cursor=pointer]:
+          - /url: /my-team
+          - generic [ref=e117]:
+            - heading "My Team" [level=3] [ref=e118]
+            - paragraph [ref=e119]: Edit profile, crest and contact details
+          - generic [ref=e120]: ›
+        - link "Fixtures View and manage upcoming matches ›" [ref=e121] [cursor=pointer]:
+          - /url: /manager-fixtures
+          - generic [ref=e122]:
+            - heading "Fixtures" [level=3] [ref=e123]
+            - paragraph [ref=e124]: View and manage upcoming matches
+          - generic [ref=e125]: ›
+        - link "My Squad Manage your team and player list ›" [ref=e126] [cursor=pointer]:
+          - /url: /my-squad
+          - generic [ref=e127]:
+            - heading "My Squad" [level=3] [ref=e128]
+            - paragraph [ref=e129]: Manage your team and player list
+          - generic [ref=e130]: ›
+        - link "Referees Manage referee contacts and availability ›" [ref=e131] [cursor=pointer]:
+          - /url: /referees
+          - generic [ref=e132]:
+            - heading "Referees" [level=3] [ref=e133]
+            - paragraph [ref=e134]: Manage referee contacts and availability
+          - generic [ref=e135]: ›
+        - link "Change Password Update your account password ›" [ref=e136] [cursor=pointer]:
+          - /url: /change-password
+          - generic [ref=e137]:
+            - heading "Change Password" [level=3] [ref=e138]
+            - paragraph [ref=e139]: Update your account password
+          - generic [ref=e140]: ›
+        - link "Debug Setup Seed and reset data for development ›" [ref=e141] [cursor=pointer]:
+          - /url: /debug
+          - generic [ref=e142]:
+            - heading "Debug Setup" [level=3] [ref=e143]
+            - paragraph [ref=e144]: Seed and reset data for development
+          - generic [ref=e145]: ›
+  - contentinfo [ref=e146]:
+    - generic [ref=e147]:
+      - generic [ref=e148]:
+        - text: Created by
+        - strong [ref=e149]: Stuart Bradley
+        - text: ·
+        - link "stuartbradleyDeveloper@gmail.com" [ref=e150] [cursor=pointer]:
+          - /url: mailto:stuartbradleyDeveloper@gmail.com
+      - navigation [ref=e151]:
+        - link "Privacy" [ref=e152] [cursor=pointer]:
+          - /url: /privacy
+      - generic "Build version" [ref=e153]: v@version
+  - region "Cookie notice" [ref=e154]:
+    - generic [ref=e155]:
+      - paragraph [ref=e156]:
+        - text: We use a single strictly-necessary cookie to keep you signed in. No tracking or analytics cookies are used. See our
+        - link "privacy notice" [ref=e157] [cursor=pointer]:
+          - /url: /privacy
+        - text: .
+      - button "OK" [ref=e158] [cursor=pointer]

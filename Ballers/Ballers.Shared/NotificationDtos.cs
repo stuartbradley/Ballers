@@ -34,3 +34,8 @@ public class NotificationSettingDto
     public string DisplayName { get; set; } = "";
     public string Description { get; set; } = "";
 }
+
+public class LeagueSettingsDto
+{
+    public bool PlayersLocked { get; set; }
+}

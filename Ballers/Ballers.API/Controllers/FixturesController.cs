@@ -34,7 +34,7 @@ namespace Ballers.API.Controllers
             var fixture = await _fixtures.GetByIdAsync(id);
             if (fixture == null) return NotFound();
 
-            if (!user.IsAdmin && user.TeamId != fixture.HomeTeamId && user.TeamId != fixture.AwayTeamId)
+            if (!user.IsAdmin && !user.IsReferee && user.TeamId != fixture.HomeTeamId && user.TeamId != fixture.AwayTeamId)
                 return Forbid();
 
             return Ok(fixture);
@@ -45,7 +45,7 @@ namespace Ballers.API.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Unauthorized();
-            return Ok(await _fixtures.GetForUserAsync(user.IsAdmin, user.TeamId));
+            return Ok(await _fixtures.GetForUserAsync(user.IsAdmin || user.IsReferee, user.TeamId));
         }
 
         [HttpPost("{fixtureId}/stats")]
@@ -57,7 +57,7 @@ namespace Ballers.API.Controllers
             var fixture = await _fixtures.GetByIdAsync(fixtureId);
             if (fixture == null) return NotFound();
 
-            bool isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
+            bool isAdmin = user.IsAdmin || user.IsReferee;
             if (!isAdmin && user.TeamId != fixture.HomeTeamId && user.TeamId != fixture.AwayTeamId)
                 return Forbid();
 
@@ -83,7 +83,7 @@ namespace Ballers.API.Controllers
         public async Task<IActionResult> GetTable(int seasonId)
             => Ok(await _fixtures.GetTableAsync(seasonId));
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Referee")]
         [HttpPut("{fixtureId}/referee")]
         public async Task<IActionResult> AssignReferee(int fixtureId, [FromBody] AssignRefereeRequest request)
         {
@@ -97,7 +97,7 @@ namespace Ballers.API.Controllers
             return Ok();
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Referee")]
         [HttpPut("{fixtureId}/schedule")]
         public async Task<IActionResult> UpdateSchedule(int fixtureId, UpdateFixtureScheduleRequest request)
         {
@@ -125,7 +125,7 @@ namespace Ballers.API.Controllers
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Unauthorized();
 
-            bool isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
+            bool isAdmin = user.IsAdmin || user.IsReferee;
 
             var fixture = await _fixtures.GetByIdAsync(fixtureId);
             if (fixture == null) return NotFound();
@@ -150,7 +150,7 @@ namespace Ballers.API.Controllers
             var fixture = await _fixtures.GetByIdAsync(fixtureId);
             if (fixture == null) return NotFound();
 
-            bool isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
+            bool isAdmin = user.IsAdmin || user.IsReferee;
             if (!isAdmin && user.TeamId != fixture.HomeTeamId && user.TeamId != fixture.AwayTeamId)
                 return Forbid();
 
@@ -187,7 +187,7 @@ namespace Ballers.API.Controllers
             var fixture = await _fixtures.GetByIdAsync(fixtureId);
             if (fixture == null) return NotFound();
 
-            bool isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
+            bool isAdmin = user.IsAdmin || user.IsReferee;
             if (!isAdmin && user.TeamId != fixture.HomeTeamId && user.TeamId != fixture.AwayTeamId)
                 return Forbid();
 
@@ -217,7 +217,7 @@ namespace Ballers.API.Controllers
             var fixture = await _fixtures.GetByIdAsync(fixtureId);
             if (fixture == null) return NotFound();
 
-            bool isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
+            bool isAdmin = user.IsAdmin || user.IsReferee;
             if (!isAdmin && user.TeamId != fixture.HomeTeamId && user.TeamId != fixture.AwayTeamId)
                 return Forbid();
 

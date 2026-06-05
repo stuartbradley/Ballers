@@ -34,6 +34,17 @@ namespace Ballers.API.Controllers
             catch (InvalidOperationException ex) { return BadRequest(ex.Message); }
         }
 
+        [HttpPost("create-referee")]
+        public async Task<IActionResult> CreateReferee(CreateRefereeRequest request)
+        {
+            try
+            {
+                await _admin.CreateRefereeAsync(request.Email, request.Password);
+                return Ok();
+            }
+            catch (InvalidOperationException ex) { return BadRequest(ex.Message); }
+        }
+
         [HttpPost("generate-fixtures")]
         public async Task<IActionResult> GenerateFixtures(GenerateFixturesRequest request)
         {

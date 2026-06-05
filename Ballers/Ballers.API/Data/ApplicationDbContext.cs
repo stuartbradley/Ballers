@@ -25,6 +25,7 @@ namespace Ballers.API.Data
         public DbSet<KnockoutFixture> KnockoutFixtures => Set<KnockoutFixture>();
         public DbSet<Notification> Notifications => Set<Notification>();
         public DbSet<NotificationSetting> NotificationSettings => Set<NotificationSetting>();
+        public DbSet<LeagueSetting> LeagueSettings => Set<LeagueSetting>();
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

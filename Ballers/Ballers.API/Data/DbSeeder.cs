@@ -16,8 +16,9 @@ namespace Ballers.API.Data
             var db = serviceProvider.GetRequiredService<Ballers.API.Data.ApplicationDbContext>();
 
             await SeedNotificationSettings(db);
+            await SeedLeagueSettings(db);
 
-            string[] roles = ["Admin", "Manager"];
+            string[] roles = ["Admin", "Manager", "Referee"];
 
             foreach (var role in roles)
                 if (!await roleManager.RoleExistsAsync(role))
@@ -43,6 +44,15 @@ namespace Ballers.API.Data
                     throw new InvalidOperationException(
                         $"Failed to seed admin user: {string.Join(", ", result.Errors.Select(e => e.Description))}");
                 await userManager.AddToRoleAsync(admin, "Admin");
+            }
+        }
+
+        private static async Task SeedLeagueSettings(Ballers.API.Data.ApplicationDbContext db)
+        {
+            if (!db.LeagueSettings.Any())
+            {
+                db.LeagueSettings.Add(new LeagueSetting { PlayersLocked = false });
+                await db.SaveChangesAsync();
             }
         }
 

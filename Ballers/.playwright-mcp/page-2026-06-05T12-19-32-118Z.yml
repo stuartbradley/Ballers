@@ -1,0 +1,130 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - img "BBL Logo" [ref=e7]
+        - generic [ref=e8]: Hello Northfield United
+      - navigation [ref=e9]:
+        - link "Home" [ref=e10] [cursor=pointer]:
+          - /url: /
+        - link "Fixtures" [ref=e11] [cursor=pointer]:
+          - /url: /fixtures
+        - link "Teams" [ref=e12] [cursor=pointer]:
+          - /url: /teams
+        - link "Stats" [ref=e13] [cursor=pointer]:
+          - /url: /stats
+        - link "TOTW" [ref=e14] [cursor=pointer]:
+          - /url: /totw
+        - link "Debug" [ref=e15] [cursor=pointer]:
+          - /url: /debug
+        - link "Dashboard" [ref=e16] [cursor=pointer]:
+          - /url: /dashboard
+        - button "🔔" [ref=e18] [cursor=pointer]
+        - generic [ref=e19] [cursor=pointer]: Logout
+  - text: ›
+  - generic [ref=e21]:
+    - generic [ref=e22]:
+      - button "← Back" [ref=e23] [cursor=pointer]
+      - generic [ref=e24]:
+        - button "Street" [ref=e25] [cursor=pointer]
+        - button "Split" [ref=e26] [cursor=pointer]
+        - button "Style 3" [ref=e27] [cursor=pointer]
+    - generic [ref=e28]:
+      - generic: MATCHDAY
+      - banner [ref=e33]:
+        - generic [ref=e34]: Blackpool Ballers League
+      - generic [ref=e35]: Match Week 1
+      - generic [ref=e36]:
+        - generic [ref=e37]:
+          - img "Northfield United" [ref=e39]
+          - heading "Northfield United" [level=2] [ref=e40]
+        - generic [ref=e41]:
+          - generic [ref=e42]: V
+          - generic [ref=e43]: S
+        - generic [ref=e44]:
+          - img "Moorland Celtic" [ref=e46]
+          - heading "Moorland Celtic" [level=2] [ref=e47]
+      - generic [ref=e48]:
+        - generic [ref=e49]:
+          - generic [ref=e50]: Venue
+          - generic [ref=e51]: Elmwood Park
+          - generic [ref=e52]: NG8 3RR
+        - generic [ref=e53]:
+          - generic [ref=e54]: Kickoff
+          - generic [ref=e55]: 15:00
+          - generic [ref=e56]: THU 19 FEB
+      - generic [ref=e57]:
+        - generic [ref=e58]:
+          - generic [ref=e59]: Team Sheet
+          - generic [ref=e60]: sheetTeamName
+        - list [ref=e61]:
+          - listitem [ref=e62]:
+            - generic [ref=e63]: "1"
+            - generic [ref=e64]: Josh Wood
+          - listitem [ref=e65]:
+            - generic [ref=e66]: "2"
+            - generic [ref=e67]: Dave Walker
+          - listitem [ref=e68]:
+            - generic [ref=e69]: "3"
+            - generic [ref=e70]: Joe Harris
+          - listitem [ref=e71]:
+            - generic [ref=e72]: "4"
+            - generic [ref=e73]: Chris Jones
+          - listitem [ref=e74]:
+            - generic [ref=e75]: "5"
+            - generic [ref=e76]: Luke Jones
+          - listitem [ref=e77]:
+            - generic [ref=e78]: "6"
+            - generic [ref=e79]: Jack Walker
+          - listitem [ref=e80]:
+            - generic [ref=e81]: "7"
+            - generic [ref=e82]: Mark Young
+          - listitem [ref=e83]:
+            - generic [ref=e84]: "8"
+            - generic [ref=e85]: Tom Young
+          - listitem [ref=e86]:
+            - generic [ref=e87]: "9"
+            - generic [ref=e88]: Daniel Walker
+          - listitem [ref=e89]:
+            - generic [ref=e90]: "10"
+            - generic [ref=e91]: Tom Clarke
+          - listitem [ref=e92]:
+            - generic [ref=e93]: "11"
+            - generic [ref=e94]: Luke Smith
+          - listitem [ref=e95]:
+            - generic [ref=e96]: "12"
+            - generic [ref=e97]: Tom Lewis
+          - listitem [ref=e98]:
+            - generic [ref=e99]: "13"
+            - generic [ref=e100]: Jamie Robinson
+          - listitem [ref=e101]:
+            - generic [ref=e102]: "14"
+            - generic [ref=e103]: Matt Robinson
+          - listitem [ref=e104]:
+            - generic [ref=e105]: "15"
+            - generic [ref=e106]: Matt Martin
+      - contentinfo [ref=e107]:
+        - generic [ref=e108]: backed by
+        - generic [ref=e109]:
+          - img "Rimmington Roofing" [ref=e110]
+          - generic [ref=e111]: Rimmington Roofing
+  - contentinfo [ref=e112]:
+    - generic [ref=e113]:
+      - generic [ref=e114]:
+        - text: Created by
+        - strong [ref=e115]: Stuart Bradley
+        - text: ·
+        - link "stuartbradleyDeveloper@gmail.com" [ref=e116] [cursor=pointer]:
+          - /url: mailto:stuartbradleyDeveloper@gmail.com
+      - navigation [ref=e117]:
+        - link "Privacy" [ref=e118] [cursor=pointer]:
+          - /url: /privacy
+      - generic "Build version" [ref=e119]: v@version
+  - region "Cookie notice" [ref=e120]:
+    - generic [ref=e121]:
+      - paragraph [ref=e122]:
+        - text: We use a single strictly-necessary cookie to keep you signed in. No tracking or analytics cookies are used. See our
+        - link "privacy notice" [ref=e123] [cursor=pointer]:
+          - /url: /privacy
+        - text: .
+      - button "OK" [ref=e124] [cursor=pointer]

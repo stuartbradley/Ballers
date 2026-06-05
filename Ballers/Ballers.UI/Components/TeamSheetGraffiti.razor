@@ -1,0 +1,111 @@
+@using Ballers.Models
+
+<div class="gf-poster">
+    <div class="gf-noise"></div>
+    <span class="gf-bigtag">BALLERS</span>
+
+    <!-- Masthead — spray stencil + drips -->
+    <header class="gf-head">
+        <img class="gf-logo" src="/images/BBL-Logo.png" alt="Ballers League" />
+        <span class="gf-stencil">Blackpool Ballers League</span>
+        <span class="gf-mw">@(Fixture.IsKnockout ? Fixture.KnockoutRound : $"Match Week {Fixture.Week}")</span>
+        <div class="gf-drips"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    </header>
+
+    <!-- Fixture -->
+    <div class="gf-fixture">
+        <div class="gf-side">
+            <div class="gf-badge">
+                @if (!string.IsNullOrEmpty(HomeBadge))
+                {
+                    <img src="@HomeBadge" alt="@Fixture.HomeTeam" />
+                }
+                else
+                {
+                    <span class="gf-badge-fallback">@Initials(Fixture.HomeTeam)</span>
+                }
+            </div>
+            <h2 class="gf-name">@Fixture.HomeTeam</h2>
+        </div>
+
+        <div class="gf-vs">VS</div>
+
+        <div class="gf-side">
+            <div class="gf-badge">
+                @if (!string.IsNullOrEmpty(AwayBadge))
+                {
+                    <img src="@AwayBadge" alt="@Fixture.AwayTeam" />
+                }
+                else
+                {
+                    <span class="gf-badge-fallback">@Initials(Fixture.AwayTeam)</span>
+                }
+            </div>
+            <h2 class="gf-name">@Fixture.AwayTeam</h2>
+        </div>
+    </div>
+
+    <!-- Caution-tape info strip -->
+    <div class="gf-strip">
+        <div class="gf-strip-cell">
+            <span class="gf-strip-label">Venue</span>
+            <span class="gf-strip-value">@(string.IsNullOrEmpty(Fixture.Location) ? "TBD" : Fixture.Location)@(string.IsNullOrEmpty(Fixture.Postcode) ? "" : $" · {Fixture.Postcode}")</span>
+        </div>
+        <div class="gf-strip-cell">
+            <span class="gf-strip-label">Kickoff</span>
+            <span class="gf-strip-value">@(Fixture.Kickoff?.ToString("ddd d MMM · HH:mm").ToUpper() ?? "TBD")</span>
+        </div>
+    </div>
+
+    <!-- Squad -->
+    <div class="gf-sheet">
+        <div class="gf-sheet-head">
+            <span class="gf-sheet-tag">Squad</span>
+            <span class="gf-sheet-club">@SheetTeamName</span>
+        </div>
+
+        @if (!Squad.Any())
+        {
+            <p class="gf-empty">No players registered.</p>
+        }
+        else
+        {
+            <ul class="gf-players">
+                @foreach (var p in Squad)
+                {
+                    <li class="gf-row">
+                        <span class="gf-num">@p.Number</span>
+                        <span class="gf-pname">@p.Name</span>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+
+    <!-- Sponsor -->
+    <footer class="gf-sponsor">
+        <span class="gf-sponsor-label">Backed by</span>
+        <div class="gf-sponsor-plate">
+            <div class="gf-sponsor-img" role="img" aria-label="Rimmington Roofing"
+                 style="background-image:url('/images/RimmingtonRoofing.png')"></div>
+        </div>
+        <span class="gf-sponsor-name">Rimmington Roofing</span>
+    </footer>
+</div>
+
+@code {
+    [Parameter] public FixtureDetailsDto Fixture { get; set; } = default!;
+    [Parameter] public string? HomeBadge { get; set; }
+    [Parameter] public string? AwayBadge { get; set; }
+    [Parameter] public string SheetTeamName { get; set; } = "";
+    [Parameter] public List<PlayerCardDto> Squad { get; set; } = new();
+
+    private static string Initials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "?";
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length == 1
+            ? parts[0][..Math.Min(2, parts[0].Length)].ToUpper()
+            : (parts[0][0].ToString() + parts[^1][0]).ToUpper();
+    }
+}

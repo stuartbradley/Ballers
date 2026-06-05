@@ -232,7 +232,8 @@
 .fixture-actions { text-align: right; }
 
 .edit-btn,
-.view-btn {
+.view-btn,
+.sheet-btn {
     border: none;
     padding: 8px 16px;
     border-radius: 6px;
@@ -243,6 +244,19 @@
     letter-spacing: 0.12em;
     text-transform: uppercase;
     transition: background 0.18s, transform 0.18s;
+}
+
+.sheet-btn {
+    background: transparent;
+    color: var(--ballers-accent);
+    border: 1px solid rgba(250, 204, 21, 0.4);
+    margin-left: 8px;
+}
+
+.sheet-btn:hover {
+    background: rgba(250, 204, 21, 0.12);
+    border-color: var(--ballers-accent);
+    transform: translateY(-1px);
 }
 
 .edit-btn {

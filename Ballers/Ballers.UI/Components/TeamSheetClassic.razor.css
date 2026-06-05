@@ -1,0 +1,192 @@
+/* ============================================================
+   STYLE 1 — STREET FLYER
+   Raw matchday flyer: marker scrawl, gaffer tape, halftone,
+   taped corners, slightly off-kilter. Navy + gold.
+   ============================================================ */
+
+.ts-poster {
+    --ink:   #05080F;
+    --ink-2: #0B1626;
+    --gold:  #FACC15;
+    --gold-2:#E0A400;
+    --blue:  #1E3A8A;
+    --chalk: #F2EEE3;
+
+    position: relative;
+    width: 100%;
+    max-width: 640px;
+    background: linear-gradient(176deg, #14263F 0%, #0B1626 48%, #060F1C 100%);
+    border-radius: 3px;
+    overflow: hidden;
+    transform: rotate(-0.7deg);
+    box-shadow:
+        0 2px 0 rgba(0,0,0,0.4),
+        18px 22px 0 rgba(0,0,0,0.22),
+        0 46px 120px rgba(0,0,0,0.7);
+    isolation: isolate;
+    animation: tsRise 0.55s cubic-bezier(0.22,0.9,0.3,1) both;
+}
+@keyframes tsRise {
+    from { opacity: 0; transform: rotate(-0.7deg) translateY(26px); }
+    to   { opacity: 1; transform: rotate(-0.7deg) translateY(0); }
+}
+
+.ts-grain {
+    position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    opacity: 0.55; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+}
+
+.ts-halftone {
+    position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    background-image: radial-gradient(rgba(250,204,21,0.10) 1.1px, transparent 1.6px);
+    background-size: 8px 8px;
+    -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 42%, transparent 72%, #000 100%);
+            mask-image: linear-gradient(180deg, #000 0%, transparent 42%, transparent 72%, #000 100%);
+    opacity: 0.7;
+}
+
+.ts-slash {
+    position: absolute; z-index: 0; pointer-events: none;
+    top: 156px; left: -12%; width: 124%; height: 150px;
+    background: linear-gradient(90deg, transparent, rgba(250,204,21,0.18), transparent);
+    transform: rotate(-7deg); filter: blur(2px);
+}
+
+.ts-watermark {
+    position: absolute; z-index: 0; top: 150px; left: 50%;
+    transform: translateX(-50%) rotate(-90deg);
+    font-family: 'Anton', sans-serif;
+    font-size: 9rem; line-height: 1; letter-spacing: 0.02em;
+    color: rgba(255,255,255,0.035);
+    white-space: nowrap; pointer-events: none; user-select: none;
+}
+
+.ts-tape {
+    position: absolute; z-index: 3; width: 104px; height: 30px;
+    background:
+        repeating-linear-gradient(90deg, rgba(250,204,21,0) 0 5px, rgba(0,0,0,0.05) 5px 6px),
+        linear-gradient(180deg, rgba(250,204,21,0.72), rgba(224,164,0,0.66));
+    box-shadow: 0 2px 10px rgba(0,0,0,0.4); opacity: 0.9;
+}
+.ts-tape-tl { top: 16px; left: -28px; transform: rotate(-43deg); }
+.ts-tape-tr { top: 16px; right: -28px; transform: rotate(43deg); }
+.ts-tape-bl { bottom: 16px; left: -28px; transform: rotate(43deg); }
+.ts-tape-br { bottom: 16px; right: -28px; transform: rotate(-43deg); }
+
+.ts-poster > *:not(.ts-grain):not(.ts-halftone):not(.ts-slash):not(.ts-watermark):not(.ts-tape) {
+    position: relative; z-index: 1;
+}
+
+.ts-head { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 30px 24px 0; }
+.ts-logo { height: 256px; width: auto; max-width: 100%; filter: drop-shadow(2px 3px 0 rgba(0,0,0,0.45)); }
+.ts-head-text {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.15rem; letter-spacing: 0.3em; text-indent: 0.3em; text-transform: uppercase;
+    color: var(--ink); background: var(--gold);
+    padding: 5px 16px 3px; transform: rotate(-1.6deg);
+    box-shadow: 3px 3px 0 rgba(0,0,0,0.35);
+    clip-path: polygon(1% 6%, 99% 0, 100% 92%, 0% 100%);
+}
+.ts-occasion {
+    text-align: center; margin-top: 14px;
+    font-family: 'Permanent Marker', cursive; font-size: 1.05rem;
+    color: var(--gold); transform: rotate(-1.5deg);
+}
+
+.ts-fixture { display: grid; grid-template-columns: 1fr auto 1fr; align-items: start; gap: 4px; padding: 18px 20px 30px; }
+.ts-side { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.ts-side:first-of-type { transform: rotate(-1.5deg); animation: tsInL 0.55s 0.12s cubic-bezier(0.22,0.9,0.3,1) both; }
+.ts-side:last-of-type  { transform: rotate(1.5deg);  animation: tsInR 0.55s 0.12s cubic-bezier(0.22,0.9,0.3,1) both; }
+@keyframes tsInL { from { opacity:0; transform: rotate(-1.5deg) translateX(-24px); } to { opacity:1; } }
+@keyframes tsInR { from { opacity:0; transform: rotate(1.5deg) translateX(24px); }  to { opacity:1; } }
+
+.ts-badge {
+    width: 112px; height: 112px; border-radius: 50%;
+    background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.14), rgba(255,255,255,0.03));
+    border: 3px solid var(--gold);
+    box-shadow: 0 0 0 5px rgba(5,8,15,0.7), 6px 8px 0 rgba(0,0,0,0.35);
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.ts-badge img { width: 100%; height: 100%; object-fit: cover; }
+.ts-badge-fallback { font-family: 'Anton', sans-serif; font-size: 2.8rem; color: var(--gold); text-shadow: 2px 2px 0 rgba(0,0,0,0.4); }
+
+.ts-club {
+    margin: 0; font-family: 'Anton', sans-serif;
+    font-size: clamp(1.55rem, 6.6vw, 2.6rem); line-height: 0.88;
+    text-transform: uppercase; text-align: center; color: var(--chalk);
+    transform: skewX(-5deg); text-shadow: 3px 3px 0 rgba(0,0,0,0.45); max-width: 220px;
+}
+
+.ts-vs {
+    align-self: center; margin-top: 26px; width: 78px; height: 78px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Permanent Marker', cursive; font-size: 1.9rem; color: var(--gold);
+    background: var(--ink); border: 3px solid var(--gold);
+    border-radius: 49% 51% 47% 53% / 53% 47% 53% 47%;
+    transform: rotate(-9deg);
+    box-shadow: 0 0 24px rgba(250,204,21,0.4), 4px 4px 0 rgba(0,0,0,0.4);
+    animation: tsPop 0.5s 0.42s cubic-bezier(0.34,1.56,0.5,1) both;
+}
+.ts-vs span:last-child { margin-left: -2px; }
+@keyframes tsPop { from { opacity:0; transform: rotate(-9deg) scale(0.3);} to { opacity:1; transform: rotate(-9deg) scale(1);} }
+
+.ts-band {
+    display: grid; grid-template-columns: 1fr 1fr;
+    background: var(--gold); color: var(--ink); margin: 0 14px;
+    transform: rotate(-0.8deg); box-shadow: 4px 5px 0 rgba(0,0,0,0.3);
+    clip-path: polygon(0.5% 8%, 99% 2%, 100% 90%, 1% 98%);
+}
+.ts-band-cell { padding: 15px 22px; display: flex; flex-direction: column; gap: 1px; }
+.ts-band-cell:first-child { border-right: 2px dashed rgba(5,8,15,0.4); }
+.ts-band-label { font-family: 'Permanent Marker', cursive; font-size: 0.82rem; color: rgba(5,8,15,0.62); transform: rotate(-1.5deg); margin-bottom: 2px; }
+.ts-band-value { font-family: 'Anton', sans-serif; font-size: 1.4rem; line-height: 1.05; text-transform: uppercase; }
+.ts-band-sub { font-family: 'Saira Semi Condensed', sans-serif; font-weight: 600; font-size: 0.78rem; letter-spacing: 0.06em; color: rgba(5,8,15,0.72); }
+
+.ts-sheet { padding: 32px 26px 6px; }
+.ts-sheet-title { display: flex; align-items: baseline; gap: 14px; margin-bottom: 16px; }
+.ts-sheet-kicker { font-family: 'Anton', sans-serif; font-size: 1.55rem; text-transform: uppercase; color: var(--chalk); transform: skewX(-5deg); border-bottom: 4px solid var(--gold); padding-bottom: 2px; }
+.ts-sheet-club { font-family: 'Permanent Marker', cursive; font-size: 1rem; color: var(--gold); margin-left: auto; transform: rotate(-2deg); }
+.ts-empty { color: rgba(255,255,255,0.4); font-family: 'Permanent Marker', cursive; padding: 8px 0 18px; }
+
+.ts-players { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
+.ts-player {
+    display: flex; align-items: center; gap: 13px; padding: 9px 2px;
+    border-bottom: 2px dashed rgba(255,255,255,0.13); animation: tsFade 0.4s ease both;
+}
+.ts-players .ts-player:nth-child(1){animation-delay:.28s}
+.ts-players .ts-player:nth-child(2){animation-delay:.32s}
+.ts-players .ts-player:nth-child(3){animation-delay:.36s}
+.ts-players .ts-player:nth-child(4){animation-delay:.40s}
+.ts-players .ts-player:nth-child(5){animation-delay:.44s}
+.ts-players .ts-player:nth-child(6){animation-delay:.48s}
+.ts-players .ts-player:nth-child(7){animation-delay:.52s}
+.ts-players .ts-player:nth-child(8){animation-delay:.56s}
+.ts-players .ts-player:nth-child(n+9){animation-delay:.60s}
+@keyframes tsFade { from { opacity:0; transform: translateY(6px);} to { opacity:1; } }
+
+.ts-num { flex-shrink: 0; min-width: 42px; font-family: 'Anton', sans-serif; font-size: 1.95rem; line-height: 1; text-align: center; color: transparent; -webkit-text-stroke: 1.6px var(--gold); transform: rotate(-3deg); }
+.ts-name { font-family: 'Saira Semi Condensed', sans-serif; font-weight: 600; font-size: 1.04rem; letter-spacing: 0.03em; text-transform: uppercase; color: rgba(255,255,255,0.9); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.ts-sponsor {
+    margin: 30px 18px 26px; padding: 20px 24px 22px;
+    background: var(--chalk); color: var(--ink);
+    transform: rotate(0.8deg); box-shadow: 5px 6px 0 rgba(0,0,0,0.3);
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    clip-path: polygon(0 3%, 100% 0, 99% 97%, 1% 100%);
+}
+.ts-sponsor-kicker { font-family: 'Permanent Marker', cursive; font-size: 1.05rem; color: var(--gold-2); transform: rotate(-2deg); text-shadow: 1px 1px 0 rgba(0,0,0,0.15); }
+.ts-sponsor-row { display: flex; align-items: center; gap: 20px; }
+.ts-sponsor-logo { height: 150px; width: auto; max-width: 100%; object-fit: contain; }
+.ts-sponsor-name { font-family: 'Anton', sans-serif; font-size: 1.7rem; text-transform: uppercase; color: var(--ink); }
+
+@media (max-width: 560px) {
+    .ts-badge { width: 86px; height: 86px; }
+    .ts-club { font-size: clamp(1.3rem, 8.4vw, 2rem); }
+    .ts-vs { width: 60px; height: 60px; font-size: 1.4rem; margin-top: 18px; }
+    .ts-watermark { font-size: 6rem; }
+    .ts-players { grid-template-columns: 1fr; }
+    .ts-sheet { padding-left: 18px; padding-right: 18px; }
+    .ts-fixture { padding-left: 12px; padding-right: 12px; }
+    .ts-band-value { font-size: 1.2rem; }
+}

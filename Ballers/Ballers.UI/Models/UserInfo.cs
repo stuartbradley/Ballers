@@ -6,5 +6,6 @@
         public int? TeamId { get; set; }
         public bool IsAdmin { get; set; }
         public string? TeamName { get; set; }
+        public bool IsReferee { get; set; }
     }
 }

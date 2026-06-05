@@ -120,7 +120,9 @@
 
         if (user.Identity?.IsAuthenticated == true)
             teamName = user.FindFirst("TeamName")?.Value
-                       ?? (user.IsInRole("Admin") ? "Admin" : user.Identity?.Name);
+                       ?? (user.IsInRole("Admin") ? "Admin"
+                           : user.IsInRole("Referee") ? "Referee"
+                           : user.Identity?.Name);
 
         var season = await SeasonSvc.GetCurrentSeason();
         knockoutGenerated = season?.IsKnockoutGenerated ?? false;

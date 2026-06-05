@@ -1,0 +1,110 @@
+@using Ballers.Models
+
+<div class="sp-poster">
+    <div class="sp-grain"></div>
+
+    <!-- Face-off -->
+    <div class="sp-top">
+        <div class="sp-wedge"></div>
+        <div class="sp-mast">
+            <img class="sp-logo" src="/images/BBL-Logo.png" alt="Ballers League" />
+            <span class="sp-league">Blackpool Ballers League</span>
+            <span class="sp-occasion">@(Fixture.IsKnockout ? Fixture.KnockoutRound : $"Match Week {Fixture.Week}")</span>
+        </div>
+
+        <div class="sp-faceoff">
+            <div class="sp-team">
+                <div class="sp-badge">
+                    @if (!string.IsNullOrEmpty(HomeBadge))
+                    {
+                        <img src="@HomeBadge" alt="@Fixture.HomeTeam" />
+                    }
+                    else
+                    {
+                        <span class="sp-badge-fallback">@Initials(Fixture.HomeTeam)</span>
+                    }
+                </div>
+                <h2 class="sp-name">@Fixture.HomeTeam</h2>
+            </div>
+
+            <div class="sp-vs">VS</div>
+
+            <div class="sp-team">
+                <div class="sp-badge">
+                    @if (!string.IsNullOrEmpty(AwayBadge))
+                    {
+                        <img src="@AwayBadge" alt="@Fixture.AwayTeam" />
+                    }
+                    else
+                    {
+                        <span class="sp-badge-fallback">@Initials(Fixture.AwayTeam)</span>
+                    }
+                </div>
+                <h2 class="sp-name">@Fixture.AwayTeam</h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info band -->
+    <div class="sp-band">
+        <div class="sp-band-cell">
+            <span class="sp-band-label">Venue</span>
+            <span class="sp-band-value">@(string.IsNullOrEmpty(Fixture.Location) ? "TBD" : Fixture.Location)@(string.IsNullOrEmpty(Fixture.Postcode) ? "" : $" · {Fixture.Postcode}")</span>
+        </div>
+        <div class="sp-band-cell">
+            <span class="sp-band-label">Kickoff</span>
+            <span class="sp-band-value">@(Fixture.Kickoff?.ToString("ddd d MMM · HH:mm").ToUpper() ?? "TBD")</span>
+        </div>
+    </div>
+
+    <!-- Team sheet -->
+    <div class="sp-sheet">
+        <div class="sp-sheet-head">
+            <h3>Team Sheet</h3>
+            <span class="sp-sheet-club">@SheetTeamName</span>
+        </div>
+
+        @if (!Squad.Any())
+        {
+            <p class="sp-empty">No players registered.</p>
+        }
+        else
+        {
+            <ul class="sp-list">
+                @foreach (var p in Squad)
+                {
+                    <li class="sp-row">
+                        <span class="sp-num">@p.Number</span>
+                        <span class="sp-pname">@p.Name</span>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+
+    <!-- Sponsor -->
+    <div class="sp-sponsor">
+        <span class="sp-sponsor-label">Backed by</span>
+        <div class="sp-sponsor-chip">
+            <img src="/images/RimmingtonRoofing.png" alt="Rimmington Roofing" />
+        </div>
+        <span class="sp-sponsor-name">Rimmington Roofing</span>
+    </div>
+</div>
+
+@code {
+    [Parameter] public FixtureDetailsDto Fixture { get; set; } = default!;
+    [Parameter] public string? HomeBadge { get; set; }
+    [Parameter] public string? AwayBadge { get; set; }
+    [Parameter] public string SheetTeamName { get; set; } = "";
+    [Parameter] public List<PlayerCardDto> Squad { get; set; } = new();
+
+    private static string Initials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "?";
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length == 1
+            ? parts[0][..Math.Min(2, parts[0].Length)].ToUpper()
+            : (parts[0][0].ToString() + parts[^1][0]).ToUpper();
+    }
+}

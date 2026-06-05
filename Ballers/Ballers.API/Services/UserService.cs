@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Ballers.API.Services
 {
-    public record UserProfile(string? Email, int? TeamId, bool IsAdmin, string? TeamName);
+    public record UserProfile(string? Email, int? TeamId, bool IsAdmin, string? TeamName, bool IsReferee);
 
     public interface IUserService
     {
@@ -25,7 +25,7 @@ namespace Ballers.API.Services
 
             if (user == null) return null;
 
-            return new UserProfile(user.Email, user.TeamId, user.IsAdmin, user.Team?.Name);
+            return new UserProfile(user.Email, user.TeamId, user.IsAdmin, user.Team?.Name, user.IsReferee);
         }
     }
 }

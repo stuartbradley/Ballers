@@ -2,9 +2,12 @@
 @using Ballers.Models
 @using Ballers.Services
 @using Microsoft.AspNetCore.Authorization
-@attribute [Authorize]
+@using Microsoft.AspNetCore.Components.Authorization
+@attribute [Authorize(Roles = "Manager,Admin")]
 
 @inject PlayerService PlayerService
+@inject LeagueSettingsService LeagueSettingsSvc
+@inject AuthenticationStateProvider AuthProvider
 
 @if (_editPlayer != null)
 {
@@ -63,6 +66,16 @@
         else
         {
 
+        @if (playersLocked && !isAdmin)
+        {
+            <!-- Registration locked by admin -->
+            <div class="form-card">
+                <p class="form-card-label">Add Player</p>
+                <div class="form-error">Player registration is locked. New players can no longer be added.</div>
+            </div>
+        }
+        else
+        {
         <!-- Add Player Form -->
         <div class="form-card">
             <p class="form-card-label">Add Player</p>
@@ -95,6 +108,7 @@
 
             </form>
         </div>
+        }
 
         <!-- Summary Strip -->
         <div class="squad-summary">
@@ -169,6 +183,8 @@
     private List<PlayerDto> players = new();
     private bool isLoading = true;
     private bool noTeamAssigned = false;
+    private bool playersLocked = false;
+    private bool isAdmin = false;
     private string newName = "";
     private int newNumber;
     private string newPosition = "MID";
@@ -189,6 +205,15 @@
 
     protected override async Task OnInitializedAsync()
     {
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        isAdmin = authState.User.IsInRole("Admin");
+
+        try
+        {
+            playersLocked = (await LeagueSettingsSvc.Get()).PlayersLocked;
+        }
+        catch { /* non-fatal: default to unlocked */ }
+
         await LoadPlayers();
     }
 

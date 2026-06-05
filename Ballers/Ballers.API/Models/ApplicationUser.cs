@@ -7,6 +7,7 @@ namespace Ballers.API.Models
         public int? TeamId { get; set; }
         public Team? Team { get; set; }
         public bool IsAdmin { get; set; }
+        public bool IsReferee { get; set; }
 
     }
 }

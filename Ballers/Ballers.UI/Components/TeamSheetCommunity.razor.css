@@ -1,0 +1,211 @@
+/* ============================================================
+   STYLE 5 — COMMUNITY / MATCHDAY ON THE PARK
+   Warm, welcoming grassroots feel. Mown-pitch green, friendly
+   white cards, inclusive tagline. Navy + gold accents.
+   ============================================================ */
+
+.cm-poster {
+    --pitch:  #1E8C4E;
+    --pitch-2:#19773F;
+    --navy:   #11233F;
+    --gold:   #FACC15;
+    --cream:  #FFFFFF;
+    --soft:   #F4F7F2;
+
+    position: relative;
+    width: 100%;
+    max-width: 640px;
+    background: var(--pitch);
+    border-radius: 18px;
+    overflow: hidden;
+    padding: 0 0 16px;
+    box-shadow: 0 44px 120px rgba(0,0,0,0.55);
+    isolation: isolate;
+    animation: cmRise 0.5s cubic-bezier(0.22,0.9,0.3,1) both;
+}
+@keyframes cmRise { from { opacity:0; transform: translateY(22px);} to { opacity:1; transform:none; } }
+
+/* Mown-pitch stripes */
+.cm-pitch {
+    position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    background: repeating-linear-gradient(90deg, var(--pitch) 0 44px, var(--pitch-2) 44px 88px);
+    opacity: 0.9;
+}
+.cm-pitch::after {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.12), transparent 55%);
+}
+.cm-poster > *:not(.cm-pitch) { position: relative; z-index: 1; }
+
+/* ── Header ── */
+.cm-head {
+    text-align: center;
+    padding: 26px 24px 6px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+}
+.cm-logo { height: 240px; width: auto; max-width: 100%; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3)); }
+.cm-league {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.7rem; letter-spacing: 0.14em; text-indent: 0.14em;
+    text-transform: uppercase; color: #fff;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+.cm-tag {
+    background: var(--gold); color: var(--navy);
+    font-family: 'Inter', sans-serif; font-weight: 700;
+    font-size: 0.72rem; letter-spacing: 0.06em;
+    padding: 5px 14px; border-radius: 999px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+.cm-occasion {
+    text-align: center; margin: 4px 0 0;
+    font-family: 'Inter', sans-serif; font-weight: 600;
+    font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase;
+    color: rgba(255,255,255,0.85);
+}
+
+/* ── Face-off ── */
+.cm-faceoff {
+    display: grid; grid-template-columns: 1fr auto 1fr;
+    align-items: center; gap: 10px;
+    padding: 22px 20px;
+}
+.cm-card {
+    background: var(--cream);
+    border-radius: 16px;
+    padding: 20px 14px 16px;
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.22);
+}
+.cm-card:first-child { animation: cmL 0.5s 0.1s ease both; }
+.cm-card:last-child  { animation: cmR 0.5s 0.1s ease both; }
+@keyframes cmL { from { opacity:0; transform: translateX(-16px);} to { opacity:1; } }
+@keyframes cmR { from { opacity:0; transform: translateX(16px);} to { opacity:1; } }
+
+.cm-badge {
+    width: 92px; height: 92px; border-radius: 50%;
+    background: var(--soft);
+    border: 3px solid var(--pitch);
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.cm-badge img { width: 100%; height: 100%; object-fit: cover; }
+.cm-badge-fallback { font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; letter-spacing: 0.04em; color: var(--pitch); }
+
+.cm-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem; letter-spacing: 0.05em; text-transform: uppercase;
+    text-align: center; line-height: 1.05; color: var(--navy);
+}
+
+.cm-vs {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--navy); color: var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; letter-spacing: 0.04em;
+    box-shadow: 0 0 0 4px rgba(255,255,255,0.85);
+    animation: cmPop 0.45s 0.36s cubic-bezier(0.34,1.56,0.5,1) both;
+}
+@keyframes cmPop { from { opacity:0; transform: scale(0.3);} to { opacity:1; transform: scale(1);} }
+
+/* ── Info pills ── */
+.cm-info {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
+    padding: 0 20px 6px;
+}
+.cm-pill {
+    background: rgba(255,255,255,0.92); color: var(--navy);
+    font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.84rem;
+    padding: 8px 16px; border-radius: 999px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+}
+
+/* ── Team sheet (clipboard panel) ── */
+.cm-sheet {
+    background: var(--cream);
+    margin: 16px 16px 0;
+    border-radius: 16px;
+    padding: 20px 22px 14px;
+    box-shadow: 0 14px 32px rgba(0,0,0,0.22);
+}
+.cm-sheet-head {
+    display: flex; align-items: baseline; gap: 12px;
+    margin-bottom: 14px; padding-bottom: 10px;
+    border-bottom: 3px solid var(--gold);
+}
+.cm-sheet-head h3 {
+    margin: 0; font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem;
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--navy);
+}
+.cm-sheet-club {
+    font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.82rem;
+    text-transform: uppercase; letter-spacing: 0.04em; color: var(--pitch); margin-left: auto;
+}
+.cm-empty { color: #64748B; font-style: italic; padding: 8px 0 14px; }
+
+.cm-players { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; }
+.cm-row {
+    display: flex; align-items: center; gap: 12px; padding: 7px 4px;
+    border-bottom: 1px solid #EDF1EC;
+    animation: cmFade 0.4s ease both;
+}
+.cm-players .cm-row:nth-child(1){animation-delay:.24s}
+.cm-players .cm-row:nth-child(2){animation-delay:.28s}
+.cm-players .cm-row:nth-child(3){animation-delay:.32s}
+.cm-players .cm-row:nth-child(4){animation-delay:.36s}
+.cm-players .cm-row:nth-child(5){animation-delay:.40s}
+.cm-players .cm-row:nth-child(6){animation-delay:.44s}
+.cm-players .cm-row:nth-child(7){animation-delay:.48s}
+.cm-players .cm-row:nth-child(8){animation-delay:.52s}
+.cm-players .cm-row:nth-child(n+9){animation-delay:.56s}
+@keyframes cmFade { from { opacity:0; transform: translateY(5px);} to { opacity:1; } }
+
+.cm-num {
+    flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%;
+    background: var(--pitch); color: #fff;
+    font-family: 'Bebas Neue', sans-serif; font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+}
+.cm-pname {
+    font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.95rem;
+    color: var(--navy);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ── Sponsor ── */
+.cm-sponsor {
+    background: var(--cream);
+    margin: 16px 16px 0;
+    border-radius: 16px;
+    padding: 18px 20px 22px;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    box-shadow: 0 14px 32px rgba(0,0,0,0.22);
+}
+.cm-sponsor-label {
+    font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.72rem;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--pitch);
+}
+.cm-sponsor-logo { height: 120px; width: auto; max-width: 100%; object-fit: contain; }
+.cm-sponsor-name {
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem;
+    letter-spacing: 0.06em; text-transform: uppercase; color: var(--navy);
+}
+
+/* ── Inclusive ribbon ── */
+.cm-ribbon {
+    margin: 18px auto 6px;
+    width: fit-content;
+    background: var(--gold); color: var(--navy);
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.05rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 8px 22px; border-radius: 999px;
+    transform: rotate(-1.5deg);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+}
+
+@media (max-width: 560px) {
+    .cm-badge { width: 72px; height: 72px; }
+    .cm-name { font-size: 1.1rem; }
+    .cm-players { grid-template-columns: 1fr; }
+    .cm-league { font-size: 1.35rem; }
+    .cm-sponsor-logo { height: 96px; }
+}

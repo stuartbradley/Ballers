@@ -1,0 +1,189 @@
+/* ============================================================
+   STYLE 3 — VINTAGE PROGRAMME
+   Cream paper, navy ink, gold rules, halftone. Classic
+   matchday-programme feel. (Light theme.)
+   ============================================================ */
+
+.vt-poster {
+    --paper:  #F3E9D2;
+    --paper-2:#EADFC2;
+    --ink:    #11233F;
+    --ink-2:  #1E3A5F;
+    --gold:   #B8902B;
+    --gold-2: #D4AF37;
+
+    position: relative;
+    width: 100%;
+    max-width: 640px;
+    background:
+        radial-gradient(circle at 50% 0%, #F8F0DC, var(--paper) 60%),
+        var(--paper);
+    color: var(--ink);
+    border-radius: 3px;
+    overflow: hidden;
+    padding: 22px;
+    box-shadow: 0 44px 120px rgba(0,0,0,0.6);
+    isolation: isolate;
+    animation: vtRise 0.5s cubic-bezier(0.22,0.9,0.3,1) both;
+}
+@keyframes vtRise { from { opacity:0; transform: translateY(22px);} to { opacity:1; transform:none; } }
+
+/* Halftone print dots */
+.vt-halftone {
+    position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    background-image: radial-gradient(rgba(17,35,63,0.10) 1px, transparent 1.5px);
+    background-size: 7px 7px; opacity: 0.5;
+}
+/* Thin gold inner frame */
+.vt-frame {
+    position: absolute; inset: 10px; z-index: 0; pointer-events: none;
+    border: 1.5px solid var(--gold);
+    box-shadow: inset 0 0 0 4px var(--paper), inset 0 0 0 5px rgba(184,144,43,0.4);
+}
+.vt-poster > *:not(.vt-halftone):not(.vt-frame) { position: relative; z-index: 1; }
+
+.vt-logo { display: block; height: 248px; width: auto; max-width: 100%; margin: 8px auto 12px; }
+
+/* ── Masthead ── */
+.vt-head {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px 18px 0;
+}
+.vt-rule { flex: 1; height: 0; border-top: 3px double var(--ink); }
+.vt-league {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem; letter-spacing: 0.18em; text-indent: 0.18em;
+    text-transform: uppercase; color: var(--ink); white-space: nowrap;
+}
+.vt-occasion {
+    text-align: center; margin-top: 8px;
+    font-family: 'Saira Semi Condensed', sans-serif; font-style: italic; font-weight: 500;
+    font-size: 0.92rem; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--gold);
+}
+
+/* ── Face-off ── */
+.vt-faceoff {
+    display: grid; grid-template-columns: 1fr auto 1fr;
+    align-items: center; gap: 8px; padding: 26px 14px 24px;
+}
+.vt-team { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.vt-team:first-child { animation: vtL 0.5s 0.1s ease both; }
+.vt-team:last-child  { animation: vtR 0.5s 0.1s ease both; }
+@keyframes vtL { from { opacity:0; transform: translateX(-18px);} to { opacity:1; } }
+@keyframes vtR { from { opacity:0; transform: translateX(18px);} to { opacity:1; } }
+
+.vt-badge {
+    width: 104px; height: 104px; border-radius: 50%;
+    background: var(--paper-2);
+    border: 2px solid var(--ink);
+    box-shadow: 0 0 0 4px var(--paper), 0 0 0 6px var(--gold);
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.vt-badge img { width: 100%; height: 100%; object-fit: cover; }
+.vt-badge-fallback { font-family: 'Anton', sans-serif; font-size: 2.4rem; color: var(--ink); }
+
+.vt-name {
+    margin: 0; font-family: 'Anton', sans-serif;
+    font-size: clamp(1.4rem, 5.8vw, 2.2rem); line-height: 0.92;
+    text-transform: uppercase; text-align: center; color: var(--ink);
+    max-width: 200px;
+}
+
+.vt-vs {
+    width: 60px; height: 60px; border-radius: 50%;
+    background: var(--ink); color: var(--paper);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Anton', sans-serif; font-style: italic; font-size: 1.5rem;
+    box-shadow: 0 0 0 3px var(--paper), 0 0 0 5px var(--gold);
+    animation: vtPop 0.45s 0.38s cubic-bezier(0.34,1.56,0.5,1) both;
+}
+@keyframes vtPop { from { opacity:0; transform: scale(0.3);} to { opacity:1; transform: scale(1);} }
+
+/* ── Meta ── */
+.vt-meta {
+    display: flex; align-items: center; justify-content: center; gap: 16px;
+    padding: 14px 12px;
+    border-top: 3px double var(--ink);
+    border-bottom: 3px double var(--ink);
+    margin: 0 6px;
+}
+.vt-meta-item { display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
+.vt-meta-sep { color: var(--gold); font-size: 0.8rem; }
+.vt-meta-label {
+    font-family: 'Bebas Neue', sans-serif; font-size: 0.7rem;
+    letter-spacing: 0.24em; text-transform: uppercase; color: var(--gold);
+}
+.vt-meta-value {
+    font-family: 'Saira Semi Condensed', sans-serif; font-weight: 700;
+    font-size: 0.95rem; text-transform: uppercase; color: var(--ink);
+}
+
+/* ── Team sheet ── */
+.vt-sheet { padding: 24px 14px 8px; }
+.vt-sheet-head { display: flex; align-items: center; gap: 14px; }
+.vt-sheet-head h3 {
+    margin: 0; font-family: 'Anton', sans-serif; font-size: 1.5rem;
+    text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink); white-space: nowrap;
+}
+.vt-line { flex: 1; height: 0; border-top: 2px solid var(--gold); }
+.vt-sheet-club {
+    text-align: center; margin: 6px 0 18px;
+    font-family: 'Saira Semi Condensed', sans-serif; font-style: italic; font-weight: 600;
+    font-size: 0.92rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gold);
+}
+.vt-empty { text-align: center; font-style: italic; color: rgba(17,35,63,0.5); padding: 8px 0 18px; }
+
+.vt-players { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 24px; }
+.vt-row {
+    display: flex; align-items: center; gap: 12px; padding: 7px 2px;
+    border-bottom: 1px dotted rgba(17,35,63,0.35);
+    animation: vtFade 0.4s ease both;
+}
+.vt-players .vt-row:nth-child(1){animation-delay:.24s}
+.vt-players .vt-row:nth-child(2){animation-delay:.28s}
+.vt-players .vt-row:nth-child(3){animation-delay:.32s}
+.vt-players .vt-row:nth-child(4){animation-delay:.36s}
+.vt-players .vt-row:nth-child(5){animation-delay:.40s}
+.vt-players .vt-row:nth-child(6){animation-delay:.44s}
+.vt-players .vt-row:nth-child(7){animation-delay:.48s}
+.vt-players .vt-row:nth-child(8){animation-delay:.52s}
+.vt-players .vt-row:nth-child(n+9){animation-delay:.56s}
+@keyframes vtFade { from { opacity:0; transform: translateY(5px);} to { opacity:1; } }
+
+.vt-num {
+    flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%;
+    background: var(--ink); color: var(--paper);
+    font-family: 'Anton', sans-serif; font-size: 0.92rem;
+    display: flex; align-items: center; justify-content: center;
+}
+.vt-pname {
+    font-family: 'Saira Semi Condensed', sans-serif; font-weight: 600;
+    font-size: 1rem; letter-spacing: 0.03em; text-transform: uppercase; color: var(--ink);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ── Sponsor ── */
+.vt-sponsor {
+    margin: 24px 6px 6px; padding: 18px 20px 20px;
+    border: 3px double var(--ink);
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    background: rgba(184,144,43,0.07);
+}
+.vt-sponsor-label {
+    font-family: 'Bebas Neue', sans-serif; font-size: 0.82rem;
+    letter-spacing: 0.3em; text-indent: 0.3em; text-transform: uppercase; color: var(--gold);
+}
+.vt-sponsor-logo { height: 140px; width: auto; max-width: 100%; object-fit: contain; }
+.vt-sponsor-name {
+    font-family: 'Anton', sans-serif; font-size: 1.5rem;
+    text-transform: uppercase; color: var(--ink);
+}
+
+@media (max-width: 560px) {
+    .vt-league { font-size: 1.05rem; letter-spacing: 0.1em; }
+    .vt-badge { width: 78px; height: 78px; }
+    .vt-name { font-size: clamp(1.2rem, 7vw, 1.7rem); }
+    .vt-players { grid-template-columns: 1fr; }
+    .vt-sponsor-logo { height: 110px; }
+}
