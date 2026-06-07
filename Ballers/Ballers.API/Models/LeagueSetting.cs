@@ -7,5 +7,8 @@ namespace Ballers.API.Models
 
         // When true, managers can no longer add new players to their squad.
         public bool PlayersLocked { get; set; }
+
+        // When true, all fixtures are locked for editing (no stats/squad/schedule changes).
+        public bool FixturesLocked { get; set; }
     }
 }

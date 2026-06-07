@@ -3,10 +3,13 @@
 @using Ballers.Models
 @using Ballers.Services
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
 @attribute [Authorize]
 
 @inject FixtureService FixtureService
 @inject AuthService AuthService
+@inject LeagueSettingsService LeagueSettingsSvc
+@inject AuthenticationStateProvider AuthProvider
 @inject NavigationManager Nav
 
 <PageTitle>My Fixtures</PageTitle>
@@ -106,17 +109,24 @@
                         </span>
 
                         <span class="fixture-actions">
-                            <button class="@(fixture.ManagerStatsSubmitted || (fixture.IsKnockout && fixture.IsPlayed) ? "view-btn" : "edit-btn")"
-                                    @onclick="() => OpenFixture(fixture.Id)">
-                                @if (fixture.IsKnockout)
-                                {
-                                    @(fixture.IsPlayed ? "View" : "Enter Stats")
-                                }
-                                else
-                                {
-                                    @(fixture.ManagerStatsSubmitted ? "View" : fixture.IsPlayed ? "Submit Stats" : "Edit")
-                                }
-                            </button>
+                            @if (lockedForMe)
+                            {
+                                <button class="view-btn" @onclick="() => OpenFixture(fixture.Id)">View</button>
+                            }
+                            else
+                            {
+                                <button class="@(fixture.ManagerStatsSubmitted || (fixture.IsKnockout && fixture.IsPlayed) ? "view-btn" : "edit-btn")"
+                                        @onclick="() => OpenFixture(fixture.Id)">
+                                    @if (fixture.IsKnockout)
+                                    {
+                                        @(fixture.IsPlayed ? "View" : "Enter Stats")
+                                    }
+                                    else
+                                    {
+                                        @(fixture.ManagerStatsSubmitted ? "View" : fixture.IsPlayed ? "Submit Stats" : "Edit")
+                                    }
+                                </button>
+                            }
                             <button class="sheet-btn" @onclick="() => OpenTeamSheet(fixture.Id)">Team Sheet</button>
                         </span>
 
@@ -133,10 +143,19 @@
 @code {
 
     private List<FixtureDto>? fixtures;
+    private bool lockedForMe;
 
     protected override async Task OnInitializedAsync()
     {
-        fixtures = await FixtureService.GetFixtures();
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        var isAdmin = authState.User.IsInRole("Admin");
+
+        var fixturesTask = FixtureService.GetFixtures();
+        var settingsTask = LeagueSettingsSvc.Get();
+        await Task.WhenAll(fixturesTask, settingsTask);
+
+        fixtures = fixturesTask.Result;
+        lockedForMe = settingsTask.Result.FixturesLocked && !isAdmin;
     }
 
     void OpenFixture(int id)

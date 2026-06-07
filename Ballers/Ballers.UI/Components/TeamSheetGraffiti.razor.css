@@ -15,6 +15,7 @@
     position: relative;
     width: 100%;
     max-width: 640px;
+    container-type: inline-size;
     color: var(--chalk);
     background:
         radial-gradient(circle at 18% 8%, rgba(250,204,21,0.10), transparent 38%),
@@ -48,7 +49,7 @@
 
 /* ── Masthead ── */
 .gf-head { padding: 28px 24px 0; text-align: center; position: relative; }
-.gf-logo { display: block; height: 256px; width: auto; max-width: 100%; margin: 0 auto 12px; filter: drop-shadow(0 0 14px rgba(250,204,21,0.4)); }
+.gf-logo { display: block; height: 240px; width: auto; max-width: 100%; margin: 0 auto 12px; filter: drop-shadow(0 0 14px rgba(250,204,21,0.4)); }
 .gf-stencil {
     display: inline-block;
     font-family: 'Anton', sans-serif;
@@ -197,18 +198,19 @@
     background: var(--chalk); border-radius: 6px; padding: 12px 22px;
     box-shadow: 0 10px 26px rgba(0,0,0,0.5);
 }
-.gf-sponsor-img { width: 200px; height: 150px; background-size: contain; background-repeat: no-repeat; background-position: center; }
+.gf-sponsor-plate img { height: 150px; width: auto; max-width: 100%; object-fit: contain; }
 .gf-sponsor-name {
     font-family: 'Anton', sans-serif; font-size: 1.6rem;
     text-transform: uppercase; color: var(--chalk);
 }
 
-@media (max-width: 560px) {
+@container (max-width: 560px) {
+    .gf-logo { height: 120px; }
     .gf-badge { width: 84px; height: 84px; }
     .gf-name { font-size: clamp(1.3rem, 8vw, 2rem); }
     .gf-vs { width: 62px; height: 62px; font-size: 1.5rem; }
     .gf-bigtag { font-size: 5.5rem; }
     .gf-players { grid-template-columns: 1fr; }
     .gf-sheet { padding-left: 18px; padding-right: 18px; }
-    .gf-sponsor-plate img { height: 100px; }
+    .gf-sponsor-plate img { height: 110px; }
 }

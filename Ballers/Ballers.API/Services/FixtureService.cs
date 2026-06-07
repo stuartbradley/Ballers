@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Ballers.API.Services
 {
+    public record ImportFixturesResult(int Created, List<string> Errors);
+
     public interface IFixtureService
     {
         Task<FixtureDetail?> GetByIdAsync(int id);
@@ -21,6 +23,7 @@ namespace Ballers.API.Services
         Task<bool> UpdateScheduleAsync(int fixtureId, string? location, string? postcode, DateTime kickoff);
         Task AssignRefereeAsync(int fixtureId, int? refereeId);
         Task GenerateFixturesAsync(List<int> teamIds, DateTime startDate);
+        Task<ImportFixturesResult> ImportFixturesAsync(Stream csv, int seasonNumber, DateTime startDate, bool makeActive);
         Task<List<OpponentPlayerStat>> GetOpponentStatsAsync(int fixtureId, int opponentTeamId);
         Task<List<HeadToHeadResult>> GetHeadToHeadAsync(int homeTeamId, int awayTeamId, int excludeFixtureId);
         Task SaveCaptaincyAsync(int fixtureId, int teamId, int? captainId, int? viceId);
@@ -667,6 +670,146 @@ namespace Ballers.API.Services
             }
 
             await _db.SaveChangesAsync();
+        }
+
+        public async Task<ImportFixturesResult> ImportFixturesAsync(Stream csv, int seasonNumber, DateTime startDate, bool makeActive)
+        {
+            var errors = new List<string>();
+
+            string text;
+            using (var reader = new StreamReader(csv))
+                text = await reader.ReadToEndAsync();
+
+            var lines = text.Replace("\r\n", "\n").Replace("\r", "\n")
+                .Split('\n').Where(l => l.Trim().Length > 0).ToList();
+            if (lines.Count < 2)
+                return new ImportFixturesResult(0, new() { "CSV is empty or has no data rows." });
+
+            // header → column index
+            var header = SplitCsvLine(lines[0]).Select(h => h.Trim().ToLowerInvariant()).ToList();
+            int Col(string name) => header.IndexOf(name);
+            int cMatch = Col("matchnumber"), cHome = Col("hometeam"), cAway = Col("awayteam");
+            int cKick = Col("kickoff"), cLoc = Col("location"), cPost = Col("postcode"), cRef = Col("referee");
+
+            if (cMatch < 0 || cHome < 0 || cAway < 0)
+                return new ImportFixturesResult(0, new() { "CSV must have headers: MatchNumber, HomeTeam, AwayTeam (plus optional Kickoff, Location, Postcode, Referee)." });
+
+            if (await _db.Seasons.AnyAsync(s => s.SeasonNumber == seasonNumber))
+                return new ImportFixturesResult(0, new() { $"Season {seasonNumber} already exists." });
+
+            var teamsByName = await _db.Teams.ToDictionaryAsync(t => t.Name.Trim().ToLowerInvariant(), t => t.Id);
+            var refsByName = await _db.Referees.ToDictionaryAsync(r => r.Name.Trim().ToLowerInvariant(), r => r.Id);
+
+            var season = new Season { SeasonNumber = seasonNumber, StartDate = startDate, IsActive = makeActive };
+            var fixtures = new List<Fixture>();
+
+            for (int i = 1; i < lines.Count; i++)
+            {
+                int rowNum = i + 1; // 1-based incl header
+                var cells = SplitCsvLine(lines[i]);
+                string Get(int idx) => idx >= 0 && idx < cells.Count ? cells[idx].Trim() : "";
+
+                if (!int.TryParse(Get(cMatch), out var matchNumber) || matchNumber < 1)
+                { errors.Add($"Row {rowNum}: invalid MatchNumber '{Get(cMatch)}'."); continue; }
+
+                var homeName = Get(cHome); var awayName = Get(cAway);
+                if (!teamsByName.TryGetValue(homeName.ToLowerInvariant(), out var homeId))
+                { errors.Add($"Row {rowNum}: home team '{homeName}' not found."); continue; }
+                if (!teamsByName.TryGetValue(awayName.ToLowerInvariant(), out var awayId))
+                { errors.Add($"Row {rowNum}: away team '{awayName}' not found."); continue; }
+                if (homeId == awayId)
+                { errors.Add($"Row {rowNum}: home and away team are the same ('{homeName}')."); continue; }
+
+                DateTime? kickoff = null;
+                var kickStr = Get(cKick);
+                if (!string.IsNullOrWhiteSpace(kickStr))
+                {
+                    if (TryParseKickoff(kickStr, out var k)) kickoff = k;
+                    else { errors.Add($"Row {rowNum}: invalid Kickoff '{kickStr}' (use yyyy-MM-dd HH:mm)."); continue; }
+                }
+
+                int? refId = null;
+                var refName = Get(cRef);
+                if (!string.IsNullOrWhiteSpace(refName))
+                {
+                    if (refsByName.TryGetValue(refName.ToLowerInvariant(), out var rid)) refId = rid;
+                    else { errors.Add($"Row {rowNum}: referee '{refName}' not found."); continue; }
+                }
+
+                var windowStart = startDate.AddDays((matchNumber - 1) * 14);
+                fixtures.Add(new Fixture
+                {
+                    Season = season,
+                    HomeTeamId = homeId,
+                    AwayTeamId = awayId,
+                    MatchNumber = matchNumber,
+                    WindowStart = windowStart,
+                    WindowEnd = windowStart.AddDays(13),
+                    Kickoff = kickoff,
+                    Location = string.IsNullOrWhiteSpace(Get(cLoc)) ? null : Get(cLoc),
+                    Postcode = string.IsNullOrWhiteSpace(Get(cPost)) ? null : Get(cPost),
+                    RefereeId = refId,
+                });
+            }
+
+            if (fixtures.Count == 0 && errors.Count == 0)
+                errors.Add("No fixture rows found.");
+            if (errors.Count > 0)
+                return new ImportFixturesResult(0, errors);
+
+            season.EndDate = fixtures.Max(f => f.WindowEnd);
+
+            using var tx = await _db.Database.BeginTransactionAsync();
+            _db.Seasons.Add(season);
+            _db.Fixtures.AddRange(fixtures);
+            await _db.SaveChangesAsync();
+            await tx.CommitAsync();
+
+            return new ImportFixturesResult(fixtures.Count, errors);
+        }
+
+        private static bool TryParseKickoff(string s, out DateTime result)
+        {
+            string[] formats =
+            {
+                "yyyy-MM-dd HH:mm", "yyyy-MM-ddTHH:mm", "dd/MM/yyyy HH:mm",
+                "dd/MM/yyyy H:mm", "yyyy-MM-dd", "dd/MM/yyyy"
+            };
+            if (DateTime.TryParseExact(s, formats,
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.None, out result))
+                return true;
+            return DateTime.TryParse(s, System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None, out result);
+        }
+
+        // Minimal CSV line parser supporting double-quoted fields.
+        private static List<string> SplitCsvLine(string line)
+        {
+            var result = new List<string>();
+            var sb = new System.Text.StringBuilder();
+            bool inQuotes = false;
+            for (int i = 0; i < line.Length; i++)
+            {
+                char c = line[i];
+                if (inQuotes)
+                {
+                    if (c == '"')
+                    {
+                        if (i + 1 < line.Length && line[i + 1] == '"') { sb.Append('"'); i++; }
+                        else inQuotes = false;
+                    }
+                    else sb.Append(c);
+                }
+                else
+                {
+                    if (c == '"') inQuotes = true;
+                    else if (c == ',') { result.Add(sb.ToString()); sb.Clear(); }
+                    else sb.Append(c);
+                }
+            }
+            result.Add(sb.ToString());
+            return result;
         }
 
         private static List<List<(int HomeId, int AwayId)>> ChunkIntoRounds(

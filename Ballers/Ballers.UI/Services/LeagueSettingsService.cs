@@ -25,5 +25,15 @@ namespace Ballers.Services
             var response = await _http.SendAsync(request);
             response.EnsureSuccessStatusCode();
         }
+
+        public async Task SetFixturesLocked(bool locked)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Put, "api/league-settings/fixtures-locked");
+            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+            request.Content = JsonContent.Create(locked);
+
+            var response = await _http.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+        }
     }
 }

@@ -10,6 +10,7 @@
 @inject PenaltyService PenaltyService
 @inject FairplayService FairplayService
 @inject RefereeService RefereeService
+@inject LeagueSettingsService LeagueSettingsSvc
 @inject NavigationManager Nav
 
 <PageTitle>@(fixture != null ? $"{fixture.HomeTeam} vs {fixture.AwayTeam}" : "Fixture")</PageTitle>
@@ -219,7 +220,7 @@
                                     <label>Kickoff</label>
                                     <input type="datetime-local" class="stat-input schedule-input" @bind="scheduleKickoff" disabled="@fixture.IsEditLocked" />
                                 </div>
-                                <button class="primary-btn" @onclick="SaveSchedule" disabled="@fixture.IsEditLocked">Save Schedule</button>
+                                <button class="primary-btn" @onclick="SaveSchedule" disabled="@(fixture.IsEditLocked || editingLocked)">Save Schedule</button>
                             </div>
                         </div>
 
@@ -245,7 +246,7 @@
                                             </option>
                                         }
                                     </select>
-                                    <button class="primary-btn" @onclick="SaveReferee" disabled="@fixture.IsEditLocked">Save</button>
+                                    <button class="primary-btn" @onclick="SaveReferee" disabled="@(fixture.IsEditLocked || editingLocked)">Save</button>
                                 </div>
                                 @if (selectedRefereeId.HasValue)
                                 {
@@ -278,7 +279,7 @@
                                     <label>@fixture.AwayTeam</label>
                                     <input type="number" class="stat-input" min="1" max="10" @bind="fairplayAwayRating" disabled="@fixture.IsEditLocked" />
                                 </div>
-                                <button class="primary-btn" @onclick="SaveFairplay" disabled="@fixture.IsEditLocked">Save Ratings</button>
+                                <button class="primary-btn" @onclick="SaveFairplay" disabled="@(fixture.IsEditLocked || editingLocked)">Save Ratings</button>
                             </div>
                         </div>
                     }
@@ -310,10 +311,10 @@
                     }
 
                     <div class="squad-actions">
-                        <button class="primary-btn squad-save-btn" @onclick="SaveSquad" disabled="@fixture.IsEditLocked">Save Squad</button>
+                        <button class="primary-btn squad-save-btn" @onclick="SaveSquad" disabled="@(fixture.IsEditLocked || editingLocked)">Save Squad</button>
                         @if (!fixture.IsEditLocked)
                         {
-                            <button class="primary-btn captaincy-save-btn" @onclick="SaveCaptaincy">Save Captaincy</button>
+                            <button class="primary-btn captaincy-save-btn" @onclick="SaveCaptaincy" disabled="@editingLocked">Save Captaincy</button>
                         }
                     </div>
                 </div>
@@ -357,7 +358,7 @@
                             }
                         </div>
 
-                        <button class="submit-stats-btn" @onclick="SubmitStats" disabled="@fixture.IsEditLocked">Submit Match Stats</button>
+                        <button class="submit-stats-btn" @onclick="SubmitStats" disabled="@(fixture.IsEditLocked || editingLocked)">Submit Match Stats</button>
                     }
                     else
                     {
@@ -433,7 +434,7 @@
                             }
                         </div>
 
-                        <button class="submit-stats-btn" @onclick="SubmitPenalties" disabled="@fixture.IsEditLocked">Submit Penalties</button>
+                        <button class="submit-stats-btn" @onclick="SubmitPenalties" disabled="@(fixture.IsEditLocked || editingLocked)">Submit Penalties</button>
 
                         @if (opponentKicks.Any())
                         {
@@ -493,6 +494,7 @@
     private List<PenaltyKickResultDto> opponentKicks = new();
 
     private bool isAdmin = false;
+    private bool editingLocked = false;
     private int fairplayHomeRating = 5;
     private int fairplayAwayRating = 5;
 
@@ -582,6 +584,8 @@
 
         isUserHome = user?.TeamId == fixture.HomeTeamId;
         isAdmin = (user?.IsAdmin ?? false) || (user?.IsReferee ?? false);
+        // Global admin "shut down editing" lock — only a true admin bypasses it.
+        editingLocked = !(user?.IsAdmin ?? false) && (await LeagueSettingsSvc.Get()).FixturesLocked;
         opponentSavedScore = isUserHome ? fixture.AwayScore : fixture.HomeScore;
 
         int teamId = isUserHome ? fixture.HomeTeamId : fixture.AwayTeamId;

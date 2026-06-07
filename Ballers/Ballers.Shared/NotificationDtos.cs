@@ -38,4 +38,5 @@ public class NotificationSettingDto
 public class LeagueSettingsDto
 {
     public bool PlayersLocked { get; set; }
+    public bool FixturesLocked { get; set; }
 }

@@ -15,6 +15,7 @@
     position: relative;
     width: 100%;
     max-width: 640px;
+    container-type: inline-size;
     background: var(--pitch);
     border-radius: 18px;
     overflow: hidden;
@@ -43,7 +44,7 @@
     padding: 26px 24px 6px;
     display: flex; flex-direction: column; align-items: center; gap: 8px;
 }
-.cm-logo { height: 240px; width: auto; max-width: 100%; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3)); }
+.cm-logo { height: 220px; width: auto; max-width: 100%; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3)); }
 .cm-league {
     font-family: 'Bebas Neue', sans-serif;
     font-size: 1.7rem; letter-spacing: 0.14em; text-indent: 0.14em;
@@ -202,7 +203,8 @@
     box-shadow: 0 6px 16px rgba(0,0,0,0.3);
 }
 
-@media (max-width: 560px) {
+@container (max-width: 560px) {
+    .cm-logo { height: 110px; }
     .cm-badge { width: 72px; height: 72px; }
     .cm-name { font-size: 1.1rem; }
     .cm-players { grid-template-columns: 1fr; }

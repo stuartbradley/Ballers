@@ -12,7 +12,9 @@ namespace Ballers.API.Services
         int? RefereeId = null, string? RefereeName = null,
         DateTime WindowStart = default, DateTime WindowEnd = default)
     {
-        public bool IsEditLocked => !IsKnockout && IsPlayed && (Kickoff ?? WindowEnd) < DateTime.UtcNow.AddDays(-14);
+        // No time-based grace period — fixtures stay editable until the admin
+        // locks them via the global "Lock all fixtures" switch.
+        public bool IsEditLocked => false;
         public bool IsKnockout { get; init; }
         public string KnockoutTournament { get; init; } = "";
         public string KnockoutRound { get; init; } = "";

@@ -57,6 +57,24 @@ namespace Ballers.API.Controllers
             catch (InvalidOperationException ex) { return BadRequest(ex.Message); }
         }
 
+        [HttpPost("import-fixtures")]
+        public async Task<IActionResult> ImportFixtures(
+            IFormFile file, [FromForm] int seasonNumber, [FromForm] DateTime startDate, [FromForm] bool makeActive = false)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("No CSV file provided.");
+            if (seasonNumber < 1)
+                return BadRequest("A valid season number is required.");
+
+            using var stream = file.OpenReadStream();
+            var result = await _fixtures.ImportFixturesAsync(stream, seasonNumber, startDate, makeActive);
+
+            if (result.Errors.Count > 0)
+                return BadRequest(new { errors = result.Errors });
+
+            return Ok(new { created = result.Created });
+        }
+
         [HttpPost("seasons/{id}/generate-knockout")]
         public async Task<IActionResult> GenerateKnockout(int id)
         {

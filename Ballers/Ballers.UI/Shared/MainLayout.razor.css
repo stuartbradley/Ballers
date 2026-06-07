@@ -42,8 +42,9 @@
     align-items: center;
     padding: 0 24px;
     height: 68px;
-    max-width: 1200px;
+    max-width: 1380px;
     margin: 0 auto;
+    gap: 20px;
 }
 
 /* ===== LOGO / CREST ===== */
@@ -113,15 +114,17 @@
 .nav-links {
     display: flex;
     align-items: center;
-    gap: 28px;
+    gap: 18px;
+    flex-shrink: 0;
 }
 
 .nav-links a,
 .logout-link {
     font-family: var(--font-display);
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     font-weight: 600;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.07em;
+    white-space: nowrap;
     text-transform: uppercase;
     color: var(--ballers-primary);
     text-decoration: none;

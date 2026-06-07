@@ -1,0 +1,220 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - img "BBL Logo" [ref=e7]
+        - generic [ref=e8]: Hello Admin
+      - navigation [ref=e9]:
+        - link "Home" [ref=e10] [cursor=pointer]:
+          - /url: /
+        - link "Fixtures" [ref=e11] [cursor=pointer]:
+          - /url: /fixtures
+        - link "Teams" [ref=e12] [cursor=pointer]:
+          - /url: /teams
+        - link "Stats" [ref=e13] [cursor=pointer]:
+          - /url: /stats
+        - link "TOTW" [ref=e14] [cursor=pointer]:
+          - /url: /totw
+        - link "Debug" [ref=e15] [cursor=pointer]:
+          - /url: /debug
+        - link "Dashboard" [ref=e16] [cursor=pointer]:
+          - /url: /dashboard
+        - button "🔔" [ref=e18] [cursor=pointer]
+        - generic [ref=e19] [cursor=pointer]: Logout
+  - text: ›
+  - generic [ref=e21]:
+    - generic [ref=e23]:
+      - paragraph [ref=e24]: Admin Only
+      - heading "League Control" [level=1] [ref=e25]
+    - generic [ref=e26]:
+      - generic [ref=e27]:
+        - link "Fairplay Table" [ref=e28] [cursor=pointer]:
+          - /url: /admin/fairplay
+        - link "Knockout Bracket" [ref=e29] [cursor=pointer]:
+          - /url: /knockout
+        - link "Squad Management" [ref=e30] [cursor=pointer]:
+          - /url: /admin/squads
+      - generic [ref=e31]:
+        - generic [ref=e32]:
+          - generic [ref=e33]:
+            - generic [ref=e34]: Team
+            - heading "Add New Team" [level=3] [ref=e35]
+          - generic [ref=e36]:
+            - generic [ref=e37]:
+              - generic [ref=e38] [cursor=pointer]:
+                - checkbox "Referee account" [ref=e39]
+                - generic [ref=e40]: Referee account
+              - textbox "Team name" [ref=e41]
+              - textbox "Manager email" [ref=e42]
+              - textbox "Password" [ref=e43]
+            - button "Create Team" [ref=e44] [cursor=pointer]
+        - generic [ref=e45]:
+          - generic [ref=e46]:
+            - generic [ref=e47]: Fixtures
+            - heading "Generate Fixtures" [level=3] [ref=e48]
+          - generic [ref=e49]:
+            - generic [ref=e50]: Season start date
+            - textbox [ref=e51]: 2026-06-07
+            - generic [ref=e52]: Select teams
+            - generic [ref=e53]:
+              - generic [ref=e54] [cursor=pointer]:
+                - checkbox "Bridgend Rangers" [ref=e55]
+                - generic [ref=e56]: Bridgend Rangers
+              - generic [ref=e57] [cursor=pointer]:
+                - checkbox "Eastbrook Rovers" [ref=e58]
+                - generic [ref=e59]: Eastbrook Rovers
+              - generic [ref=e60] [cursor=pointer]:
+                - checkbox "Hilltop Town" [ref=e61]
+                - generic [ref=e62]: Hilltop Town
+              - generic [ref=e63] [cursor=pointer]:
+                - checkbox "Lakeside Dynamos" [ref=e64]
+                - generic [ref=e65]: Lakeside Dynamos
+              - generic [ref=e66] [cursor=pointer]:
+                - checkbox "Moorland Celtic" [ref=e67]
+                - generic [ref=e68]: Moorland Celtic
+              - generic [ref=e69] [cursor=pointer]:
+                - checkbox "Northfield United" [ref=e70]
+                - generic [ref=e71]: Northfield United
+              - generic [ref=e72] [cursor=pointer]:
+                - checkbox "Parkside Warriors" [ref=e73]
+                - generic [ref=e74]: Parkside Warriors
+              - generic [ref=e75] [cursor=pointer]:
+                - checkbox "Riverside FC" [ref=e76]
+                - generic [ref=e77]: Riverside FC
+              - generic [ref=e78] [cursor=pointer]:
+                - checkbox "Southgate City" [ref=e79]
+                - generic [ref=e80]: Southgate City
+              - generic [ref=e81] [cursor=pointer]:
+                - checkbox "Westfield Athletic" [ref=e82]
+                - generic [ref=e83]: Westfield Athletic
+          - button "Generate Fixtures" [ref=e84] [cursor=pointer]
+        - generic [ref=e85]:
+          - generic [ref=e86]:
+            - generic [ref=e87]: Import
+            - heading "Import Fixtures (CSV)" [level=3] [ref=e88]
+          - paragraph [ref=e89]:
+            - text: Upload a CSV to create a whole season manually.
+            - link "Download the template" [ref=e90] [cursor=pointer]:
+              - /url: /fixtures-template.csv
+            - text: ". Columns:"
+            - code [ref=e91]: MatchNumber, HomeTeam, AwayTeam, Kickoff, Location, Postcode, Referee
+            - text: . Team and referee names must match existing records exactly. Kickoff format
+            - code [ref=e92]: yyyy-MM-dd HH:mm
+            - text: .
+          - generic [ref=e93]:
+            - generic [ref=e94]:
+              - generic [ref=e95]:
+                - text: Season number
+                - spinbutton [ref=e96]: "101"
+              - generic [ref=e97]:
+                - text: Season start date
+                - textbox [ref=e98]: 2026-06-07
+            - generic [ref=e99] [cursor=pointer]:
+              - checkbox "Make this the active season" [ref=e100]
+              - generic [ref=e101]: Make this the active season
+            - button "Choose File" [active] [ref=e102]
+          - button "Import Fixtures" [ref=e103] [cursor=pointer]
+        - generic [ref=e104]:
+          - generic [ref=e105]:
+            - generic [ref=e106]: History
+            - heading "Seasons" [level=3] [ref=e107]
+          - generic [ref=e108]:
+            - generic [ref=e109]:
+              - generic [ref=e110]:
+                - generic [ref=e111]: Season 99
+                - generic [ref=e112]: 06 Sep 2026 — 03 Oct 2026
+              - generic [ref=e113]:
+                - button "Activate" [ref=e114] [cursor=pointer]
+                - button "Gen Knockout" [ref=e115] [cursor=pointer]
+            - generic [ref=e116]:
+              - generic [ref=e117]:
+                - generic [ref=e118]: Season 1
+                - generic [ref=e119]: 15 Feb 2026 — 25 Oct 2026
+              - generic [ref=e120]:
+                - generic [ref=e121]: Active
+                - button "Gen Knockout" [ref=e122] [cursor=pointer]
+        - generic [ref=e123]:
+          - generic [ref=e124]:
+            - generic [ref=e125]: Registration
+            - heading "Player Registration" [level=3] [ref=e126]
+          - generic [ref=e128]:
+            - generic [ref=e129]:
+              - generic [ref=e130]: Lock player registration
+              - generic [ref=e131]: When locked, managers can no longer add new players to their squads. Admins can still add players.
+            - generic [ref=e132] [cursor=pointer]:
+              - checkbox "Open" [ref=e133]
+              - generic [ref=e134]: Open
+        - generic [ref=e135]:
+          - generic [ref=e136]:
+            - generic [ref=e137]: Alerts
+            - heading "Notification Settings" [level=3] [ref=e138]
+          - generic [ref=e139]:
+            - generic [ref=e140]:
+              - generic [ref=e141]:
+                - generic [ref=e142]: Fixture Time/Location Updated
+                - generic [ref=e143]: Notify away team when a fixture's time or location is changed.
+              - generic [ref=e144] [cursor=pointer]:
+                - checkbox "On" [checked] [ref=e145]
+                - generic [ref=e146]: "On"
+            - generic [ref=e147]:
+              - generic [ref=e148]:
+                - generic [ref=e149]: No Squad Set (24h Warning)
+                - generic [ref=e150]: Notify teams that haven't set their squad 24 hours before kickoff.
+              - generic [ref=e151] [cursor=pointer]:
+                - checkbox "On" [checked] [ref=e152]
+                - generic [ref=e153]: "On"
+            - generic [ref=e154]:
+              - generic [ref=e155]:
+                - generic [ref=e156]: No Referee Set (48h Warning)
+                - generic [ref=e157]: Notify home team when no referee is assigned 48 hours before kickoff.
+              - generic [ref=e158] [cursor=pointer]:
+                - checkbox "On" [checked] [ref=e159]
+                - generic [ref=e160]: "On"
+            - generic [ref=e161]:
+              - generic [ref=e162]:
+                - generic [ref=e163]: No Location Set (72h Warning)
+                - generic [ref=e164]: Notify home team when no location is set 72 hours before kickoff.
+              - generic [ref=e165] [cursor=pointer]:
+                - checkbox "On" [checked] [ref=e166]
+                - generic [ref=e167]: "On"
+            - generic [ref=e168]:
+              - generic [ref=e169]:
+                - generic [ref=e170]: Stats Overdue (48h After)
+                - generic [ref=e171]: Notify both teams when stats haven't been entered 48 hours after a fixture.
+              - generic [ref=e172] [cursor=pointer]:
+                - checkbox "On" [checked] [ref=e173]
+                - generic [ref=e174]: "On"
+            - generic [ref=e175]:
+              - generic [ref=e176]:
+                - generic [ref=e177]: New Fixture Scheduled
+                - generic [ref=e178]: Notify both teams when a new fixture is scheduled.
+              - generic [ref=e179] [cursor=pointer]:
+                - checkbox "On" [checked] [ref=e180]
+                - generic [ref=e181]: "On"
+            - generic [ref=e182]:
+              - generic [ref=e183]:
+                - generic [ref=e184]: Result Submitted
+                - generic [ref=e185]: Notify both teams when fixture stats/result are submitted.
+              - generic [ref=e186] [cursor=pointer]:
+                - checkbox "On" [checked] [ref=e187]
+                - generic [ref=e188]: "On"
+  - contentinfo [ref=e189]:
+    - generic [ref=e190]:
+      - generic [ref=e191]:
+        - text: Created by
+        - strong [ref=e192]: Stuart Bradley
+        - text: ·
+        - link "stuartbradleyDeveloper@gmail.com" [ref=e193] [cursor=pointer]:
+          - /url: mailto:stuartbradleyDeveloper@gmail.com
+      - navigation [ref=e194]:
+        - link "Privacy" [ref=e195] [cursor=pointer]:
+          - /url: /privacy
+      - generic "Build version" [ref=e196]: v@version
+  - region "Cookie notice" [ref=e197]:
+    - generic [ref=e198]:
+      - paragraph [ref=e199]:
+        - text: We use a single strictly-necessary cookie to keep you signed in. No tracking or analytics cookies are used. See our
+        - link "privacy notice" [ref=e200] [cursor=pointer]:
+          - /url: /privacy
+        - text: .
+      - button "OK" [ref=e201] [cursor=pointer]

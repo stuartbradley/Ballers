@@ -340,6 +340,9 @@ namespace Ballers.API.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("FixturesLocked")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("PlayersLocked")
                         .HasColumnType("bit");
 

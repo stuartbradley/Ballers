@@ -17,13 +17,19 @@ namespace Ballers.API.Controllers
         private readonly IFixtureService _fixtures;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly INotificationService _notifications;
+        private readonly ILeagueSettingsService _leagueSettings;
 
-        public FixturesController(IFixtureService fixtures, UserManager<ApplicationUser> userManager, INotificationService notifications)
+        public FixturesController(IFixtureService fixtures, UserManager<ApplicationUser> userManager, INotificationService notifications, ILeagueSettingsService leagueSettings)
         {
             _fixtures = fixtures;
             _userManager = userManager;
             _notifications = notifications;
+            _leagueSettings = leagueSettings;
         }
+
+        // Global admin "shut down editing" switch — only a true admin bypasses it.
+        private async Task<bool> FixturesLockedFor(ApplicationUser user)
+            => !user.IsAdmin && await _leagueSettings.AreFixturesLockedAsync();
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetFixture(int id)
@@ -61,6 +67,9 @@ namespace Ballers.API.Controllers
             if (!isAdmin && user.TeamId != fixture.HomeTeamId && user.TeamId != fixture.AwayTeamId)
                 return Forbid();
 
+            if (await FixturesLockedFor(user))
+                return Conflict("Fixtures are locked by the admin — editing is disabled.");
+
             if (fixture.IsEditLocked)
                 return Conflict("This fixture is locked — more than 2 weeks have passed since it was played.");
 
@@ -87,8 +96,14 @@ namespace Ballers.API.Controllers
         [HttpPut("{fixtureId}/referee")]
         public async Task<IActionResult> AssignReferee(int fixtureId, [FromBody] AssignRefereeRequest request)
         {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
+
             var fixture = await _fixtures.GetByIdAsync(fixtureId);
             if (fixture == null) return NotFound();
+
+            if (await FixturesLockedFor(user))
+                return Conflict("Fixtures are locked by the admin — editing is disabled.");
 
             if (fixture.IsEditLocked)
                 return Conflict("This fixture is locked — more than 2 weeks have passed since it was played.");
@@ -101,8 +116,14 @@ namespace Ballers.API.Controllers
         [HttpPut("{fixtureId}/schedule")]
         public async Task<IActionResult> UpdateSchedule(int fixtureId, UpdateFixtureScheduleRequest request)
         {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
+
             var fixture = await _fixtures.GetByIdAsync(fixtureId);
             if (fixture == null) return NotFound();
+
+            if (await FixturesLockedFor(user))
+                return Conflict("Fixtures are locked by the admin — editing is disabled.");
 
             if (fixture.IsEditLocked)
                 return Conflict("This fixture is locked — more than 2 weeks have passed since it was played.");
@@ -153,6 +174,9 @@ namespace Ballers.API.Controllers
             bool isAdmin = user.IsAdmin || user.IsReferee;
             if (!isAdmin && user.TeamId != fixture.HomeTeamId && user.TeamId != fixture.AwayTeamId)
                 return Forbid();
+
+            if (await FixturesLockedFor(user))
+                return Conflict("Fixtures are locked by the admin — editing is disabled.");
 
             if (fixture.IsEditLocked)
                 return Conflict("This fixture is locked — more than 2 weeks have passed since it was played.");
@@ -222,6 +246,10 @@ namespace Ballers.API.Controllers
                 return Forbid();
 
             if (!isAdmin && user.TeamId == null) return Forbid();
+
+            if (await FixturesLockedFor(user))
+                return Conflict("Fixtures are locked by the admin — editing is disabled.");
+
             int teamId = isAdmin ? fixture.HomeTeamId : user.TeamId!.Value;
             await _fixtures.SaveCaptaincyAsync(fixtureId, teamId, request.CaptainPlayerId, request.ViceCaptainPlayerId);
             return Ok();

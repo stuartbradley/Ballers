@@ -4,6 +4,7 @@
 @using Ballers.Services
 @using Ballers.Shared
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Forms
 @attribute [Authorize(Roles = "Admin")]
 
 @inject AdminService AdminService
@@ -123,6 +124,63 @@
                 }
             </div>
 
+            <!-- IMPORT FIXTURES — full width -->
+            <div class="admin-card season-card">
+                <div class="card-header">
+                    <span class="card-label blue-label">Import</span>
+                    <h3>Import Fixtures (CSV)</h3>
+                </div>
+
+                <p class="input-label" style="margin-bottom:12px;">
+                    Upload a CSV to create a whole season manually.
+                    <a href="/fixtures-template.csv" download>Download the template</a>.
+                    Columns: <code>MatchNumber, HomeTeam, AwayTeam, Kickoff, Location, Postcode, Referee</code>.
+                    Team and referee names must match existing records exactly. Kickoff format <code>yyyy-MM-dd HH:mm</code>.
+                </p>
+
+                <div class="form-group">
+                    <div style="display:flex;gap:12px;align-items:flex-end;">
+                        <div style="flex:1;min-width:0;">
+                            <label class="input-label">Season number</label>
+                            <input type="number" min="1" class="form-input" style="width:100%;" @bind="importSeasonNumber" />
+                        </div>
+                        <div style="flex:1;min-width:0;">
+                            <label class="input-label">Season start date</label>
+                            <InputDate @bind-Value="importStartDate" class="form-input date-input" style="width:100%;" />
+                        </div>
+                    </div>
+
+                    <label class="team-check-label" style="margin:12px 0;">
+                        <input type="checkbox" checked="@importMakeActive"
+                               @onchange="(e) => importMakeActive = (bool)e.Value!" />
+                        <span>Make this the active season</span>
+                    </label>
+
+                    <InputFile id="csvInput" OnChange="OnImportFileSelected" accept=".csv" style="display:none" />
+                    <label for="csvInput" class="file-pick-btn">
+                        @(importFile?.Name ?? "Choose CSV file")
+                    </label>
+                </div>
+
+                <button class="primary-btn" @onclick="ImportFixtures" disabled="@(importFile == null || importing)">
+                    @(importing ? "Importing…" : "Import Fixtures")
+                </button>
+
+                @if (!string.IsNullOrEmpty(importMessage))
+                {
+                    <div class="@(importIsError ? "error-msg" : "success-msg")">@importMessage</div>
+                }
+                @if (importErrors.Count > 0)
+                {
+                    <ul class="error-msg" style="margin-top:8px;">
+                        @foreach (var err in importErrors)
+                        {
+                            <li>@err</li>
+                        }
+                    </ul>
+                }
+            </div>
+
             <!-- SEASONS — full width -->
             <div class="admin-card season-card">
                 <div class="card-header">
@@ -203,6 +261,19 @@
                             <span>@(playersLocked ? "Locked" : "Open")</span>
                         </label>
                     </div>
+
+                    <div class="season-row">
+                        <div class="season-info">
+                            <span class="season-name">Lock all fixtures for editing</span>
+                            <span class="season-dates">When locked, managers and referees can no longer submit stats or edit fixtures. The Submit Stats button is removed. Admins can still edit.</span>
+                        </div>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                            <input type="checkbox"
+                                   checked="@fixturesLocked"
+                                   @onchange="(e) => ToggleFixturesLocked((bool)e.Value!)" />
+                            <span>@(fixturesLocked ? "Locked" : "Open")</span>
+                        </label>
+                    </div>
                 </div>
 
                 @if (!string.IsNullOrEmpty(playersLockMessage))
@@ -259,8 +330,55 @@
     private bool knockoutIsError;
 
     private bool playersLocked;
+    private bool fixturesLocked;
     private string playersLockMessage = "";
     private bool playersLockIsError;
+
+    private int importSeasonNumber = 1;
+    private DateTime importStartDate = DateTime.Today;
+    private bool importMakeActive;
+    private IBrowserFile? importFile;
+    private bool importing;
+    private string importMessage = "";
+    private bool importIsError;
+    private List<string> importErrors = new();
+
+    private void OnImportFileSelected(InputFileChangeEventArgs e) => importFile = e.File;
+
+    async Task ImportFixtures()
+    {
+        importMessage = "";
+        importErrors = new();
+        if (importFile == null) return;
+
+        importing = true;
+        try
+        {
+            var (created, errors) = await AdminService.ImportFixtures(importFile, importSeasonNumber, importStartDate, importMakeActive);
+            if (errors.Count > 0)
+            {
+                importIsError = true;
+                importMessage = "Import failed — fix these rows and try again:";
+                importErrors = errors;
+            }
+            else
+            {
+                importIsError = false;
+                importMessage = $"Imported {created} fixtures into Season {importSeasonNumber}.";
+                importFile = null;
+                seasons = await AdminService.GetSeasons();
+            }
+        }
+        catch (Exception ex)
+        {
+            importIsError = true;
+            importMessage = ex.Message;
+        }
+        finally
+        {
+            importing = false;
+        }
+    }
 
     private List<TeamDto> teams = new();
     private List<SeasonDto> seasons = new();
@@ -290,6 +408,7 @@
         seasons = seasonsTask.Result;
         notifSettings = notifTask.Result;
         playersLocked = leagueTask.Result.PlayersLocked;
+        fixturesLocked = leagueTask.Result.FixturesLocked;
     }
 
     async Task TogglePlayersLocked(bool locked)
@@ -303,6 +422,25 @@
             playersLockMessage = locked
                 ? "Player registration locked."
                 : "Player registration open.";
+        }
+        catch (Exception ex)
+        {
+            playersLockIsError = true;
+            playersLockMessage = ex.Message;
+        }
+    }
+
+    async Task ToggleFixturesLocked(bool locked)
+    {
+        playersLockMessage = "";
+        try
+        {
+            await LeagueSettingsSvc.SetFixturesLocked(locked);
+            fixturesLocked = locked;
+            playersLockIsError = false;
+            playersLockMessage = locked
+                ? "All fixtures locked for editing."
+                : "Fixtures unlocked for editing.";
         }
         catch (Exception ex)
         {

@@ -15,6 +15,7 @@
     position: relative;
     width: 100%;
     max-width: 640px;
+    container-type: inline-size;
     background:
         radial-gradient(circle at 50% 0%, #F8F0DC, var(--paper) 60%),
         var(--paper);
@@ -42,7 +43,7 @@
 }
 .vt-poster > *:not(.vt-halftone):not(.vt-frame) { position: relative; z-index: 1; }
 
-.vt-logo { display: block; height: 248px; width: auto; max-width: 100%; margin: 8px auto 12px; }
+.vt-logo { display: block; height: 220px; width: auto; max-width: 100%; margin: 8px auto 12px; }
 
 /* ── Masthead ── */
 .vt-head {
@@ -180,7 +181,8 @@
     text-transform: uppercase; color: var(--ink);
 }
 
-@media (max-width: 560px) {
+@container (max-width: 560px) {
+    .vt-logo { height: 120px; }
     .vt-league { font-size: 1.05rem; letter-spacing: 0.1em; }
     .vt-badge { width: 78px; height: 78px; }
     .vt-name { font-size: clamp(1.2rem, 7vw, 1.7rem); }

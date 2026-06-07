@@ -12,11 +12,13 @@ namespace Ballers.API.Controllers
     {
         private readonly IFairplayService _fairplay;
         private readonly IFixtureService _fixtures;
+        private readonly ILeagueSettingsService _leagueSettings;
 
-        public FairplayController(IFairplayService fairplay, IFixtureService fixtures)
+        public FairplayController(IFairplayService fairplay, IFixtureService fixtures, ILeagueSettingsService leagueSettings)
         {
             _fairplay = fairplay;
             _fixtures = fixtures;
+            _leagueSettings = leagueSettings;
         }
 
         [HttpGet("{fixtureId:int}")]
@@ -31,6 +33,9 @@ namespace Ballers.API.Controllers
         {
             var fixture = await _fixtures.GetByIdAsync(fixtureId);
             if (fixture == null) return NotFound();
+
+            if (!User.IsInRole("Admin") && await _leagueSettings.AreFixturesLockedAsync())
+                return Conflict("Fixtures are locked by the admin — editing is disabled.");
 
             if (fixture.IsEditLocked)
                 return Conflict("This fixture is locked — more than 2 weeks have passed since it was played.");

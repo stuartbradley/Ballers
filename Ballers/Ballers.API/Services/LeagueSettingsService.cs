@@ -9,6 +9,8 @@ namespace Ballers.API.Services
     {
         Task<LeagueSettingsDto> GetAsync();
         Task SetPlayersLockedAsync(bool locked);
+        Task SetFixturesLockedAsync(bool locked);
+        Task<bool> AreFixturesLockedAsync();
     }
 
     public class LeagueSettingsService : ILeagueSettingsService
@@ -32,7 +34,11 @@ namespace Ballers.API.Services
         public async Task<LeagueSettingsDto> GetAsync()
         {
             var setting = await GetOrCreateAsync();
-            return new LeagueSettingsDto { PlayersLocked = setting.PlayersLocked };
+            return new LeagueSettingsDto
+            {
+                PlayersLocked = setting.PlayersLocked,
+                FixturesLocked = setting.FixturesLocked
+            };
         }
 
         public async Task SetPlayersLockedAsync(bool locked)
@@ -40,6 +46,19 @@ namespace Ballers.API.Services
             var setting = await GetOrCreateAsync();
             setting.PlayersLocked = locked;
             await _db.SaveChangesAsync();
+        }
+
+        public async Task SetFixturesLockedAsync(bool locked)
+        {
+            var setting = await GetOrCreateAsync();
+            setting.FixturesLocked = locked;
+            await _db.SaveChangesAsync();
+        }
+
+        public async Task<bool> AreFixturesLockedAsync()
+        {
+            var setting = await _db.LeagueSettings.FirstOrDefaultAsync();
+            return setting?.FixturesLocked ?? false;
         }
     }
 }

@@ -48,28 +48,28 @@
         <div id="poster-capture" class="ts-capture">
             @if (variant == 1)
             {
-                <TeamSheetClassic Fixture="fixture" HomeBadge="homeBadge" AwayBadge="awayBadge"
-                                  SheetTeamName="sheetTeamName" Squad="squad" />
+                <TeamSheetClassic Fixture="fixture" HomeBadge="@homeBadge" AwayBadge="@awayBadge"
+                                  SheetTeamName="@sheetTeamName" Squad="squad" />
             }
             else if (variant == 2)
             {
-                <TeamSheetSplit Fixture="fixture" HomeBadge="homeBadge" AwayBadge="awayBadge"
-                                SheetTeamName="sheetTeamName" Squad="squad" />
+                <TeamSheetSplit Fixture="fixture" HomeBadge="@homeBadge" AwayBadge="@awayBadge"
+                                SheetTeamName="@sheetTeamName" Squad="squad" />
             }
             else if (variant == 3)
             {
-                <TeamSheetVintage Fixture="fixture" HomeBadge="homeBadge" AwayBadge="awayBadge"
-                                  SheetTeamName="sheetTeamName" Squad="squad" />
+                <TeamSheetVintage Fixture="fixture" HomeBadge="@homeBadge" AwayBadge="@awayBadge"
+                                  SheetTeamName="@sheetTeamName" Squad="squad" />
             }
             else if (variant == 4)
             {
-                <TeamSheetGraffiti Fixture="fixture" HomeBadge="homeBadge" AwayBadge="awayBadge"
-                                   SheetTeamName="sheetTeamName" Squad="squad" />
+                <TeamSheetGraffiti Fixture="fixture" HomeBadge="@homeBadge" AwayBadge="@awayBadge"
+                                   SheetTeamName="@sheetTeamName" Squad="squad" />
             }
             else
             {
-                <TeamSheetCommunity Fixture="fixture" HomeBadge="homeBadge" AwayBadge="awayBadge"
-                                    SheetTeamName="sheetTeamName" Squad="squad" />
+                <TeamSheetCommunity Fixture="fixture" HomeBadge="@homeBadge" AwayBadge="@awayBadge"
+                                    SheetTeamName="@sheetTeamName" Squad="squad" />
             }
         </div>
     }

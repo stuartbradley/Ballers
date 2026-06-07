@@ -27,5 +27,13 @@ namespace Ballers.API.Controllers
             await _settings.SetPlayersLockedAsync(locked);
             return Ok();
         }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("fixtures-locked")]
+        public async Task<IActionResult> SetFixturesLocked([FromBody] bool locked)
+        {
+            await _settings.SetFixturesLockedAsync(locked);
+            return Ok();
+        }
     }
 }
