@@ -50,6 +50,14 @@ namespace Ballers.API.Controllers
             return Ok();
         }
 
+        [Authorize(Roles = "Admin")]
+        [HttpPost("team/{teamId}")]
+        public async Task<IActionResult> AddPlayerForTeam(int teamId, CreatePlayerRequest request)
+        {
+            await _players.AddPlayerAsync(teamId, request);
+            return Ok();
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> RemovePlayer(int id)
         {

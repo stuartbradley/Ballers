@@ -8,6 +8,7 @@
 
 @inject TeamService TeamSvc
 @inject PlayerService PlayerSvc
+@inject HttpClient Http
 @inject NavigationManager Nav
 
 <PageTitle>Squad Management — Admin</PageTitle>
@@ -41,7 +42,7 @@
                         <div class="team-tile-image">
                             @if (!string.IsNullOrEmpty(team.ProfileImageUrl))
                             {
-                                <img src="@team.ProfileImageUrl" alt="@team.Name" />
+                                <img src="@Abs(team.ProfileImageUrl)" alt="@team.Name" />
                             }
                             else
                             {
@@ -56,6 +57,27 @@
         else
         {
             <!-- Players for selected team -->
+
+            <div class="admin-add-card">
+                <p class="admin-add-label">Add Player</p>
+                <form @onsubmit="AddPlayer" @onsubmit:preventDefault>
+                    <div class="position-toggle">
+                        <button type="button" class="pos-btn @(newPosition == "GK"  ? "active GK"  : "")" @onclick='() => newPosition = "GK"'>GK</button>
+                        <button type="button" class="pos-btn @(newPosition == "DEF" ? "active DEF" : "")" @onclick='() => newPosition = "DEF"'>DEF</button>
+                        <button type="button" class="pos-btn @(newPosition == "MID" ? "active MID" : "")" @onclick='() => newPosition = "MID"'>MID</button>
+                        <button type="button" class="pos-btn @(newPosition == "FWD" ? "active FWD" : "")" @onclick='() => newPosition = "FWD"'>FWD</button>
+                    </div>
+                    <div class="add-player-row">
+                        <input class="form-input name-input" placeholder="Player name" @bind="newName" autocomplete="off" />
+                        <input class="form-input number-input" type="number" placeholder="No." min="1" @bind="newNumber" />
+                        <button class="add-btn" type="submit">Add Player</button>
+                    </div>
+                    @if (!string.IsNullOrEmpty(formError))
+                    {
+                        <div class="form-error">@formError</div>
+                    }
+                </form>
+            </div>
 
             @if (_editPlayer != null)
             {
@@ -143,6 +165,35 @@
     private int _editNumber;
     private string _editPosition = "MID";
     private string _editError = "";
+
+    private string newName = "";
+    private int newNumber;
+    private string newPosition = "MID";
+    private string formError = "";
+
+    private string? Abs(string? url)
+        => string.IsNullOrEmpty(url) ? null : Http.BaseAddress!.ToString().TrimEnd('/') + url;
+
+    private async Task AddPlayer()
+    {
+        formError = "";
+        if (!TeamId.HasValue) return;
+        if (string.IsNullOrWhiteSpace(newName)) { formError = "Please enter a player name."; return; }
+        if (newNumber <= 0) { formError = "Please enter a valid squad number."; return; }
+
+        try
+        {
+            await PlayerSvc.AddPlayerForTeam(TeamId.Value, newName, newNumber, newPosition);
+            newName = "";
+            newNumber = 0;
+            newPosition = "MID";
+            await ReloadSquad();
+        }
+        catch
+        {
+            formError = "Failed to add player. Please try again.";
+        }
+    }
 
     private IEnumerable<IGrouping<string, PlayerCardDto>> GroupedPlayers =>
         players.GroupBy(p => p.Position)

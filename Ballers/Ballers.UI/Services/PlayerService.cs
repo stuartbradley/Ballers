@@ -39,6 +39,14 @@ namespace Ballers.Services
             response.EnsureSuccessStatusCode();
         }
 
+        public async Task AddPlayerForTeam(int teamId, string name, int number, string position)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Post, $"api/players/team/{teamId}");
+            request.Content = JsonContent.Create(new { name, number, position });
+            var response = await _httpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+        }
+
         public async Task RemovePlayer(int id)
         {
             var request = new HttpRequestMessage(

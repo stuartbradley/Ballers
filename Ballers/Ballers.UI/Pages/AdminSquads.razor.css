@@ -5,7 +5,7 @@
 .admin-squads-page {
     background: #07101E;
     color: white;
-    min-height: 80vh;
+    min-height: 100vh;
     padding-bottom: 80px;
 }
 
@@ -214,6 +214,23 @@
     width: 36px;
     margin-top: 8px;
     background: var(--ballers-accent);
+}
+
+.admin-add-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 20px 22px;
+    margin-bottom: 28px;
+}
+.admin-add-label {
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ballers-accent);
+    margin: 0 0 14px;
 }
 
 .position-toggle {
