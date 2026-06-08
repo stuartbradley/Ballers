@@ -8,9 +8,28 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <InvariantGlobalization>true</InvariantGlobalization>
     <BlazorCacheBootResources>false</BlazorCacheBootResources>
-    <Version>0.1.0</Version>
-    <InformationalVersion>0.1.0-dev</InformationalVersion>
+    <!-- Fallback when git/tags aren't available at build time -->
+    <Version>1.0.1</Version>
+    <InformationalVersion>1.0.1</InformationalVersion>
   </PropertyGroup>
+
+  <!-- Derive the version from the latest git tag (e.g. v1.0.2 -> 1.0.2).
+       Runs before the assembly attributes are generated; falls back to the
+       hardcoded version above if git isn't present (e.g. building from a
+       source archive on the server). -->
+  <Target Name="SetVersionFromGitTag" BeforeTargets="GetAssemblyVersion;GenerateAssemblyInfo;BeforeBuild">
+    <Exec Command="git describe --tags --abbrev=0"
+          ConsoleToMSBuild="true" ContinueOnError="true" StandardOutputImportance="low">
+      <Output TaskParameter="ConsoleOutput" PropertyName="_GitTag" />
+    </Exec>
+    <PropertyGroup Condition="'$(_GitTag)' != ''">
+      <_TagVersion>$(_GitTag.Trim().TrimStart('v'))</_TagVersion>
+      <Version>$([System.Text.RegularExpressions.Regex]::Match($(_TagVersion), '^[0-9]+(\.[0-9]+){0,3}').Value)</Version>
+      <AssemblyVersion>$(Version)</AssemblyVersion>
+      <FileVersion>$(Version)</FileVersion>
+      <InformationalVersion>$(_TagVersion)</InformationalVersion>
+    </PropertyGroup>
+  </Target>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="8.0.24" />
