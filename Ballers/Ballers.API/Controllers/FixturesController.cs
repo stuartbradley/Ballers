@@ -189,6 +189,7 @@ namespace Ballers.API.Controllers
         [HttpGet("current-week")]
         public async Task<IActionResult> GetCurrentWeek()
         {
+            if (await PublicFixturesHidden()) return NotFound();
             var week = await _fixtures.GetCurrentWeekAsync();
             return week == null ? NotFound() : Ok(week);
         }
@@ -196,7 +197,19 @@ namespace Ballers.API.Controllers
         [AllowAnonymous]
         [HttpGet("weeks")]
         public async Task<IActionResult> GetFixtureWeeks([FromQuery] int? seasonId)
-            => Ok(await _fixtures.GetAllWeeksAsync(seasonId));
+        {
+            if (await PublicFixturesHidden()) return Ok(new List<FixtureWeekDto>());
+            return Ok(await _fixtures.GetAllWeeksAsync(seasonId));
+        }
+
+        // Fixtures are hidden from the public schedule unless the viewer is an
+        // admin/referee (so the admin can prepare a season before revealing it).
+        private async Task<bool> PublicFixturesHidden()
+        {
+            if (!await _leagueSettings.AreFixturesHiddenAsync()) return false;
+            var user = await _userManager.GetUserAsync(User);
+            return !(user?.IsAdmin ?? false) && !(user?.IsReferee ?? false);
+        }
 
         [HttpGet("{fixtureId}/stats")]
         public async Task<IActionResult> GetFixtureStats(int fixtureId)
@@ -259,6 +272,7 @@ namespace Ballers.API.Controllers
         [HttpGet("next-fixtures")]
         public async Task<IActionResult> GetNextFixtures()
         {
+            if (await PublicFixturesHidden()) return Ok(new List<FixtureMatchDto>());
             var week = await _fixtures.GetCurrentWeekAsync();
             return Ok(week?.Matches ?? new List<FixtureMatchDto>());
         }

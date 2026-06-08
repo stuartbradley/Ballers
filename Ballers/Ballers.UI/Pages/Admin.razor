@@ -274,6 +274,19 @@
                             <span>@(fixturesLocked ? "Locked" : "Open")</span>
                         </label>
                     </div>
+
+                    <div class="season-row">
+                        <div class="season-info">
+                            <span class="season-name">Hide fixtures from the public</span>
+                            <span class="season-dates">When hidden, the public Fixtures page and home page show no fixtures — so you can upload a season and reveal it when ready. Admins/referees still see them.</span>
+                        </div>
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                            <input type="checkbox"
+                                   checked="@fixturesHidden"
+                                   @onchange="(e) => ToggleFixturesHidden((bool)e.Value!)" />
+                            <span>@(fixturesHidden ? "Hidden" : "Visible")</span>
+                        </label>
+                    </div>
                 </div>
 
                 @if (!string.IsNullOrEmpty(playersLockMessage))
@@ -331,6 +344,7 @@
 
     private bool playersLocked;
     private bool fixturesLocked;
+    private bool fixturesHidden;
     private string playersLockMessage = "";
     private bool playersLockIsError;
 
@@ -409,6 +423,7 @@
         notifSettings = notifTask.Result;
         playersLocked = leagueTask.Result.PlayersLocked;
         fixturesLocked = leagueTask.Result.FixturesLocked;
+        fixturesHidden = leagueTask.Result.FixturesHidden;
     }
 
     async Task TogglePlayersLocked(bool locked)
@@ -441,6 +456,25 @@
             playersLockMessage = locked
                 ? "All fixtures locked for editing."
                 : "Fixtures unlocked for editing.";
+        }
+        catch (Exception ex)
+        {
+            playersLockIsError = true;
+            playersLockMessage = ex.Message;
+        }
+    }
+
+    async Task ToggleFixturesHidden(bool hidden)
+    {
+        playersLockMessage = "";
+        try
+        {
+            await LeagueSettingsSvc.SetFixturesHidden(hidden);
+            fixturesHidden = hidden;
+            playersLockIsError = false;
+            playersLockMessage = hidden
+                ? "Fixtures hidden from the public."
+                : "Fixtures visible to the public.";
         }
         catch (Exception ex)
         {

@@ -10,5 +10,8 @@ namespace Ballers.API.Models
 
         // When true, all fixtures are locked for editing (no stats/squad/schedule changes).
         public bool FixturesLocked { get; set; }
+
+        // When true, fixtures are hidden from the public site (schedule pages show nothing).
+        public bool FixturesHidden { get; set; }
     }
 }

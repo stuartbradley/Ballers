@@ -35,5 +35,13 @@ namespace Ballers.API.Controllers
             await _settings.SetFixturesLockedAsync(locked);
             return Ok();
         }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("fixtures-hidden")]
+        public async Task<IActionResult> SetFixturesHidden([FromBody] bool hidden)
+        {
+            await _settings.SetFixturesHiddenAsync(hidden);
+            return Ok();
+        }
     }
 }
