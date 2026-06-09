@@ -203,7 +203,7 @@
                         </div>
                     }
 
-                    @if (isAdmin && !fixture.IsKnockout)
+                    @if (!fixture.IsKnockout)
                     {
                         <div class="schedule-section">
                             <h3>Schedule</h3>
@@ -267,7 +267,10 @@
                                 }
                             }
                         </div>
+                    }
 
+                    @if (isAdmin && !fixture.IsKnockout)
+                    {
                         <div class="fairplay-section">
                             <h3>Fairplay Ratings</h3>
                             <div class="fairplay-editor">
@@ -646,18 +649,20 @@
         captainPlayerId = (isAdmin || isUserHome) ? fixture.HomeCaptainId : fixture.AwayCaptainId;
         vicePlayerId    = (isAdmin || isUserHome) ? fixture.HomeViceCaptainId : fixture.AwayViceCaptainId;
 
+        // Schedule + referee are editable by managers of the fixture too, so load
+        // them for everyone who can reach this page.
+        scheduleLocation = fixture.Location ?? "";
+        schedulePostcode = fixture.Postcode;
+        scheduleKickoff = fixture.Kickoff ?? DateTime.Now;
+        allReferees = await RefereeService.GetAll();
+        selectedRefereeId = fixture.RefereeId;
+
         if (isAdmin)
         {
-            scheduleLocation = fixture.Location ?? "";
-            schedulePostcode = fixture.Postcode;
-            scheduleKickoff = fixture.Kickoff ?? DateTime.Now;
-
+            // Fairplay ratings stay admin/referee only.
             var fairplay = await FairplayService.GetRatings(fixture.Id);
             fairplayHomeRating = fairplay?.HomeRating ?? 5;
             fairplayAwayRating = fairplay?.AwayRating ?? 5;
-
-            allReferees = await RefereeService.GetAll();
-            selectedRefereeId = fixture.RefereeId;
         }
     }
 

@@ -92,7 +92,7 @@ namespace Ballers.API.Controllers
         public async Task<IActionResult> GetTable(int seasonId)
             => Ok(await _fixtures.GetTableAsync(seasonId));
 
-        [Authorize(Roles = "Admin,Referee")]
+        [Authorize]
         [HttpPut("{fixtureId}/referee")]
         public async Task<IActionResult> AssignReferee(int fixtureId, [FromBody] AssignRefereeRequest request)
         {
@@ -101,6 +101,10 @@ namespace Ballers.API.Controllers
 
             var fixture = await _fixtures.GetByIdAsync(fixtureId);
             if (fixture == null) return NotFound();
+
+            // Admins/referees, or a manager of either team in this fixture, may edit.
+            if (!user.IsAdmin && !user.IsReferee && user.TeamId != fixture.HomeTeamId && user.TeamId != fixture.AwayTeamId)
+                return Forbid();
 
             if (await FixturesLockedFor(user))
                 return Conflict("Fixtures are locked by the admin — editing is disabled.");
@@ -112,7 +116,7 @@ namespace Ballers.API.Controllers
             return Ok();
         }
 
-        [Authorize(Roles = "Admin,Referee")]
+        [Authorize]
         [HttpPut("{fixtureId}/schedule")]
         public async Task<IActionResult> UpdateSchedule(int fixtureId, UpdateFixtureScheduleRequest request)
         {
@@ -121,6 +125,10 @@ namespace Ballers.API.Controllers
 
             var fixture = await _fixtures.GetByIdAsync(fixtureId);
             if (fixture == null) return NotFound();
+
+            // Admins/referees, or a manager of either team in this fixture, may edit.
+            if (!user.IsAdmin && !user.IsReferee && user.TeamId != fixture.HomeTeamId && user.TeamId != fixture.AwayTeamId)
+                return Forbid();
 
             if (await FixturesLockedFor(user))
                 return Conflict("Fixtures are locked by the admin — editing is disabled.");
