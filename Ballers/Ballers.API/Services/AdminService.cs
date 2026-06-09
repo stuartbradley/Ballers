@@ -9,6 +9,7 @@ namespace Ballers.API.Services
     {
         Task CreateTeamAsync(string teamName, string email, string password);
         Task CreateRefereeAsync(string email, string password);
+        Task DeleteSeasonAsync(int seasonId);
     }
 
     public class AdminService : IAdminService
@@ -67,6 +68,31 @@ namespace Ballers.API.Services
                     string.Join("; ", result.Errors.Select(e => e.Description)));
 
             await _userManager.AddToRoleAsync(user, "Referee");
+        }
+
+        public async Task DeleteSeasonAsync(int seasonId)
+        {
+            var season = await _db.Seasons.FirstOrDefaultAsync(s => s.Id == seasonId);
+            if (season == null)
+                throw new KeyNotFoundException("Season not found.");
+
+            using var tx = await _db.Database.BeginTransactionAsync();
+
+            // Knockout fixtures reference fixtures via a NoAction FK, so remove them
+            // first. The remaining fixture children (stats, squads, penalties, fairplay)
+            // are cascade-deleted when the fixtures go.
+            var knockouts = await _db.KnockoutFixtures.Where(k => k.SeasonId == seasonId).ToListAsync();
+            _db.KnockoutFixtures.RemoveRange(knockouts);
+            await _db.SaveChangesAsync();
+
+            var fixtures = await _db.Fixtures.Where(f => f.SeasonId == seasonId).ToListAsync();
+            _db.Fixtures.RemoveRange(fixtures);
+            await _db.SaveChangesAsync();
+
+            _db.Seasons.Remove(season);
+            await _db.SaveChangesAsync();
+
+            await tx.CommitAsync();
         }
     }
 }

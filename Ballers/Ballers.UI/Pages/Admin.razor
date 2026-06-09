@@ -11,6 +11,7 @@
 @inject NotificationService NotificationSvc
 @inject KnockoutService KnockoutSvc
 @inject LeagueSettingsService LeagueSettingsSvc
+@inject IJSRuntime JS
 
 <PageTitle>Admin</PageTitle>
 
@@ -225,6 +226,9 @@
                                     {
                                         <span class="season-badge" style="background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.25);color:#60a5fa;">Knockout</span>
                                     }
+                                    <button class="activate-btn" style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.4);color:#fca5a5;" @onclick="() => DeleteSeason(s.Id, s.SeasonNumber)">
+                                        Delete
+                                    </button>
                                 </div>
                             </div>
                         }
@@ -562,6 +566,26 @@
         {
             await AdminService.ActivateSeason(id);
             seasonMessage = "Season activated.";
+            seasonIsError = false;
+            seasons = await AdminService.GetSeasons();
+        }
+        catch (Exception ex)
+        {
+            seasonMessage = ex.Message;
+            seasonIsError = true;
+        }
+    }
+
+    async Task DeleteSeason(int id, int seasonNumber)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm",
+            $"Delete Season {seasonNumber}? This permanently removes all its fixtures, stats and results. This cannot be undone.");
+        if (!confirmed) return;
+
+        try
+        {
+            await AdminService.DeleteSeason(id);
+            seasonMessage = $"Season {seasonNumber} deleted.";
             seasonIsError = false;
             seasons = await AdminService.GetSeasons();
         }

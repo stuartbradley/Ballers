@@ -135,5 +135,17 @@
                 throw new Exception(body.Trim('"'));
             }
         }
+
+        public async Task DeleteSeason(int id)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Delete, $"api/admin/seasons/{id}");
+            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+            var response = await _http.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                throw new Exception(body.Trim('"'));
+            }
+        }
     }
 }

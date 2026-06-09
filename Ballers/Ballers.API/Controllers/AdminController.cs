@@ -87,6 +87,17 @@ namespace Ballers.API.Controllers
             catch (InvalidOperationException ex) { return Conflict(ex.Message); }
         }
 
+        [HttpDelete("seasons/{id}")]
+        public async Task<IActionResult> DeleteSeason(int id)
+        {
+            try
+            {
+                await _admin.DeleteSeasonAsync(id);
+                return Ok();
+            }
+            catch (KeyNotFoundException ex) { return NotFound(ex.Message); }
+        }
+
         [HttpPost("seasons/{id}/activate")]
         public async Task<IActionResult> ActivateSeason(int id)
         {
