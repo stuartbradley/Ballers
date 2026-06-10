@@ -102,8 +102,8 @@ namespace Ballers.API.Controllers
             var fixture = await _fixtures.GetByIdAsync(fixtureId);
             if (fixture == null) return NotFound();
 
-            // Admins/referees, or a manager of either team in this fixture, may edit.
-            if (!user.IsAdmin && !user.IsReferee && user.TeamId != fixture.HomeTeamId && user.TeamId != fixture.AwayTeamId)
+            // Admins/referees, or the HOME team's manager, may edit the schedule/referee.
+            if (!user.IsAdmin && !user.IsReferee && user.TeamId != fixture.HomeTeamId)
                 return Forbid();
 
             if (await FixturesLockedFor(user))
@@ -126,8 +126,8 @@ namespace Ballers.API.Controllers
             var fixture = await _fixtures.GetByIdAsync(fixtureId);
             if (fixture == null) return NotFound();
 
-            // Admins/referees, or a manager of either team in this fixture, may edit.
-            if (!user.IsAdmin && !user.IsReferee && user.TeamId != fixture.HomeTeamId && user.TeamId != fixture.AwayTeamId)
+            // Admins/referees, or the HOME team's manager, may edit the schedule/referee.
+            if (!user.IsAdmin && !user.IsReferee && user.TeamId != fixture.HomeTeamId)
                 return Forbid();
 
             if (await FixturesLockedFor(user))

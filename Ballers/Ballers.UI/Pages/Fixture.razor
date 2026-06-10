@@ -203,7 +203,7 @@
                         </div>
                     }
 
-                    @if (!fixture.IsKnockout)
+                    @if ((isAdmin || isUserHome) && !fixture.IsKnockout)
                     {
                         <div class="schedule-section">
                             <h3>Schedule</h3>
