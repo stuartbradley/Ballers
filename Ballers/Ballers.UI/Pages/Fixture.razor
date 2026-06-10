@@ -217,8 +217,12 @@
                                     <input type="text" class="stat-input schedule-input" placeholder="e.g. M1 1AE" @bind="schedulePostcode" disabled="@fixture.IsEditLocked" />
                                 </div>
                                 <div class="schedule-field">
-                                    <label>Kickoff</label>
-                                    <input type="datetime-local" class="stat-input schedule-input" @bind="scheduleKickoff" @bind:format="yyyy-MM-ddTHH:mm" disabled="@fixture.IsEditLocked" />
+                                    <label>Date</label>
+                                    <input type="date" class="stat-input schedule-input" @bind="scheduleDate" disabled="@fixture.IsEditLocked" />
+                                </div>
+                                <div class="schedule-field">
+                                    <label>Time</label>
+                                    <input type="time" class="stat-input schedule-input" @bind="scheduleTime" disabled="@fixture.IsEditLocked" />
                                 </div>
                                 <div class="schedule-actions">
                                     <button class="primary-btn" @onclick="SaveSchedule" disabled="@(fixture.IsEditLocked || editingLocked)">Save Schedule</button>
@@ -520,7 +524,8 @@
 
     private string scheduleLocation = "";
     private string? schedulePostcode;
-    private DateTime? scheduleKickoff;
+    private DateOnly? scheduleDate;
+    private TimeOnly? scheduleTime;
 
     private List<RefereeDto> allReferees = new();
     private int? selectedRefereeId;
@@ -656,7 +661,8 @@
         // them for everyone who can reach this page.
         scheduleLocation = fixture.Location ?? "";
         schedulePostcode = fixture.Postcode;
-        scheduleKickoff = fixture.Kickoff;
+        scheduleDate = fixture.Kickoff.HasValue ? DateOnly.FromDateTime(fixture.Kickoff.Value) : null;
+        scheduleTime = fixture.Kickoff.HasValue ? TimeOnly.FromDateTime(fixture.Kickoff.Value) : null;
         allReferees = await RefereeService.GetAll();
         selectedRefereeId = fixture.RefereeId;
 
@@ -687,7 +693,10 @@
 
     async Task SaveSchedule()
     {
-        await FixtureService.UpdateFixtureSchedule(fixture!.Id, scheduleLocation, schedulePostcode, scheduleKickoff);
+        DateTime? kickoff = scheduleDate.HasValue
+            ? scheduleDate.Value.ToDateTime(scheduleTime ?? TimeOnly.MinValue)
+            : null;
+        await FixtureService.UpdateFixtureSchedule(fixture!.Id, scheduleLocation, schedulePostcode, kickoff);
         fixture = await FixtureService.GetFixture(fixture!.Id);
         await ShowToast("Schedule saved.");
     }
@@ -696,7 +705,8 @@
     {
         scheduleLocation = "";
         schedulePostcode = null;
-        scheduleKickoff = null;
+        scheduleDate = null;
+        scheduleTime = null;
         await FixtureService.UpdateFixtureSchedule(fixture!.Id, null, null, null);
         fixture = await FixtureService.GetFixture(fixture!.Id);
         await ShowToast("Schedule cleared.");

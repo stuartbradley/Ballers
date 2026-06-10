@@ -7,17 +7,10 @@
 else
 {
     <div class="totw-lineup">
-        @if (gk != null)
-        {
-            <div class="totw-row totw-row-gk">
-                <TotwCard Player="gk" />
-            </div>
-        }
-
-        @if (outfield.Count > 0)
+        @if (players.Count > 0)
         {
             <div class="totw-row totw-row-outfield">
-                @foreach (var p in outfield)
+                @foreach (var p in players)
                 {
                     <TotwCard Player="p" />
                 }
@@ -29,12 +22,10 @@ else
 @code {
     [Parameter] public TeamOfTheWeekDto? Totw { get; set; }
 
-    private TotwPlayerDto? gk;
-    private List<TotwPlayerDto> outfield = new();
+    private List<TotwPlayerDto> players = new();
 
     protected override void OnParametersSet()
     {
-        gk = Totw?.Players.FirstOrDefault(p => p.IsGoalkeeper);
-        outfield = Totw?.Players.Where(p => !p.IsGoalkeeper).ToList() ?? new();
+        players = Totw?.Players ?? new();
     }
 }

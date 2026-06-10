@@ -2,7 +2,7 @@
     display: flex;
     flex-direction: column;
     gap: 32px;
-    padding: 40px 20px;
+    padding: 40px 16px;
     background:
         radial-gradient(ellipse at center top, rgba(250, 204, 21, 0.08), transparent 60%),
         linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 100%);
@@ -26,20 +26,21 @@
 }
 
 .totw-row {
-    display: grid;
-    gap: 24px;
-    justify-items: center;
     position: relative;
     z-index: 1;
 }
 
-.totw-row-gk {
-    grid-template-columns: minmax(180px, 240px);
-    justify-content: center;
-}
-
+/* Centred wrap so any count stays balanced. Cards are ~240px (set in TotwCard);
+   width capped so four fit per row → 8 lands as a clean 2×4, 10 as 4×4×2. */
 .totw-row-outfield {
-    grid-template-columns: repeat(5, 1fr);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: stretch;
+    gap: 28px 16px;
+    width: 100%;
+    max-width: 1040px;
+    margin: 0 auto;
 }
 
 .totw-empty {
@@ -49,16 +50,12 @@
     font-style: italic;
 }
 
-@media (max-width: 900px) {
-    .totw-row-outfield {
-        grid-template-columns: repeat(3, 1fr);
-    }
+/* Three per row on tablets */
+@media (max-width: 1040px) {
+    .totw-row-outfield { max-width: 780px; }
 }
 
 @media (max-width: 540px) {
-    .totw-row-outfield {
-        grid-template-columns: repeat(2, 1fr);
-    }
     .totw-lineup { padding: 24px 12px; }
-    .totw-row { gap: 16px; }
+    .totw-row-outfield { gap: 16px; }
 }

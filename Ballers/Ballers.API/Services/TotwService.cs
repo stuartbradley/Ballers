@@ -161,7 +161,6 @@ namespace Ballers.API.Services
 
             var fixtureIds = fixtures.Select(f => f.Id).ToList();
             var weekFinalDate = fixtures.Max(f => f.WindowEnd);
-            var weekComplete = fixtures.All(f => f.IsPlayed) || weekFinalDate <= DateTime.UtcNow;
 
             var motmRows = await _db.FixturePlayerStats
                 .AsNoTracking()
@@ -192,70 +191,9 @@ namespace Ballers.API.Services
                     false, s.Goals, s.Assists, null, null, s.ProfileImageBase64))
                 .ToList();
 
-            var players = new List<TotwPlayerDto>(outfield);
-
-            if (weekComplete)
-            {
-                var gkRows = await _db.FixturePlayerStats
-                    .AsNoTracking()
-                    .Where(s => fixtureIds.Contains(s.FixtureId) && s.Player!.Position == "GK")
-                    .Select(s => new
-                    {
-                        s.PlayerId,
-                        Name = s.Player!.Name,
-                        TeamId = s.Player.TeamId,
-                        TeamName = s.Player.Team!.Name,
-                        Position = s.Player.Position,
-                        ProfileImageBase64 = s.Player.ProfileImageBase64,
-                        s.Goals,
-                        s.Assists,
-                        s.FixtureId
-                    })
-                    .ToListAsync();
-
-                var fixtureScoreMap = fixtures.ToDictionary(f => f.Id,
-                    f => new { f.HomeTeamId, f.AwayTeamId, f.HomeScore, f.AwayScore });
-
-                var bestGk = gkRows
-                    .GroupBy(s => new { s.PlayerId, s.Name, s.TeamId, s.TeamName, s.Position, s.ProfileImageBase64 })
-                    .Select(g =>
-                    {
-                        int conceded = 0, clean = 0;
-                        foreach (var r in g)
-                        {
-                            var fx = fixtureScoreMap[r.FixtureId];
-                            int opp = g.Key.TeamId == fx.HomeTeamId ? fx.AwayScore : fx.HomeScore;
-                            conceded += opp;
-                            if (opp == 0) clean++;
-                        }
-                        return new
-                        {
-                            g.Key.PlayerId,
-                            g.Key.Name,
-                            g.Key.TeamId,
-                            g.Key.TeamName,
-                            g.Key.Position,
-                            g.Key.ProfileImageBase64,
-                            Conceded = conceded,
-                            CleanSheets = clean,
-                            Matches = g.Count(),
-                            Goals = g.Sum(x => x.Goals),
-                            Assists = g.Sum(x => x.Assists)
-                        };
-                    })
-                    .OrderBy(x => x.Conceded)
-                    .ThenByDescending(x => x.CleanSheets)
-                    .ThenByDescending(x => x.Matches)
-                    .ThenBy(x => x.PlayerId)
-                    .FirstOrDefault();
-
-                if (bestGk != null)
-                {
-                    players.Add(new TotwPlayerDto(
-                        bestGk.PlayerId, bestGk.Name, bestGk.TeamId, bestGk.TeamName, bestGk.Position,
-                        true, bestGk.Goals, bestGk.Assists, bestGk.Conceded, bestGk.CleanSheets, bestGk.ProfileImageBase64));
-                }
-            }
+            // Team of the Week is the Man of the Match winners from each game.
+            // (No goalkeeper slot — that only existed to pad the XI to 11.)
+            var players = outfield;
 
             if (players.Count == 0) return null;
 

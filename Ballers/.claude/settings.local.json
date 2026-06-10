@@ -102,7 +102,26 @@
       "Bash(curl -k -s -o /dev/null -w \"UI:%{http_code}\\\\n\" https://localhost:57420/ -m 5)",
       "Bash(curl -k -s -f -o /dev/null -X POST https://localhost:7075/api/test/reset)",
       "PowerShell($urls = @\\(\"https://images.unsplash.com/photo-1517747614396-d21a78b850e8?q=80&w=1920&auto=format&fit=crop\",\"https://images.unsplash.com/photo-1517747614396-d21a78b850e8?fm=webp&q=55&w=1920&fit=crop\",\"https://images.unsplash.com/photo-1517747614396-d21a78b850e8?fm=webp&q=45&w=1600&fit=crop\"\\); foreach \\($u in $urls\\) { $r = Invoke-WebRequest -Uri $u -Method Head -UseBasicParsing; $len = [int]$r.Headers['Content-Length']; $kb = [math]::Round\\($len/1024\\); $ct = $r.Headers['Content-Type']; Write-Output \"$kb KB  $ct  ::  $u\" })",
-      "PowerShell($urls = @\\(\"https://images.unsplash.com/photo-1517747614396-d21a78b850e8?fm=webp&q=40&w=1600&fit=crop\",\"https://images.unsplash.com/photo-1517747614396-d21a78b850e8?fm=webp&q=35&w=1600&fit=crop\",\"https://images.unsplash.com/photo-1517747614396-d21a78b850e8?fm=webp&q=40&w=1200&fit=crop\",\"https://images.unsplash.com/photo-1517747614396-d21a78b850e8?fm=avif&q=45&w=1600&fit=crop\"\\); foreach \\($u in $urls\\) { $r = Invoke-WebRequest -Uri $u -Method Head -UseBasicParsing; $len = [int]$r.Headers['Content-Length']; $kb = [math]::Round\\($len/1024\\); $ct = $r.Headers['Content-Type']; Write-Output \"$kb KB  $ct  ::  $u\" })"
+      "PowerShell($urls = @\\(\"https://images.unsplash.com/photo-1517747614396-d21a78b850e8?fm=webp&q=40&w=1600&fit=crop\",\"https://images.unsplash.com/photo-1517747614396-d21a78b850e8?fm=webp&q=35&w=1600&fit=crop\",\"https://images.unsplash.com/photo-1517747614396-d21a78b850e8?fm=webp&q=40&w=1200&fit=crop\",\"https://images.unsplash.com/photo-1517747614396-d21a78b850e8?fm=avif&q=45&w=1600&fit=crop\"\\); foreach \\($u in $urls\\) { $r = Invoke-WebRequest -Uri $u -Method Head -UseBasicParsing; $len = [int]$r.Headers['Content-Length']; $kb = [math]::Round\\($len/1024\\); $ct = $r.Headers['Content-Type']; Write-Output \"$kb KB  $ct  ::  $u\" })",
+      "Bash(sqllocaldb info *)",
+      "Bash(dotnet dev-certs *)",
+      "Bash(curl -sk https://localhost:7075/api/status -o NUL -w \"status:%{http_code}\\\\n\" --max-time 5)",
+      "Bash(curl -sk https://localhost:57420/ -o NUL -w \"ui:%{http_code}\\\\n\" --max-time 5)",
+      "Bash(ASPNETCORE_ENVIRONMENT=Development dotnet run --project Ballers.API/Ballers.API.csproj --launch-profile https)",
+      "mcp__plugin_playwright_playwright__browser_resize",
+      "mcp__plugin_playwright_playwright__browser_snapshot",
+      "mcp__plugin_playwright_playwright__browser_click",
+      "mcp__plugin_playwright_playwright__browser_fill_form",
+      "mcp__plugin_playwright_playwright__browser_wait_for",
+      "PowerShell(foreach \\($p in 7075,57420,57421,5248\\) { try { $c = Get-NetTCPConnection -LocalPort $p -State Listen -ErrorAction Stop; $c.OwningProcess | Select-Object -Unique | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue; \"killed PID $_ on $p\" } } catch { \"nothing on $p\" } })",
+      "mcp__plugin_playwright_playwright__browser_evaluate",
+      "mcp__plugin_playwright_playwright__browser_type",
+      "mcp__plugin_playwright_playwright__browser_press_key",
+      "PowerShell(Get-NetTCPConnection *)",
+      "PowerShell($ci=[Globalization.CultureInfo]::InvariantCulture; try { $d=[datetime]::ParseExact\\(\"2026-04-22T15:00\",\"yyyy-MM-ddTHH:mm\",$ci\\); \"PARSE OK -> $\\($d.ToString\\('yyyy-MM-dd HH:mm'\\)\\)\" } catch { \"PARSE FAIL: $\\($_.Exception.Message\\)\" }; try { $s=\\([datetime]\"2026-04-22T15:00\"\\).ToString\\(\"yyyy-MM-ddTHH:mm\",$ci\\); \"FORMAT OK -> $s\" } catch { \"FORMAT FAIL: $\\($_.Exception.Message\\)\" })",
+      "PowerShell($ci=[Globalization.CultureInfo]::GetCultureInfo\\('en-GB'\\); \\([datetime]\"2026-02-22T15:00\"\\).ToString\\(\"ddd d MMM\",$ci\\) + \"  |  \" + \\([datetime]\"2026-12-05T10:00\"\\).ToString\\(\"ddd d MMM\",$ci\\))",
+      "Bash(git commit -q -m ' *)",
+      "Bash(git tag *)"
     ]
   }
 }
