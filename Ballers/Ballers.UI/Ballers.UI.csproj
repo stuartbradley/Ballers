@@ -24,7 +24,11 @@
     </Exec>
     <PropertyGroup Condition="'$(_GitTag)' != ''">
       <_TagVersion>$(_GitTag.Trim().TrimStart('v'))</_TagVersion>
-      <Version>$([System.Text.RegularExpressions.Regex]::Match($(_TagVersion), '^[0-9]+(\.[0-9]+){0,3}').Value)</Version>
+      <!-- Empty when git failed (e.g. "fatal: No names found") so we never clobber the fallback Version. -->
+      <_MatchedVersion>$([System.Text.RegularExpressions.Regex]::Match($(_TagVersion), '^[0-9]+(\.[0-9]+){0,3}').Value)</_MatchedVersion>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(_MatchedVersion)' != ''">
+      <Version>$(_MatchedVersion)</Version>
       <AssemblyVersion>$(Version)</AssemblyVersion>
       <FileVersion>$(Version)</FileVersion>
       <InformationalVersion>$(_TagVersion)</InformationalVersion>
