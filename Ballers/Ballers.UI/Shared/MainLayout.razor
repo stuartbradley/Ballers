@@ -41,6 +41,7 @@
             <AuthorizeView>
                 <Authorized>
                     <NavLink href="/dashboard">Dashboard</NavLink>
+                    <NavLink href="/guide">Guide</NavLink>
                     <NotificationBell />
                     <a class="logout-link" @onclick="Logout" @onclick:preventDefault>Logout</a>
                 </Authorized>
@@ -89,6 +90,7 @@
         <AuthorizeView>
             <Authorized>
                 <NavLink href="/dashboard" @onclick="CloseNav">Dashboard</NavLink>
+                <NavLink href="/guide" @onclick="CloseNav">Guide</NavLink>
                 <NavLink href="/change-password" @onclick="CloseNav">Change Password</NavLink>
                 <button class="mobile-logout-btn" @onclick="Logout">Logout</button>
             </Authorized>

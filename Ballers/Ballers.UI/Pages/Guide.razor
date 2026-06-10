@@ -1,0 +1,246 @@
+@page "/guide"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject IJSRuntime JS
+
+<PageTitle>How to Use the App — Blackpool Ballers League</PageTitle>
+
+<div class="guide-page">
+
+    <!-- Hero -->
+    <section class="g-hero">
+        <div class="g-hero-inner">
+            <span class="g-eyebrow">Manager Handbook</span>
+            <h1>How to Use the <span class="accent">Ballers</span> App</h1>
+            <p class="g-sub">Everything you need to run your team — set up your squad, schedule matches, pick your line-up and submit your stats.</p>
+        </div>
+    </section>
+
+    <div class="g-body">
+
+        <!-- Quick nav -->
+        <nav class="g-toc">
+            <button type="button" @onclick='() => ScrollTo("start")'>Getting Started</button>
+            <button type="button" @onclick='() => ScrollTo("team")'>Team Details</button>
+            <button type="button" @onclick='() => ScrollTo("squad")'>Your Squad</button>
+            <button type="button" @onclick='() => ScrollTo("fixtures")'>Fixtures</button>
+            <button type="button" @onclick='() => ScrollTo("schedule")'>Schedule &amp; Referee</button>
+            <button type="button" @onclick='() => ScrollTo("selection")'>Pick Your Squad</button>
+            <button type="button" @onclick='() => ScrollTo("sheet")'>Team Sheet</button>
+            <button type="button" @onclick='() => ScrollTo("stats")'>Match Stats</button>
+            <button type="button" @onclick='() => ScrollTo("penalties")'>Penalties</button>
+            <button type="button" @onclick='() => ScrollTo("extras")'>Other Bits</button>
+        </nav>
+
+        <!-- Getting started -->
+        <section id="start" class="g-section">
+            <h2>1 · Getting Started</h2>
+            <p>
+                When you log in, the <strong>Dashboard</strong> is your home base. From there, the action
+                tiles take you everywhere you need to go: <em>My Team</em>, <em>My Squad</em>,
+                <em>Fixtures</em>, <em>Referees</em> and <em>Change Password</em>.
+            </p>
+            <div class="g-callout">
+                <span class="g-callout-tag">Tip</span>
+                Find your Dashboard any time from the <strong>Dashboard</strong> link in the top menu (you'll only
+                see it while logged in).
+            </div>
+            <figure class="g-shot">
+                <img src="/images/guide/guide-dashboard.png" alt="The manager dashboard with action tiles" width="1425" height="1092" loading="lazy" />
+                <figcaption>Your dashboard — record summary and quick-action tiles.</figcaption>
+            </figure>
+        </section>
+
+        <!-- Team details -->
+        <section id="team" class="g-section">
+            <h2>2 · Updating Your Team Details</h2>
+            <p>Go to <strong>Dashboard → My Team</strong>. Here you set everything fans see on your team profile.</p>
+            <ol class="g-steps">
+                <li><strong>Club crest / photo</strong> — click <em>Choose image</em> to upload a badge or team photo (JPEG, PNG or WebP, max 5&nbsp;MB). Every image is automatically checked for inappropriate content before it saves.</li>
+                <li><strong>Club details</strong> — set your Team Name, Manager Name, Year Founded, Contact Number and an <em>About the Club</em> bio (up to 1000 characters).</li>
+                <li>Hit <strong>Save Profile</strong>. You'll see a green "Profile saved" confirmation.</li>
+            </ol>
+            <div class="g-callout">
+                <span class="g-callout-tag">Note</span>
+                If you see "No team assigned", your account isn't linked to a team yet — contact an admin.
+            </div>
+            <figure class="g-shot">
+                <img src="/images/guide/guide-my-team.png" alt="My Team page with crest upload and club details form" width="1425" height="1258" loading="lazy" />
+                <figcaption>My Team — upload your crest and edit club details.</figcaption>
+            </figure>
+        </section>
+
+        <!-- Squad -->
+        <section id="squad" class="g-section">
+            <h2>3 · Managing Your Squad</h2>
+            <p>Go to <strong>Dashboard → My Squad</strong> to build and maintain your player list.</p>
+
+            <h3>Adding a player</h3>
+            <ol class="g-steps">
+                <li>Pick a <strong>position</strong> — GK, DEF, MID or FWD.</li>
+                <li>Type the <strong>player's name</strong> and <strong>squad number</strong>.</li>
+                <li>Click <strong>Add Player</strong>. They appear instantly, grouped by position, with a live count strip up top.</li>
+            </ol>
+
+            <h3>Editing or removing a player</h3>
+            <ol class="g-steps">
+                <li>On a player card, click <strong>Edit</strong> to change their name, number or position, then <em>Save</em>.</li>
+                <li>Click the <strong>photo</strong> option to upload &amp; crop a player headshot.</li>
+                <li>Use <strong>Remove</strong> to take a player off your squad.</li>
+            </ol>
+            <div class="g-callout">
+                <span class="g-callout-tag">Heads-up</span>
+                Admins can <strong>lock player registration</strong> once the season is set. While locked you can't add
+                new players — you'll see a message in place of the Add Player form.
+            </div>
+            <figure class="g-shot">
+                <img src="/images/guide/guide-my-squad.png" alt="My Squad page with add-player form and players grouped by position" width="1425" height="3729" loading="lazy" />
+                <figcaption>My Squad — add players, then manage them grouped by position.</figcaption>
+            </figure>
+        </section>
+
+        <!-- Fixtures -->
+        <section id="fixtures" class="g-section">
+            <h2>4 · Your Fixtures</h2>
+            <p>
+                Go to <strong>Dashboard → Fixtures</strong> (My Fixtures) for the full list of your matches. Each row
+                shows the week, the teams, kickoff, location and a <strong>status</strong>:
+            </p>
+            <ul class="g-pill-list">
+                <li><span class="g-pill awaiting">Awaiting</span> kickoff/venue not set yet</li>
+                <li><span class="g-pill scheduled">Scheduled</span> date &amp; venue are set</li>
+                <li><span class="g-pill squad">Awaiting Team Selection</span> you still need to pick your squad</li>
+                <li><span class="g-pill played">Played</span> the match is done</li>
+            </ul>
+            <p>
+                Each fixture has two buttons: <strong>Edit / Submit Stats / View</strong> (opens the match) and
+                <strong>Team Sheet</strong> (the shareable line-up graphic).
+            </p>
+            <figure class="g-shot">
+                <img src="/images/guide/guide-fixtures.png" alt="My Fixtures list showing week, teams, kickoff, location and status" width="1440" height="900" loading="lazy" />
+                <figcaption>My Fixtures — every match with its status and action buttons.</figcaption>
+            </figure>
+        </section>
+
+        <!-- Schedule + ref -->
+        <section id="schedule" class="g-section">
+            <h2>5 · Setting the Schedule &amp; Referee</h2>
+            <p>
+                Open a fixture and stay on the <strong>Overview</strong> tab. For your league games you can:
+            </p>
+            <ol class="g-steps">
+                <li>Under <strong>Schedule</strong>, set the <em>Location</em>, <em>Postcode</em> and <em>Kickoff</em> date/time, then <strong>Save Schedule</strong>.</li>
+                <li>Under <strong>Referee</strong>, pick an official from the dropdown and <strong>Save</strong>. The list flags any ref already "Booked this window", and shows their phone/email once assigned.</li>
+            </ol>
+            <div class="g-callout">
+                <span class="g-callout-tag">Who can edit?</span>
+                The home team's manager (and admins) set the schedule and referee for a league fixture.
+                No referees registered yet? Add one from the <strong>Referees</strong> page first.
+            </div>
+            <figure class="g-shot">
+                <img src="/images/guide/guide-fixture-overview.png" alt="Fixture overview tab with schedule and referee editors" width="1425" height="1011" loading="lazy" />
+                <figcaption>The fixture Overview tab — set the schedule and assign a referee.</figcaption>
+            </figure>
+        </section>
+
+        <!-- Squad selection -->
+        <section id="selection" class="g-section">
+            <h2>6 · Picking Your Match Squad</h2>
+            <p>In the fixture, open the <strong>Squad</strong> tab.</p>
+            <ol class="g-steps">
+                <li>Tick the players in your match-day squad.</li>
+                <li>On any selected player, use the <strong>C</strong> and <strong>VC</strong> buttons to set your Captain and Vice-Captain.</li>
+                <li>Click <strong>Save Squad</strong>, then <strong>Save Captaincy</strong>.</li>
+            </ol>
+            <div class="g-callout">
+                <span class="g-callout-tag">Important</span>
+                You must select <strong>more than 10 players</strong> to unlock the <em>Stats</em> tab — that's how the app
+                knows your line-up is in.
+            </div>
+            <figure class="g-shot">
+                <img src="/images/guide/guide-fixture-squad.png" alt="Squad tab with players ticked and captain/vice-captain set" width="1425" height="1459" loading="lazy" />
+                <figcaption>The Squad tab — tick your players and set the C / VC.</figcaption>
+            </figure>
+        </section>
+
+        <!-- Team sheet -->
+        <section id="sheet" class="g-section">
+            <h2>7 · Creating a Team Sheet</h2>
+            <p>
+                From My Fixtures (or a fixture), open <strong>Team Sheet</strong> to generate a shareable line-up poster
+                using your squad and club crest.
+            </p>
+            <ol class="g-steps">
+                <li>Choose a style: <strong>Street</strong>, <strong>Split</strong>, <strong>Graffiti</strong> or <strong>Community</strong>.</li>
+                <li>Click <strong>⬇ Download</strong> to save it as a PNG.</li>
+                <li>Post it on your socials to hype the match 🔥</li>
+            </ol>
+            <figure class="g-shot">
+                <img src="/images/guide/guide-team-sheet.png" alt="Team sheet generator with style options and download button" width="1425" height="1879" loading="lazy" />
+                <figcaption>Team Sheet — pick a style and download your line-up poster.</figcaption>
+            </figure>
+        </section>
+
+        <!-- Match stats -->
+        <section id="stats" class="g-section">
+            <h2>8 · Submitting Match Stats</h2>
+            <p>After the game, open the fixture and go to the <strong>Stats</strong> tab.</p>
+            <ol class="g-steps">
+                <li>For each player, enter <strong>Goals</strong> and <strong>Assists</strong>, tick any <strong>Yellow</strong> or <strong>Red</strong> cards.</li>
+                <li>Tick exactly one <strong>MOTM</strong> (Man of the Match) — it's required.</li>
+                <li>The score at the top updates live as you add goals.</li>
+                <li>Click <strong>Submit Match Stats</strong>.</li>
+            </ol>
+            <div class="g-callout">
+                <span class="g-callout-tag">Fair play</span>
+                You only enter <em>your own</em> team's stats. Your opponent enters theirs — you'll see them on the
+                opponent toggle once they've submitted.
+            </div>
+            <figure class="g-shot">
+                <img src="/images/guide/guide-fixture-stats.png" alt="Stats tab with goals, assists, MOTM and cards per player" width="1425" height="1478" loading="lazy" />
+                <figcaption>The Stats tab — enter goals, assists, MOTM and cards; the score updates live.</figcaption>
+            </figure>
+        </section>
+
+        <!-- Penalties -->
+        <section id="penalties" class="g-section">
+            <h2>9 · Penalty Shootouts</h2>
+            <p>If the match went to penalties, open the <strong>Penalties</strong> tab (available once the match is marked played).</p>
+            <ol class="g-steps">
+                <li>For all <strong>5 kicks</strong>, choose the player and mark <em>Scored</em> or <em>Missed</em>.</li>
+                <li>Click <strong>Submit Penalties</strong>.</li>
+                <li>Your opponent's kicks appear once they submit theirs.</li>
+            </ol>
+        </section>
+
+        <!-- Extras -->
+        <section id="extras" class="g-section">
+            <h2>10 · Other Bits Worth Knowing</h2>
+            <ul class="g-feature-grid">
+                <li>
+                    <h4>Referees</h4>
+                    <p>Add and manage referee contacts (name, phone, email) from the <strong>Referees</strong> page so they're ready to assign to games.</p>
+                </li>
+                <li>
+                    <h4>Notifications 🔔</h4>
+                    <p>The bell in the top menu flags things that need your attention — like fixtures awaiting your team selection.</p>
+                </li>
+                <li>
+                    <h4>Change Password</h4>
+                    <p>Update your account password any time from the Dashboard or the mobile menu.</p>
+                </li>
+                <li>
+                    <h4>Editing locks</h4>
+                    <p>A fixture closes for edits <strong>2 weeks after the final whistle</strong>. Admins can also lock all fixtures league-wide near deadlines — you'll see a banner when something's locked.</p>
+                </li>
+            </ul>
+        </section>
+
+        <p class="g-quote">Stuck on something? Reach out to a league admin and we'll sort it.</p>
+
+    </div>
+</div>
+
+@code {
+    private async Task ScrollTo(string id) => await JS.InvokeVoidAsync("scrollToId", id);
+}

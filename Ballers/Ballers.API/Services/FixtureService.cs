@@ -20,7 +20,7 @@ namespace Ballers.API.Services
         Task UpdateSquadAsync(int fixtureId, List<int> playerIds, int? teamId);
         Task<List<PlayerStatDto>> GetStatsAsync(int fixtureId);
         Task SubmitStatsAsync(int fixtureId, List<PlayerStatDto> stats, int? teamId);
-        Task<bool> UpdateScheduleAsync(int fixtureId, string? location, string? postcode, DateTime kickoff);
+        Task<bool> UpdateScheduleAsync(int fixtureId, string? location, string? postcode, DateTime? kickoff);
         Task AssignRefereeAsync(int fixtureId, int? refereeId);
         Task GenerateFixturesAsync(List<int> teamIds, DateTime startDate);
         Task<ImportFixturesResult> ImportFixturesAsync(Stream csv, int seasonNumber, DateTime startDate, bool makeActive);
@@ -223,7 +223,7 @@ namespace Ballers.API.Services
                 {
                     Home = f.HomeTeam!.Name,
                     Away = f.AwayTeam!.Name,
-                    Day = f.Kickoff?.ToString("dddd") ?? "",
+                    Day = f.Kickoff?.ToString("ddd d MMM") ?? "",
                     Time = f.Kickoff?.ToString("HH:mm") ?? "",
                     Location = f.Location ?? "",
                     Postcode = f.Postcode ?? ""
@@ -318,7 +318,7 @@ namespace Ballers.API.Services
                             {
                                 Home = f.HomeTeamName,
                                 Away = f.AwayTeamName,
-                                Day = f.Kickoff?.ToString("dddd") ?? "",
+                                Day = f.Kickoff?.ToString("ddd d MMM") ?? "",
                                 Time = f.Kickoff?.ToString("HH:mm") ?? "",
                                 Location = f.Location ?? "",
                                 Postcode = f.Postcode ?? "",
@@ -550,7 +550,7 @@ namespace Ballers.API.Services
             await _db.SaveChangesAsync();
         }
 
-        public async Task<bool> UpdateScheduleAsync(int fixtureId, string? location, string? postcode, DateTime kickoff)
+        public async Task<bool> UpdateScheduleAsync(int fixtureId, string? location, string? postcode, DateTime? kickoff)
         {
             var fixture = await _db.Fixtures.FindAsync(fixtureId);
             if (fixture == null) return false;

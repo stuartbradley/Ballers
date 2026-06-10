@@ -89,7 +89,7 @@ namespace Ballers.Services
                 .ReadFromJsonAsync<List<FixtureDto>>() ?? new();
         }
 
-        public async Task UpdateFixtureSchedule(int fixtureId, string location, string? postcode, DateTime kickoffTime)
+        public async Task UpdateFixtureSchedule(int fixtureId, string? location, string? postcode, DateTime? kickoffTime)
         {
             var request = new HttpRequestMessage(HttpMethod.Put, $"api/fixtures/{fixtureId}/schedule");
 

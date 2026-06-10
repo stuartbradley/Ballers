@@ -186,12 +186,20 @@
 }
 
 .meta-item {
-    font-size: 0.74rem;
-    color: rgba(255, 255, 255, 0.35);
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.6);
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
     letter-spacing: 0.02em;
+}
+
+.meta-icon { opacity: 0.7; }
+
+/* Date/time — the key detail, slightly brighter + medium weight */
+.meta-date {
+    color: rgba(255, 255, 255, 0.82);
+    font-weight: 600;
 }
 
 .meta-item.tbd {
@@ -202,10 +210,39 @@
 .meta-link {
     text-decoration: none;
     transition: color 0.15s;
+    align-items: center;
 }
 
 .meta-link:hover {
     color: var(--ballers-accent);
+}
+
+.meta-place {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.meta-venue { color: inherit; }
+
+/* Postcode shown as a small pill so it's always visible */
+.meta-postcode {
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.75);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 5px;
+    padding: 2px 7px;
+    white-space: nowrap;
+}
+
+.meta-link:hover .meta-postcode {
+    color: var(--ballers-accent);
+    border-color: rgba(250, 204, 21, 0.4);
 }
 
 /* ===== BYE STRIP ===== */

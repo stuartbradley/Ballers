@@ -218,9 +218,12 @@
                                 </div>
                                 <div class="schedule-field">
                                     <label>Kickoff</label>
-                                    <input type="datetime-local" class="stat-input schedule-input" @bind="scheduleKickoff" disabled="@fixture.IsEditLocked" />
+                                    <input type="datetime-local" class="stat-input schedule-input" @bind="scheduleKickoff" @bind:format="yyyy-MM-ddTHH:mm" disabled="@fixture.IsEditLocked" />
                                 </div>
-                                <button class="primary-btn" @onclick="SaveSchedule" disabled="@(fixture.IsEditLocked || editingLocked)">Save Schedule</button>
+                                <div class="schedule-actions">
+                                    <button class="primary-btn" @onclick="SaveSchedule" disabled="@(fixture.IsEditLocked || editingLocked)">Save Schedule</button>
+                                    <button class="ghost-btn" @onclick="ClearSchedule" disabled="@(fixture.IsEditLocked || editingLocked)">Clear</button>
+                                </div>
                             </div>
                         </div>
 
@@ -517,7 +520,7 @@
 
     private string scheduleLocation = "";
     private string? schedulePostcode;
-    private DateTime scheduleKickoff = DateTime.Now;
+    private DateTime? scheduleKickoff;
 
     private List<RefereeDto> allReferees = new();
     private int? selectedRefereeId;
@@ -653,7 +656,7 @@
         // them for everyone who can reach this page.
         scheduleLocation = fixture.Location ?? "";
         schedulePostcode = fixture.Postcode;
-        scheduleKickoff = fixture.Kickoff ?? DateTime.Now;
+        scheduleKickoff = fixture.Kickoff;
         allReferees = await RefereeService.GetAll();
         selectedRefereeId = fixture.RefereeId;
 
@@ -687,6 +690,16 @@
         await FixtureService.UpdateFixtureSchedule(fixture!.Id, scheduleLocation, schedulePostcode, scheduleKickoff);
         fixture = await FixtureService.GetFixture(fixture!.Id);
         await ShowToast("Schedule saved.");
+    }
+
+    async Task ClearSchedule()
+    {
+        scheduleLocation = "";
+        schedulePostcode = null;
+        scheduleKickoff = null;
+        await FixtureService.UpdateFixtureSchedule(fixture!.Id, null, null, null);
+        fixture = await FixtureService.GetFixture(fixture!.Id);
+        await ShowToast("Schedule cleared.");
     }
 
 

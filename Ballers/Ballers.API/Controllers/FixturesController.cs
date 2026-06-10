@@ -138,11 +138,11 @@ namespace Ballers.API.Controllers
 
             await _fixtures.UpdateScheduleAsync(fixtureId, request.Location, request.Postcode, request.KickOffTime);
 
-            var kickoffDisplay = request.KickOffTime.ToString("dd MMM HH:mm");
+            var kickoffDisplay = request.KickOffTime?.ToString("dd MMM HH:mm") ?? "TBD";
             await _notifications.CreateForTeamAsync(
                 fixture.AwayTeamId,
                 NotificationType.FixtureUpdated,
-                $"Fixture vs {fixture.HomeTeam} has been updated — {kickoffDisplay} at {request.Location ?? "TBD"}.",
+                $"Fixture vs {fixture.HomeTeam} has been updated — {kickoffDisplay} at {(string.IsNullOrWhiteSpace(request.Location) ? "TBD" : request.Location)}.",
                 $"/fixture/{fixtureId}");
 
             return Ok();

@@ -100,14 +100,77 @@
 }
 .su-block strong { color: #fff; }
 
+/* ── Availability notice ── */
+.su-availability {
+    background: rgba(250,204,21,0.08);
+    border: 1px solid rgba(250,204,21,0.25);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 22px;
+    color: rgba(255,255,255,0.8) !important;
+    line-height: 1.6 !important;
+}
+
 /* ── Headline card ── */
 .su-headline-card {
+    position: relative;
     background: linear-gradient(180deg, #11203A 0%, #0B1628 100%);
     border: 1px solid rgba(250,204,21,0.25);
     border-radius: 14px;
     padding: 32px;
     box-shadow: 0 30px 70px rgba(0,0,0,0.4);
+    overflow: hidden;
 }
+.su-headline-card.is-taken {
+    border-color: rgba(255,255,255,0.12);
+}
+/* dim + desaturate the content, but keep the stamp/badge sharp */
+.su-headline-card.is-taken .su-headline-top,
+.su-headline-card.is-taken .su-features {
+    filter: grayscale(1) opacity(0.45);
+    pointer-events: none;
+}
+/* big diagonal stamp across the card */
+.su-sold-stamp {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    pointer-events: none;
+}
+.su-sold-stamp span {
+    transform: rotate(-12deg);
+    border: 4px solid #B91C1C;
+    color: #fff;
+    background: rgba(185,28,28,0.85);
+    font-family: var(--font-display);
+    font-size: clamp(1.4rem, 4.5vw, 2.6rem);
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 12px 34px;
+    border-radius: 8px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    white-space: nowrap;
+}
+.su-sold-badge {
+    position: absolute;
+    top: 18px;
+    right: -38px;
+    transform: rotate(45deg);
+    background: #B91C1C;
+    color: #fff;
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 6px 44px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+}
+.su-price s { color: rgba(255,255,255,0.45); text-decoration-color: #B91C1C; }
 .su-headline-top {
     display: flex;
     justify-content: space-between;

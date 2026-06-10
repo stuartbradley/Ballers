@@ -47,21 +47,33 @@
                 <div class="fixture-meta">
                     @if (!string.IsNullOrEmpty(match.Day) || !string.IsNullOrEmpty(match.Time))
                     {
-                        <span class="meta-item">
-                            🕐 @(string.IsNullOrEmpty(match.Day) ? "TBD" : $"{match.Day}{(string.IsNullOrEmpty(match.Time) ? "" : $" · {match.Time}")}")
+                        <span class="meta-item meta-date">
+                            <span class="meta-icon">🕐</span>
+                            <span>@(string.IsNullOrEmpty(match.Day) ? "TBD" : match.Day)@(string.IsNullOrEmpty(match.Time) ? "" : $" · {match.Time}")</span>
                         </span>
                     }
                     else
                     {
-                        <span class="meta-item tbd">Time TBD</span>
+                        <span class="meta-item tbd">Date &amp; time TBD</span>
                     }
-                    @if (!string.IsNullOrEmpty(match.Location))
+                    @if (!string.IsNullOrEmpty(match.Location) || !string.IsNullOrEmpty(match.Postcode))
                     {
                         <a class="meta-item meta-link"
-                           href="https://www.google.com/maps/search/?api=1&query=@Uri.EscapeDataString(string.IsNullOrEmpty(match.Postcode) ? match.Location : $"{match.Location} {match.Postcode}")"
+                           href="https://www.google.com/maps/search/?api=1&query=@Uri.EscapeDataString(string.IsNullOrEmpty(match.Postcode) ? match.Location : string.IsNullOrEmpty(match.Location) ? match.Postcode : $"{match.Location} {match.Postcode}")"
                            target="_blank"
-                           rel="noopener noreferrer">
-                            📍 @match.Location
+                           rel="noopener noreferrer"
+                           title="Open in Google Maps">
+                            📍
+                            <span class="meta-place">
+                                @if (!string.IsNullOrEmpty(match.Location))
+                                {
+                                    <span class="meta-venue">@match.Location</span>
+                                }
+                                @if (!string.IsNullOrEmpty(match.Postcode))
+                                {
+                                    <span class="meta-postcode">@match.Postcode</span>
+                                }
+                            </span>
                         </a>
                     }
                 </div>

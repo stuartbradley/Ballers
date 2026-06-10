@@ -611,6 +611,40 @@
 
 .primary-btn:active { transform: translateY(0); }
 
+.schedule-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.ghost-btn {
+    background: transparent;
+    color: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-family: var(--font-display);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.18s, color 0.18s, border-color 0.18s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.ghost-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.45);
+}
+
+.ghost-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
 .stats-team-toggle {
     display: flex;
     gap: 4px;
