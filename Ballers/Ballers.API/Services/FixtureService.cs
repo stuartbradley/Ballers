@@ -223,6 +223,8 @@ namespace Ballers.API.Services
                 {
                     Home = f.HomeTeam!.Name,
                     Away = f.AwayTeam!.Name,
+                    HomeLogo = f.HomeTeam.ProfileImageUrl,
+                    AwayLogo = f.AwayTeam.ProfileImageUrl,
                     Day = f.Kickoff?.ToString("ddd d MMM") ?? "",
                     Time = f.Kickoff?.ToString("HH:mm") ?? "",
                     Location = f.Location ?? "",
@@ -258,6 +260,8 @@ namespace Ballers.API.Services
                     f.SeasonId,
                     HomeTeamName = f.HomeTeam!.Name,
                     AwayTeamName = f.AwayTeam!.Name,
+                    HomeTeamLogo = f.HomeTeam.ProfileImageUrl,
+                    AwayTeamLogo = f.AwayTeam.ProfileImageUrl,
                 })
                 .ToListAsync();
 
@@ -318,6 +322,8 @@ namespace Ballers.API.Services
                             {
                                 Home = f.HomeTeamName,
                                 Away = f.AwayTeamName,
+                                HomeLogo = f.HomeTeamLogo,
+                                AwayLogo = f.AwayTeamLogo,
                                 Day = f.Kickoff?.ToString("ddd d MMM") ?? "",
                                 Time = f.Kickoff?.ToString("HH:mm") ?? "",
                                 Location = f.Location ?? "",

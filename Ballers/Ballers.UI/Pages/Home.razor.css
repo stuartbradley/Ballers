@@ -66,7 +66,7 @@
     text-align: center;
     color: white;
     overflow: hidden;
-    clip-path: polygon(0 0, 100% 0, 100% 93%, 0 100%);
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 70px), 0 100%);
     margin-bottom: -70px;
     z-index: 0;
 }
@@ -805,4 +805,80 @@ tbody tr:hover {
 @media (max-width: 768px) {
     .sponsors { padding: 60px 16px 70px; }
     .sponsor-card { width: 100%; max-width: 320px; }
+}
+
+/* ================================================================
+   PLAYER PERK — partner offer band
+   ================================================================ */
+
+.perks-section {
+    background: #07101E;
+    padding: 20px 20px 90px;
+}
+
+.perk-card {
+    max-width: 720px;
+    margin: 0 auto;
+    text-align: center;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 48px 32px;
+    position: relative;
+}
+
+.perk-badge {
+    display: inline-block;
+    background: var(--ballers-accent);
+    color: #080D23;
+    font-family: var(--font-display);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 5px 16px;
+    border-radius: 2px;
+    margin-bottom: 20px;
+}
+
+.perk-card h2 {
+    color: white;
+    font-size: 2.2rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin: 0 0 16px;
+}
+
+.perk-sub {
+    max-width: 480px;
+    margin: 0 auto 30px;
+    color: rgba(255,255,255,0.5);
+    font-size: 0.98rem;
+    line-height: 1.8;
+}
+
+.perk-cta {
+    display: inline-block;
+    background: var(--ballers-accent);
+    color: #080D23;
+    text-decoration: none;
+    padding: 13px 38px;
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    border-radius: 3px;
+    transition: background 0.18s ease, box-shadow 0.18s ease;
+}
+
+.perk-cta:hover {
+    background: white;
+    box-shadow: 0 14px 40px rgba(0,0,0,0.45);
+}
+
+@media (max-width: 768px) {
+    .perks-section { padding: 10px 16px 70px; }
+    .perk-card { padding: 36px 22px; }
+    .perk-card h2 { font-size: 1.7rem; }
 }

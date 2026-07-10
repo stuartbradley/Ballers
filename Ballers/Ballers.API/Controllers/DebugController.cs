@@ -80,6 +80,7 @@ namespace Ballers.API.Controllers
                 await PlayFixturesAsync(skipLast: false);
                 var season = await _db.Seasons.FirstAsync(s => s.IsActive);
                 await CompleteKnockoutAsync(season.Id);
+                await SeedMatchOfTheDayAsync(season.Id);
                 return Ok(new { message = "Full completed season seeded. All fixtures played, knockout bracket complete." });
             }
             catch (Exception ex) { return StatusCode(500, new { message = $"Failed: {ex.Message}" }); }
@@ -374,6 +375,83 @@ namespace Ballers.API.Controllers
             _db.FixturePlayers.AddRange(newFps);
             _db.FixturePlayerStats.AddRange(newStats);
             await _db.SaveChangesAsync();
+        }
+
+        private static readonly string[] _motdBodies =
+        {
+            "Six goals, two penalties and a last-minute equaliser — this one had everything. The neutrals went home happy even if both managers were left scratching their heads at the back.",
+            "A complete performance from front to back. The midfield bossed possession from the first whistle and the finishing was clinical when the chances came. A statement win.",
+            "Backs-to-the-wall stuff and a famous away day. Defenders threw themselves in front of everything and the travelling support roared them over the line. Scenes at full time."
+        };
+
+        private static readonly string[] _motdPalette =
+        {
+            "#1e3a8a", "#065f46", "#7c2d12", "#4c1d95", "#9f1239", "#0f766e"
+        };
+
+        private async Task SeedMatchOfTheDayAsync(int seasonId)
+        {
+            if (await _db.MatchOfTheDayPosts.AnyAsync()) return;
+
+            var fixtures = await _db.Fixtures
+                .Include(f => f.HomeTeam)
+                .Include(f => f.AwayTeam)
+                .Where(f => f.SeasonId == seasonId && f.IsPlayed)
+                .OrderByDescending(f => f.Kickoff)
+                .Take(3)
+                .ToListAsync();
+            if (fixtures.Count == 0) return;
+
+            var posts = new List<MatchOfTheDayPost>();
+            for (int i = 0; i < fixtures.Count; i++)
+            {
+                var f = fixtures[i];
+                var home = f.HomeTeam!.Name;
+                var away = f.AwayTeam!.Name;
+                var score = $"{f.HomeScore} – {f.AwayScore}";
+
+                posts.Add(new MatchOfTheDayPost
+                {
+                    FixtureId = f.Id,
+                    CoverImageBase64 = MockMatchImage(home, away, score, i, 0),
+                    Body = _motdBodies[i % _motdBodies.Length],
+                    CreatedAt = DateTime.UtcNow.AddDays(-i),
+                    Photos = new List<MatchOfTheDayPhoto>
+                    {
+                        new() { ImageBase64 = MockMatchImage(home, away, "First Half", i, 1), SortOrder = 0 },
+                        new() { ImageBase64 = MockMatchImage(home, away, "The Goal", i, 2), SortOrder = 1 },
+                        new() { ImageBase64 = MockMatchImage(home, away, "Full Time", i, 3), SortOrder = 2 }
+                    }
+                });
+            }
+
+            _db.MatchOfTheDayPosts.AddRange(posts);
+            await _db.SaveChangesAsync();
+        }
+
+        // Inline SVG data-URI placeholder so seeded posts have a real image with no binary assets.
+        private static string MockMatchImage(string home, string away, string label, int seed, int variant)
+        {
+            var c1 = _motdPalette[(seed * 3 + variant) % _motdPalette.Length];
+            var c2 = _motdPalette[(seed * 3 + variant + 2) % _motdPalette.Length];
+            static string Esc(string s) => System.Security.SecurityElement.Escape(s) ?? s;
+
+            var svg =
+$@"<svg xmlns='http://www.w3.org/2000/svg' width='800' height='500' viewBox='0 0 800 500'>
+  <defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
+    <stop offset='0' stop-color='{c1}'/><stop offset='1' stop-color='{c2}'/>
+  </linearGradient></defs>
+  <rect width='800' height='500' fill='url(#g)'/>
+  <circle cx='400' cy='250' r='90' fill='none' stroke='rgba(255,255,255,0.18)' stroke-width='3'/>
+  <line x1='400' y1='0' x2='400' y2='500' stroke='rgba(255,255,255,0.18)' stroke-width='3'/>
+  <text x='400' y='205' fill='white' font-family='Segoe UI, sans-serif' font-size='40' font-weight='700' text-anchor='middle'>{Esc(home)}</text>
+  <text x='400' y='255' fill='rgba(255,255,255,0.7)' font-family='Segoe UI, sans-serif' font-size='22' text-anchor='middle'>vs</text>
+  <text x='400' y='305' fill='white' font-family='Segoe UI, sans-serif' font-size='40' font-weight='700' text-anchor='middle'>{Esc(away)}</text>
+  <text x='400' y='460' fill='rgba(255,255,255,0.85)' font-family='Segoe UI, sans-serif' font-size='28' font-weight='600' text-anchor='middle'>{Esc(label)}</text>
+</svg>";
+
+            var b64 = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(svg));
+            return "data:image/svg+xml;base64," + b64;
         }
 
         private void SeedKnockoutStats(KnockoutFixture ko, int homeGoals, int awayGoals,

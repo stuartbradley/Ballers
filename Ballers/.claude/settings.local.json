@@ -121,7 +121,8 @@
       "PowerShell($ci=[Globalization.CultureInfo]::InvariantCulture; try { $d=[datetime]::ParseExact\\(\"2026-04-22T15:00\",\"yyyy-MM-ddTHH:mm\",$ci\\); \"PARSE OK -> $\\($d.ToString\\('yyyy-MM-dd HH:mm'\\)\\)\" } catch { \"PARSE FAIL: $\\($_.Exception.Message\\)\" }; try { $s=\\([datetime]\"2026-04-22T15:00\"\\).ToString\\(\"yyyy-MM-ddTHH:mm\",$ci\\); \"FORMAT OK -> $s\" } catch { \"FORMAT FAIL: $\\($_.Exception.Message\\)\" })",
       "PowerShell($ci=[Globalization.CultureInfo]::GetCultureInfo\\('en-GB'\\); \\([datetime]\"2026-02-22T15:00\"\\).ToString\\(\"ddd d MMM\",$ci\\) + \"  |  \" + \\([datetime]\"2026-12-05T10:00\"\\).ToString\\(\"ddd d MMM\",$ci\\))",
       "Bash(git commit -q -m ' *)",
-      "Bash(git tag *)"
+      "Bash(git tag *)",
+      "Bash(git commit *)"
     ]
   }
 }

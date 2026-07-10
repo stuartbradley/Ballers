@@ -97,6 +97,31 @@
                         </div>
                     </div>
 
+                    <div class="field-row">
+                        <div class="field-group">
+                            <label>Home Kit Colour</label>
+                            <div class="kit-colour-input">
+                                <input type="color" @bind="form.HomeKitColour" />
+                                <span class="kit-colour-hex">@(form.HomeKitColour ?? "—")</span>
+                                @if (!string.IsNullOrEmpty(form.HomeKitColour))
+                                {
+                                    <button type="button" class="kit-colour-clear" @onclick="() => form.HomeKitColour = null" title="Clear home kit colour">✕</button>
+                                }
+                            </div>
+                        </div>
+                        <div class="field-group">
+                            <label>Away Kit Colour</label>
+                            <div class="kit-colour-input">
+                                <input type="color" @bind="form.AwayKitColour" />
+                                <span class="kit-colour-hex">@(form.AwayKitColour ?? "—")</span>
+                                @if (!string.IsNullOrEmpty(form.AwayKitColour))
+                                {
+                                    <button type="button" class="kit-colour-clear" @onclick="() => form.AwayKitColour = null" title="Clear away kit colour">✕</button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="field-group">
                         <label>About the Club</label>
                         <textarea @bind="form.Bio" placeholder="Tell people about your team — how you formed, your ambitions, who can join…" rows="5" maxlength="1000"></textarea>
@@ -118,7 +143,45 @@
                 </div>
             </div>
 
+            <!-- Manager photo -->
+            <div class="mt-card image-card">
+                <h3>Manager Photo</h3>
+                <p class="upload-hint">Shown on the manager card on your team page. The card upgrades bronze → silver (3 wins) → gold (6 wins) automatically. Leave the manager name blank to hide the card entirely.</p>
+                <div class="image-section">
+                    <div class="current-image-wrap">
+                        @if (!string.IsNullOrEmpty(managerImageBase64))
+                        {
+                            <img class="current-image" src="@managerImageBase64" alt="Manager photo" />
+                        }
+                        else
+                        {
+                            <div class="image-placeholder">
+                                <span>@Initials(form.ManagerName ?? "")</span>
+                            </div>
+                        }
+                    </div>
+                    <div class="image-upload-area">
+                        <p class="upload-hint">Crop, position and remove the background — same as player photos.</p>
+                        <button type="button" class="upload-btn" @onclick="() => showManagerCrop = true">
+                            @(string.IsNullOrEmpty(managerImageBase64) ? "Choose image" : "Change photo")
+                        </button>
+                        @if (managerImageSuccess)
+                        {
+                            <p class="field-success">Manager photo updated.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+
         </div>
+
+        <ImageCropModal IsVisible="showManagerCrop"
+                        Name="@(form.ManagerName ?? "Manager")"
+                        Number="managerWins"
+                        Position="MGR"
+                        SaveOverride="SaveManagerImage"
+                        OnClose="@(() => showManagerCrop = false)"
+                        OnSaved="@(() => { managerImageSuccess = true; showManagerCrop = false; })" />
     }
 
 </div>
@@ -134,6 +197,10 @@
     private string? imageError;
     private bool saveSuccess = false;
     private bool imageSuccess = false;
+    private string? managerImageBase64;
+    private int managerWins = 0;
+    private bool showManagerCrop = false;
+    private bool managerImageSuccess = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -152,7 +219,11 @@
                 form.YearFormed = profile.YearFormed;
                 form.PhoneNumber = profile.PhoneNumber;
                 form.Bio = profile.Bio;
+                form.HomeKitColour = profile.HomeKitColour;
+                form.AwayKitColour = profile.AwayKitColour;
                 currentImageUrl = profile.ProfileImageUrl;
+                managerImageBase64 = profile.ManagerImageBase64;
+                managerWins = profile.Wins;
             }
         }
 
@@ -211,6 +282,15 @@
             currentImageUrl = url;
             imageSuccess = true;
         }
+    }
+
+    // Called by ImageCropModal with the processed base64 (cropped + background removed).
+    async Task<bool> SaveManagerImage(string base64)
+    {
+        managerImageSuccess = false;
+        var ok = await TeamService.UploadManagerImage(teamId!.Value, base64);
+        if (ok) managerImageBase64 = base64;
+        return ok;
     }
 
     static string Initials(string name)

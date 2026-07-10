@@ -9,6 +9,10 @@ namespace Ballers.Models
         public int? YearFormed { get; set; }
         public string? Bio { get; set; }
         public string? ProfileImageUrl { get; set; }
+        public string? ManagerImageBase64 { get; set; }
+        public string? HomeKitColour { get; set; }
+        public string? AwayKitColour { get; set; }
+        public int Wins { get; set; }
     }
 
     public class UpdateTeamProfileRequest
@@ -18,6 +22,13 @@ namespace Ballers.Models
         public string? ManagerName { get; set; }
         public int? YearFormed { get; set; }
         public string? Bio { get; set; }
+        public string? HomeKitColour { get; set; }
+        public string? AwayKitColour { get; set; }
+    }
+
+    public class UploadManagerImageRequest
+    {
+        public string? ImageBase64 { get; set; }
     }
 
     public class PlayerCardDto

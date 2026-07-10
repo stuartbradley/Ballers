@@ -68,6 +68,20 @@
                 </div>
             }
 
+            @if (!string.IsNullOrEmpty(profile.ManagerName))
+            {
+                <div class="profile-card manager-card-section">
+                    <h3>Manager</h3>
+                    <div class="manager-card-wrap">
+                        <PlayerCard Name="@profile.ManagerName"
+                                    Number="@profile.Wins"
+                                    Position="MGR"
+                                    TierOverride="@ManagerTier(profile.Wins)"
+                                    ImageUrl="@profile.ManagerImageBase64" />
+                    </div>
+                </div>
+            }
+
             @if (playerCards.Any())
             {
                 <div class="profile-card squad-card">
@@ -82,6 +96,29 @@
                                                 Assists="@p.Assists"
                                                 Motm="@p.Motm"
                                                 ImageUrl="@p.ImageUrl" />
+                        }
+                    </div>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(profile.HomeKitColour) || !string.IsNullOrEmpty(profile.AwayKitColour))
+            {
+                <div class="profile-card kit-card">
+                    <h3>Kits</h3>
+                    <div class="kit-grid">
+                        @if (!string.IsNullOrEmpty(profile.HomeKitColour))
+                        {
+                            <div class="kit-item">
+                                @KitJersey(profile.HomeKitColour!)
+                                <span class="kit-label">Home</span>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(profile.AwayKitColour))
+                        {
+                            <div class="kit-item">
+                                @KitJersey(profile.AwayKitColour!)
+                                <span class="kit-label">Away</span>
+                            </div>
                         }
                     </div>
                 </div>
@@ -129,6 +166,14 @@
     private TeamProfileDto? profile;
     private List<PlayerCardDto> playerCards = new();
     private bool isLoading = true;
+
+    // bronze < 3 wins ≤ silver < 6 wins ≤ gold
+    static string ManagerTier(int wins) => wins >= 6 ? "gold" : wins >= 3 ? "silver" : "bronze";
+
+    RenderFragment KitJersey(string colour) => @<svg class="kit-jersey" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22 6 L8 14 L4 26 L14 32 L16 28 L16 58 L48 58 L48 28 L50 32 L60 26 L56 14 L42 6 C40 12 34 14 32 14 C30 14 24 12 22 6 Z"
+              fill="@colour" stroke="rgba(0,0,0,0.35)" stroke-width="1.5" stroke-linejoin="round" />
+    </svg>;
 
     protected override async Task OnParametersSetAsync()
     {

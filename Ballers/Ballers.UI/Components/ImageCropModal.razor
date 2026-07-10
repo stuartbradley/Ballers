@@ -103,6 +103,9 @@
     [Parameter] public string Name { get; set; } = "";
     [Parameter] public int Number { get; set; }
     [Parameter] public string Position { get; set; } = "";
+    /// <summary>When set, the processed base64 is handed here to persist instead of saving against PlayerId.
+    /// Return true on success. Used for the manager card.</summary>
+    [Parameter] public Func<string, Task<bool>>? SaveOverride { get; set; }
 
     private readonly string _zoneId = "cropPhotoZone";
     private readonly string _rawId = "cropRawZone";
@@ -222,7 +225,19 @@
                 return;
             }
 
-            await PlayerService.UploadPlayerImage(PlayerId, base64);
+            if (SaveOverride != null)
+            {
+                if (!await SaveOverride(base64))
+                {
+                    _error = "Failed to save. The image may have been flagged for inappropriate content.";
+                    return;
+                }
+            }
+            else
+            {
+                await PlayerService.UploadPlayerImage(PlayerId, base64);
+            }
+
             await OnSaved.InvokeAsync();
             await CloseInternal();
         }

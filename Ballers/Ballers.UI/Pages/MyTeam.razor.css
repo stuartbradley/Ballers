@@ -267,6 +267,51 @@
     color: rgba(255,255,255,0.2);
 }
 
+/* Kit colour picker */
+.kit-colour-input {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.kit-colour-input input[type="color"] {
+    width: 52px;
+    height: 40px;
+    padding: 4px;
+    cursor: pointer;
+    flex: 0 0 auto;
+}
+
+.kit-colour-hex {
+    font-family: var(--font-main);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.6);
+    letter-spacing: 0.06em;
+}
+
+.kit-colour-clear {
+    width: 24px;
+    height: 24px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.55);
+    font-size: 0.65rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, color 0.15s;
+}
+
+.kit-colour-clear:hover {
+    background: rgba(220,38,38,0.85);
+    border-color: #fca5a5;
+    color: white;
+}
+
 .field-group input:focus,
 .field-group textarea:focus {
     border-color: var(--ballers-accent);

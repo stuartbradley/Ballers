@@ -1,0 +1,259 @@
+@page "/admin/motd"
+@using Ballers.Models
+@using Ballers.Services
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@attribute [Authorize(Roles = "Admin")]
+@inject MotdService MotdService
+@inject IJSRuntime JS
+
+<PageTitle>Match of the Day · Admin</PageTitle>
+
+<div class="motda-page">
+
+    <div class="motda-hero">
+        <div class="motda-hero-inner">
+            <p class="motda-eyebrow">Admin Only</p>
+            <h1>Match of the Day</h1>
+        </div>
+    </div>
+
+    <div class="motda-body">
+
+        <!-- Editor -->
+        <div class="motda-card">
+            <h3>@(editingId == null ? "New Post" : "Edit Post")</h3>
+
+            <div class="motda-form">
+
+                <div class="field-group">
+                    <label>Match</label>
+                    <select @bind="selectedFixtureId">
+                        <option value="0">— Select a match —</option>
+                        @foreach (var opt in options)
+                        {
+                            <option value="@opt.FixtureId">@opt.Label</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="field-group">
+                    <label>Cover Photo</label>
+                    <div class="motda-cover-row">
+                        @if (!string.IsNullOrEmpty(coverBase64))
+                        {
+                            <img class="motda-cover-preview" src="@coverBase64" alt="Cover preview" />
+                        }
+                        else
+                        {
+                            <div class="motda-cover-placeholder">No cover</div>
+                        }
+                        <div>
+                            <InputFile OnChange="OnCoverSelected" accept="image/*" class="file-input" id="coverInput" />
+                            <label for="coverInput" class="motda-upload-btn">@(string.IsNullOrEmpty(coverBase64) ? "Choose cover" : "Replace cover")</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label>Gallery Photos</label>
+                    <InputFile OnChange="OnGallerySelected" accept="image/*" multiple class="file-input" id="galleryInput" />
+                    <label for="galleryInput" class="motda-upload-btn">Add photos</label>
+                    @if (galleryPhotos.Any())
+                    {
+                        <div class="motda-gallery-grid">
+                            @for (var i = 0; i < galleryPhotos.Count; i++)
+                            {
+                                var idx = i;
+                                <div class="motda-gallery-thumb">
+                                    <img src="@galleryPhotos[idx]" alt="Gallery @idx" />
+                                    <button type="button" class="motda-thumb-remove" @onclick="() => RemovePhoto(idx)" title="Remove">✕</button>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <div class="field-group">
+                    <label>Blog</label>
+                    <textarea @bind="body" rows="10" placeholder="Write the match report… Separate paragraphs with a blank line."></textarea>
+                </div>
+
+                @if (!string.IsNullOrEmpty(error))
+                {
+                    <p class="motda-error">@error</p>
+                }
+                @if (savedOk)
+                {
+                    <p class="motda-success">Saved.</p>
+                }
+
+                <div class="motda-actions">
+                    <button class="motda-save-btn @(saving ? "saving" : "")" @onclick="Save" disabled="@saving">
+                        @(saving ? "Saving…" : editingId == null ? "Publish Post" : "Save Changes")
+                    </button>
+                    @if (editingId != null)
+                    {
+                        <button class="motda-cancel-btn" @onclick="ResetForm">Cancel</button>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Existing posts -->
+        <div class="motda-card">
+            <h3>Posts</h3>
+            @if (isLoading)
+            {
+                <LoadingSpinner />
+            }
+            else if (!posts.Any())
+            {
+                <p class="motda-empty">No posts yet.</p>
+            }
+            else
+            {
+                <div class="motda-list">
+                    @foreach (var p in posts)
+                    {
+                        <div class="motda-list-row">
+                            <img class="motda-list-thumb" src="@p.CoverImageBase64" alt="@p.Caption" />
+                            <div class="motda-list-info">
+                                <p class="motda-list-title">@p.Caption</p>
+                                <p class="motda-list-sub">@(p.Date?.ToString("dd MMM yyyy") ?? "No date")</p>
+                            </div>
+                            <div class="motda-list-actions">
+                                <button class="motda-edit-btn" @onclick="() => StartEdit(p.Id)">Edit</button>
+                                <button class="motda-delete-btn" @onclick="() => Delete(p.Id)">Delete</button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+    </div>
+
+</div>
+
+@code {
+    private List<MotdListItemDto> posts = new();
+    private List<MotdFixtureOptionDto> options = new();
+    private bool isLoading = true;
+
+    private int? editingId;
+    private int selectedFixtureId;
+    private string? coverBase64;
+    private string body = "";
+    private List<string> galleryPhotos = new();
+
+    private bool saving;
+    private bool savedOk;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        options = await MotdService.GetFixtureOptions();
+        await LoadPosts();
+    }
+
+    private async Task LoadPosts()
+    {
+        isLoading = true;
+        posts = await MotdService.GetList();
+        isLoading = false;
+    }
+
+    private async Task OnCoverSelected(InputFileChangeEventArgs e)
+    {
+        error = null;
+        var dataUrl = await ToDataUrl(e.File);
+        if (dataUrl != null) coverBase64 = dataUrl;
+    }
+
+    private async Task OnGallerySelected(InputFileChangeEventArgs e)
+    {
+        error = null;
+        foreach (var file in e.GetMultipleFiles(maximumFileCount: 30))
+        {
+            var dataUrl = await ToDataUrl(file);
+            if (dataUrl != null) galleryPhotos.Add(dataUrl);
+        }
+    }
+
+    private async Task<string?> ToDataUrl(IBrowserFile file)
+    {
+        if (file.Size > 8 * 1024 * 1024)
+        {
+            error = $"'{file.Name}' is over 8 MB and was skipped.";
+            return null;
+        }
+        await using var stream = file.OpenReadStream(maxAllowedSize: 8 * 1024 * 1024);
+        using var ms = new MemoryStream();
+        await stream.CopyToAsync(ms);
+        return $"data:{file.ContentType};base64,{Convert.ToBase64String(ms.ToArray())}";
+    }
+
+    private void RemovePhoto(int index) => galleryPhotos.RemoveAt(index);
+
+    private async Task Save()
+    {
+        error = null;
+        savedOk = false;
+
+        if (selectedFixtureId <= 0) { error = "Select a match."; return; }
+        if (string.IsNullOrEmpty(coverBase64)) { error = "A cover photo is required."; return; }
+
+        saving = true;
+        var request = new SaveMotdRequest
+        {
+            FixtureId = selectedFixtureId,
+            CoverImageBase64 = coverBase64,
+            Body = body,
+            Photos = galleryPhotos
+        };
+
+        var ok = editingId == null
+            ? await MotdService.Create(request)
+            : await MotdService.Update(editingId.Value, request);
+        saving = false;
+
+        if (!ok) { error = "Save failed. Please try again."; return; }
+
+        savedOk = true;
+        ResetForm();
+        await LoadPosts();
+    }
+
+    private async Task StartEdit(int id)
+    {
+        var detail = await MotdService.GetById(id);
+        if (detail == null) return;
+
+        editingId = detail.Id;
+        selectedFixtureId = detail.FixtureId;
+        coverBase64 = detail.CoverImageBase64;
+        body = detail.Body;
+        galleryPhotos = new List<string>(detail.Photos);
+        error = null;
+        savedOk = false;
+        StateHasChanged();
+    }
+
+    private async Task Delete(int id)
+    {
+        if (!await JS.InvokeAsync<bool>("confirm", "Delete this post?")) return;
+        await MotdService.Delete(id);
+        if (editingId == id) ResetForm();
+        await LoadPosts();
+    }
+
+    private void ResetForm()
+    {
+        editingId = null;
+        selectedFixtureId = 0;
+        coverBase64 = null;
+        body = "";
+        galleryPhotos = new();
+    }
+}

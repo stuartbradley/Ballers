@@ -104,6 +104,7 @@
 .crop-card-preview.gk  { filter: hue-rotate(100deg) saturate(0.85) brightness(0.9); }
 .crop-card-preview.def { filter: hue-rotate(205deg) saturate(0.9) brightness(0.95); }
 .crop-card-preview.fwd { filter: hue-rotate(-25deg) saturate(1.1) brightness(0.95); }
+.crop-card-preview.mgr { filter: none; } /* manager card uses plain gold frame */
 
 .crop-card-top {
     flex: 0 0 65%;

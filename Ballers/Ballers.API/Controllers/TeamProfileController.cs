@@ -37,16 +37,7 @@ namespace Ballers.API.Controllers
             var team = await _db.Teams.FindAsync(id);
             if (team == null) return NotFound();
 
-            return Ok(new TeamProfileDto
-            {
-                Id = team.Id,
-                Name = team.Name,
-                PhoneNumber = team.PhoneNumber,
-                ManagerName = team.ManagerName,
-                YearFormed = team.YearFormed,
-                Bio = team.Bio,
-                ProfileImageUrl = team.ProfileImageUrl
-            });
+            return Ok(await BuildProfileDto(team));
         }
 
         [HttpPut("{id}/profile")]
@@ -68,10 +59,27 @@ namespace Ballers.API.Controllers
             team.ManagerName = request.ManagerName?.Trim();
             team.YearFormed = request.YearFormed;
             team.Bio = request.Bio?.Trim();
+            team.HomeKitColour = request.HomeKitColour?.Trim();
+            team.AwayKitColour = request.AwayKitColour?.Trim();
 
             await _db.SaveChangesAsync();
 
-            return Ok(new TeamProfileDto
+            return Ok(await BuildProfileDto(team));
+        }
+
+        // Current-season wins drive the manager card tier (bronze < 3 ≤ silver < 6 ≤ gold).
+        private async Task<TeamProfileDto> BuildProfileDto(Team team)
+        {
+            var today = DateTime.UtcNow;
+
+            var wins = await _db.Fixtures
+                .Where(f => f.IsPlayed
+                    && f.Season!.StartDate <= today && f.Season.EndDate >= today
+                    && ((f.HomeTeamId == team.Id && f.HomeScore > f.AwayScore)
+                     || (f.AwayTeamId == team.Id && f.AwayScore > f.HomeScore)))
+                .CountAsync();
+
+            return new TeamProfileDto
             {
                 Id = team.Id,
                 Name = team.Name,
@@ -79,8 +87,12 @@ namespace Ballers.API.Controllers
                 ManagerName = team.ManagerName,
                 YearFormed = team.YearFormed,
                 Bio = team.Bio,
-                ProfileImageUrl = team.ProfileImageUrl
-            });
+                ProfileImageUrl = team.ProfileImageUrl,
+                ManagerImageBase64 = team.ManagerImageBase64,
+                HomeKitColour = team.HomeKitColour,
+                AwayKitColour = team.AwayKitColour,
+                Wins = wins
+            };
         }
 
         [HttpGet("{id}/squad")]
@@ -185,6 +197,53 @@ namespace Ballers.API.Controllers
             await _db.SaveChangesAsync();
 
             return Ok(new { url = team.ProfileImageUrl });
+        }
+
+        // Manager photo is stored as a base64 data URL in the DB (same as player photos), not on disk.
+        [HttpPut("{id}/manager/image")]
+        [Authorize]
+        public async Task<IActionResult> UploadManagerImage(int id, [FromBody] UploadManagerImageRequest request)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
+            if (user.TeamId != id) return Forbid();
+
+            var team = await _db.Teams.FindAsync(id);
+            if (team == null) return NotFound();
+
+            if (string.IsNullOrEmpty(request.ImageBase64))
+            {
+                team.ManagerImageBase64 = null;
+                await _db.SaveChangesAsync();
+                return Ok();
+            }
+
+            // Accept "data:image/png;base64,xxxx" or a raw base64 payload.
+            var payload = request.ImageBase64;
+            var contentType = "image/png";
+            var commaIdx = payload.IndexOf(',');
+            if (payload.StartsWith("data:") && commaIdx > 0)
+            {
+                var header = payload[5..commaIdx];
+                var semi = header.IndexOf(';');
+                contentType = semi > 0 ? header[..semi] : header;
+                payload = payload[(commaIdx + 1)..];
+            }
+
+            byte[] imageBytes;
+            try { imageBytes = Convert.FromBase64String(payload); }
+            catch (FormatException) { return BadRequest("Invalid image data."); }
+
+            if (imageBytes.Length > 5 * 1024 * 1024)
+                return BadRequest("Image must be under 5 MB.");
+
+            if (await _moderation.IsExplicitAsync(imageBytes, contentType))
+                return BadRequest("Image was rejected: explicit or inappropriate content detected.");
+
+            team.ManagerImageBase64 = request.ImageBase64;
+            await _db.SaveChangesAsync();
+
+            return Ok();
         }
     }
 }

@@ -33,6 +33,7 @@
             <NavLink href="/teams">Teams</NavLink>
             <NavLink href="/stats">Stats</NavLink>
             <NavLink href="/totw">TOTW</NavLink>
+            <NavLink href="/motd">MOTD</NavLink>
             <NavLink href="/sponsor-us">Sponsor Us</NavLink>
             @if (HostEnv.IsDevelopment() || Config.GetValue<bool>("IsUAT"))
             {
@@ -86,6 +87,7 @@
         <NavLink href="/teams" @onclick="CloseNav">Teams</NavLink>
         <NavLink href="/stats" @onclick="CloseNav">Stats</NavLink>
         <NavLink href="/totw" @onclick="CloseNav">TOTW</NavLink>
+        <NavLink href="/motd" @onclick="CloseNav">MOTD</NavLink>
         <NavLink href="/sponsor-us" @onclick="CloseNav">Sponsor Us</NavLink>
         <AuthorizeView>
             <Authorized>

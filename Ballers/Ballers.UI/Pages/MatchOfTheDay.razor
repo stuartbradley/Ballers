@@ -1,0 +1,66 @@
+@page "/motd"
+@using Ballers.Models
+@using Ballers.Services
+@inject MotdService MotdService
+
+<PageTitle>Match of the Day</PageTitle>
+
+<div class="motd-page">
+
+    <div class="motd-hero">
+        <div class="motd-hero-inner">
+            <p class="motd-eyebrow">Ballers League</p>
+            <h1>Match of the Day</h1>
+            <p class="motd-sub">Photos & stories from across the season</p>
+        </div>
+    </div>
+
+    <div class="motd-body">
+        @if (isLoading)
+        {
+            <div class="motd-loading"><LoadingSpinner /></div>
+        }
+        else if (!posts.Any())
+        {
+            <div class="motd-empty">No match stories posted yet.</div>
+        }
+        else
+        {
+            <div class="motd-grid">
+                @foreach (var post in posts)
+                {
+                    <a class="motd-tile" href="/motd/@post.Id">
+                        <div class="motd-tile-img-wrap">
+                            <img class="motd-tile-img" src="@post.CoverImageBase64" alt="@post.Caption" />
+                        </div>
+                        <div class="motd-tile-caption">
+                            <p class="motd-tile-title">@post.Caption</p>
+                            <div class="motd-tile-meta">
+                                @if (post.Date.HasValue)
+                                {
+                                    <span class="motd-meta-item">🗓 @post.Date.Value.ToString("dd MMM yyyy")</span>
+                                }
+                                @if (!string.IsNullOrEmpty(post.Location) || !string.IsNullOrEmpty(post.Postcode))
+                                {
+                                    <span class="motd-meta-item">📍 @(string.IsNullOrEmpty(post.Location) ? post.Postcode : post.Location)</span>
+                                }
+                            </div>
+                        </div>
+                    </a>
+                }
+            </div>
+        }
+    </div>
+
+</div>
+
+@code {
+    private List<MotdListItemDto> posts = new();
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        posts = await MotdService.GetList();
+        isLoading = false;
+    }
+}

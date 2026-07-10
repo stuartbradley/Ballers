@@ -52,6 +52,13 @@ namespace Ballers.Services
             return result?.Url;
         }
 
+        // Manager photo is stored as a base64 data URL in the DB (same as player photos).
+        public async Task<bool> UploadManagerImage(int teamId, string imageBase64)
+        {
+            var response = await _http.PutAsJsonAsync($"api/teams/{teamId}/manager/image", new { imageBase64 });
+            return response.IsSuccessStatusCode;
+        }
+
         private class UploadImageResult
         {
             public string? Url { get; set; }

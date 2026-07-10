@@ -1,4 +1,5 @@
 @using Ballers.Models
+@inject HttpClient Http
 
 <div class="week-card">
 
@@ -13,7 +14,10 @@
             <div class="fixture-card @(match.IsPlayed ? "played" : "")">
 
                 <div class="matchup">
-                    <span class="team-name home-team @(match.IsPlayed && match.HomeScore > match.AwayScore ? "winner" : "")">@match.Home</span>
+                    <div class="team-side home-team">
+                        @TeamCrest(match.HomeLogo, match.Home)
+                        <span class="team-name @(match.IsPlayed && match.HomeScore > match.AwayScore ? "winner" : "")">@match.Home</span>
+                    </div>
                     @if (match.IsPlayed)
                     {
                         <div class="score-ring">@match.HomeScore – @match.AwayScore</div>
@@ -22,7 +26,10 @@
                     {
                         <div class="vs-ring">VS</div>
                     }
-                    <span class="team-name away-team @(match.IsPlayed && match.AwayScore > match.HomeScore ? "winner" : "")">@match.Away</span>
+                    <div class="team-side away-team">
+                        @TeamCrest(match.AwayLogo, match.Away)
+                        <span class="team-name @(match.IsPlayed && match.AwayScore > match.HomeScore ? "winner" : "")">@match.Away</span>
+                    </div>
                 </div>
 
                 @if (match.IsPlayed && (match.HomeScorers.Any() || match.AwayScorers.Any()))
@@ -98,4 +105,24 @@
 @code {
     [Parameter]
     public FixtureWeekDto Week { get; set; } = new();
+
+    RenderFragment TeamCrest(string? logo, string name) => __builder =>
+    {
+        if (!string.IsNullOrEmpty(logo))
+        {
+            <img class="team-crest" src="@(Http.BaseAddress!.ToString().TrimEnd('/') + logo)" alt="@name crest" />
+        }
+        else
+        {
+            <div class="team-crest team-crest-placeholder"><span>@Initials(name)</span></div>
+        }
+    };
+
+    static string Initials(string name)
+    {
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length >= 2
+            ? $"{parts[0][0]}{parts[1][0]}".ToUpper()
+            : name.Length >= 2 ? name[..2].ToUpper() : name.ToUpper();
+    }
 }

@@ -71,9 +71,12 @@
     [Parameter] public EventCallback OnRemove { get; set; }
     [Parameter] public EventCallback OnEditPhoto { get; set; }
     [Parameter] public EventCallback OnEdit { get; set; }
+    /// <summary>When set ("gold"/"silver"/"bronze"), overrides the stat-derived tier (used by manager cards).</summary>
+    [Parameter] public string? TierOverride { get; set; }
 
     private string CardTier =>
-        (Goals ?? 0) >= 1 && (Assists ?? 0) >= 1 ? "gold" :
+        TierOverride ??
+        ((Goals ?? 0) >= 1 && (Assists ?? 0) >= 1 ? "gold" :
         (Goals ?? 0) >= 1 || (Assists ?? 0) >= 1 ? "silver" :
-        "bronze";
+        "bronze");
 }

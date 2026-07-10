@@ -1,0 +1,94 @@
+@page "/motd/{Id:int}"
+@using Ballers.Models
+@using Ballers.Services
+@inject MotdService MotdService
+
+<PageTitle>@(post?.Caption ?? "Match of the Day")</PageTitle>
+
+<div class="motd-post-page">
+
+    @if (isLoading)
+    {
+        <div class="motd-post-loading"><LoadingSpinner /></div>
+    }
+    else if (post == null)
+    {
+        <div class="motd-post-404">
+            <h2>Story not found</h2>
+            <NavLink href="/motd">Back to Match of the Day</NavLink>
+        </div>
+    }
+    else
+    {
+        <div class="motd-post-body">
+
+            <NavLink class="motd-back" href="/motd">← All matches</NavLink>
+
+            <header class="motd-post-header">
+                <h1>@post.Caption</h1>
+                <div class="motd-post-meta">
+                    @if (post.Date.HasValue)
+                    {
+                        <span class="motd-post-meta-item">🗓 @post.Date.Value.ToString("dddd dd MMM yyyy")</span>
+                    }
+                    @if (!string.IsNullOrEmpty(post.Location) || !string.IsNullOrEmpty(post.Postcode))
+                    {
+                        <span class="motd-post-meta-item">📍 @JoinPlace(post.Location, post.Postcode)</span>
+                    }
+                </div>
+            </header>
+
+            <div class="motd-post-cover">
+                <img src="@post.CoverImageBase64" alt="@post.Caption" />
+            </div>
+
+            @if (post.Photos.Any())
+            {
+                <div class="motd-gallery">
+                    @foreach (var photo in post.Photos)
+                    {
+                        <div class="motd-gallery-item">
+                            <img src="@photo" alt="@post.Caption photo" />
+                        </div>
+                    }
+                </div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(post.Body))
+            {
+                <article class="motd-article">
+                    @foreach (var para in Paragraphs(post.Body))
+                    {
+                        <p>@para</p>
+                    }
+                </article>
+            }
+
+        </div>
+    }
+
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private MotdDetailDto? post;
+    private bool isLoading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        post = await MotdService.GetById(Id);
+        isLoading = false;
+    }
+
+    static string JoinPlace(string? location, string? postcode)
+    {
+        if (string.IsNullOrEmpty(location)) return postcode ?? "";
+        if (string.IsNullOrEmpty(postcode)) return location;
+        return $"{location} · {postcode}";
+    }
+
+    static IEnumerable<string> Paragraphs(string body) =>
+        body.Replace("\r\n", "\n").Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+}

@@ -12,6 +12,8 @@
     {
         public string Home { get; set; } = "";
         public string Away { get; set; } = "";
+        public string? HomeLogo { get; set; }
+        public string? AwayLogo { get; set; }
         public string Day { get; set; } = "";
         public string Time { get; set; } = "";
         public string Location { get; set; } = "";

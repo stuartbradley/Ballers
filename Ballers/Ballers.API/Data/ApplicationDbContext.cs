@@ -26,6 +26,8 @@ namespace Ballers.API.Data
         public DbSet<Notification> Notifications => Set<Notification>();
         public DbSet<NotificationSetting> NotificationSettings => Set<NotificationSetting>();
         public DbSet<LeagueSetting> LeagueSettings => Set<LeagueSetting>();
+        public DbSet<MatchOfTheDayPost> MatchOfTheDayPosts => Set<MatchOfTheDayPost>();
+        public DbSet<MatchOfTheDayPhoto> MatchOfTheDayPhotos => Set<MatchOfTheDayPhoto>();
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -163,6 +165,18 @@ namespace Ballers.API.Data
             builder.Entity<Fixture>()
                 .HasOne(f => f.AwayViceCaptain).WithMany()
                 .HasForeignKey(f => f.AwayViceCaptainId).OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<MatchOfTheDayPost>()
+                .HasOne(p => p.Fixture)
+                .WithMany()
+                .HasForeignKey(p => p.FixtureId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<MatchOfTheDayPhoto>()
+                .HasOne(ph => ph.Post)
+                .WithMany(p => p.Photos)
+                .HasForeignKey(ph => ph.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
 
     }
