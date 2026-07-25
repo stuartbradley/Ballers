@@ -841,6 +841,15 @@ tbody tr:hover {
     margin-bottom: 20px;
 }
 
+.perk-image {
+    display: block;
+    max-width: 220px;
+    width: 100%;
+    height: auto;
+    margin: 0 auto 24px;
+    border-radius: 12px;
+}
+
 .perk-card h2 {
     color: white;
     font-size: 2.2rem;
