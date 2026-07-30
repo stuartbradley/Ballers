@@ -55,7 +55,10 @@ window.teamSheetExport = {
             }
 
             // Re-fit names at the forced 640px width, not whatever the screen was.
-            fitPlayerNames(target);
+            // The slack matters: snapdom re-rasterizes the text, and slightly wider
+            // font metrics there re-trigger the ellipsis on names that fit exactly
+            // on screen. Leaving a few px spare absorbs that difference.
+            fitPlayerNames(target, CAPTURE_SLACK_PX);
             if (window.snapdom.preCache) {
                 try { await window.snapdom.preCache(target); } catch (e) { }
             }
@@ -63,6 +66,9 @@ window.teamSheetExport = {
             const img = await window.snapdom.toPng(target, {
                 scale: 2,
                 embedFonts: true,
+                // Measure the real laid-out text instead of letting it re-flow at
+                // its natural width under font fallback, which was clipping names.
+                reconcile: true,
                 backgroundColor: null
             });
 
@@ -99,12 +105,17 @@ window.teamSheetExport = {
 // Player name spans, one class per poster variant.
 const PLAYER_NAME_SELECTOR = '.ts-name, .sp-pname, .gf-pname, .cm-pname, .vt-pname';
 
+// Spare width left when fitting for the capture, to absorb the font-metric
+// difference between the live page and snapdom's rasterization.
+const CAPTURE_SLACK_PX = 8;
+
 // Most variants lay the squad out in a two-column grid, so each name is capped
 // at roughly half the poster width and longer ones hit the ellipsis while the
 // neighbouring column still looks empty. Step the font size down — only for the
 // names that actually overflow — until each one fits, with a floor so a very
 // long name degrades to the ellipsis rather than becoming unreadable.
-function fitPlayerNames(root) {
+// slackPx leaves that many pixels spare rather than fitting flush to the edge.
+function fitPlayerNames(root, slackPx = 0) {
     for (const el of root.querySelectorAll(PLAYER_NAME_SELECTOR)) {
         // Reset to the stylesheet size first: this runs repeatedly (re-render,
         // variant switch, export) and must not compound earlier shrinks.
@@ -122,7 +133,7 @@ function fitPlayerNames(root) {
         const min = base * 0.7;
         let size = base;
         // scrollWidth exceeds clientWidth only while the text is being clipped.
-        while (el.scrollWidth > el.clientWidth + 0.5 && size > min) {
+        while (el.scrollWidth > el.clientWidth - slackPx + 0.5 && size > min) {
             size = Math.max(min, size - 0.5);
             el.style.fontSize = size + 'px';
         }

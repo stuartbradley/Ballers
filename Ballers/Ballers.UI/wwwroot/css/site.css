@@ -1,4 +1,6 @@
-﻿@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
+﻿/* Oswald + Inter are loaded via a <link> in index.html rather than @import here.
+   snapdom skips nested @import rules when embedding fonts for the team sheet
+   export, which left the poster rasterizing with fallback metrics. */
 
 *, *::before, *::after {
     box-sizing: border-box;
