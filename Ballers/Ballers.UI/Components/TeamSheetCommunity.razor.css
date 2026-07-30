@@ -169,7 +169,8 @@
 .cm-pname {
     font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.95rem;
     color: var(--navy);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    /* Wrap instead of ellipsis — the PNG export truncated names of its own accord. */
+    min-width: 0; overflow-wrap: anywhere;
 }
 
 /* ── Sponsor ── */

@@ -179,7 +179,8 @@
 .gf-pname {
     font-family: 'Permanent Marker', cursive; font-size: 0.96rem;
     letter-spacing: 0.01em; color: rgba(255,255,255,0.92);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    /* Wrap instead of ellipsis — the PNG export truncated names of its own accord. */
+    min-width: 0; overflow-wrap: anywhere;
 }
 
 /* ── Sponsor ── */

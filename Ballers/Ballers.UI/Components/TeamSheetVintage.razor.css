@@ -161,7 +161,8 @@
 .vt-pname {
     font-family: 'Saira Semi Condensed', sans-serif; font-weight: 600;
     font-size: 1rem; letter-spacing: 0.03em; text-transform: uppercase; color: var(--ink);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    /* Wrap instead of ellipsis — the PNG export truncated names of its own accord. */
+    min-width: 0; overflow-wrap: anywhere;
 }
 
 /* ── Sponsor ── */

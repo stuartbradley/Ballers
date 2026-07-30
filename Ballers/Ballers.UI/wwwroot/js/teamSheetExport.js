@@ -55,10 +55,7 @@ window.teamSheetExport = {
             }
 
             // Re-fit names at the forced 640px width, not whatever the screen was.
-            // The slack matters: snapdom re-rasterizes the text, and slightly wider
-            // font metrics there re-trigger the ellipsis on names that fit exactly
-            // on screen. Leaving a few px spare absorbs that difference.
-            fitPlayerNames(target, CAPTURE_SLACK_PX);
+            fitPlayerNames(target);
             if (window.snapdom.preCache) {
                 try { await window.snapdom.preCache(target); } catch (e) { }
             }
@@ -105,25 +102,28 @@ window.teamSheetExport = {
 // Player name spans, one class per poster variant.
 const PLAYER_NAME_SELECTOR = '.ts-name, .sp-pname, .gf-pname, .cm-pname, .vt-pname';
 
-// Spare width left when fitting for the capture, to absorb the font-metric
-// difference between the live page and snapdom's rasterization.
-const CAPTURE_SLACK_PX = 8;
+// True while the name still occupies a single line box.
+function fitsOneLine(el) {
+    const cs = getComputedStyle(el);
+    const lineHeight = parseFloat(cs.lineHeight) || parseFloat(cs.fontSize) * 1.25;
+    // Halfway between one and two lines, so the test is not sensitive to
+    // sub-pixel rounding in either direction.
+    return el.scrollHeight <= lineHeight * 1.6;
+}
 
 // Most variants lay the squad out in a two-column grid, so each name is capped
-// at roughly half the poster width and longer ones hit the ellipsis while the
-// neighbouring column still looks empty. Step the font size down — only for the
-// names that actually overflow — until each one fits, with a floor so a very
-// long name degrades to the ellipsis rather than becoming unreadable.
-// slackPx leaves that many pixels spare rather than fitting flush to the edge.
-function fitPlayerNames(root, slackPx = 0) {
+// at roughly half the poster width. Names now wrap rather than ellipsis, so no
+// text is ever lost; this just steps the font size down — only for names that
+// would otherwise wrap — to keep as many as possible on one line. A name that
+// still does not fit at the floor simply wraps, which is why the floor is safe.
+function fitPlayerNames(root) {
     for (const el of root.querySelectorAll(PLAYER_NAME_SELECTOR)) {
         // Reset to the stylesheet size first: this runs repeatedly (re-render,
         // variant switch, export) and must not compound earlier shrinks.
         if (el.dataset.tsBaseSize) {
             el.style.fontSize = '';
         }
-        // Not laid out yet (hidden, or measured before the first paint) — every
-        // name would look like it overflows and get shrunk to the floor.
+        // Not laid out yet (hidden, or measured before the first paint).
         if (el.clientWidth === 0) continue;
 
         const base = parseFloat(getComputedStyle(el).fontSize);
@@ -132,8 +132,7 @@ function fitPlayerNames(root, slackPx = 0) {
 
         const min = base * 0.7;
         let size = base;
-        // scrollWidth exceeds clientWidth only while the text is being clipped.
-        while (el.scrollWidth > el.clientWidth - slackPx + 0.5 && size > min) {
+        while (!fitsOneLine(el) && size > min) {
             size = Math.max(min, size - 0.5);
             el.style.fontSize = size + 'px';
         }
