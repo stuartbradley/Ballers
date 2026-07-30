@@ -78,8 +78,18 @@ window.teamSheetExport = {
 };
 
 // Fetch a URL and return a base64 data URI.
+//
+// cache: 'reload' is deliberate. The poster's <img> tags load badges as plain
+// (non-CORS) requests, which seeds the HTTP cache with a response this CORS
+// fetch is not allowed to reuse — the browser reports it as a missing
+// Access-Control-Allow-Origin header even when the server sends one. Reusing
+// the cache here ('force-cache' or a revalidating 304) keeps hitting that
+// stale entry, so bypass it and re-request as a proper CORS fetch.
+// credentials: 'omit' keeps the request compatible with an origin-specific
+// Access-Control-Allow-Origin.
 async function toDataUri(url) {
-    const resp = await fetch(url, { cache: 'force-cache' });
+    const resp = await fetch(url, { mode: 'cors', cache: 'reload', credentials: 'omit' });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status} fetching ${url}`);
     const blob = await resp.blob();
     return await new Promise((resolve, reject) => {
         const fr = new FileReader();
