@@ -4,6 +4,20 @@
 // That means the downloaded image always looks like the desktop poster, even
 // when exporting from a narrow phone screen.
 window.teamSheetExport = {
+    // Shrink any player name that overflows its column so it reads in full.
+    // Called by the page after each render and again before capture, since the
+    // poster is forced to 640px for the export and the fit differs at that width.
+    fitNames: async function (elementId) {
+        const node = document.getElementById(elementId);
+        if (!node) return false;
+        // Measurement is meaningless until the poster's webfonts have loaded.
+        if (document.fonts && document.fonts.ready) {
+            try { await document.fonts.ready; } catch (e) { }
+        }
+        fitPlayerNames(node);
+        return true;
+    },
+
     download: async function (elementId, filename) {
         const node = document.getElementById(elementId);
         if (!node || !window.snapdom) {
@@ -39,6 +53,9 @@ window.teamSheetExport = {
             if (document.fonts && document.fonts.ready) {
                 try { await document.fonts.ready; } catch (e) { }
             }
+
+            // Re-fit names at the forced 640px width, not whatever the screen was.
+            fitPlayerNames(target);
             if (window.snapdom.preCache) {
                 try { await window.snapdom.preCache(target); } catch (e) { }
             }
@@ -73,9 +90,44 @@ window.teamSheetExport = {
             target.style.minWidth = prev.minWidth;
             target.style.flexShrink = prev.flexShrink;
             target.style.margin = prev.margin;
+            // Back to the on-screen width, so re-fit against it.
+            fitPlayerNames(target);
         }
     }
 };
+
+// Player name spans, one class per poster variant.
+const PLAYER_NAME_SELECTOR = '.ts-name, .sp-pname, .gf-pname, .cm-pname, .vt-pname';
+
+// Most variants lay the squad out in a two-column grid, so each name is capped
+// at roughly half the poster width and longer ones hit the ellipsis while the
+// neighbouring column still looks empty. Step the font size down — only for the
+// names that actually overflow — until each one fits, with a floor so a very
+// long name degrades to the ellipsis rather than becoming unreadable.
+function fitPlayerNames(root) {
+    for (const el of root.querySelectorAll(PLAYER_NAME_SELECTOR)) {
+        // Reset to the stylesheet size first: this runs repeatedly (re-render,
+        // variant switch, export) and must not compound earlier shrinks.
+        if (el.dataset.tsBaseSize) {
+            el.style.fontSize = '';
+        }
+        // Not laid out yet (hidden, or measured before the first paint) — every
+        // name would look like it overflows and get shrunk to the floor.
+        if (el.clientWidth === 0) continue;
+
+        const base = parseFloat(getComputedStyle(el).fontSize);
+        if (!base) continue;
+        el.dataset.tsBaseSize = String(base);
+
+        const min = base * 0.7;
+        let size = base;
+        // scrollWidth exceeds clientWidth only while the text is being clipped.
+        while (el.scrollWidth > el.clientWidth + 0.5 && size > min) {
+            size = Math.max(min, size - 0.5);
+            el.style.fontSize = size + 'px';
+        }
+    }
+}
 
 // Fetch a URL and return a base64 data URI.
 //

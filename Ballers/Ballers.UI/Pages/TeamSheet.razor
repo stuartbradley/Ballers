@@ -96,6 +96,22 @@
     private bool squadIsProvisional = false;
     private int variant = 1;
 
+    // Names are shrunk to fit their column by measuring the rendered text, which
+    // can only happen after the poster is in the DOM. Re-runs on every render so
+    // switching variant re-fits against that variant's layout.
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (fixture == null) return;
+        try
+        {
+            await JS.InvokeVoidAsync("teamSheetExport.fitNames", "poster-capture");
+        }
+        catch (JSException)
+        {
+            // Fitting is cosmetic — never block the page on it.
+        }
+    }
+
     private async Task DownloadImage()
     {
         if (fixture == null) return;
