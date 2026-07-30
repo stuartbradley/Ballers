@@ -107,7 +107,17 @@ async function inlineAssets(root) {
             const data = await get(src);
             restores.push(() => img.setAttribute('src', src));
             img.setAttribute('src', data);
-        } catch (e) { /* leave original */ }
+        } catch (e) {
+            // Usually a missing Access-Control-Allow-Origin on a cross-origin
+            // image. Blank the alt text so the capture shows an empty slot
+            // rather than the alt string rendered as poster copy.
+            console.warn('teamSheetExport: could not inline image', src, e);
+            const alt = img.getAttribute('alt');
+            if (alt) {
+                restores.push(() => img.setAttribute('alt', alt));
+                img.setAttribute('alt', '');
+            }
+        }
     }
 
     // inline background-image url(...)

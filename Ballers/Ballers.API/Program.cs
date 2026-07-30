@@ -125,6 +125,14 @@ if (app.Environment.IsDevelopment())
 app.UseResponseCompression();
 app.UseHttpsRedirection();
 
+app.UseRouting();
+
+// CORS must run before the static file middleware, otherwise uploaded team
+// badges under /uploads are served without an Access-Control-Allow-Origin
+// header. The UI can still display them, but the team sheet export fetches
+// each image to inline it as a data URI, and that fetch is blocked.
+app.UseCors("AllowUI");
+
 var webRoot = app.Environment.WebRootPath
     ?? Path.Combine(app.Environment.ContentRootPath, "wwwroot");
 app.UseStaticFiles(new StaticFileOptions
@@ -133,9 +141,6 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = ""
 });
 
-app.UseRouting();
-
-app.UseCors("AllowUI");
 app.UseAuthentication();
 app.UseAuthorization();
 
