@@ -87,6 +87,22 @@
 .ts-download:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(250,204,21,0.4); }
 .ts-download:disabled { opacity: 0.6; cursor: default; }
 
+/* Shown when no squad has been picked and the full roster is used instead.
+   Sits outside #poster-capture so it never lands in the downloaded image. */
+.ts-notice {
+    width: 100%;
+    max-width: 660px;
+    margin-bottom: 18px;
+    padding: 10px 16px;
+    background: rgba(250,204,21,0.10);
+    border: 1px solid rgba(250,204,21,0.32);
+    border-radius: 10px;
+    color: rgba(250,204,21,0.92);
+    font-family: 'Saira Semi Condensed', sans-serif;
+    font-size: 0.82rem;
+    text-align: center;
+}
+
 .ts-capture { width: 100%; display: flex; justify-content: center; }
 
 .ts-error { color: rgba(255,255,255,0.6); margin-top: 60px; }

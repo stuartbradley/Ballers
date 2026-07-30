@@ -45,6 +45,13 @@
     }
     else
     {
+        @if (squadIsProvisional)
+        {
+            <div class="ts-notice">
+                No squad picked for this fixture yet — showing the full @sheetTeamName roster.
+            </div>
+        }
+
         <div id="poster-capture" class="ts-capture">
             @if (variant == 1)
             {
@@ -86,6 +93,7 @@
     private string sheetTeamName = "";
     private bool isLoading = true;
     private bool isDownloading = false;
+    private bool squadIsProvisional = false;
     private int variant = 1;
 
     private async Task DownloadImage()
@@ -122,12 +130,23 @@
 
         var homeTask = TeamService.GetProfile(fixture.HomeTeamId);
         var awayTask = TeamService.GetProfile(fixture.AwayTeamId);
-        var squadTask = TeamService.GetSquad(sheetTeamId);
-        await Task.WhenAll(homeTask, awayTask, squadTask);
+        var rosterTask = TeamService.GetSquad(sheetTeamId);
+        var pickedTask = FixtureService.GetFixtureSquad(Id);
+        await Task.WhenAll(homeTask, awayTask, rosterTask, pickedTask);
 
         homeBadge = Abs(homeTask.Result?.ProfileImageUrl);
         awayBadge = Abs(awayTask.Result?.ProfileImageUrl);
-        squad = squadTask.Result.OrderBy(p => p.Number).ToList();
+
+        // The fixture squad endpoint returns picks for both teams, so intersecting
+        // with this team's roster filters out the opposition as well as unpicked players.
+        var pickedIds = pickedTask.Result.Select(p => p.PlayerId).ToHashSet();
+        var picked = rosterTask.Result.Where(p => pickedIds.Contains(p.Id)).ToList();
+
+        // No squad saved for this fixture yet — show the full roster rather than a blank sheet.
+        squadIsProvisional = picked.Count == 0;
+        squad = (squadIsProvisional ? rosterTask.Result : picked)
+            .OrderBy(p => p.Number)
+            .ToList();
 
         isLoading = false;
     }
