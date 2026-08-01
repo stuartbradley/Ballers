@@ -31,6 +31,24 @@ namespace Ballers.API.Controllers
         private async Task<bool> FixturesLockedFor(ApplicationUser user)
             => !user.IsAdmin && await _leagueSettings.AreFixturesLockedAsync();
 
+        /// <summary>
+        /// Which team a write applies to. Admins and referees have no team of
+        /// their own, so they name the side explicitly and default to the home
+        /// team; a manager always acts for their own team, whatever they send.
+        /// Returns null when an admin names a team that is not in this fixture.
+        /// </summary>
+        private static int? ResolveActingTeamId(
+            bool isAdmin, ApplicationUser user, FixtureDetail fixture, int? requestedTeamId)
+        {
+            if (!isAdmin) return user.TeamId;
+
+            if (requestedTeamId is null) return fixture.HomeTeamId;
+
+            return requestedTeamId == fixture.HomeTeamId || requestedTeamId == fixture.AwayTeamId
+                ? requestedTeamId
+                : null;
+        }
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetFixture(int id)
         {
@@ -73,9 +91,12 @@ namespace Ballers.API.Controllers
             if (fixture.IsEditLocked)
                 return Conflict("This fixture is locked — more than 2 weeks have passed since it was played.");
 
+            var actingTeamId = ResolveActingTeamId(isAdmin, user, fixture, request.TeamId);
+            if (actingTeamId is null) return BadRequest("That team is not in this fixture.");
+
             try
             {
-                await _fixtures.SubmitStatsAsync(fixtureId, request.PlayerStats, isAdmin ? null : user.TeamId);
+                await _fixtures.SubmitStatsAsync(fixtureId, request.PlayerStats, actingTeamId);
 
                 var msg = $"Stats submitted for {fixture.HomeTeam} vs {fixture.AwayTeam}.";
                 var link = $"/fixture/{fixtureId}";
@@ -189,7 +210,13 @@ namespace Ballers.API.Controllers
             if (fixture.IsEditLocked)
                 return Conflict("This fixture is locked — more than 2 weeks have passed since it was played.");
 
-            await _fixtures.UpdateSquadAsync(fixtureId, request.PlayerIds, isAdmin ? null : user.TeamId);
+            // Never null for an admin: UpdateSquadAsync treats a null team as
+            // "replace every player in this fixture", which would wipe the other
+            // team's squad when an admin saved one side.
+            var actingTeamId = ResolveActingTeamId(isAdmin, user, fixture, request.TeamId);
+            if (actingTeamId is null) return BadRequest("That team is not in this fixture.");
+
+            await _fixtures.UpdateSquadAsync(fixtureId, request.PlayerIds, actingTeamId);
             return Ok();
         }
 
@@ -312,8 +339,11 @@ namespace Ballers.API.Controllers
             if (await FixturesLockedFor(user))
                 return Conflict("Fixtures are locked by the admin — editing is disabled.");
 
-            int teamId = isAdmin ? fixture.HomeTeamId : user.TeamId!.Value;
-            await _fixtures.SaveCaptaincyAsync(fixtureId, teamId, request.CaptainPlayerId, request.ViceCaptainPlayerId);
+            var actingTeamId = ResolveActingTeamId(isAdmin, user, fixture, request.TeamId);
+            if (actingTeamId is null) return BadRequest("That team is not in this fixture.");
+
+            await _fixtures.SaveCaptaincyAsync(
+                fixtureId, actingTeamId.Value, request.CaptainPlayerId, request.ViceCaptainPlayerId);
             return Ok();
         }
 

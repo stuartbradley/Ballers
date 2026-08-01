@@ -266,6 +266,21 @@
     letter-spacing: 0.01em;
 }
 
+/* Shown when one team has submitted and the other has not. */
+.awaiting-stats-banner {
+    background: rgba(96, 165, 250, 0.08);
+    border: 1px solid rgba(96, 165, 250, 0.25);
+    border-radius: 8px;
+    padding: 10px 16px;
+    margin: 0 0 12px;
+    font-size: 0.82rem;
+    color: rgba(147, 197, 253, 0.9);
+    text-align: center;
+    letter-spacing: 0.01em;
+}
+
+.awaiting-stats-banner strong { color: white; }
+
 .fixture-tabs {
     display: flex;
     background: #0D1B30;
@@ -551,6 +566,61 @@
     align-items: center;
     gap: 16px;
     flex-wrap: wrap;
+}
+
+/* ── Admin "viewing as" team switch ── */
+
+.acting-team-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.acting-team-label {
+    font-family: var(--font-display);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.acting-team-toggle {
+    display: inline-flex;
+    padding: 4px;
+    gap: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+}
+
+.acting-team-btn {
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.55);
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 7px 16px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+}
+
+.acting-team-btn:hover { color: white; }
+
+.acting-team-btn.active {
+    background: var(--ballers-accent);
+    color: #07101E;
+}
+
+@media (max-width: 560px) {
+    .acting-team-toggle { width: 100%; }
+    .acting-team-btn { flex: 1; padding: 8px 10px; }
 }
 
 /* ── True man of the match (admin only) ── */

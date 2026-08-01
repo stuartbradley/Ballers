@@ -26,6 +26,9 @@ namespace Ballers.API.Services
         public string? AwayCaptainName { get; init; }
         public int? AwayViceCaptainId { get; init; }
         public string? AwayViceCaptainName { get; init; }
+        // A result is only counted once both are true; see Fixture.IsPlayed.
+        public bool HomeStatsSubmitted { get; init; }
+        public bool AwayStatsSubmitted { get; init; }
     }
     public record HeadToHeadResult(
         int FixtureId, string HomeTeam, string AwayTeam,

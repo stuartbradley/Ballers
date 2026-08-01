@@ -77,6 +77,31 @@
                 </div>
             }
 
+            @if (AwaitingOtherTeamStats)
+            {
+                <div class="awaiting-stats-banner">
+                    Waiting on <strong>@TeamYetToSubmit</strong> to submit their stats.
+                    The result stays off the league table until both teams have.
+                </div>
+            }
+
+            @if (isAdmin)
+            {
+                <div class="acting-team-bar">
+                    <span class="acting-team-label">Viewing as</span>
+                    <div class="acting-team-toggle">
+                        <button class="acting-team-btn @(ViewingHome ? "active" : "")"
+                                @onclick="@(() => SwitchActingTeam(fixture.HomeTeamId))">
+                            @fixture.HomeTeam
+                        </button>
+                        <button class="acting-team-btn @(ViewingHome ? "" : "active")"
+                                @onclick="@(() => SwitchActingTeam(fixture.AwayTeamId))">
+                            @fixture.AwayTeam
+                        </button>
+                    </div>
+                </div>
+            }
+
             <!-- TABS -->
             <div class="fixture-tabs">
                 <button class="tab @(activeTab == "overview" ? "active" : "")"
@@ -203,7 +228,7 @@
                         </div>
                     }
 
-                    @if ((isAdmin || isUserHome) && !fixture.IsKnockout)
+                    @if ((isAdmin || ViewingHome) && !fixture.IsKnockout)
                     {
                         <div class="schedule-section">
                             <h3>Schedule</h3>
@@ -495,7 +520,7 @@
                         @if (opponentKicks.Any())
                         {
                             <div class="opponent-kicks">
-                                <h3>@(isUserHome ? fixture.AwayTeam : fixture.HomeTeam)'s Penalties</h3>
+                                <h3>@opponentTeamName's Penalties</h3>
                                 <div class="penalty-table">
                                     <div class="penalty-header">
                                         <span>#</span>
@@ -545,7 +570,26 @@
     private int previewHomeScore = 0;
     private int previewAwayScore = 0;
     private int opponentSavedScore = 0;
-    private bool isUserHome = false;
+
+    // The team this page is showing and editing. A manager only ever sees their
+    // own team; an admin or referee has no team of their own, so they choose a
+    // side and default to the home team.
+    private int actingTeamId;
+    private bool ViewingHome => fixture != null && actingTeamId == fixture.HomeTeamId;
+
+    // Sent on writes so the API knows which side an admin is acting for. Null for
+    // managers, whose team the API takes from their own account regardless.
+    private int? AdminTeamId => isAdmin ? actingTeamId : null;
+
+    // Exactly one side has reported, so the result is not counted anywhere yet.
+    private bool AwaitingOtherTeamStats =>
+        fixture != null
+        && !fixture.IsKnockout
+        && fixture.HomeStatsSubmitted != fixture.AwayStatsSubmitted;
+
+    private string TeamYetToSubmit =>
+        fixture!.HomeStatsSubmitted ? fixture.AwayTeam : fixture.HomeTeam;
+
     private List<PenaltyKickViewModel> penaltyKicks = new();
     private List<PenaltyKickResultDto> opponentKicks = new();
 
@@ -564,16 +608,16 @@
     private bool viewingOpponent = false;
     private List<OpponentPlayerStatDto> opponentStats = new();
     private bool opponentStatsLoaded = false;
-    private string myTeamLabel => isAdmin ? fixture!.HomeTeam : "My Team";
-    private string opponentTeamName => isAdmin ? fixture!.AwayTeam : (isUserHome ? fixture!.AwayTeam : fixture!.HomeTeam);
+    private string myTeamLabel => isAdmin ? (ViewingHome ? fixture!.HomeTeam : fixture!.AwayTeam) : "My Team";
+    private string opponentTeamName => ViewingHome ? fixture!.AwayTeam : fixture!.HomeTeam;
 
     private List<HeadToHeadResultDto> headToHead = new();
     private bool h2hLoaded = false;
 
     private int? captainPlayerId;
     private int? vicePlayerId;
-    private string? myCaptainName => isUserHome ? fixture?.HomeCaptainName : fixture?.AwayCaptainName;
-    private string? myViceName    => isUserHome ? fixture?.HomeViceCaptainName : fixture?.AwayViceCaptainName;
+    private string? myCaptainName => ViewingHome ? fixture?.HomeCaptainName : fixture?.AwayCaptainName;
+    private string? myViceName    => ViewingHome ? fixture?.HomeViceCaptainName : fixture?.AwayViceCaptainName;
 
     private string scheduleLocation = "";
     private string? schedulePostcode;
@@ -646,9 +690,24 @@
         var savedStats = await FixtureService.GetFixtureStats(fixture.Id);
         var user = await AuthService.GetCurrentUser();
 
-        isUserHome = user?.TeamId == fixture.HomeTeamId;
         isAdmin = (user?.IsAdmin ?? false) || (user?.IsReferee ?? false);
         isSiteAdmin = user?.IsAdmin ?? false;
+
+        // An admin or referee has no team of their own, so without an explicit
+        // choice the page would fall through to the away team's data while
+        // labelling it as the home team's. Default them to the home side and let
+        // them switch; a manager is pinned to whichever side they manage.
+        if (isAdmin)
+        {
+            if (actingTeamId != fixture.HomeTeamId && actingTeamId != fixture.AwayTeamId)
+                actingTeamId = fixture.HomeTeamId;
+        }
+        else
+        {
+            actingTeamId = user?.TeamId == fixture.AwayTeamId
+                ? fixture.AwayTeamId
+                : fixture.HomeTeamId;
+        }
 
         if (isSiteAdmin)
         {
@@ -657,12 +716,12 @@
         }
         // Global admin "shut down editing" lock — only a true admin bypasses it.
         editingLocked = !(user?.IsAdmin ?? false) && (await LeagueSettingsSvc.Get()).FixturesLocked;
-        opponentSavedScore = isUserHome ? fixture.AwayScore : fixture.HomeScore;
+        opponentSavedScore = ViewingHome ? fixture.AwayScore : fixture.HomeScore;
 
-        int teamId = isUserHome ? fixture.HomeTeamId : fixture.AwayTeamId;
+        int teamId = actingTeamId;
 
         var squadTask = FixtureService.GetFixtureSquad(fixture.Id);
-        var myPlayersTask = FixtureService.GetFixturePlayers(fixture.Id);
+        var myPlayersTask = FixtureService.GetFixturePlayers(fixture.Id, isAdmin ? actingTeamId : null);
         await Task.WhenAll(squadTask, myPlayersTask);
 
         var squadIds = squadTask.Result.Select(p => p.PlayerId).ToHashSet();
@@ -700,8 +759,8 @@
             p.OnGoalsChanged = UpdateScorePreview;
 
         var shootout = await PenaltyService.GetShootout(fixture.Id);
-        var myKicks = isUserHome ? shootout?.HomeKicks : shootout?.AwayKicks;
-        opponentKicks = (isUserHome ? shootout?.AwayKicks : shootout?.HomeKicks) ?? new();
+        var myKicks = ViewingHome ? shootout?.HomeKicks : shootout?.AwayKicks;
+        opponentKicks = (ViewingHome ? shootout?.AwayKicks : shootout?.HomeKicks) ?? new();
 
         penaltyKicks = Enumerable.Range(1, 5).Select(i =>
         {
@@ -714,8 +773,8 @@
             };
         }).ToList();
 
-        captainPlayerId = (isAdmin || isUserHome) ? fixture.HomeCaptainId : fixture.AwayCaptainId;
-        vicePlayerId    = (isAdmin || isUserHome) ? fixture.HomeViceCaptainId : fixture.AwayViceCaptainId;
+        captainPlayerId = ViewingHome ? fixture.HomeCaptainId : fixture.AwayCaptainId;
+        vicePlayerId    = ViewingHome ? fixture.HomeViceCaptainId : fixture.AwayViceCaptainId;
 
         // Schedule + referee are editable by managers of the fixture too, so load
         // them for everyone who can reach this page.
@@ -819,16 +878,36 @@
     void UpdateScorePreview()
     {
         var myGoals = players.Sum(x => x.Goals);
-        if (isUserHome) { previewHomeScore = myGoals; previewAwayScore = opponentSavedScore; }
+        if (ViewingHome) { previewHomeScore = myGoals; previewAwayScore = opponentSavedScore; }
         else             { previewHomeScore = opponentSavedScore; previewAwayScore = myGoals; }
         StateHasChanged();
+    }
+
+    // Admin/referee only. Reloads the page's data for the other side of the
+    // fixture — squad, stats, captaincy and penalties all follow the choice.
+    async Task SwitchActingTeam(int teamId)
+    {
+        if (actingTeamId == teamId) return;
+
+        actingTeamId = teamId;
+
+        // The opponent is now the other team, so the cached stats are stale.
+        opponentStatsLoaded = false;
+        opponentStats = new();
+        viewingOpponent = false;
+
+        await LoadFixture();
     }
 
     async Task LoadOpponentStats()
     {
         if (!opponentStatsLoaded)
         {
-            int? overrideTeamId = isAdmin ? fixture!.AwayTeamId : null;
+            // "Opponent" is relative to the side being viewed, so switching to the
+            // away team must show the home team's stats rather than always away.
+            int? overrideTeamId = isAdmin
+                ? (ViewingHome ? fixture!.AwayTeamId : fixture!.HomeTeamId)
+                : null;
             opponentStats = await FixtureService.GetOpponentStats(fixture!.Id, overrideTeamId);
             opponentStatsLoaded = true;
         }
@@ -856,7 +935,7 @@
 
     async Task SaveCaptaincy()
     {
-        await FixtureService.SaveCaptaincy(fixture!.Id, captainPlayerId, vicePlayerId);
+        await FixtureService.SaveCaptaincy(fixture!.Id, captainPlayerId, vicePlayerId, AdminTeamId);
         fixture = await FixtureService.GetFixture(fixture!.Id);
         await ShowToast("Captaincy saved.");
     }
@@ -871,11 +950,11 @@
     async Task SaveSquad()
     {
         var selectedPlayers = teamPlayers.Where(p => p.IsSelected).Select(p => p.PlayerId).ToList();
-        await FixtureService.SaveSquad(fixture!.Id, selectedPlayers);
+        await FixtureService.SaveSquad(fixture!.Id, selectedPlayers, AdminTeamId);
 
         squadSelected = selectedPlayers.Count > 10;
 
-        int teamId = isUserHome ? fixture!.HomeTeamId : fixture!.AwayTeamId;
+        int teamId = actingTeamId;
         var savedStats = await FixtureService.GetFixtureStats(fixture!.Id);
 
         players = teamPlayers
@@ -946,7 +1025,7 @@
 
         try
         {
-            await FixtureService.SubmitStats(fixture!.Id, stats);
+            await FixtureService.SubmitStats(fixture!.Id, stats, AdminTeamId);
             await LoadFixture();
             await ShowToast("Match stats saved.");
         }

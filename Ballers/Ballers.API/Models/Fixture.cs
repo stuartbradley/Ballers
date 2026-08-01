@@ -8,7 +8,12 @@
         public DateTime? Kickoff { get; set; }
         public string? Location { get; set; } = "";
         public string? Postcode { get; set; }
+        // A result only counts once both teams have submitted their stats. Until
+        // then the fixture is not "played", so a side that submits first cannot
+        // show up in the league table with a scoreline missing the opponent's goals.
         public bool IsPlayed { get; set; } = false;
+        public bool HomeStatsSubmitted { get; set; } = false;
+        public bool AwayStatsSubmitted { get; set; } = false;
         public int SeasonId {  get; set; }
         public Season? Season { get; set; }
         public Team? HomeTeam { get; set; }

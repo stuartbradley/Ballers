@@ -3,6 +3,10 @@
     public class SubmitFixtureStatsRequest
     {
         public List<PlayerStatDto> PlayerStats { get; set; } = new();
+
+        // Admin/referee only — picks the home or away side. Ignored for managers,
+        // who always act for their own team.
+        public int? TeamId { get; set; }
     }
     public class PlayerStatDto
     {

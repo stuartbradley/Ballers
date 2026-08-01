@@ -236,6 +236,51 @@ namespace Ballers.Tests
             Assert.All(squad, fp => Assert.NotEqual(1, fp.PlayerId));
         }
 
+        [Fact]
+        public async Task UpdateSquad_WithTeamId_LeavesTheOtherTeamsSquadIntact()
+        {
+            var db = await SeedBase(nameof(UpdateSquad_WithTeamId_LeavesTheOtherTeamsSquadIntact));
+            db.Fixtures.Add(MakeFixture(1));
+            db.Players.AddRange(
+                new Player { Id = 1, Name = "Home1", TeamId = 1 },
+                new Player { Id = 2, Name = "Home2", TeamId = 1 },
+                new Player { Id = 3, Name = "Away1", TeamId = 2 });
+            db.FixturePlayers.AddRange(
+                new FixturePlayer { FixtureId = 1, PlayerId = 1 },
+                new FixturePlayer { FixtureId = 1, PlayerId = 3 });
+            await db.SaveChangesAsync();
+
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
+            await svc.UpdateSquadAsync(1, new List<int> { 2 }, teamId: 1);
+
+            var squad = db.FixturePlayers.Where(fp => fp.FixtureId == 1).Select(fp => fp.PlayerId).ToList();
+            Assert.Contains(2, squad);   // home squad replaced
+            Assert.DoesNotContain(1, squad);
+            Assert.Contains(3, squad);   // away squad untouched
+        }
+
+        [Fact]
+        public async Task UpdateSquad_WithoutTeamId_ReplacesBothTeams()
+        {
+            // Documents why the controller never sends a null team for an admin:
+            // a null team wipes every player in the fixture, not just one side.
+            var db = await SeedBase(nameof(UpdateSquad_WithoutTeamId_ReplacesBothTeams));
+            db.Fixtures.Add(MakeFixture(1));
+            db.Players.AddRange(
+                new Player { Id = 1, Name = "Home1", TeamId = 1 },
+                new Player { Id = 3, Name = "Away1", TeamId = 2 });
+            db.FixturePlayers.AddRange(
+                new FixturePlayer { FixtureId = 1, PlayerId = 1 },
+                new FixturePlayer { FixtureId = 1, PlayerId = 3 });
+            await db.SaveChangesAsync();
+
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
+            await svc.UpdateSquadAsync(1, new List<int> { 1 }, teamId: null);
+
+            var squad = db.FixturePlayers.Where(fp => fp.FixtureId == 1).Select(fp => fp.PlayerId).ToList();
+            Assert.Equal(new[] { 1 }, squad);
+        }
+
         // ── True man of the match ───────────────────────────────────────
 
         // Seeds a fixture where each team already has a nominated man of the
@@ -340,6 +385,110 @@ namespace Ballers.Tests
             }, teamId: 1);
 
             Assert.Equal(1, db.Fixtures.Single(f => f.Id == 1).TrueMotmPlayerId);
+        }
+
+        // ── Both teams must submit before a result counts ───────────────
+
+        [Fact]
+        public async Task SubmitStats_OneTeamOnly_DoesNotMarkFixturePlayed()
+        {
+            var db = await SeedBase(nameof(SubmitStats_OneTeamOnly_DoesNotMarkFixturePlayed));
+            db.Fixtures.Add(MakeFixture(1));
+            db.Players.AddRange(
+                new Player { Id = 1, Name = "HomeStriker", TeamId = 1 },
+                new Player { Id = 2, Name = "AwayStriker", TeamId = 2 });
+            await db.SaveChangesAsync();
+
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
+            // The losing team reports its single goal first.
+            await svc.SubmitStatsAsync(1, new List<PlayerStatDto>
+            {
+                new() { PlayerId = 1, Goals = 1, IsManOfTheMatch = true }
+            }, teamId: 1);
+
+            var fixture = db.Fixtures.Find(1)!;
+            Assert.False(fixture.IsPlayed);   // stays out of the league table
+            Assert.True(fixture.HomeStatsSubmitted);
+            Assert.False(fixture.AwayStatsSubmitted);
+        }
+
+        [Fact]
+        public async Task SubmitStats_BothTeams_MarksFixturePlayedWithFullScore()
+        {
+            var db = await SeedBase(nameof(SubmitStats_BothTeams_MarksFixturePlayedWithFullScore));
+            db.Fixtures.Add(MakeFixture(1));
+            db.Players.AddRange(
+                new Player { Id = 1, Name = "HomeStriker", TeamId = 1 },
+                new Player { Id = 2, Name = "AwayStriker", TeamId = 2 });
+            await db.SaveChangesAsync();
+
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
+            await svc.SubmitStatsAsync(1, new List<PlayerStatDto>
+            {
+                new() { PlayerId = 1, Goals = 1, IsManOfTheMatch = true }
+            }, teamId: 1);
+            await svc.SubmitStatsAsync(1, new List<PlayerStatDto>
+            {
+                new() { PlayerId = 2, Goals = 4, IsManOfTheMatch = true }
+            }, teamId: 2);
+
+            var fixture = db.Fixtures.Find(1)!;
+            Assert.True(fixture.IsPlayed);
+            Assert.Equal(1, fixture.HomeScore);
+            Assert.Equal(4, fixture.AwayScore);
+        }
+
+        [Fact]
+        public async Task SubmitStats_TeamWithNoGoals_StillCountsAsSubmitted()
+        {
+            var db = await SeedBase(nameof(SubmitStats_TeamWithNoGoals_StillCountsAsSubmitted));
+            db.Fixtures.Add(MakeFixture(1));
+            db.Players.AddRange(
+                new Player { Id = 1, Name = "HomeStriker", TeamId = 1 },
+                new Player { Id = 2, Name = "AwayKeeper", TeamId = 2 });
+            await db.SaveChangesAsync();
+
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
+            await svc.SubmitStatsAsync(1, new List<PlayerStatDto>
+            {
+                new() { PlayerId = 1, Goals = 3, IsManOfTheMatch = true }
+            }, teamId: 1);
+            // Beaten side submits with nothing to report — that still counts.
+            await svc.SubmitStatsAsync(1, new List<PlayerStatDto>
+            {
+                new() { PlayerId = 2, Goals = 0, IsManOfTheMatch = true }
+            }, teamId: 2);
+
+            var fixture = db.Fixtures.Find(1)!;
+            Assert.True(fixture.IsPlayed);
+            Assert.Equal(3, fixture.HomeScore);
+            Assert.Equal(0, fixture.AwayScore);
+        }
+
+        [Fact]
+        public async Task SubmitStats_ResubmittingOneTeam_KeepsFixturePlayed()
+        {
+            var db = await SeedBase(nameof(SubmitStats_ResubmittingOneTeam_KeepsFixturePlayed));
+            db.Fixtures.Add(MakeFixture(1));
+            db.Players.AddRange(
+                new Player { Id = 1, Name = "HomeStriker", TeamId = 1 },
+                new Player { Id = 2, Name = "AwayStriker", TeamId = 2 });
+            await db.SaveChangesAsync();
+
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
+            await svc.SubmitStatsAsync(1, new List<PlayerStatDto>
+            { new() { PlayerId = 1, Goals = 1, IsManOfTheMatch = true } }, teamId: 1);
+            await svc.SubmitStatsAsync(1, new List<PlayerStatDto>
+            { new() { PlayerId = 2, Goals = 4, IsManOfTheMatch = true } }, teamId: 2);
+
+            // Correcting one side later must not drop the result from the table.
+            await svc.SubmitStatsAsync(1, new List<PlayerStatDto>
+            { new() { PlayerId = 1, Goals = 2, IsManOfTheMatch = true } }, teamId: 1);
+
+            var fixture = db.Fixtures.Find(1)!;
+            Assert.True(fixture.IsPlayed);
+            Assert.Equal(2, fixture.HomeScore);
+            Assert.Equal(4, fixture.AwayScore);
         }
 
         // ── SubmitStatsAsync ────────────────────────────────────────────

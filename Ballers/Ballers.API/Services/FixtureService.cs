@@ -76,6 +76,8 @@ namespace Ballers.API.Services
                 AwayCaptainName    = f.AwayCaptain?.Name,
                 AwayViceCaptainId  = f.AwayViceCaptainId,
                 AwayViceCaptainName = f.AwayViceCaptain?.Name,
+                HomeStatsSubmitted = f.HomeStatsSubmitted,
+                AwayStatsSubmitted = f.AwayStatsSubmitted,
             };
         }
 
@@ -557,7 +559,18 @@ namespace Ballers.API.Services
 
             fixture.HomeScore = allScores.Where(x => x.TeamId == fixture.HomeTeamId).Sum(x => x.Goals);
             fixture.AwayScore = allScores.Where(x => x.TeamId == fixture.AwayTeamId).Sum(x => x.Goals);
-            fixture.IsPlayed = true;
+
+            // Record which side has reported. A null team means the caller is
+            // submitting for the whole fixture at once, which counts as both.
+            if (teamId == fixture.HomeTeamId) fixture.HomeStatsSubmitted = true;
+            else if (teamId == fixture.AwayTeamId) fixture.AwayStatsSubmitted = true;
+            else if (teamId is null) fixture.HomeStatsSubmitted = fixture.AwayStatsSubmitted = true;
+
+            // The result is only final — and only counts towards the table, player
+            // stats and head-to-head — once both teams have submitted. Otherwise a
+            // team that reports first appears to have won 1-0 while the opponent's
+            // goals are still missing.
+            fixture.IsPlayed = fixture.HomeStatsSubmitted && fixture.AwayStatsSubmitted;
 
             // Resubmitting stats can move a team's man of the match, which would
             // leave the true man of the match pointing at a player who is no longer

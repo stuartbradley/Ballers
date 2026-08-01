@@ -52,9 +52,12 @@ namespace Ballers.Services
             return await response.Content
                 .ReadFromJsonAsync<FixtureDetailsDto>();
         }
+        // teamId is only honoured for admins and referees, who use it to pick the
+        // home or away side; a manager's team always comes from their account.
         public async Task SaveSquad(
                         int fixtureId,
-                        List<int> playerIds)
+                        List<int> playerIds,
+                        int? teamId = null)
         {
             var request = new HttpRequestMessage(
                 HttpMethod.Post,
@@ -62,7 +65,8 @@ namespace Ballers.Services
 
             request.Content = JsonContent.Create(new
             {
-                playerIds
+                playerIds,
+                teamId
             });
 
             var response = await _httpClient.SendAsync(request);
@@ -108,7 +112,8 @@ namespace Ballers.Services
 
         public async Task SubmitStats(
                         int fixtureId,
-                        List<FixturePlayerStatInput> stats)
+                        List<FixturePlayerStatInput> stats,
+                        int? teamId = null)
         {
             var request = new HttpRequestMessage(
                 HttpMethod.Post,
@@ -116,7 +121,8 @@ namespace Ballers.Services
 
             request.Content = JsonContent.Create(new
             {
-                PlayerStats = stats
+                PlayerStats = stats,
+                teamId
             });
             var response = await _httpClient.SendAsync(request);
 
@@ -140,11 +146,13 @@ namespace Ballers.Services
 
             return await response.Content.ReadFromJsonAsync<List<PlayerStatsDto>>() ?? new();
         }
-        public async Task<List<PlayerDto>> GetFixturePlayers(int fixtureId)
+        public async Task<List<PlayerDto>> GetFixturePlayers(int fixtureId, int? teamId = null)
         {
             var request = new HttpRequestMessage(
                 HttpMethod.Get,
-                $"api/fixtures/{fixtureId}/players");
+                teamId.HasValue
+                    ? $"api/fixtures/{fixtureId}/players?teamId={teamId}"
+                    : $"api/fixtures/{fixtureId}/players");
 
             request.SetBrowserRequestCredentials(
                 BrowserRequestCredentials.Include);
@@ -163,12 +171,13 @@ namespace Ballers.Services
             return await response.Content.ReadFromJsonAsync<List<HeadToHeadResultDto>>() ?? new();
         }
 
-        public async Task SaveCaptaincy(int fixtureId, int? captainId, int? viceId)
+        public async Task SaveCaptaincy(int fixtureId, int? captainId, int? viceId, int? teamId = null)
         {
             await _httpClient.PutAsJsonAsync($"api/fixtures/{fixtureId}/captaincy", new
             {
                 captainPlayerId = captainId,
-                viceCaptainPlayerId = viceId
+                viceCaptainPlayerId = viceId,
+                teamId
             });
         }
 
