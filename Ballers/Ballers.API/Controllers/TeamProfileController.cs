@@ -123,7 +123,13 @@ namespace Ballers.API.Controllers
                     PlayerId = g.Key,
                     Goals = g.Sum(x => x.Goals),
                     Assists = g.Sum(x => x.Assists),
-                    Motm = g.Count(x => x.ManOfTheMatch)
+                    Motm = g.Count(x => x.ManOfTheMatch),
+                    // A clean sheet is an appearance in a played fixture where this
+                    // player's team conceded nothing. Counted for every position
+                    // here; only goalkeepers and defenders are given the figure below.
+                    CleanSheets = g.Count(x =>
+                        (team.Id == x.Fixture!.HomeTeamId && x.Fixture.AwayScore == 0) ||
+                        (team.Id == x.Fixture!.AwayTeamId && x.Fixture.HomeScore == 0))
                 })
                 .ToListAsync();
 
@@ -139,6 +145,7 @@ namespace Ballers.API.Controllers
                     Goals = s?.Goals ?? 0,
                     Assists = s?.Assists ?? 0,
                     Motm = s?.Motm ?? 0,
+                    CleanSheets = PlayerPositions.EarnsCleanSheets(p.Position) ? s?.CleanSheets ?? 0 : 0,
                     ImageUrl = p.ProfileImageBase64
                 };
             });

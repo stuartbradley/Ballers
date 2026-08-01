@@ -40,6 +40,9 @@ namespace Ballers.Models
         public int Goals { get; set; }
         public int Assists { get; set; }
         public int Motm { get; set; }
+        // Only counted for goalkeepers and defenders, who earn their card tier
+        // from clean sheets rather than goals and assists. Always 0 for others.
+        public int CleanSheets { get; set; }
         public string? ImageUrl { get; set; }
     }
 }

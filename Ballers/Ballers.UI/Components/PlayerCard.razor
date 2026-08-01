@@ -42,6 +42,15 @@
                             <div class="player-feature-title">MOTM</div>
                         </span>
                     </div>
+                    @if (EarnsCleanSheets)
+                    {
+                        <div class="player-features-col">
+                            <span>
+                                <div class="player-feature-value">@(CleanSheets ?? 0)</div>
+                                <div class="player-feature-title">CS</div>
+                            </span>
+                        </div>
+                    }
                 </div>
             }
         </div>
@@ -67,6 +76,8 @@
     [Parameter] public int? Goals { get; set; }
     [Parameter] public int? Assists { get; set; }
     [Parameter] public int? Motm { get; set; }
+    /// <summary>Only meaningful for goalkeepers and defenders; ignored for other positions.</summary>
+    [Parameter] public int? CleanSheets { get; set; }
     [Parameter] public string? ImageUrl { get; set; }
     [Parameter] public EventCallback OnRemove { get; set; }
     [Parameter] public EventCallback OnEditPhoto { get; set; }
@@ -74,9 +85,39 @@
     /// <summary>When set ("gold"/"silver"/"bronze"), overrides the stat-derived tier (used by manager cards).</summary>
     [Parameter] public string? TierOverride { get; set; }
 
-    private string CardTier =>
-        TierOverride ??
-        ((Goals ?? 0) >= 1 && (Assists ?? 0) >= 1 ? "gold" :
+    // Goals and assists are a poor measure of a goalkeeper or defender, so those
+    // two positions can also earn their tier through clean sheets.
+    private bool EarnsCleanSheets =>
+        string.Equals(Position, "GK", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(Position, "DEF", StringComparison.OrdinalIgnoreCase);
+
+    private string CardTier => TierOverride ?? BestTier();
+
+    // Whichever of the two routes to a tier is better — a defender who scores and
+    // assists still gets gold without the clean sheets, and vice versa.
+    private string BestTier()
+    {
+        var attacking = AttackingTier();
+        if (!EarnsCleanSheets) return attacking;
+
+        var defensive = DefensiveTier();
+        return TierRank(defensive) > TierRank(attacking) ? defensive : attacking;
+    }
+
+    private string AttackingTier() =>
+        (Goals ?? 0) >= 1 && (Assists ?? 0) >= 1 ? "gold" :
         (Goals ?? 0) >= 1 || (Assists ?? 0) >= 1 ? "silver" :
-        "bronze");
+        "bronze";
+
+    private string DefensiveTier() =>
+        (CleanSheets ?? 0) >= 5 ? "gold" :
+        (CleanSheets ?? 0) >= 3 ? "silver" :
+        "bronze";
+
+    private static int TierRank(string tier) => tier switch
+    {
+        "gold" => 2,
+        "silver" => 1,
+        _ => 0
+    };
 }

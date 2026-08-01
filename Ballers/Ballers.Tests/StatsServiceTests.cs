@@ -318,6 +318,61 @@ namespace Ballers.Tests
         }
 
         [Fact]
+        public async Task GetLeaderboard_DefenderGetsCleanSheet_WhenOpponentScoresZero()
+        {
+            var db = await SeedLeaderboardBase(nameof(GetLeaderboard_DefenderGetsCleanSheet_WhenOpponentScoresZero));
+            // fixture 2 is 0-0 — a defender is credited just like the keeper
+            db.Players.Add(new Player { Id = 1, Name = "Stopper", TeamId = 1, Position = "DEF" });
+            db.FixturePlayerStats.Add(new FixturePlayerStat { PlayerId = 1, FixtureId = 2 });
+            await db.SaveChangesAsync();
+
+            var svc = new StatsService(db);
+            var result = await svc.GetLeaderboardAsync(null);
+
+            Assert.Equal(1, result[0].CleanSheets);
+        }
+
+        [Fact]
+        public async Task GetLeaderboard_DefenderNoCleanSheet_WhenOpponentScores()
+        {
+            var db = await SeedLeaderboardBase(nameof(GetLeaderboard_DefenderNoCleanSheet_WhenOpponentScores));
+            // fixture 1 is 2-1 — the away defender's team conceded 2
+            db.Players.Add(new Player { Id = 1, Name = "AwayStopper", TeamId = 2, Position = "DEF" });
+            db.FixturePlayerStats.Add(new FixturePlayerStat { PlayerId = 1, FixtureId = 1 });
+            await db.SaveChangesAsync();
+
+            var svc = new StatsService(db);
+            var result = await svc.GetLeaderboardAsync(null);
+
+            Assert.Equal(0, result[0].CleanSheets);
+        }
+
+        [Fact]
+        public async Task GetLeaderboard_Midfielder_AlwaysZeroCleanSheets()
+        {
+            var db = await SeedLeaderboardBase(nameof(GetLeaderboard_Midfielder_AlwaysZeroCleanSheets));
+            // fixture 2 is 0-0 but a midfielder earns nothing from it
+            db.Players.Add(new Player { Id = 1, Name = "Playmaker", TeamId = 1, Position = "MID" });
+            db.FixturePlayerStats.Add(new FixturePlayerStat { PlayerId = 1, FixtureId = 2 });
+            await db.SaveChangesAsync();
+
+            var svc = new StatsService(db);
+            var result = await svc.GetLeaderboardAsync(null);
+
+            Assert.Equal(0, result[0].CleanSheets);
+        }
+
+        [Theory]
+        [InlineData("GK", true)]
+        [InlineData("DEF", true)]
+        [InlineData("def", true)]
+        [InlineData("MID", false)]
+        [InlineData("FWD", false)]
+        [InlineData(null, false)]
+        public void EarnsCleanSheets_OnlyForGoalkeepersAndDefenders(string? position, bool expected)
+            => Assert.Equal(expected, PlayerPositions.EarnsCleanSheets(position));
+
+        [Fact]
         public async Task GetLeaderboard_OnlyIncludesPlayedFixtures()
         {
             var db = DbContextFactory.Create(nameof(GetLeaderboard_OnlyIncludesPlayedFixtures));

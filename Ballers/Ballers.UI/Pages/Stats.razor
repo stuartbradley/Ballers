@@ -104,7 +104,7 @@
                                     <td class="col-num">@p.Appearances</td>
                                     <td class="col-num goals-col">@p.Goals</td>
                                     <td class="col-num">@p.Assists</td>
-                                    <td class="col-num">@(p.Position == "GK" ? p.CleanSheets.ToString() : "–")</td>
+                                    <td class="col-num">@(EarnsCleanSheets(p.Position) ? p.CleanSheets.ToString() : "–")</td>
                                     <td class="col-num">@(p.YellowCards > 0 ? p.YellowCards.ToString() : "–")</td>
                                     <td class="col-num @(p.RedCards > 0 ? "red-stat" : "")">@(p.RedCards > 0 ? p.RedCards.ToString() : "–")</td>
                                 </tr>
@@ -147,6 +147,12 @@
         "red"     => sortAsc ? Filtered.OrderBy(x => x.RedCards)    : Filtered.OrderByDescending(x => x.RedCards),
         _         => Filtered.OrderByDescending(x => x.Goals).ThenByDescending(x => x.Assists)
     };
+
+    // Only goalkeepers and defenders are credited with clean sheets; everyone
+    // else shows a dash rather than a misleading zero.
+    static bool EarnsCleanSheets(string? position) =>
+        string.Equals(position, "GK", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(position, "DEF", StringComparison.OrdinalIgnoreCase);
 
     protected override async Task OnInitializedAsync()
     {

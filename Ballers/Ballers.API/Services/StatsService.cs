@@ -104,7 +104,9 @@ namespace Ballers.API.Services
                 .Select(g =>
                 {
                     var player = g.First().Player!;
-                    var cleanSheets = player.Position == "GK"
+                    // Defenders count clean sheets alongside goalkeepers — the same
+                    // measure that earns them their card tier.
+                    var cleanSheets = PlayerPositions.EarnsCleanSheets(player.Position)
                         ? g.Count(s =>
                             (player.TeamId == s.Fixture!.HomeTeamId && s.Fixture.AwayScore == 0) ||
                             (player.TeamId == s.Fixture!.AwayTeamId && s.Fixture.HomeScore == 0))
