@@ -219,7 +219,7 @@
             <div class="totw-section-header">
                 <div>
                     <h2>Team of the Week</h2>
-                    <p class="totw-section-sub">Match Week @currentTotw.MatchNumber · @currentTotw.GeneratedAtUtc.ToLocalTime().ToString("d MMM yyyy")</p>
+                    <p class="totw-section-sub">Match Week @currentTotw.MatchNumber · @currentTotw.WeekStart.ToString("d MMM yyyy")</p>
                 </div>
                 <button class="totw-section-link" @onclick="@(() => Nav.NavigateTo("/totw"))">View all weeks →</button>
             </div>

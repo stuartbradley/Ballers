@@ -32,7 +32,7 @@
 
             <div class="totw-pill">
                 <div class="totw-pill-mw">Match Week <span class="totw-pill-num">@current.MatchNumber</span></div>
-                <div class="totw-pill-date">@current.GeneratedAtUtc.ToLocalTime().ToString("dddd, d MMMM yyyy")</div>
+                <div class="totw-pill-date">@current.WeekStart.ToString("dddd, d MMMM yyyy")</div>
                 <div class="totw-pill-count">@(currentIndex + 1) of @weeks.Count</div>
             </div>
 

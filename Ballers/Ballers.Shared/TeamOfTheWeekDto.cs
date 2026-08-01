@@ -6,7 +6,10 @@ namespace Ballers.Shared
         int Id,
         int SeasonId,
         int MatchNumber,
-        DateTime GeneratedAtUtc,
+        // The date the match week opens. Deliberately not derived from kickoffs:
+        // a fixture rearranged outside its window would otherwise relabel the
+        // whole week. This is a plain calendar date, not a UTC instant.
+        DateTime WeekStart,
         List<TotwPlayerDto> Players);
 
     public record TotwPlayerDto(

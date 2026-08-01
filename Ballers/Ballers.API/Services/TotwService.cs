@@ -88,19 +88,18 @@ namespace Ballers.API.Services
                 var (allWeeks, weeksWithMotm) = await GetWeekListsAsync(season.Value);
                 var motmSet = weeksWithMotm.ToHashSet();
 
+                // Each week is dated by the start of its own window. Using the
+                // latest kickoff let a fixture rearranged outside the window
+                // relabel the entire match week.
                 var dated = await _db.Fixtures
                     .AsNoTracking()
                     .Where(f => f.SeasonId == season.Value && motmSet.Contains(f.WindowStart))
-                    .GroupBy(f => f.WindowStart)
-                    .Select(g => new
-                    {
-                        WindowStart = g.Key,
-                        Date = g.Max(f => f.Kickoff) ?? g.Max(f => f.WindowEnd)
-                    })
+                    .Select(f => f.WindowStart)
+                    .Distinct()
                     .ToListAsync();
 
                 return dated
-                    .Select(d => new TotwWeekRefDto(allWeeks.IndexOf(d.WindowStart) + 1, d.Date))
+                    .Select(windowStart => new TotwWeekRefDto(allWeeks.IndexOf(windowStart) + 1, windowStart))
                     .OrderByDescending(w => w.MatchNumber)
                     .ToList();
             }) ?? new List<TotwWeekRefDto>();
@@ -141,26 +140,16 @@ namespace Ballers.API.Services
 
         private async Task<TeamOfTheWeekDto?> BuildAsync(int seasonId, DateTime weekStart, int weekIndex)
         {
-            var fixtures = await _db.Fixtures
+            // Only the ids are needed — the rest of the fixture columns became
+            // redundant when the goalkeeper slot and the kickoff-derived week
+            // date were dropped.
+            var fixtureIds = await _db.Fixtures
                 .AsNoTracking()
                 .Where(f => f.SeasonId == seasonId && f.WindowStart == weekStart)
-                .Select(f => new
-                {
-                    f.Id,
-                    f.HomeTeamId,
-                    f.AwayTeamId,
-                    f.HomeScore,
-                    f.AwayScore,
-                    f.IsPlayed,
-                    f.Kickoff,
-                    f.WindowEnd
-                })
+                .Select(f => f.Id)
                 .ToListAsync();
 
-            if (fixtures.Count == 0) return null;
-
-            var fixtureIds = fixtures.Select(f => f.Id).ToList();
-            var weekFinalDate = fixtures.Max(f => f.WindowEnd);
+            if (fixtureIds.Count == 0) return null;
 
             var motmRows = await _db.FixturePlayerStats
                 .AsNoTracking()
@@ -197,13 +186,10 @@ namespace Ballers.API.Services
 
             if (players.Count == 0) return null;
 
-            var weekDate = fixtures
-                .Where(f => f.Kickoff.HasValue)
-                .Select(f => f.Kickoff!.Value)
-                .DefaultIfEmpty(weekFinalDate)
-                .Max();
-
-            return new TeamOfTheWeekDto(weekIndex, seasonId, weekIndex, weekDate, players);
+            // The week is labelled by when it opens, not by its latest kickoff:
+            // a single fixture rearranged months ahead used to drag the whole
+            // week's date with it.
+            return new TeamOfTheWeekDto(weekIndex, seasonId, weekIndex, weekStart, players);
         }
     }
 }
