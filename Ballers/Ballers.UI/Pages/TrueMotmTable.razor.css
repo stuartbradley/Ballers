@@ -1,0 +1,214 @@
+/* ================================================================
+   TRUE MAN OF THE MATCH — admin-only log of the referee's real pick
+   ================================================================ */
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes heroReveal {
+    from { clip-path: inset(100% 0 0 0); opacity: 0; transform: translateY(10px); }
+    to   { clip-path: inset(0% 0 0 0); opacity: 1; transform: translateY(0); }
+}
+
+/* ================================================================
+   PAGE SHELL
+   ================================================================ */
+
+.tmotm-page {
+    min-height: calc(100vh - 71px);
+    background: #07101E;
+}
+
+/* ================================================================
+   HERO
+   ================================================================ */
+
+.tmotm-hero {
+    background: #0B1628;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.tmotm-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        repeating-linear-gradient(90deg, transparent 0px, transparent 79px, rgba(255, 255, 255, 0.015) 79px, rgba(255, 255, 255, 0.015) 80px),
+        repeating-linear-gradient(0deg,  transparent 0px, transparent 79px, rgba(255, 255, 255, 0.015) 79px, rgba(255, 255, 255, 0.015) 80px);
+    pointer-events: none;
+}
+
+.tmotm-hero::after {
+    content: "";
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, var(--ballers-accent) 0%, rgba(250, 204, 21, 0.2) 100%);
+}
+
+.tmotm-hero-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 36px 24px;
+}
+
+.hero-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.tmotm-eyebrow {
+    font-family: var(--font-display);
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--ballers-accent);
+    opacity: 0.75;
+    animation: fadeUp 0.4s ease both;
+}
+
+.back-link {
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+    text-decoration: none;
+    transition: color 0.18s;
+    animation: fadeUp 0.4s ease both;
+}
+
+.back-link:hover { color: var(--ballers-accent); }
+
+.tmotm-hero-inner h1 {
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: white;
+    margin: 0;
+    animation: heroReveal 0.55s 0.1s ease both;
+}
+
+.tmotm-sub {
+    margin: 10px 0 0;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.45);
+    animation: fadeUp 0.4s 0.15s ease both;
+}
+
+/* ================================================================
+   BODY
+   ================================================================ */
+
+.tmotm-body {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 28px 24px 64px;
+}
+
+/* ================================================================
+   TABLE CARD
+   ================================================================ */
+
+.tmotm-card {
+    background: #111D33;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    /* The table scrolls inside the card on narrow screens rather than
+       forcing the page itself to scroll sideways. */
+    overflow-x: auto;
+    animation: fadeUp 0.4s 0.08s ease both;
+}
+
+.tmotm-table {
+    width: 100%;
+    min-width: 640px;
+    border-collapse: collapse;
+}
+
+.tmotm-table thead tr {
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.tmotm-table th {
+    padding: 12px 18px;
+    text-align: left;
+    font-family: var(--font-display);
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: rgba(255, 255, 255, 0.28);
+    white-space: nowrap;
+}
+
+.tmotm-table td {
+    padding: 16px 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+}
+
+.tmotm-table tbody tr:last-child td { border-bottom: none; }
+
+.tmotm-row {
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.tmotm-row:hover { background: rgba(255, 255, 255, 0.03); }
+
+/* ===== COLUMNS ===== */
+
+.col-week  { width: 60px; text-align: center; }
+.col-score { width: 80px; text-align: center; }
+.col-team  { width: 160px; }
+.col-date  { width: 130px; white-space: nowrap; }
+
+.tmotm-table th.col-week,
+.tmotm-table th.col-score { text-align: center; }
+
+.fixture-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.88rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: white;
+}
+
+.vs {
+    color: rgba(255, 255, 255, 0.3);
+    font-weight: 400;
+    margin: 0 4px;
+}
+
+.winner {
+    font-weight: 700;
+    color: var(--ballers-accent);
+}
+
+.muted { color: rgba(255, 255, 255, 0.38) !important; }
+
+.empty-row {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.35) !important;
+    padding: 32px 18px !important;
+}
+
+@media (max-width: 560px) {
+    .tmotm-hero-inner, .tmotm-body { padding-left: 16px; padding-right: 16px; }
+}

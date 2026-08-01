@@ -1,0 +1,92 @@
+@page "/admin/true-motm"
+@using Ballers.Models
+@using Ballers.Services
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Admin")]
+
+@inject FixtureService FixtureService
+@inject NavigationManager Nav
+
+<PageTitle>True Man of the Match</PageTitle>
+
+<div class="tmotm-page">
+
+    <div class="tmotm-hero">
+        <div class="tmotm-hero-inner">
+            <div class="hero-top">
+                <p class="tmotm-eyebrow">Admin</p>
+                <a href="/admin" class="back-link">← Back to Admin</a>
+            </div>
+            <h1>True Man of the Match</h1>
+            <p class="tmotm-sub">
+                The referee's real pick for each match. Not visible to players, managers or referees.
+            </p>
+        </div>
+    </div>
+
+    <div class="tmotm-body">
+
+        @if (isLoading)
+        {
+            <LoadingSpinner />
+        }
+        else
+        {
+            <div class="tmotm-card">
+                <table class="tmotm-table">
+                    <thead>
+                        <tr>
+                            <th class="col-week">Week</th>
+                            <th>Fixture</th>
+                            <th class="col-score">Score</th>
+                            <th>Winner</th>
+                            <th class="col-team">Team</th>
+                            <th class="col-date">Played</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!rows.Any())
+                        {
+                            <tr>
+                                <td colspan="6" class="empty-row">
+                                    No winners picked yet. Choose one on a fixture's details tab.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var row in rows)
+                            {
+                                <tr class="tmotm-row" @onclick="() => OpenFixture(row.FixtureId)">
+                                    <td class="col-week muted">@row.Week</td>
+                                    <td class="fixture-name">@row.HomeTeam <span class="vs">v</span> @row.AwayTeam</td>
+                                    <td class="col-score muted">@row.HomeScore–@row.AwayScore</td>
+                                    <td class="winner">@row.PlayerName</td>
+                                    <td class="col-team muted">@row.TeamName</td>
+                                    <td class="col-date muted">
+                                        @(row.Kickoff.HasValue ? row.Kickoff.Value.ToString("dd MMM yyyy") : "—")
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+    </div>
+
+</div>
+
+@code {
+    private bool isLoading = true;
+    private List<TrueMotmRowDto> rows = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        rows = await FixtureService.GetTrueMotmLog();
+        isLoading = false;
+    }
+
+    void OpenFixture(int fixtureId) => Nav.NavigateTo($"/fixture/{fixtureId}");
+}

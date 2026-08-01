@@ -294,6 +294,52 @@
                         </div>
                     }
 
+                    @if (isSiteAdmin)
+                    {
+                        <div class="true-motm-section">
+                            <h3>True Man of the Match</h3>
+                            <p class="true-motm-note">
+                                Admin only — not shown to players, managers or referees.
+                            </p>
+
+                            @if (trueMotm == null || trueMotm.Candidates.Count == 0)
+                            {
+                                <p class="true-motm-empty">
+                                    No man of the match has been recorded in the stats yet.
+                                    Once each team has one, pick the real winner here.
+                                </p>
+                            }
+                            else
+                            {
+                                <div class="true-motm-options">
+                                    @foreach (var candidate in trueMotm.Candidates)
+                                    {
+                                        <label class="true-motm-option @(trueMotmSelection == candidate.PlayerId ? "selected" : "")">
+                                            <input type="radio" name="true-motm"
+                                                   checked="@(trueMotmSelection == candidate.PlayerId)"
+                                                   @onchange="() => trueMotmSelection = candidate.PlayerId" />
+                                            <span class="true-motm-player">@candidate.PlayerName</span>
+                                            <span class="true-motm-team">@candidate.TeamName</span>
+                                        </label>
+                                    }
+                                </div>
+
+                                <div class="true-motm-actions">
+                                    <button class="primary-btn" @onclick="SaveTrueMotm">Save Winner</button>
+                                    @if (trueMotmSelection.HasValue)
+                                    {
+                                        <button class="true-motm-clear" @onclick="ClearTrueMotm">Clear</button>
+                                    }
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrEmpty(trueMotmMessage))
+                            {
+                                <p class="true-motm-message">@trueMotmMessage</p>
+                            }
+                        </div>
+                    }
+
                 </div>
             }
 
@@ -504,9 +550,16 @@
     private List<PenaltyKickResultDto> opponentKicks = new();
 
     private bool isAdmin = false;
+    // isAdmin above also covers referees. The true man of the match is kept from
+    // referees as well as players, so it needs the stricter flag.
+    private bool isSiteAdmin = false;
     private bool editingLocked = false;
     private int fairplayHomeRating = 5;
     private int fairplayAwayRating = 5;
+
+    private TrueMotmDto? trueMotm;
+    private int? trueMotmSelection;
+    private string? trueMotmMessage;
 
     private bool viewingOpponent = false;
     private List<OpponentPlayerStatDto> opponentStats = new();
@@ -595,6 +648,13 @@
 
         isUserHome = user?.TeamId == fixture.HomeTeamId;
         isAdmin = (user?.IsAdmin ?? false) || (user?.IsReferee ?? false);
+        isSiteAdmin = user?.IsAdmin ?? false;
+
+        if (isSiteAdmin)
+        {
+            trueMotm = await FixtureService.GetTrueMotm(fixture.Id);
+            trueMotmSelection = trueMotm?.SelectedPlayerId;
+        }
         // Global admin "shut down editing" lock — only a true admin bypasses it.
         editingLocked = !(user?.IsAdmin ?? false) && (await LeagueSettingsSvc.Get()).FixturesLocked;
         opponentSavedScore = isUserHome ? fixture.AwayScore : fixture.HomeScore;
@@ -723,6 +783,37 @@
         }
         await FairplayService.SubmitRatings(fixture!.Id, fairplayHomeRating, fairplayAwayRating);
         await ShowToast("Fairplay ratings saved.");
+    }
+
+    async Task SaveTrueMotm()
+    {
+        if (!trueMotmSelection.HasValue)
+        {
+            await ShowToast("Pick one of the two men of the match first.", success: false);
+            return;
+        }
+        await PersistTrueMotm(trueMotmSelection, "True man of the match saved.");
+    }
+
+    async Task ClearTrueMotm()
+        => await PersistTrueMotm(null, "True man of the match cleared.");
+
+    async Task PersistTrueMotm(int? playerId, string successMessage)
+    {
+        var saved = await FixtureService.SaveTrueMotm(fixture!.Id, playerId);
+        if (!saved)
+        {
+            await ShowToast("Could not save the true man of the match.", success: false);
+            return;
+        }
+
+        trueMotmSelection = playerId;
+        if (trueMotm != null) trueMotm.SelectedPlayerId = playerId;
+
+        // Reflected in the panel as well as the toast, since the toast disappears
+        // and this is the only place the pick is visible.
+        trueMotmMessage = successMessage;
+        await ShowToast(successMessage);
     }
 
     void UpdateScorePreview()

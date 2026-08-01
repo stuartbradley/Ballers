@@ -182,6 +182,31 @@ namespace Ballers.Services
             return await response.Content.ReadFromJsonAsync<List<OpponentPlayerStatDto>>() ?? new();
         }
 
+        // ── True man of the match (admin only) ─────────────────────────────
+        // The API forbids these to anyone who is not a site admin, including
+        // referees, so a non-admin simply gets nothing back rather than an error.
+
+        public async Task<TrueMotmDto?> GetTrueMotm(int fixtureId)
+        {
+            var response = await _httpClient.GetAsync($"api/fixtures/{fixtureId}/true-motm");
+            if (!response.IsSuccessStatusCode) return null;
+            return await response.Content.ReadFromJsonAsync<TrueMotmDto>();
+        }
+
+        public async Task<bool> SaveTrueMotm(int fixtureId, int? playerId)
+        {
+            var response = await _httpClient.PutAsJsonAsync(
+                $"api/fixtures/{fixtureId}/true-motm", new { playerId });
+            return response.IsSuccessStatusCode;
+        }
+
+        public async Task<List<TrueMotmRowDto>> GetTrueMotmLog()
+        {
+            var response = await _httpClient.GetAsync("api/fixtures/true-motm");
+            if (!response.IsSuccessStatusCode) return new List<TrueMotmRowDto>();
+            return await response.Content.ReadFromJsonAsync<List<TrueMotmRowDto>>() ?? new();
+        }
+
         public async Task<List<FixtureSquadPlayerDto>> GetFixtureSquad(int fixtureId)
         {
             var request = new HttpRequestMessage(

@@ -27,6 +27,9 @@ namespace Ballers.API.Services
         Task<List<OpponentPlayerStat>> GetOpponentStatsAsync(int fixtureId, int opponentTeamId);
         Task<List<HeadToHeadResult>> GetHeadToHeadAsync(int homeTeamId, int awayTeamId, int excludeFixtureId);
         Task SaveCaptaincyAsync(int fixtureId, int teamId, int? captainId, int? viceId);
+        Task<TrueMotmDetail?> GetTrueMotmAsync(int fixtureId);
+        Task<bool> SetTrueMotmAsync(int fixtureId, int? playerId);
+        Task<List<TrueMotmRow>> GetTrueMotmLogAsync();
     }
 
     public class FixtureService : IFixtureService
@@ -420,6 +423,74 @@ namespace Ballers.API.Services
                 .ToListAsync();
         }
 
+        // The candidates are exactly the players the referee flagged as man of the
+        // match in the fixture stats — normally one per team.
+        private IQueryable<TrueMotmCandidate> CandidateQuery(int fixtureId)
+            => _db.FixturePlayerStats
+                .Where(s => s.FixtureId == fixtureId && s.ManOfTheMatch)
+                .Select(s => new TrueMotmCandidate(
+                    s.PlayerId,
+                    s.Player!.Name,
+                    s.Player.TeamId,
+                    s.Player.Team!.Name));
+
+        public async Task<TrueMotmDetail?> GetTrueMotmAsync(int fixtureId)
+        {
+            var fixture = await _db.Fixtures
+                .Where(f => f.Id == fixtureId)
+                .Select(f => new { f.Id, Home = f.HomeTeam!.Name, Away = f.AwayTeam!.Name, f.TrueMotmPlayerId })
+                .FirstOrDefaultAsync();
+
+            if (fixture == null) return null;
+
+            var candidates = await CandidateQuery(fixtureId).ToListAsync();
+
+            return new TrueMotmDetail(
+                fixture.Id, fixture.Home, fixture.Away, fixture.TrueMotmPlayerId, candidates);
+        }
+
+        // Returns false when the player is not one of the fixture's nominated men
+        // of the match, so a stale or hand-crafted request cannot set an arbitrary
+        // player. Passing null clears the pick.
+        public async Task<bool> SetTrueMotmAsync(int fixtureId, int? playerId)
+        {
+            var fixture = await _db.Fixtures.FindAsync(fixtureId);
+            if (fixture == null) return false;
+
+            if (playerId.HasValue)
+            {
+                bool isCandidate = await _db.FixturePlayerStats
+                    .AnyAsync(s => s.FixtureId == fixtureId
+                                && s.PlayerId == playerId.Value
+                                && s.ManOfTheMatch);
+                if (!isCandidate) return false;
+            }
+
+            fixture.TrueMotmPlayerId = playerId;
+            await _db.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<List<TrueMotmRow>> GetTrueMotmLogAsync()
+        {
+            return await _db.Fixtures
+                .Where(f => f.TrueMotmPlayerId != null)
+                .OrderByDescending(f => f.MatchNumber)
+                .ThenByDescending(f => f.Kickoff)
+                .Select(f => new TrueMotmRow(
+                    f.Id,
+                    f.Kickoff,
+                    f.MatchNumber,
+                    f.HomeTeam!.Name,
+                    f.AwayTeam!.Name,
+                    f.HomeScore,
+                    f.AwayScore,
+                    f.TrueMotmPlayerId,
+                    f.TrueMotmPlayer!.Name,
+                    f.TrueMotmPlayer.Team!.Name))
+                .ToListAsync();
+        }
+
         public async Task SubmitStatsAsync(int fixtureId, List<PlayerStatDto> stats, int? teamId)
         {
             using var transaction = await _db.Database.BeginTransactionAsync();
@@ -487,6 +558,18 @@ namespace Ballers.API.Services
             fixture.HomeScore = allScores.Where(x => x.TeamId == fixture.HomeTeamId).Sum(x => x.Goals);
             fixture.AwayScore = allScores.Where(x => x.TeamId == fixture.AwayTeamId).Sum(x => x.Goals);
             fixture.IsPlayed = true;
+
+            // Resubmitting stats can move a team's man of the match, which would
+            // leave the true man of the match pointing at a player who is no longer
+            // a candidate. Clear it so it has to be picked again.
+            if (fixture.TrueMotmPlayerId.HasValue)
+            {
+                bool stillNominated = await _db.FixturePlayerStats
+                    .AnyAsync(s => s.FixtureId == fixtureId
+                                && s.PlayerId == fixture.TrueMotmPlayerId.Value
+                                && s.ManOfTheMatch);
+                if (!stillNominated) fixture.TrueMotmPlayerId = null;
+            }
 
             await _db.SaveChangesAsync();
             await transaction.CommitAsync();

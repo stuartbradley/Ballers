@@ -236,6 +236,112 @@ namespace Ballers.Tests
             Assert.All(squad, fp => Assert.NotEqual(1, fp.PlayerId));
         }
 
+        // ── True man of the match ───────────────────────────────────────
+
+        // Seeds a fixture where each team already has a nominated man of the
+        // match: player 1 for Home FC, player 3 for Away FC.
+        private static async Task<ApplicationDbContext> SeedWithMotmNominees(string dbName)
+        {
+            var db = await SeedBase(dbName);
+            db.Fixtures.Add(MakeFixture(1));
+            db.Players.AddRange(
+                new Player { Id = 1, Name = "Home Star", TeamId = 1 },
+                new Player { Id = 2, Name = "Home Sub", TeamId = 1 },
+                new Player { Id = 3, Name = "Away Star", TeamId = 2 });
+            db.FixturePlayerStats.AddRange(
+                new FixturePlayerStat { FixtureId = 1, PlayerId = 1, ManOfTheMatch = true },
+                new FixturePlayerStat { FixtureId = 1, PlayerId = 2, ManOfTheMatch = false },
+                new FixturePlayerStat { FixtureId = 1, PlayerId = 3, ManOfTheMatch = true });
+            await db.SaveChangesAsync();
+            return db;
+        }
+
+        [Fact]
+        public async Task GetTrueMotm_ReturnsOneCandidatePerNominatedPlayer()
+        {
+            var db = await SeedWithMotmNominees(nameof(GetTrueMotm_ReturnsOneCandidatePerNominatedPlayer));
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
+
+            var result = await svc.GetTrueMotmAsync(1);
+
+            Assert.NotNull(result);
+            Assert.Null(result.SelectedPlayerId);
+            Assert.Equal(2, result.Candidates.Count);
+            Assert.Contains(result.Candidates, c => c.PlayerId == 1 && c.TeamName == "Home FC");
+            Assert.Contains(result.Candidates, c => c.PlayerId == 3 && c.TeamName == "Away FC");
+            Assert.DoesNotContain(result.Candidates, c => c.PlayerId == 2);
+        }
+
+        [Fact]
+        public async Task SetTrueMotm_NominatedPlayer_IsSaved()
+        {
+            var db = await SeedWithMotmNominees(nameof(SetTrueMotm_NominatedPlayer_IsSaved));
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
+
+            var saved = await svc.SetTrueMotmAsync(1, 3);
+
+            Assert.True(saved);
+            Assert.Equal(3, db.Fixtures.Single(f => f.Id == 1).TrueMotmPlayerId);
+        }
+
+        [Fact]
+        public async Task SetTrueMotm_PlayerWhoIsNotNominated_IsRejected()
+        {
+            var db = await SeedWithMotmNominees(nameof(SetTrueMotm_PlayerWhoIsNotNominated_IsRejected));
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
+
+            var saved = await svc.SetTrueMotmAsync(1, 2);
+
+            Assert.False(saved);
+            Assert.Null(db.Fixtures.Single(f => f.Id == 1).TrueMotmPlayerId);
+        }
+
+        [Fact]
+        public async Task SetTrueMotm_NullClearsThePick()
+        {
+            var db = await SeedWithMotmNominees(nameof(SetTrueMotm_NullClearsThePick));
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
+            await svc.SetTrueMotmAsync(1, 1);
+
+            var cleared = await svc.SetTrueMotmAsync(1, null);
+
+            Assert.True(cleared);
+            Assert.Null(db.Fixtures.Single(f => f.Id == 1).TrueMotmPlayerId);
+        }
+
+        [Fact]
+        public async Task SubmitStats_MovingTheTeamMotm_ClearsAStaleTrueMotm()
+        {
+            var db = await SeedWithMotmNominees(nameof(SubmitStats_MovingTheTeamMotm_ClearsAStaleTrueMotm));
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
+            await svc.SetTrueMotmAsync(1, 1);
+
+            // Home FC's man of the match moves from player 1 to player 2, so the
+            // stored pick no longer refers to a nominated player.
+            await svc.SubmitStatsAsync(1, new List<PlayerStatDto>
+            {
+                new() { PlayerId = 1, IsManOfTheMatch = false },
+                new() { PlayerId = 2, IsManOfTheMatch = true }
+            }, teamId: 1);
+
+            Assert.Null(db.Fixtures.Single(f => f.Id == 1).TrueMotmPlayerId);
+        }
+
+        [Fact]
+        public async Task SubmitStats_LeavingTheTeamMotmAlone_KeepsTheTrueMotm()
+        {
+            var db = await SeedWithMotmNominees(nameof(SubmitStats_LeavingTheTeamMotmAlone_KeepsTheTrueMotm));
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
+            await svc.SetTrueMotmAsync(1, 1);
+
+            await svc.SubmitStatsAsync(1, new List<PlayerStatDto>
+            {
+                new() { PlayerId = 1, Goals = 2, IsManOfTheMatch = true }
+            }, teamId: 1);
+
+            Assert.Equal(1, db.Fixtures.Single(f => f.Id == 1).TrueMotmPlayerId);
+        }
+
         // ── SubmitStatsAsync ────────────────────────────────────────────
 
         [Fact]

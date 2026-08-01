@@ -32,6 +32,12 @@
 
         public ICollection<FixturePlayerStat> FixturePlayerStats { get; set; } = new List<FixturePlayerStat>();
 
+        // The referee names a man of the match for each team in the fixture stats,
+        // then picks one of those two as the match's true man of the match. That
+        // pick is admin-only and must never be exposed to players or managers.
+        public int? TrueMotmPlayerId { get; set; }
+        public Player? TrueMotmPlayer { get; set; }
+
         public bool IsKnockout { get; set; }
         public string? KnockoutTournament { get; set; }
         public string? KnockoutRound { get; set; }

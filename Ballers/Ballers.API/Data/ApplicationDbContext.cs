@@ -166,6 +166,12 @@ namespace Ballers.API.Data
                 .HasOne(f => f.AwayViceCaptain).WithMany()
                 .HasForeignKey(f => f.AwayViceCaptainId).OnDelete(DeleteBehavior.NoAction);
 
+            // Matches the captaincy relationships above: NoAction keeps SQL Server
+            // from rejecting the multiple cascade paths Fixture -> Player.
+            builder.Entity<Fixture>()
+                .HasOne(f => f.TrueMotmPlayer).WithMany()
+                .HasForeignKey(f => f.TrueMotmPlayerId).OnDelete(DeleteBehavior.NoAction);
+
             builder.Entity<MatchOfTheDayPost>()
                 .HasOne(p => p.Fixture)
                 .WithMany()

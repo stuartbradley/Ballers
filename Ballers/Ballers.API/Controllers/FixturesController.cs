@@ -193,6 +193,47 @@ namespace Ballers.API.Controllers
             return Ok();
         }
 
+        // ── True man of the match ──────────────────────────────────────────
+        // The referee names a man of the match per team in the stats, then picks
+        // one of the two as the match's real man of the match. That pick is for
+        // the site admin only: referees and managers are deliberately excluded,
+        // and it is never returned on the ordinary fixture endpoints, so it
+        // cannot leak to players through the fixture page.
+
+        [HttpGet("{fixtureId}/true-motm")]
+        public async Task<IActionResult> GetTrueMotm(int fixtureId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
+            if (!user.IsAdmin) return Forbid();
+
+            var detail = await _fixtures.GetTrueMotmAsync(fixtureId);
+            return detail == null ? NotFound() : Ok(detail);
+        }
+
+        [HttpPut("{fixtureId}/true-motm")]
+        public async Task<IActionResult> SetTrueMotm(int fixtureId, SetTrueMotmRequest request)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
+            if (!user.IsAdmin) return Forbid();
+
+            var saved = await _fixtures.SetTrueMotmAsync(fixtureId, request.PlayerId);
+            return saved
+                ? Ok()
+                : BadRequest("That player is not a man of the match for this fixture.");
+        }
+
+        [HttpGet("true-motm")]
+        public async Task<IActionResult> GetTrueMotmLog()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
+            if (!user.IsAdmin) return Forbid();
+
+            return Ok(await _fixtures.GetTrueMotmLogAsync());
+        }
+
         [AllowAnonymous]
         [HttpGet("current-week")]
         public async Task<IActionResult> GetCurrentWeek()
