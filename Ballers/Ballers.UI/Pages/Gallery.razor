@@ -1,0 +1,330 @@
+@page "/gallery/{Id:int}"
+@using Ballers.Shared
+@using Ballers.Services
+@using Ballers.UI.Infrastructure
+@implements IAsyncDisposable
+
+@inject GalleryService GalleryService
+@inject NavigationManager Nav
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+<PageTitle>@(gallery?.Title ?? "Gallery")</PageTitle>
+
+<div class="gal-page">
+
+    @if (isLoading)
+    {
+        <LoadingSpinner />
+    }
+    else if (gallery == null)
+    {
+        <div class="gal-error">
+            <p>That gallery doesn't exist, or isn't published yet.</p>
+            <a href="/galleries" class="gal-back-link">← All galleries</a>
+        </div>
+    }
+    else
+    {
+        <!-- ── Fixture header ── -->
+        <header class="gal-hero">
+            <div class="gal-hero-inner">
+                <a href="/galleries" class="gal-back-link">← All galleries</a>
+
+                <p class="gal-week">Match Week @gallery.Week</p>
+
+                <div class="gal-fixture">
+                    <span class="gal-team">@gallery.HomeTeam</span>
+                    @if (gallery.IsPlayed)
+                    {
+                        <span class="gal-score">@gallery.HomeScore<span class="gal-score-sep">–</span>@gallery.AwayScore</span>
+                    }
+                    else
+                    {
+                        <span class="gal-vs">v</span>
+                    }
+                    <span class="gal-team">@gallery.AwayTeam</span>
+                </div>
+
+                <div class="gal-meta">
+                    @if (gallery.Kickoff.HasValue)
+                    {
+                        <span>@gallery.Kickoff.Value.ToString("dddd d MMMM yyyy")</span>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(gallery.Location))
+                    {
+                        <span>@gallery.Location</span>
+                    }
+                    <span>@gallery.PhotoCount photos</span>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(gallery.Description))
+                {
+                    <p class="gal-description">@gallery.Description</p>
+                }
+            </div>
+        </header>
+
+        <!-- ── Photographer credit ── -->
+        @if (gallery.Photographer is { } photographer)
+        {
+            <section class="gal-credit">
+                <div class="gal-credit-inner">
+                    @if (!string.IsNullOrWhiteSpace(photographer.LogoUrl))
+                    {
+                        <img class="gal-credit-logo" src="@Abs(photographer.LogoUrl)" alt="@photographer.Name" />
+                    }
+
+                    <div class="gal-credit-text">
+                        <p class="gal-credit-label">Photos by</p>
+                        <h2 class="gal-credit-name">@photographer.Name</h2>
+
+                        @if (!string.IsNullOrWhiteSpace(photographer.Bio))
+                        {
+                            <p class="gal-credit-bio">@photographer.Bio</p>
+                        }
+
+                        <div class="gal-credit-links">
+                            @if (!string.IsNullOrWhiteSpace(photographer.Website))
+                            {
+                                <a href="@Href(photographer.Website)" target="_blank" rel="noopener noreferrer">Website</a>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(photographer.Instagram))
+                            {
+                                <a href="@Href(photographer.Instagram)" target="_blank" rel="noopener noreferrer">Instagram</a>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(photographer.Facebook))
+                            {
+                                <a href="@Href(photographer.Facebook)" target="_blank" rel="noopener noreferrer">Facebook</a>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(photographer.Email))
+                            {
+                                <a href="mailto:@photographer.Email">Email</a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </section>
+        }
+
+        <!-- ── Mosaic ── -->
+        <div class="gal-body">
+            @if (!photos.Any() && !isLoadingMore)
+            {
+                <p class="gal-empty">No photos in this gallery yet.</p>
+            }
+
+            <div class="gal-mosaic">
+                @foreach (var (photo, index) in photos.Select((p, i) => (p, i)))
+                {
+                    <button class="gal-tile @TileClass(photo, index)"
+                            style="--gal-aspect: @photo.AspectRatio.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)"
+                            @onclick="() => OpenLightbox(index)"
+                            aria-label="Open photo @(index + 1)">
+                        @* Feature and wide tiles are drawn at roughly twice the size
+                           of a normal one, so they get their own sizes hint and will
+                           reach for the full-size image on a large or high-density
+                           screen where a thumbnail would look soft. *@
+                        <img src="@Abs(photo.ThumbnailUrl)"
+                             srcset="@MediaUrls.SrcSet(Http, photo.ThumbnailUrl, photo.ImageUrl)"
+                             sizes="@TileSizes(photo, index)"
+                             width="@photo.Width" height="@photo.Height"
+                             alt="Match photo @(index + 1)"
+                             loading="lazy" decoding="async" />
+                    </button>
+                }
+            </div>
+
+            @if (isLoadingMore)
+            {
+                <div class="gal-loading-more">Loading more photos…</div>
+            }
+
+            <!-- Watched by IntersectionObserver to pull the next page. -->
+            <div id="@SentinelId" class="gal-sentinel"></div>
+        </div>
+
+        <!-- ── Lightbox ── -->
+        @if (lightboxIndex is { } current && current < photos.Count)
+        {
+            var photo = photos[current];
+
+            <div class="gal-lightbox" @onclick="CloseLightbox">
+                <button class="gal-lightbox-close" @onclick="CloseLightbox" aria-label="Close">✕</button>
+
+                @if (current > 0)
+                {
+                    <button class="gal-lightbox-nav prev"
+                            @onclick="ShowPrevious" @onclick:stopPropagation
+                            aria-label="Previous photo">‹</button>
+                }
+
+                <img class="gal-lightbox-image"
+                     src="@Abs(photo.ImageUrl)"
+                     alt="Match photo @(current + 1)"
+                     @onclick:stopPropagation />
+
+                @if (current < photos.Count - 1)
+                {
+                    <button class="gal-lightbox-nav next"
+                            @onclick="ShowNext" @onclick:stopPropagation
+                            aria-label="Next photo">›</button>
+                }
+
+                <div class="gal-lightbox-counter">@(current + 1) / @gallery.PhotoCount</div>
+            </div>
+        }
+    }
+
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private const int PageSize = 40;
+
+    private GalleryDetailDto? gallery;
+    private readonly List<GalleryPhotoDto> photos = new();
+
+    private bool isLoading = true;
+    private bool isLoadingMore;
+    private bool hasMore = true;
+    private int? lightboxIndex;
+
+    private DotNetObjectReference<Gallery>? selfRef;
+    private bool observerAttached;
+
+    private string SentinelId => $"gal-sentinel-{Id}";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        photos.Clear();
+        hasMore = true;
+        lightboxIndex = null;
+
+        gallery = await GalleryService.GetGallery(Id);
+
+        if (gallery != null)
+        {
+            await LoadNextPageAsync();
+        }
+
+        isLoading = false;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // The sentinel only exists once the gallery has rendered.
+        if (gallery == null || observerAttached) return;
+
+        selfRef ??= DotNetObjectReference.Create(this);
+
+        try
+        {
+            var attached = await JS.InvokeAsync<bool>("galleryScroll.observe", SentinelId, selfRef);
+            observerAttached = attached;
+        }
+        catch (JSException)
+        {
+            // Without the observer the gallery still works, it just stops after
+            // the first page rather than loading on scroll.
+        }
+    }
+
+    [JSInvokable]
+    public async Task LoadMoreAsync()
+    {
+        if (!hasMore || isLoadingMore) return;
+
+        await LoadNextPageAsync();
+        StateHasChanged();
+    }
+
+    private async Task LoadNextPageAsync()
+    {
+        if (!hasMore || isLoadingMore) return;
+
+        isLoadingMore = true;
+        StateHasChanged();
+
+        var page = await GalleryService.GetPhotos(Id, photos.Count, PageSize);
+
+        photos.AddRange(page.Photos);
+        hasMore = page.HasMore;
+
+        isLoadingMore = false;
+    }
+
+    /// <summary>
+    /// Gives the mosaic its rhythm: portrait shots run tall, and every so often
+    /// one is promoted to a wide feature so the grid doesn't read as a plain
+    /// uniform table of thumbnails.
+    /// </summary>
+    private string TileClass(GalleryPhotoDto photo, int index)
+    {
+        var isPortrait = photo.AspectRatio > 1.15;
+        var isWide = photo.AspectRatio < 0.7;
+
+        // Feature every 7th photo, provided its shape suits the space.
+        if (index % 7 == 3 && !isPortrait) return "tile-feature";
+        if (isPortrait) return "tile-tall";
+        if (isWide) return "tile-wide";
+
+        return "tile-normal";
+    }
+
+    /// <summary>
+    /// Roughly how wide each tile is drawn, which is what the browser uses to
+    /// choose between the thumbnail and the full-size image.
+    /// </summary>
+    private string TileSizes(GalleryPhotoDto photo, int index)
+    {
+        var cls = TileClass(photo, index);
+        var isLarge = cls is "tile-feature" or "tile-wide";
+
+        return isLarge
+            ? "(max-width: 640px) 92vw, 400px"
+            : "(max-width: 640px) 46vw, 200px";
+    }
+
+    private void OpenLightbox(int index) => lightboxIndex = index;
+    private void CloseLightbox() => lightboxIndex = null;
+
+    private void ShowPrevious()
+    {
+        if (lightboxIndex is > 0) lightboxIndex--;
+    }
+
+    private async Task ShowNext()
+    {
+        if (lightboxIndex is not { } current) return;
+
+        // Stepping onto the last loaded photo pulls the next page in, so paging
+        // through the lightbox keeps working past the first chunk.
+        if (current >= photos.Count - 2 && hasMore) await LoadNextPageAsync();
+
+        if (current < photos.Count - 1) lightboxIndex = current + 1;
+    }
+
+    private string? Abs(string? url) => MediaUrls.Absolute(Http, url);
+
+    /// <summary>Photographers rarely type the scheme, and a bare domain would resolve relative to this site.</summary>
+    private static string Href(string url)
+        => url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+           url.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+            ? url
+            : $"https://{url}";
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("galleryScroll.disconnect", SentinelId);
+        }
+        catch (JSException) { }
+        catch (TaskCanceledException) { }
+
+        selfRef?.Dispose();
+    }
+}

@@ -10,6 +10,9 @@
 
     public class FixtureMatchDto
     {
+        /// <summary>Needed so the schedule can link a match to its fixture page and gallery.</summary>
+        public int Id { get; set; }
+
         public string Home { get; set; } = "";
         public string Away { get; set; } = "";
         public string? HomeLogo { get; set; }

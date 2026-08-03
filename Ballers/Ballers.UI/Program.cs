@@ -41,6 +41,7 @@ builder.Services.AddScoped<StatService>();
 builder.Services.AddScoped<PenaltyService>();
 builder.Services.AddScoped<FairplayService>();
 builder.Services.AddScoped<TeamService>();
+builder.Services.AddScoped<GalleryService>();
 builder.Services.AddScoped<RefereeService>();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<KnockoutService>();

@@ -3,6 +3,7 @@
 @using Ballers.Models
 @using Ballers.Services
 @using Ballers.Shared
+@using Ballers.UI.Infrastructure
 
 <PageTitle>Blackpool Ballers League</PageTitle>
 
@@ -12,6 +13,8 @@
 @inject StatService StatService;
 @inject PenaltyService PenaltyService;
 @inject TotwService TotwService;
+@inject GalleryService GalleryService;
+@inject HttpClient Http;
 @inject IJSRuntime JS;
 @inject NavigationManager Nav;
 
@@ -318,6 +321,45 @@
     </div>
 </section>
 
+@if (recentGalleries.Any())
+{
+    <section class="home-galleries">
+        <div class="container">
+            <div class="home-galleries-header">
+                <div>
+                    <h2>Match Photos</h2>
+                    <p class="home-galleries-sub">Shot around the league by our photographers</p>
+                </div>
+                <button class="home-galleries-link" @onclick="@(() => Nav.NavigateTo("/galleries"))">All galleries →</button>
+            </div>
+
+            <div class="home-galleries-strip">
+                @foreach (var gallery in recentGalleries)
+                {
+                    <button class="home-gallery-card" @onclick="@(() => Nav.NavigateTo($"/gallery/{gallery.Id}"))">
+                        @if (!string.IsNullOrEmpty(gallery.CoverThumbnailUrl))
+                        {
+                            @* Two sources, and the browser picks. A phone takes the
+                               small one; a wide or high-density screen, where these
+                               cards are several hundred pixels across, takes the
+                               full-size cover instead of stretching the thumbnail. *@
+                            <img src="@MediaUrls.Absolute(Http, gallery.CoverThumbnailUrl)"
+                                 srcset="@MediaUrls.SrcSet(Http, gallery.CoverThumbnailUrl, gallery.CoverImageUrl)"
+                                 sizes="(max-width: 700px) 92vw, 380px"
+                                 alt="@gallery.HomeTeam versus @gallery.AwayTeam"
+                                 loading="lazy" decoding="async" />
+                        }
+                        <div class="home-gallery-overlay">
+                            <span class="home-gallery-teams">@gallery.HomeTeam v @gallery.AwayTeam</span>
+                            <span class="home-gallery-count">@gallery.PhotoCount photos</span>
+                        </div>
+                    </button>
+                }
+            </div>
+        </div>
+    </section>
+}
+
 @code {
     private FixtureWeekDto? currentWeek;
     private List<LeagueTableRowDto> table = new();
@@ -328,7 +370,11 @@
     private List<PlayerMotmDto> topMotm = new();
     private List<PenaltyTableRowDto> penaltyTable = new();
     private TeamOfTheWeekDto? currentTotw;
+    private List<GallerySummaryDto> recentGalleries = new();
     private bool isLoading = true;
+
+    // The strip is a taster, not the full list — that's what /galleries is for.
+    private const int HomeGalleryCount = 3;
 
     protected override async Task OnInitializedAsync()
     {
@@ -341,8 +387,9 @@
             var seasonsTask = SeasonService.GetSeasons();
             var currentSeasonTask = SeasonService.GetCurrentSeason();
             var totwTask = TotwService.GetCurrent();
+            var galleriesTask = GalleryService.GetGalleries();
 
-            await Task.WhenAll(scorersTask, assistsTask, motmTask, weekTask, seasonsTask, currentSeasonTask, totwTask);
+            await Task.WhenAll(scorersTask, assistsTask, motmTask, weekTask, seasonsTask, currentSeasonTask, totwTask, galleriesTask);
 
             topScorers = scorersTask.Result;
             topAssists = assistsTask.Result;
@@ -350,6 +397,12 @@
             currentWeek = weekTask.Result;
             seasons = seasonsTask.Result;
             currentTotw = totwTask.Result;
+
+            // Only galleries that actually have a cover are worth showing here.
+            recentGalleries = galleriesTask.Result
+                .Where(g => !string.IsNullOrEmpty(g.CoverThumbnailUrl))
+                .Take(HomeGalleryCount)
+                .ToList();
 
             var currentSeason = currentSeasonTask.Result;
             selectedSeasonId = currentSeason?.Id ?? seasons.FirstOrDefault()?.Id ?? 0;

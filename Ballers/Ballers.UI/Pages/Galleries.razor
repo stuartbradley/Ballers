@@ -1,0 +1,117 @@
+@page "/galleries"
+@using Ballers.Shared
+@using Ballers.Services
+@using Ballers.UI.Infrastructure
+
+@inject GalleryService GalleryService
+@inject NavigationManager Nav
+@inject HttpClient Http
+
+<PageTitle>Match Galleries</PageTitle>
+
+<div class="galleries-page">
+
+    <div class="galleries-hero">
+        <div class="galleries-hero-inner">
+            <p class="galleries-eyebrow">Blackpool Ballers League</p>
+            <h1>Match Galleries</h1>
+            <p class="galleries-sub">
+                Photos from around the league, match by match.
+            </p>
+        </div>
+    </div>
+
+    <div class="galleries-body">
+
+        @if (isLoading)
+        {
+            <LoadingSpinner />
+        }
+        else if (!galleries.Any())
+        {
+            <div class="galleries-empty">
+                <p>No galleries yet.</p>
+                <p class="galleries-empty-sub">Photos will appear here once they've been added.</p>
+            </div>
+        }
+        else
+        {
+            <div class="gallery-grid">
+                @foreach (var gallery in galleries)
+                {
+                    <button class="gallery-card" @onclick="() => Open(gallery.Id)">
+                        <div class="gallery-card-image">
+                            @if (!string.IsNullOrEmpty(gallery.CoverThumbnailUrl))
+                            {
+                                @* Browser picks: small on a phone, full size where the
+                                   card is drawn large or the screen is high density. *@
+                                <img src="@Abs(gallery.CoverThumbnailUrl)"
+                                     srcset="@MediaUrls.SrcSet(Http, gallery.CoverThumbnailUrl, gallery.CoverImageUrl)"
+                                     sizes="(max-width: 560px) 92vw, 340px"
+                                     alt="@gallery.HomeTeam versus @gallery.AwayTeam"
+                                     loading="lazy" decoding="async" />
+                            }
+                            else
+                            {
+                                <div class="gallery-card-placeholder">No photos yet</div>
+                            }
+
+                            <span class="gallery-card-count">@gallery.PhotoCount photos</span>
+
+                            @if (!gallery.IsPublished)
+                            {
+                                <span class="gallery-card-hidden">Hidden</span>
+                            }
+                        </div>
+
+                        <div class="gallery-card-body">
+                            <div class="gallery-card-week">Match Week @gallery.Week</div>
+
+                            <div class="gallery-card-fixture">
+                                <span class="gallery-card-team">@gallery.HomeTeam</span>
+                                @if (gallery.IsPlayed)
+                                {
+                                    <span class="gallery-card-score">@gallery.HomeScore–@gallery.AwayScore</span>
+                                }
+                                else
+                                {
+                                    <span class="gallery-card-vs">v</span>
+                                }
+                                <span class="gallery-card-team">@gallery.AwayTeam</span>
+                            </div>
+
+                            <div class="gallery-card-meta">
+                                @if (gallery.Kickoff.HasValue)
+                                {
+                                    <span>@gallery.Kickoff.Value.ToString("ddd d MMM yyyy")</span>
+                                }
+                                @if (!string.IsNullOrEmpty(gallery.PhotographerName))
+                                {
+                                    <span class="gallery-card-photographer">@gallery.PhotographerName</span>
+                                }
+                            </div>
+                        </div>
+                    </button>
+                }
+            </div>
+        }
+
+    </div>
+
+</div>
+
+@code {
+    private bool isLoading = true;
+    private List<GallerySummaryDto> galleries = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        galleries = await GalleryService.GetGalleries();
+        isLoading = false;
+    }
+
+    private void Open(int galleryId) => Nav.NavigateTo($"/gallery/{galleryId}");
+
+    // Images are served by the API, which sits on a different origin to the UI.
+    private string? Abs(string? url) => MediaUrls.Absolute(Http, url);
+}

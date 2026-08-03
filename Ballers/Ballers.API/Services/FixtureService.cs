@@ -226,6 +226,7 @@ namespace Ballers.API.Services
                 DateRange = $"{fixtures.Min(f => f.WindowStart):dd MMM} - {fixtures.Max(f => f.WindowEnd):dd MMM}",
                 Matches = fixtures.Select(f => new FixtureMatchDto
                 {
+                    Id = f.Id,
                     Home = f.HomeTeam!.Name,
                     Away = f.AwayTeam!.Name,
                     HomeLogo = f.HomeTeam.ProfileImageUrl,
@@ -325,6 +326,7 @@ namespace Ballers.API.Services
                             var scorers = scorersByFixture[f.Id];
                             return new FixtureMatchDto
                             {
+                                Id = f.Id,
                                 Home = f.HomeTeamName,
                                 Away = f.AwayTeamName,
                                 HomeLogo = f.HomeTeamLogo,

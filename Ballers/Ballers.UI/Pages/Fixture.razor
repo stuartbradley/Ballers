@@ -6,6 +6,7 @@
 @attribute [Authorize]
 
 @inject FixtureService FixtureService
+@inject GalleryService GalleryService
 @inject AuthService AuthService
 @inject PenaltyService PenaltyService
 @inject FairplayService FairplayService
@@ -75,6 +76,13 @@
                 <div class="fixture-locked-banner">
                     This fixture is locked — editing closed 2 weeks after the final whistle.
                 </div>
+            }
+
+            @if (galleryId is { } gid)
+            {
+                <a class="fixture-gallery-link" href="/gallery/@gid">
+                    📷 View match photos
+                </a>
             }
 
             @if (AwaitingOtherTeamStats)
@@ -605,6 +613,9 @@
     private int? trueMotmSelection;
     private string? trueMotmMessage;
 
+    // Null when this fixture has no gallery, which is what hides the link.
+    private int? galleryId;
+
     private bool viewingOpponent = false;
     private List<OpponentPlayerStatDto> opponentStats = new();
     private bool opponentStatsLoaded = false;
@@ -714,6 +725,8 @@
             trueMotm = await FixtureService.GetTrueMotm(fixture.Id);
             trueMotmSelection = trueMotm?.SelectedPlayerId;
         }
+
+        galleryId = await GalleryService.GetGalleryIdForFixture(fixture.Id);
         // Global admin "shut down editing" lock — only a true admin bypasses it.
         editingLocked = !(user?.IsAdmin ?? false) && (await LeagueSettingsSvc.Get()).FixturesLocked;
         opponentSavedScore = ViewingHome ? fixture.AwayScore : fixture.HomeScore;

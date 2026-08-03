@@ -28,6 +28,9 @@ namespace Ballers.API.Data
         public DbSet<LeagueSetting> LeagueSettings => Set<LeagueSetting>();
         public DbSet<MatchOfTheDayPost> MatchOfTheDayPosts => Set<MatchOfTheDayPost>();
         public DbSet<MatchOfTheDayPhoto> MatchOfTheDayPhotos => Set<MatchOfTheDayPhoto>();
+        public DbSet<Photographer> Photographers => Set<Photographer>();
+        public DbSet<Gallery> Galleries => Set<Gallery>();
+        public DbSet<GalleryPhoto> GalleryPhotos => Set<GalleryPhoto>();
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -183,6 +186,35 @@ namespace Ballers.API.Data
                 .WithMany(p => p.Photos)
                 .HasForeignKey(ph => ph.PostId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // One gallery per fixture, which is what makes "does this fixture have
+            // a gallery?" a single cheap lookup from the fixture page.
+            builder.Entity<Gallery>()
+                .HasIndex(g => g.FixtureId)
+                .IsUnique();
+
+            builder.Entity<Gallery>()
+                .HasOne(g => g.Fixture)
+                .WithMany()
+                .HasForeignKey(g => g.FixtureId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Deleting a photographer leaves their galleries in place, uncredited,
+            // rather than taking the photos with them.
+            builder.Entity<Gallery>()
+                .HasOne(g => g.Photographer)
+                .WithMany()
+                .HasForeignKey(g => g.PhotographerId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.Entity<GalleryPhoto>()
+                .HasOne(p => p.Gallery)
+                .WithMany(g => g.Photos)
+                .HasForeignKey(p => p.GalleryId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<GalleryPhoto>()
+                .HasIndex(p => new { p.GalleryId, p.SortOrder });
         }
 
     }

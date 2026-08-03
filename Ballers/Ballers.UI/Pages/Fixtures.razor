@@ -4,6 +4,7 @@
 @using Ballers.Services
 @inject FixtureService FixtureService
 @inject SeasonService SeasonService
+@inject GalleryService GalleryService
 
 <PageTitle>Fixtures</PageTitle>
 
@@ -41,7 +42,7 @@
         {
             @foreach (var week in FixtureWeeks)
             {
-                <FixtureWeekCard Week="week" />
+                <FixtureWeekCard Week="week" GalleriesByFixture="galleriesByFixture" />
             }
         }
     </div>
@@ -54,12 +55,29 @@
     private int selectedSeasonId;
     private bool isLoading = true;
 
+    // One lookup for the whole schedule, rather than asking per fixture.
+    private Dictionary<int, int> galleriesByFixture = new();
+
     protected override async Task OnInitializedAsync()
     {
         seasons = await SeasonService.GetSeasons();
         var current = seasons.FirstOrDefault(s => s.IsActive) ?? seasons.LastOrDefault();
         selectedSeasonId = current?.Id ?? 0;
+
+        await LoadGalleriesAsync();
         await LoadFixtures();
+    }
+
+    private async Task LoadGalleriesAsync()
+    {
+        var galleries = await GalleryService.GetGalleries();
+
+        // A gallery with no photos in it yet has nothing to show, so it doesn't
+        // earn a link from the schedule.
+        galleriesByFixture = galleries
+            .Where(g => g.PhotoCount > 0)
+            .GroupBy(g => g.FixtureId)
+            .ToDictionary(g => g.Key, g => g.First().Id);
     }
 
     private async Task OnSeasonChanged(ChangeEventArgs e)

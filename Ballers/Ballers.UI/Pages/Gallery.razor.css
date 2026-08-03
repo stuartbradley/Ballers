@@ -1,0 +1,364 @@
+/* ================================================================
+   GALLERY — one match, shown as a mosaic
+   ================================================================ */
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.gal-page {
+    min-height: calc(100vh - 71px);
+    background: #07101E;
+}
+
+.gal-error {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 80px 24px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.gal-back-link {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+    text-decoration: none;
+    transition: color 0.18s;
+}
+
+.gal-back-link:hover { color: var(--ballers-accent); }
+
+/* ── Fixture header ── */
+
+.gal-hero {
+    background: #0B1628;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.gal-hero::after {
+    content: "";
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, var(--ballers-accent) 0%, rgba(250, 204, 21, 0.2) 100%);
+}
+
+.gal-hero-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 28px 24px 34px;
+}
+
+.gal-week {
+    font-family: var(--font-display);
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--ballers-accent);
+    opacity: 0.75;
+    margin: 18px 0 10px;
+}
+
+.gal-fixture {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.gal-team {
+    font-family: var(--font-display);
+    font-size: clamp(1.3rem, 3.4vw, 2.2rem);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: white;
+}
+
+.gal-score {
+    font-family: var(--font-display);
+    font-size: clamp(1.4rem, 3.6vw, 2.3rem);
+    font-weight: 700;
+    color: var(--ballers-accent);
+    letter-spacing: 0.04em;
+}
+
+.gal-score-sep {
+    color: rgba(255, 255, 255, 0.3);
+    margin: 0 4px;
+}
+
+.gal-vs {
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 1rem;
+    text-transform: uppercase;
+}
+
+.gal-meta {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.42);
+}
+
+.gal-description {
+    margin: 14px 0 0;
+    max-width: 70ch;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+/* ── Photographer credit ── */
+
+.gal-credit {
+    background: linear-gradient(180deg, rgba(250, 204, 21, 0.06), transparent);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.gal-credit-inner {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 22px 24px;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.gal-credit-logo {
+    width: 72px;
+    height: 72px;
+    object-fit: contain;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.04);
+    padding: 6px;
+    flex-shrink: 0;
+}
+
+.gal-credit-text { flex: 1; min-width: 240px; }
+
+.gal-credit-label {
+    font-family: var(--font-display);
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.3);
+    margin: 0 0 4px;
+}
+
+.gal-credit-name {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: white;
+    margin: 0;
+}
+
+.gal-credit-bio {
+    margin: 8px 0 0;
+    max-width: 70ch;
+    font-size: 0.85rem;
+    line-height: 1.55;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.gal-credit-links {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+}
+
+.gal-credit-links a {
+    padding: 6px 14px;
+    border: 1px solid rgba(250, 204, 21, 0.35);
+    border-radius: 999px;
+    color: var(--ballers-accent);
+    text-decoration: none;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    transition: background 0.16s, color 0.16s;
+}
+
+.gal-credit-links a:hover {
+    background: var(--ballers-accent);
+    color: #07101E;
+}
+
+/* ── Mosaic ── */
+
+.gal-body {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 26px 24px 64px;
+}
+
+.gal-empty {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.35);
+    padding: 50px 0;
+}
+
+/* Dense packing lets the tall and wide tiles fill gaps rather than
+   leaving holes, which is what gives the grid its scrapbook feel. */
+.gal-mosaic {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    grid-auto-rows: 150px;
+    grid-auto-flow: dense;
+    gap: 10px;
+}
+
+.gal-tile {
+    padding: 0;
+    border: none;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #0B1628;
+    cursor: pointer;
+    position: relative;
+    animation: fadeUp 0.35s ease both;
+}
+
+.gal-tile img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.4s ease, filter 0.25s ease;
+}
+
+.gal-tile:hover img {
+    transform: scale(1.06);
+    filter: brightness(1.08);
+}
+
+.gal-tile::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    transition: border-color 0.18s;
+    pointer-events: none;
+}
+
+.gal-tile:hover::after { border-color: rgba(250, 204, 21, 0.55); }
+
+.tile-normal  { grid-row: span 2; }
+.tile-tall    { grid-row: span 3; }
+.tile-wide    { grid-column: span 2; grid-row: span 2; }
+.tile-feature { grid-column: span 2; grid-row: span 3; }
+
+.gal-loading-more {
+    text-align: center;
+    padding: 24px 0;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.85rem;
+}
+
+.gal-sentinel { height: 1px; }
+
+/* ── Lightbox ── */
+
+.gal-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(4, 8, 16, 0.94);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 60px;
+    animation: fadeUp 0.2s ease both;
+}
+
+.gal-lightbox-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 6px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+.gal-lightbox-close {
+    position: absolute;
+    top: 18px;
+    right: 22px;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.06);
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.16s;
+}
+
+.gal-lightbox-close:hover { background: rgba(255, 255, 255, 0.16); }
+
+.gal-lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 48px;
+    height: 72px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    color: white;
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.16s;
+}
+
+.gal-lightbox-nav:hover { background: rgba(250, 204, 21, 0.85); color: #07101E; }
+.gal-lightbox-nav.prev { left: 14px; }
+.gal-lightbox-nav.next { right: 14px; }
+
+.gal-lightbox-counter {
+    position: absolute;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+@media (max-width: 640px) {
+    .gal-mosaic {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        grid-auto-rows: 110px;
+        gap: 7px;
+    }
+
+    /* A two-column-wide feature would fill the screen on a phone, so the
+       oversized tiles step back down to normal. */
+    .tile-wide, .tile-feature { grid-column: span 2; grid-row: span 2; }
+
+    .gal-lightbox { padding: 20px 12px 60px; }
+    .gal-lightbox-nav { width: 38px; height: 58px; font-size: 1.5rem; }
+    .gal-hero-inner, .gal-body, .gal-credit-inner { padding-left: 16px; padding-right: 16px; }
+}

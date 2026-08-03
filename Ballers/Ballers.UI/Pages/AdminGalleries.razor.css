@@ -1,0 +1,346 @@
+/* ================================================================
+   ADMIN — gallery and photographer management
+   ================================================================ */
+
+.ag-page {
+    min-height: calc(100vh - 71px);
+    background: #07101E;
+}
+
+/* ── Hero ── */
+
+.ag-hero {
+    background: #0B1628;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.ag-hero::after {
+    content: "";
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, var(--ballers-accent) 0%, rgba(250, 204, 21, 0.2) 100%);
+}
+
+.ag-hero-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 32px 24px;
+}
+
+.hero-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.ag-eyebrow {
+    font-family: var(--font-display);
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--ballers-accent);
+    opacity: 0.75;
+    margin: 0;
+}
+
+.back-link {
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+    text-decoration: none;
+}
+
+.back-link:hover { color: var(--ballers-accent); }
+
+.ag-hero-inner h1 {
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 3.6vw, 2.3rem);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: white;
+    margin: 0;
+}
+
+/* ── Body ── */
+
+.ag-body {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 26px 24px 64px;
+}
+
+.ag-message {
+    padding: 11px 16px;
+    border-radius: 8px;
+    margin-bottom: 18px;
+    font-size: 0.85rem;
+    background: rgba(96, 165, 250, 0.1);
+    border: 1px solid rgba(96, 165, 250, 0.3);
+    color: rgba(191, 219, 254, 0.95);
+}
+
+.ag-message.error {
+    background: rgba(248, 113, 113, 0.1);
+    border-color: rgba(248, 113, 113, 0.35);
+    color: rgba(254, 202, 202, 0.95);
+}
+
+.ag-card {
+    background: #111D33;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 22px 24px 24px;
+    margin-bottom: 22px;
+}
+
+.ag-card h2 {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: white;
+    margin: 0 0 6px;
+}
+
+.ag-hint {
+    margin: 0 0 16px;
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.38);
+}
+
+.ag-empty {
+    color: rgba(255, 255, 255, 0.35);
+    font-size: 0.87rem;
+    margin: 0;
+}
+
+/* ── Forms ── */
+
+.ag-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px 16px;
+}
+
+.ag-span-2 { grid-column: 1 / -1; }
+
+.ag-form-grid label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.ag-form-grid input,
+.ag-form-grid select,
+.ag-form-grid textarea {
+    padding: 8px 11px;
+    border-radius: 7px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.04);
+    color: white;
+    font-size: 0.88rem;
+    font-family: inherit;
+    text-transform: none;
+    letter-spacing: normal;
+    color-scheme: dark;
+}
+
+/* The open dropdown is drawn by the browser, which uses the select's own
+   background. A translucent white over the page left the list near-white with
+   white text on it, so the options need solid colours of their own. */
+.ag-form-grid select {
+    background-color: #16233C;
+}
+
+.ag-form-grid select option {
+    background-color: #16233C;
+    color: #ffffff;
+}
+
+.ag-form-grid input:focus,
+.ag-form-grid select:focus,
+.ag-form-grid textarea:focus {
+    outline: none;
+    border-color: var(--ballers-accent);
+}
+
+.ag-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+}
+
+.ag-btn {
+    padding: 9px 20px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: transparent;
+    color: rgba(255, 255, 255, 0.75);
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.ag-btn:hover { color: white; border-color: rgba(255, 255, 255, 0.4); }
+
+.ag-btn.primary {
+    background: var(--ballers-accent);
+    border-color: var(--ballers-accent);
+    color: #07101E;
+}
+
+.ag-btn.primary:hover { background: white; border-color: white; }
+
+/* ── Lists ── */
+
+.ag-list {
+    list-style: none;
+    margin: 18px 0 0;
+    padding: 0;
+}
+
+.ag-list li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.ag-list li:last-child { border-bottom: none; }
+
+.ag-list-name {
+    font-weight: 600;
+    color: white;
+    font-size: 0.9rem;
+}
+
+.ag-list-meta {
+    flex: 1;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.ag-list-actions { display: flex; gap: 12px; }
+
+.ag-link {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--ballers-accent);
+    font-size: 0.8rem;
+    cursor: pointer;
+    text-decoration: none;
+    font-family: inherit;
+}
+
+.ag-link:hover { text-decoration: underline; }
+.ag-link.danger { color: #f87171; }
+
+/* ── Gallery rows ── */
+
+.ag-gallery {
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 12px;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.ag-gallery-head {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.ag-gallery-cover {
+    width: 84px;
+    height: 58px;
+    object-fit: cover;
+    border-radius: 6px;
+    flex-shrink: 0;
+    background: #0B1628;
+}
+
+.ag-gallery-cover.empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.25);
+}
+
+.ag-gallery-info { flex: 1; min-width: 200px; }
+
+.ag-gallery-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.ag-badge {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(250, 204, 21, 0.85);
+    color: #07101E;
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+}
+
+.ag-gallery-meta {
+    margin-top: 4px;
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.38);
+}
+
+.ag-gallery-actions { display: flex; gap: 12px; align-items: center; }
+
+.ag-upload {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.ag-upload-status { color: var(--ballers-accent); }
+
+@media (max-width: 560px) {
+    .ag-hero-inner, .ag-body { padding-left: 16px; padding-right: 16px; }
+    .ag-form-grid { grid-template-columns: 1fr; }
+}

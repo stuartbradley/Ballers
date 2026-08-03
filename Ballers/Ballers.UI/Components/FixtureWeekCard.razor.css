@@ -250,6 +250,26 @@
     color: var(--ballers-accent);
 }
 
+/* Only rendered for fixtures that actually have photos. */
+.meta-gallery {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 11px;
+    border-radius: 999px;
+    border: 1px solid rgba(250, 204, 21, 0.35);
+    background: rgba(250, 204, 21, 0.08);
+    color: var(--ballers-accent);
+    text-decoration: none;
+    font-weight: 600;
+    transition: background 0.15s, color 0.15s;
+}
+
+.meta-gallery:hover {
+    background: var(--ballers-accent);
+    color: #07101E;
+}
+
 .meta-place {
     display: inline-flex;
     align-items: center;

@@ -83,6 +83,13 @@
                             </span>
                         </a>
                     }
+
+                    @if (GalleryIdFor(match.Id) is { } galleryId)
+                    {
+                        <a class="meta-item meta-gallery" href="/gallery/@galleryId" title="View match photos">
+                            📷 <span>Photos</span>
+                        </a>
+                    }
                 </div>
 
             </div>
@@ -105,6 +112,19 @@
 @code {
     [Parameter]
     public FixtureWeekDto Week { get; set; } = new();
+
+    /// <summary>
+    /// Fixture id to gallery id, for the fixtures that have photos. Passed in
+    /// rather than looked up per card so the schedule makes one call for the
+    /// whole season instead of one per match.
+    /// </summary>
+    [Parameter]
+    public IReadOnlyDictionary<int, int>? GalleriesByFixture { get; set; }
+
+    private int? GalleryIdFor(int fixtureId)
+        => GalleriesByFixture is not null && GalleriesByFixture.TryGetValue(fixtureId, out var id)
+            ? id
+            : null;
 
     RenderFragment TeamCrest(string? logo, string name) => __builder =>
     {

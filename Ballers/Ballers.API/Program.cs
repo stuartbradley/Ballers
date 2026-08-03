@@ -75,6 +75,7 @@ builder.Services.AddScoped<ILeagueSettingsService, LeagueSettingsService>();
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<ITotwService, TotwService>();
 builder.Services.AddScoped<IMotdService, MotdService>();
+builder.Services.AddScoped<IGalleryStorageService, GalleryStorageService>();
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"));
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();

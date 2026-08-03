@@ -266,6 +266,30 @@
     letter-spacing: 0.01em;
 }
 
+/* Only rendered when the fixture actually has a gallery. */
+.fixture-gallery-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    align-self: flex-start;
+    padding: 9px 18px;
+    margin: 0 0 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(250, 204, 21, 0.35);
+    background: rgba(250, 204, 21, 0.08);
+    color: var(--ballers-accent);
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    transition: background 0.16s, color 0.16s;
+}
+
+.fixture-gallery-link:hover {
+    background: var(--ballers-accent);
+    color: #07101E;
+}
+
 /* Shown when one team has submitted and the other has not. */
 .awaiting-stats-banner {
     background: rgba(96, 165, 250, 0.08);
