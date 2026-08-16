@@ -45,6 +45,17 @@ namespace Ballers.API.Controllers
             catch (InvalidOperationException ex) { return BadRequest(ex.Message); }
         }
 
+        [HttpPost("create-admin")]
+        public async Task<IActionResult> CreateAdmin(CreateAdminRequest request)
+        {
+            try
+            {
+                await _admin.CreateAdminAsync(request.Email, request.Password);
+                return Ok();
+            }
+            catch (InvalidOperationException ex) { return BadRequest(ex.Message); }
+        }
+
         [HttpPost("generate-fixtures")]
         public async Task<IActionResult> GenerateFixtures(GenerateFixturesRequest request)
         {

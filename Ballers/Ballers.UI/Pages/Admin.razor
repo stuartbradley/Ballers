@@ -41,21 +41,23 @@
             <!-- CREATE TEAM -->
             <div class="admin-card">
                 <div class="card-header">
-                    <span class="card-label">@(createTeamModel.IsReferee ? "Referee" : "Team")</span>
-                    <h3>@(createTeamModel.IsReferee ? "Add Referee" : "Add New Team")</h3>
+                    <span class="card-label">@AccountTypeLabel</span>
+                    <h3>Add @AccountTypeLabel</h3>
                 </div>
 
                 <EditForm EditContext="editContext" OnValidSubmit="CreateTeam">
                     <DataAnnotationsValidator />
                     <div class="form-group">
-                        <label class="team-check-label" style="margin-bottom:12px;">
-                            <input type="checkbox"
-                                   checked="@createTeamModel.IsReferee"
-                                   @onchange="(e) => createTeamModel.IsReferee = (bool)e.Value!" />
-                            <span>Referee account</span>
-                        </label>
+                        <label class="input-label">Account type</label>
+                        <select class="form-input"
+                                value="@createTeamModel.AccountType"
+                                @onchange="OnAccountTypeChanged">
+                            <option value="@AccountType.Team">Team (manager login)</option>
+                            <option value="@AccountType.Referee">Referee</option>
+                            <option value="@AccountType.Admin">Admin</option>
+                        </select>
 
-                        @if (!createTeamModel.IsReferee)
+                        @if (createTeamModel.IsTeam)
                         {
                             <InputText class="form-input"
                                        placeholder="Team name"
@@ -63,8 +65,16 @@
                             <ValidationMessage For="@(() => createTeamModel.TeamName)" />
                         }
 
+                        @if (createTeamModel.IsAdmin)
+                        {
+                            <div class="info-msg">
+                                Admins have full control of the league — fixtures, seasons, results and other accounts.
+                                Only create one for someone you trust.
+                            </div>
+                        }
+
                         <InputText class="form-input"
-                                   placeholder="@(createTeamModel.IsReferee ? "Referee email" : "Manager email")"
+                                   placeholder="@EmailPlaceholder"
                                    @bind-Value="createTeamModel.Email" />
                         <ValidationMessage For="@(() => createTeamModel.Email)" />
 
@@ -78,7 +88,7 @@
                     </div>
 
                     <button type="button" class="primary-btn" @onclick="SubmitForm">
-                        @(createTeamModel.IsReferee ? "Create Referee" : "Create Team")
+                        Create @AccountTypeLabel
                     </button>
                 </EditForm>
 
@@ -490,20 +500,49 @@
         }
     }
 
+    string AccountTypeLabel => createTeamModel.AccountType switch
+    {
+        AccountType.Referee => "Referee",
+        AccountType.Admin => "Admin",
+        _ => "Team"
+    };
+
+    string EmailPlaceholder => createTeamModel.AccountType switch
+    {
+        AccountType.Referee => "Referee email",
+        AccountType.Admin => "Admin email",
+        _ => "Manager email"
+    };
+
+    void OnAccountTypeChanged(ChangeEventArgs e)
+    {
+        createTeamModel.AccountType = Enum.Parse<AccountType>((string)e.Value!);
+        // Team name only applies to team accounts — clear it so a stale value
+        // can't linger behind the hidden field.
+        if (!createTeamModel.IsTeam)
+            createTeamModel.TeamName = "";
+        editContext.NotifyValidationStateChanged();
+    }
+
     async Task CreateTeam()
     {
         try
         {
-            if (createTeamModel.IsReferee)
+            switch (createTeamModel.AccountType)
             {
-                await AdminService.CreateReferee(createTeamModel.Email, createTeamModel.Password);
-                teamMessage = "Referee created successfully.";
-            }
-            else
-            {
-                await AdminService.CreateTeam(createTeamModel.TeamName, createTeamModel.Email, createTeamModel.Password);
-                teamMessage = "Team created successfully.";
-                teams = await AdminService.GetTeams();
+                case AccountType.Referee:
+                    await AdminService.CreateReferee(createTeamModel.Email, createTeamModel.Password);
+                    teamMessage = "Referee created successfully.";
+                    break;
+                case AccountType.Admin:
+                    await AdminService.CreateAdmin(createTeamModel.Email, createTeamModel.Password);
+                    teamMessage = "Admin created successfully.";
+                    break;
+                default:
+                    await AdminService.CreateTeam(createTeamModel.TeamName, createTeamModel.Email, createTeamModel.Password);
+                    teamMessage = "Team created successfully.";
+                    teams = await AdminService.GetTeams();
+                    break;
             }
             teamIsError = false;
             createTeamModel = new();

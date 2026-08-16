@@ -9,6 +9,7 @@ namespace Ballers.API.Services
     {
         Task CreateTeamAsync(string teamName, string email, string password);
         Task CreateRefereeAsync(string email, string password);
+        Task CreateAdminAsync(string email, string password);
         Task DeleteSeasonAsync(int seasonId);
     }
 
@@ -68,6 +69,23 @@ namespace Ballers.API.Services
                     string.Join("; ", result.Errors.Select(e => e.Description)));
 
             await _userManager.AddToRoleAsync(user, "Referee");
+        }
+
+        public async Task CreateAdminAsync(string email, string password)
+        {
+            var user = new ApplicationUser
+            {
+                UserName = email,
+                Email = email,
+                IsAdmin = true,
+            };
+
+            var result = await _userManager.CreateAsync(user, password);
+            if (!result.Succeeded)
+                throw new InvalidOperationException(
+                    string.Join("; ", result.Errors.Select(e => e.Description)));
+
+            await _userManager.AddToRoleAsync(user, "Admin");
         }
 
         public async Task DeleteSeasonAsync(int seasonId)

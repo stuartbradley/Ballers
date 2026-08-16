@@ -93,6 +93,30 @@
             }
         }
 
+        public async Task CreateAdmin(string email, string password)
+        {
+            var request = new HttpRequestMessage(
+                HttpMethod.Post,
+                "api/admin/create-admin");
+
+            request.SetBrowserRequestCredentials(
+                BrowserRequestCredentials.Include);
+
+            request.Content = JsonContent.Create(new
+            {
+                email,
+                password
+            });
+
+            var response = await _http.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                var msg = body.Trim('"');
+                throw new Exception(string.IsNullOrWhiteSpace(msg) ? $"Error {(int)response.StatusCode}" : msg);
+            }
+        }
+
         public async Task GenerateFixtures(List<int> teamIds, DateTime startDate)
         {
             var request = new HttpRequestMessage(
