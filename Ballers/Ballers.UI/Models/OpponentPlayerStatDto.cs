@@ -4,6 +4,7 @@ namespace Ballers.Models
     {
         public string Name { get; set; } = "";
         public int Goals { get; set; }
+        public int OwnGoals { get; set; }
         public int Assists { get; set; }
         public bool IsMotm { get; set; }
         public bool YellowCard { get; set; }

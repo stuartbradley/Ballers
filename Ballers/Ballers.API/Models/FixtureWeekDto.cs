@@ -32,5 +32,9 @@
     {
         public string Name { get; set; } = "";
         public int Goals { get; set; }
+
+        // Own goals are listed under the team that benefited, so the name needs
+        // marking to make clear it belongs to the other side's squad.
+        public bool IsOwnGoal { get; set; }
     }
 }

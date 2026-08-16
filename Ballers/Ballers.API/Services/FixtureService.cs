@@ -273,7 +273,7 @@ namespace Ballers.API.Services
 
             // Query 2: only rows where goals were scored — far smaller than full stats table
             var playedIds = fixtures.Where(f => f.IsPlayed).Select(f => f.Id).ToList();
-            List<(int FixtureId, int Goals, string Name, int TeamId)> scorerRows;
+            List<(int FixtureId, int Goals, string Name, int TeamId, bool IsOwnGoal)> scorerRows;
             if (playedIds.Count == 0)
             {
                 scorerRows = new();
@@ -281,16 +281,31 @@ namespace Ballers.API.Services
             else
             {
                 var raw = await _db.FixturePlayerStats
-                    .Where(s => playedIds.Contains(s.FixtureId) && s.Goals > 0)
+                    .Where(s => playedIds.Contains(s.FixtureId) && (s.Goals > 0 || s.OwnGoals > 0))
                     .Select(s => new
                     {
                         s.FixtureId,
                         s.Goals,
+                        s.OwnGoals,
                         s.Player!.Name,
                         TeamId = s.Player.TeamId
                     })
                     .ToListAsync();
-                scorerRows = raw.Select(s => (s.FixtureId, s.Goals, s.Name, s.TeamId)).ToList();
+
+                scorerRows = raw
+                    .Where(s => s.Goals > 0)
+                    .Select(s => (s.FixtureId, s.Goals, s.Name, s.TeamId, IsOwnGoal: false))
+                    .ToList();
+
+                // Own goals are listed against the side that benefited, so the row is
+                // tagged with the opposing team id rather than the scorer's own.
+                var fixtureSides = fixtures.ToDictionary(f => f.Id, f => (f.HomeTeamId, f.AwayTeamId));
+                foreach (var s in raw.Where(s => s.OwnGoals > 0))
+                {
+                    if (!fixtureSides.TryGetValue(s.FixtureId, out var sides)) continue;
+                    var creditedTeamId = s.TeamId == sides.HomeTeamId ? sides.AwayTeamId : sides.HomeTeamId;
+                    scorerRows.Add((s.FixtureId, s.OwnGoals, s.Name, creditedTeamId, IsOwnGoal: true));
+                }
             }
 
             var scorersByFixture = scorerRows.ToLookup(s => s.FixtureId);
@@ -341,13 +356,13 @@ namespace Ballers.API.Services
                                 HomeScorers = f.IsPlayed
                                     ? scorers.Where(s => s.TeamId == f.HomeTeamId)
                                         .OrderByDescending(s => s.Goals)
-                                        .Select(s => new GoalScorerDto { Name = s.Name, Goals = s.Goals })
+                                        .Select(s => new GoalScorerDto { Name = s.Name, Goals = s.Goals, IsOwnGoal = s.IsOwnGoal })
                                         .ToList()
                                     : new(),
                                 AwayScorers = f.IsPlayed
                                     ? scorers.Where(s => s.TeamId == f.AwayTeamId)
                                         .OrderByDescending(s => s.Goals)
-                                        .Select(s => new GoalScorerDto { Name = s.Name, Goals = s.Goals })
+                                        .Select(s => new GoalScorerDto { Name = s.Name, Goals = s.Goals, IsOwnGoal = s.IsOwnGoal })
                                         .ToList()
                                     : new()
                             };
@@ -419,6 +434,7 @@ namespace Ballers.API.Services
                 {
                     PlayerId = s.PlayerId,
                     Goals = s.Goals,
+                    OwnGoals = s.OwnGoals,
                     Assists = s.Assists,
                     IsManOfTheMatch = s.ManOfTheMatch,
                     HadYellowCard = s.YellowCards,
@@ -530,6 +546,7 @@ namespace Ballers.API.Services
                 if (existingStats.TryGetValue(stat.PlayerId, out var existing))
                 {
                     existing.Goals = stat.Goals;
+                    existing.OwnGoals = stat.OwnGoals;
                     existing.Assists = stat.Assists;
                     existing.ManOfTheMatch = stat.IsManOfTheMatch;
                     existing.YellowCards = stat.HadYellowCard;
@@ -542,6 +559,7 @@ namespace Ballers.API.Services
                         FixtureId = fixtureId,
                         PlayerId = stat.PlayerId,
                         Goals = stat.Goals,
+                        OwnGoals = stat.OwnGoals,
                         Assists = stat.Assists,
                         ManOfTheMatch = stat.IsManOfTheMatch,
                         YellowCards = stat.HadYellowCard,
@@ -556,11 +574,16 @@ namespace Ballers.API.Services
             var allScores = await _db.FixturePlayerStats
                 .Where(s => s.FixtureId == fixtureId)
                 .Join(_db.Players, s => s.PlayerId, p => p.Id,
-                    (s, p) => new { s.Goals, p.TeamId })
+                    (s, p) => new { s.Goals, s.OwnGoals, p.TeamId })
                 .ToListAsync();
 
-            fixture.HomeScore = allScores.Where(x => x.TeamId == fixture.HomeTeamId).Sum(x => x.Goals);
-            fixture.AwayScore = allScores.Where(x => x.TeamId == fixture.AwayTeamId).Sum(x => x.Goals);
+            var homeRows = allScores.Where(x => x.TeamId == fixture.HomeTeamId).ToList();
+            var awayRows = allScores.Where(x => x.TeamId == fixture.AwayTeamId).ToList();
+
+            // An own goal is credited to the other side, so each team's score is its
+            // own players' goals plus the opposition's own goals.
+            fixture.HomeScore = homeRows.Sum(x => x.Goals) + awayRows.Sum(x => x.OwnGoals);
+            fixture.AwayScore = awayRows.Sum(x => x.Goals) + homeRows.Sum(x => x.OwnGoals);
 
             // Record which side has reported. A null team means the caller is
             // submitting for the whole fixture at once, which counts as both.
@@ -641,7 +664,7 @@ namespace Ballers.API.Services
                          && squadIds.Contains(s.PlayerId)
                          && s.Player!.TeamId == opponentTeamId)
                 .Select(s => new OpponentPlayerStat(
-                    s.Player!.Name, s.Goals, s.Assists,
+                    s.Player!.Name, s.Goals, s.OwnGoals, s.Assists,
                     s.ManOfTheMatch, s.YellowCards, s.RedCard))
                 .ToListAsync();
         }

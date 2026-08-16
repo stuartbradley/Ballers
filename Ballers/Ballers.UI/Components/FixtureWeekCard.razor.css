@@ -205,6 +205,13 @@
     text-overflow: ellipsis;
 }
 
+/* Own goals sit under the team they counted for, so they are dimmed and
+   italicised to separate them from that team's own scorers. */
+.scorer.own-goal {
+    color: rgba(255, 255, 255, 0.34);
+    font-style: italic;
+}
+
 /* ===== META INFO ===== */
 
 .fixture-meta {

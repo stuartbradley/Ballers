@@ -18,7 +18,7 @@
             <div class="goal-scorers">
                 @foreach (var g in Fixture.HomeGoalScorers)
                 {
-                    <span class="goal-scorer">&#x26BD; @g.PlayerName@(g.Goals > 1 ? $" x{g.Goals}" : "")</span>
+                    <span class="goal-scorer @(g.IsOwnGoal ? "own-goal" : "")">&#x26BD; @g.PlayerName@(g.Goals > 1 ? $" x{g.Goals}" : "")@(g.IsOwnGoal ? " (og)" : "")</span>
                 }
             </div>
         }
@@ -35,7 +35,7 @@
             <div class="goal-scorers">
                 @foreach (var g in Fixture.AwayGoalScorers)
                 {
-                    <span class="goal-scorer">&#x26BD; @g.PlayerName@(g.Goals > 1 ? $" x{g.Goals}" : "")</span>
+                    <span class="goal-scorer @(g.IsOwnGoal ? "own-goal" : "")">&#x26BD; @g.PlayerName@(g.Goals > 1 ? $" x{g.Goals}" : "")@(g.IsOwnGoal ? " (og)" : "")</span>
                 }
             </div>
         }

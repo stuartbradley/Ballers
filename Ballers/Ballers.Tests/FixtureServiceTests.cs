@@ -522,6 +522,90 @@ namespace Ballers.Tests
         }
 
         [Fact]
+        public async Task SubmitStats_OwnGoal_CountsForTheOpposition()
+        {
+            var db = await SeedBase(nameof(SubmitStats_OwnGoal_CountsForTheOpposition));
+            db.Fixtures.Add(MakeFixture(1));
+            db.Players.AddRange(
+                new Player { Id = 1, Name = "HomeDefender", TeamId = 1 },
+                new Player { Id = 2, Name = "AwayStriker", TeamId = 2 });
+            await db.SaveChangesAsync();
+
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
+            // Home defender puts one in his own net; nobody else scores.
+            await svc.SubmitStatsAsync(1, new List<PlayerStatDto>
+            {
+                new() { PlayerId = 1, Goals = 0, OwnGoals = 1, IsManOfTheMatch = true },
+                new() { PlayerId = 2, Goals = 0 }
+            }, teamId: null);
+
+            var fixture = db.Fixtures.Find(1)!;
+            Assert.Equal(0, fixture.HomeScore);
+            Assert.Equal(1, fixture.AwayScore);
+
+            // The own goal must not land in the defender's scoring record.
+            var stat = db.FixturePlayerStats.Single(s => s.PlayerId == 1);
+            Assert.Equal(0, stat.Goals);
+            Assert.Equal(1, stat.OwnGoals);
+        }
+
+        [Fact]
+        public async Task SubmitStats_OwnGoalsFromBothSides_AddToEachOthersScore()
+        {
+            var db = await SeedBase(nameof(SubmitStats_OwnGoalsFromBothSides_AddToEachOthersScore));
+            db.Fixtures.Add(MakeFixture(1));
+            db.Players.AddRange(
+                new Player { Id = 1, Name = "HomeStriker", TeamId = 1 },
+                new Player { Id = 2, Name = "HomeDefender", TeamId = 1 },
+                new Player { Id = 3, Name = "AwayStriker", TeamId = 2 },
+                new Player { Id = 4, Name = "AwayDefender", TeamId = 2 });
+            await db.SaveChangesAsync();
+
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
+            await svc.SubmitStatsAsync(1, new List<PlayerStatDto>
+            {
+                new() { PlayerId = 1, Goals = 2, IsManOfTheMatch = true },
+                new() { PlayerId = 2, OwnGoals = 1 }
+            }, teamId: 1);
+            await svc.SubmitStatsAsync(1, new List<PlayerStatDto>
+            {
+                new() { PlayerId = 3, Goals = 1, IsManOfTheMatch = true },
+                new() { PlayerId = 4, OwnGoals = 2 }
+            }, teamId: 2);
+
+            var fixture = db.Fixtures.Find(1)!;
+            Assert.True(fixture.IsPlayed);
+            Assert.Equal(4, fixture.HomeScore);   // 2 scored + 2 away own goals
+            Assert.Equal(2, fixture.AwayScore);   // 1 scored + 1 home own goal
+        }
+
+        [Fact]
+        public async Task SubmitStats_CorrectingAnOwnGoalToZero_DropsItFromTheScore()
+        {
+            var db = await SeedBase(nameof(SubmitStats_CorrectingAnOwnGoalToZero_DropsItFromTheScore));
+            db.Fixtures.Add(MakeFixture(1));
+            db.Players.AddRange(
+                new Player { Id = 1, Name = "HomeDefender", TeamId = 1 },
+                new Player { Id = 2, Name = "AwayStriker", TeamId = 2 });
+            await db.SaveChangesAsync();
+
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
+            await svc.SubmitStatsAsync(1, new List<PlayerStatDto>
+            { new() { PlayerId = 1, OwnGoals = 1, IsManOfTheMatch = true } }, teamId: 1);
+            await svc.SubmitStatsAsync(1, new List<PlayerStatDto>
+            { new() { PlayerId = 2, Goals = 1, IsManOfTheMatch = true } }, teamId: 2);
+            Assert.Equal(2, db.Fixtures.Find(1)!.AwayScore);
+
+            // Referee decides it took a deflection and was the striker's goal after all.
+            await svc.SubmitStatsAsync(1, new List<PlayerStatDto>
+            { new() { PlayerId = 1, OwnGoals = 0, IsManOfTheMatch = true } }, teamId: 1);
+
+            var fixture = db.Fixtures.Find(1)!;
+            Assert.Equal(0, fixture.HomeScore);
+            Assert.Equal(1, fixture.AwayScore);
+        }
+
+        [Fact]
         public async Task SubmitStats_UpdatesExistingStats()
         {
             var db = await SeedBase(nameof(SubmitStats_UpdatesExistingStats));

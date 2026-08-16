@@ -1144,7 +1144,7 @@
 .stats-header,
 .stats-row {
     display: grid;
-    grid-template-columns: 1fr 64px 72px 56px 64px 56px;
+    grid-template-columns: 1fr 64px 56px 72px 56px 64px 56px;
     align-items: center;
     gap: 8px;
 }
@@ -1203,6 +1203,13 @@
     outline: none;
     border-color: var(--ballers-accent);
     background: rgba(255, 255, 255, 0.08);
+}
+
+/* Own goals count for the other side, so the column is tinted to stop it being
+   mistaken for a normal goal entry. */
+.own-goal-input {
+    border-color: rgba(255, 107, 107, 0.28);
+    background: rgba(255, 107, 107, 0.07);
 }
 
 .motm-checkbox {
@@ -1374,7 +1381,7 @@
 
     .stats-header,
     .stats-row {
-        grid-template-columns: 1fr 52px 60px 44px 52px 44px;
+        grid-template-columns: 1fr 52px 44px 60px 44px 52px 44px;
         font-size: 0.78rem;
         gap: 5px;
     }
@@ -1401,7 +1408,7 @@
     .stats-table { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
     .stats-header,
-    .stats-row { min-width: 400px; }
+    .stats-row { min-width: 450px; }
 
     .penalty-header,
     .penalty-row { grid-template-columns: 30px 1fr 100px; }

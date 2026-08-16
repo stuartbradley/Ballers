@@ -10,8 +10,9 @@
     }
     public class PlayerStatDto
     {
-        public int PlayerId { get; set; }   
+        public int PlayerId { get; set; }
         public int Goals { get; set; }
+        public int OwnGoals { get; set; }
         public int Assists { get; set; }
         public bool IsManOfTheMatch { get; set; }
         public bool HadYellowCard { get; set; }

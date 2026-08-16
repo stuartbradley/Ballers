@@ -47,7 +47,7 @@ namespace Ballers.API.Services
     public record PlayerAssistsStat(int PlayerId, string Name, int Assists);
     public record PlayerMotmStat(int PlayerId, string Name, int Motm);
     public record WinLossDrawResult(int Wins, int Losses, int Draws);
-    public record OpponentPlayerStat(string Name, int Goals, int Assists, bool IsMotm, bool YellowCard, bool RedCard);
+    public record OpponentPlayerStat(string Name, int Goals, int OwnGoals, int Assists, bool IsMotm, bool YellowCard, bool RedCard);
     public record PlayerLeaderboardEntry(
         int PlayerId, string Name, string Team, string Position,
         int Appearances, int Goals, int Assists, int CleanSheets,

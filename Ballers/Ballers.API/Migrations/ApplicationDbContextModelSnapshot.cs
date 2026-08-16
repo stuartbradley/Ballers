@@ -272,6 +272,9 @@ namespace Ballers.API.Migrations
                     b.Property<bool>("ManOfTheMatch")
                         .HasColumnType("bit");
 
+                    b.Property<int>("OwnGoals")
+                        .HasColumnType("int");
+
                     b.Property<int>("PlayerId")
                         .HasColumnType("int");
 

@@ -89,7 +89,7 @@ namespace Ballers.API.Services
             var statsByFixture = linkedIds.Any()
                 ? (await _db.FixturePlayerStats
                     .Include(s => s.Player)
-                    .Where(s => linkedIds.Contains(s.FixtureId) && s.Goals > 0)
+                    .Where(s => linkedIds.Contains(s.FixtureId) && (s.Goals > 0 || s.OwnGoals > 0))
                     .ToListAsync())
                     .GroupBy(s => s.FixtureId)
                     .ToDictionary(g => g.Key, g => g.ToList())
@@ -117,18 +117,31 @@ namespace Ballers.API.Services
                         LinkedFixtureId = k.LinkedFixtureId,
                         HomeTeamId = k.HomeTeamId,
                         AwayTeamId = k.AwayTeamId,
-                        HomeGoalScorers = stats
-                            .Where(s => s.Player?.TeamId == k.HomeTeamId)
-                            .Select(s => new KnockoutGoalScorerDto { PlayerName = s.Player!.Name, Goals = s.Goals })
-                            .ToList(),
-                        AwayGoalScorers = stats
-                            .Where(s => s.Player?.TeamId == k.AwayTeamId)
-                            .Select(s => new KnockoutGoalScorerDto { PlayerName = s.Player!.Name, Goals = s.Goals })
-                            .ToList(),
+                        // Own goals swap sides: a home player's own goal is listed
+                        // with the away scorers, and vice versa.
+                        HomeGoalScorers = KnockoutScorers(stats, k.HomeTeamId, k.AwayTeamId),
+                        AwayGoalScorers = KnockoutScorers(stats, k.AwayTeamId, k.HomeTeamId),
                     };
                 }).ToList()
             };
         }
+
+        /// <summary>Scorers to list for one side: that side's own goals scored, plus
+        /// the opposing side's own goals, which counted in this side's favour.</summary>
+        private static List<KnockoutGoalScorerDto> KnockoutScorers(
+            List<FixturePlayerStat> stats, int? teamId, int? opponentTeamId)
+            => stats
+                .Where(s => s.Player?.TeamId == teamId && s.Goals > 0)
+                .Select(s => new KnockoutGoalScorerDto { PlayerName = s.Player!.Name, Goals = s.Goals })
+                .Concat(stats
+                    .Where(s => s.Player?.TeamId == opponentTeamId && s.OwnGoals > 0)
+                    .Select(s => new KnockoutGoalScorerDto
+                    {
+                        PlayerName = s.Player!.Name,
+                        Goals = s.OwnGoals,
+                        IsOwnGoal = true
+                    }))
+                .ToList();
 
         public async Task TryFinalizeFromStatsAsync(int linkedFixtureId)
         {

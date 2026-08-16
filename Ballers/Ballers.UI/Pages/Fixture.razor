@@ -428,6 +428,7 @@
                             <div class="stats-header">
                                 <span>Player</span>
                                 <span>Goals</span>
+                                <span title="Own goals — these count for @opponentTeamName">OG</span>
                                 <span>Assists</span>
                                 <span>MOTM</span>
                                 <span>Yellow</span>
@@ -439,6 +440,7 @@
                                 <div class="stats-row">
                                     <span class="player-name">@player.Name</span>
                                     <input type="number" min="0" class="stat-input" @bind="player.Goals" disabled="@fixture.IsEditLocked" />
+                                    <input type="number" min="0" class="stat-input own-goal-input" @bind="player.OwnGoals" disabled="@fixture.IsEditLocked" />
                                     <input type="number" min="0" class="stat-input" @bind="player.Assists" disabled="@fixture.IsEditLocked" />
                                     <input type="checkbox" class="motm-checkbox" checked="@player.IsMotm" @onchange="@(() => SelectMotm(player))" disabled="@fixture.IsEditLocked" />
                                     <input type="checkbox" class="motm-checkbox yellow-card" @bind="player.HasYellowCard" disabled="@fixture.IsEditLocked" />
@@ -457,6 +459,7 @@
                                 <div class="stats-header">
                                     <span>Player</span>
                                     <span>Goals</span>
+                                    <span title="Own goals — these count for @myTeamLabel">OG</span>
                                     <span>Assists</span>
                                     <span>MOTM</span>
                                     <span>Yellow</span>
@@ -467,6 +470,7 @@
                                     <div class="stats-row">
                                         <span class="player-name">@p.Name</span>
                                         <span class="stat-value">@p.Goals</span>
+                                        <span class="stat-value">@p.OwnGoals</span>
                                         <span class="stat-value">@p.Assists</span>
                                         <span class="stat-value"><span class="motm-dot @(p.IsMotm ? "on" : "")"></span></span>
                                         <span class="stat-value"><span class="card-dot yellow @(p.YellowCard ? "on" : "")"></span></span>
@@ -577,7 +581,11 @@
 
     private int previewHomeScore = 0;
     private int previewAwayScore = 0;
-    private int opponentSavedScore = 0;
+
+    // The opponent's saved contributions, split so the live preview can respond to
+    // own goals: their goals count against us, their own goals count for us.
+    private int opponentSavedGoals = 0;
+    private int opponentSavedOwnGoals = 0;
 
     // The team this page is showing and editing. A manager only ever sees their
     // own team; an admin or referee has no team of their own, so they choose a
@@ -671,6 +679,12 @@
             get => goals;
             set { goals = value; OnGoalsChanged?.Invoke(); }
         }
+        private int ownGoals;
+        public int OwnGoals
+        {
+            get => ownGoals;
+            set { ownGoals = value; OnGoalsChanged?.Invoke(); }
+        }
         public Action? OnGoalsChanged;
         public int Assists { get; set; }
         public bool IsMotm { get; set; }
@@ -729,7 +743,6 @@
         galleryId = await GalleryService.GetGalleryIdForFixture(fixture.Id);
         // Global admin "shut down editing" lock — only a true admin bypasses it.
         editingLocked = !(user?.IsAdmin ?? false) && (await LeagueSettingsSvc.Get()).FixturesLocked;
-        opponentSavedScore = ViewingHome ? fixture.AwayScore : fixture.HomeScore;
 
         int teamId = actingTeamId;
 
@@ -758,12 +771,15 @@
                     Name = p.Name,
                     TeamId = teamId,
                     Goals = stat?.Goals ?? 0,
+                    OwnGoals = stat?.OwnGoals ?? 0,
                     Assists = stat?.Assists ?? 0,
                     IsMotm = stat?.IsManOfTheMatch ?? false,
                     HasYellowCard = stat?.HadYellowCard ?? false,
                     HasRedCard = stat?.HadRedCard ?? false
                 };
             }).ToList();
+
+        CaptureOpponentSavedGoals(savedStats);
 
         previewHomeScore = fixture.HomeScore;
         previewAwayScore = fixture.AwayScore;
@@ -888,11 +904,25 @@
         await ShowToast(successMessage);
     }
 
+    /// <summary>Splits the fixture's saved stats into the opponent's goals and own
+    /// goals. Rows for anyone outside this team's squad belong to the opposition —
+    /// the stats feed covers the whole fixture, not just our side.</summary>
+    void CaptureOpponentSavedGoals(List<PlayerStatsDto> savedStats)
+    {
+        var mySquadIds = teamPlayers.Select(p => p.PlayerId).ToHashSet();
+        var opponentRows = savedStats.Where(s => !mySquadIds.Contains(s.PlayerId)).ToList();
+        opponentSavedGoals = opponentRows.Sum(s => s.Goals);
+        opponentSavedOwnGoals = opponentRows.Sum(s => s.OwnGoals);
+    }
+
     void UpdateScorePreview()
     {
-        var myGoals = players.Sum(x => x.Goals);
-        if (ViewingHome) { previewHomeScore = myGoals; previewAwayScore = opponentSavedScore; }
-        else             { previewHomeScore = opponentSavedScore; previewAwayScore = myGoals; }
+        // Our own goals count for them; theirs count for us.
+        var myScore = players.Sum(x => x.Goals) + opponentSavedOwnGoals;
+        var theirScore = opponentSavedGoals + players.Sum(x => x.OwnGoals);
+
+        if (ViewingHome) { previewHomeScore = myScore; previewAwayScore = theirScore; }
+        else             { previewHomeScore = theirScore; previewAwayScore = myScore; }
         StateHasChanged();
     }
 
@@ -981,12 +1011,15 @@
                     Name = p.Name,
                     TeamId = teamId,
                     Goals = stat?.Goals ?? 0,
+                    OwnGoals = stat?.OwnGoals ?? 0,
                     Assists = stat?.Assists ?? 0,
                     IsMotm = stat?.IsManOfTheMatch ?? false,
                     HasYellowCard = stat?.HadYellowCard ?? false,
                     HasRedCard = stat?.HadRedCard ?? false
                 };
             }).ToList();
+
+        CaptureOpponentSavedGoals(savedStats);
 
         foreach (var p in players)
             p.OnGoalsChanged = UpdateScorePreview;
@@ -1020,9 +1053,9 @@
             return;
         }
 
-        if (players.Any(p => p.Goals < 0 || p.Assists < 0))
+        if (players.Any(p => p.Goals < 0 || p.OwnGoals < 0 || p.Assists < 0))
         {
-            await ShowToast("Goals and assists cannot be negative.", success: false);
+            await ShowToast("Goals, own goals and assists cannot be negative.", success: false);
             return;
         }
 
@@ -1030,6 +1063,7 @@
         {
             PlayerId = p.PlayerId,
             Goals = p.Goals,
+            OwnGoals = p.OwnGoals,
             Assists = p.Assists,
             IsManOfTheMatch = p.IsMotm,
             HadYellowCard = p.HasYellowCard,

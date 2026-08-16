@@ -38,14 +38,14 @@
                         <div class="scorers-col home-scorers">
                             @foreach (var s in match.HomeScorers)
                             {
-                                <span class="scorer">⚽ @s.Name@(s.Goals > 1 ? $" ×{s.Goals}" : "")</span>
+                                <span class="scorer @(s.IsOwnGoal ? "own-goal" : "")">⚽ @s.Name@(s.Goals > 1 ? $" ×{s.Goals}" : "")@(s.IsOwnGoal ? " (og)" : "")</span>
                             }
                         </div>
                         <div></div>
                         <div class="scorers-col away-scorers">
                             @foreach (var s in match.AwayScorers)
                             {
-                                <span class="scorer">⚽ @s.Name@(s.Goals > 1 ? $" ×{s.Goals}" : "")</span>
+                                <span class="scorer @(s.IsOwnGoal ? "own-goal" : "")">⚽ @s.Name@(s.Goals > 1 ? $" ×{s.Goals}" : "")@(s.IsOwnGoal ? " (og)" : "")</span>
                             }
                         </div>
                     </div>
