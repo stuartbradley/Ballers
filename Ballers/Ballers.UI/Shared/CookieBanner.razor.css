@@ -33,17 +33,49 @@
     text-decoration: underline;
 }
 
-.cookie-accept {
-    background: #fde047;
-    color: #0f172a;
-    border: none;
+.cookie-actions {
+    display: flex;
+    gap: 10px;
+    flex: 0 0 auto;
+}
+
+/* Both choices are given equal visual weight so rejecting is as easy as accepting. */
+.cookie-btn {
     border-radius: 8px;
     padding: 8px 22px;
     font-weight: 700;
     cursor: pointer;
     font-size: 0.9rem;
+    min-width: 96px;
+}
+
+.cookie-accept {
+    background: #fde047;
+    color: #0f172a;
+    border: 2px solid #fde047;
 }
 
 .cookie-accept:hover {
     background: #facc15;
+    border-color: #facc15;
+}
+
+.cookie-reject {
+    background: transparent;
+    color: #f8fafc;
+    border: 2px solid #f8fafc;
+}
+
+.cookie-reject:hover {
+    background: rgba(248, 250, 252, 0.15);
+}
+
+@media (max-width: 480px) {
+    .cookie-actions {
+        width: 100%;
+    }
+
+    .cookie-btn {
+        flex: 1 1 0;
+    }
 }

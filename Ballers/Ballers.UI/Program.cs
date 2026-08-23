@@ -48,4 +48,5 @@ builder.Services.AddScoped<KnockoutService>();
 builder.Services.AddScoped<TotwService>();
 builder.Services.AddScoped<MotdService>();
 builder.Services.AddScoped<LeagueSettingsService>();
+builder.Services.AddScoped<AnalyticsService>();
 await builder.Build().RunAsync();
