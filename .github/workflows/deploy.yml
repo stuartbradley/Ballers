@@ -32,6 +32,7 @@ jobs:
             echo "web_host=blackpoolballersleague.co.uk"        >> "$GITHUB_OUTPUT"
             echo "www_host=www.blackpoolballersleague.co.uk"    >> "$GITHUB_OUTPUT"
             echo "blazor_remote_dir=/blackpoolballersleague.co.uk/" >> "$GITHUB_OUTPUT"
+            echo "ga_id=G-J8FDGNV533"           >> "$GITHUB_OUTPUT"
             echo "version=${VERSION}"           >> "$GITHUB_OUTPUT"
           else
             echo "env_name=UAT"                 >> "$GITHUB_OUTPUT"
@@ -41,6 +42,8 @@ jobs:
             echo "web_host=bristonlyfans.co.uk"                 >> "$GITHUB_OUTPUT"
             echo "www_host=www.bristonlyfans.co.uk"             >> "$GITHUB_OUTPUT"
             echo "blazor_remote_dir=/bristonlyfans.co.uk/wwwroot/" >> "$GITHUB_OUTPUT"
+            # Empty on UAT so analytics stays off and UAT traffic never reaches the live property.
+            echo "ga_id="                       >> "$GITHUB_OUTPUT"
             echo "version=0.0.0-uat.${SHORT_SHA}" >> "$GITHUB_OUTPUT"
           fi
 
@@ -81,8 +84,21 @@ jobs:
         env:
           API_HOST: ${{ steps.target.outputs.api_host }}
           IS_UAT: ${{ steps.target.outputs.is_uat }}
+          GA_ID: ${{ steps.target.outputs.ga_id }}
         run: |
-          python3 -c "import os,json; open('Ballers/Ballers.UI/wwwroot/appsettings.json','w').write(json.dumps({'ApiBaseUrl':f'https://{os.environ[\"API_HOST\"]}/','IsUAT':os.environ['IS_UAT']=='true'}))"
+          python3 <<'PY'
+          import os, json
+          cfg = {
+            "ApiBaseUrl": f"https://{os.environ['API_HOST']}/",
+            "IsUAT": os.environ["IS_UAT"] == "true",
+          }
+          # Omitted entirely when empty, which leaves AnalyticsService disabled.
+          ga_id = os.environ.get("GA_ID", "").strip()
+          if ga_id:
+              cfg["GoogleAnalytics"] = {"MeasurementId": ga_id}
+          with open("Ballers/Ballers.UI/wwwroot/appsettings.json", "w") as f:
+              json.dump(cfg, f, indent=2)
+          PY
 
       - name: Publish Blazor
         run: dotnet publish Ballers/Ballers.UI/Ballers.UI.csproj -c Release -o publish/blazor --nologo /p:InformationalVersion=${{ steps.target.outputs.version }}
