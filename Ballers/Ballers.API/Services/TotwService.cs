@@ -17,7 +17,6 @@ namespace Ballers.API.Services
     {
         private readonly ApplicationDbContext _db;
         private readonly IMemoryCache _cache;
-        private const int MaxOutfieldSlots = 10;
         private static readonly TimeSpan CacheTtl = TimeSpan.FromSeconds(60);
 
         public TotwService(ApplicationDbContext db, IMemoryCache cache)
@@ -153,9 +152,7 @@ namespace Ballers.API.Services
 
             var motmRows = await _db.FixturePlayerStats
                 .AsNoTracking()
-                .Where(s => fixtureIds.Contains(s.FixtureId)
-                            && s.ManOfTheMatch
-                            && s.Player!.Position != "GK")
+                .Where(s => fixtureIds.Contains(s.FixtureId) && s.ManOfTheMatch)
                 .Select(s => new
                 {
                     PlayerId = s.PlayerId,
@@ -170,19 +167,18 @@ namespace Ballers.API.Services
                 })
                 .ToListAsync();
 
-            var outfield = motmRows
+            // Team of the Week is every Man of the Match winner from the week's
+            // games — no cap and no goalkeeper exclusion. Both used to silently
+            // drop winners: keepers outright, and anyone past the tenth slot
+            // once the sort below put low-scoring winners last.
+            var players = motmRows
                 .OrderByDescending(s => s.Goals + s.Assists)
                 .ThenByDescending(s => s.Goals)
                 .ThenBy(s => s.FixtureId)
-                .Take(MaxOutfieldSlots)
                 .Select(s => new TotwPlayerDto(
                     s.PlayerId, s.Name, s.TeamId, s.TeamName, s.Position,
-                    false, s.Goals, s.Assists, null, null, s.ProfileImageBase64))
+                    s.Position == "GK", s.Goals, s.Assists, null, null, s.ProfileImageBase64))
                 .ToList();
-
-            // Team of the Week is the Man of the Match winners from each game.
-            // (No goalkeeper slot — that only existed to pad the XI to 11.)
-            var players = outfield;
 
             if (players.Count == 0) return null;
 
