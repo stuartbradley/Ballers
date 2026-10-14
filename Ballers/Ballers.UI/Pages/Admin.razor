@@ -1,640 +1,306 @@
 @page "/admin"
-@using Ballers.Client.Services
-@using Ballers.Models
 @using Ballers.Services
 @using Ballers.Shared
 @using Microsoft.AspNetCore.Authorization
-@using Microsoft.AspNetCore.Components.Forms
 @attribute [Authorize(Roles = "Admin")]
 
 @inject AdminService AdminService
-@inject NotificationService NotificationSvc
-@inject KnockoutService KnockoutSvc
 @inject LeagueSettingsService LeagueSettingsSvc
-@inject IJSRuntime JS
 
-<PageTitle>Admin</PageTitle>
+<PageTitle>Admin · Overview</PageTitle>
 
-<div class="admin-page">
-
-    <div class="admin-hero">
-        <div class="admin-hero-inner">
-            <p class="admin-eyebrow">Admin Only</p>
-            <h1>League Control</h1>
-        </div>
-    </div>
-
-    <div class="admin-body">
-
-        <!-- Quick links -->
-        <div class="admin-links">
-            <a href="/admin/fairplay" class="admin-link-card">Fairplay Table</a>
-            <a href="/knockout" class="admin-link-card">Knockout Bracket</a>
-            <a href="/admin/squads" class="admin-link-card">Squad Management</a>
-            <a href="/admin/motd" class="admin-link-card">Match of the Day</a>
-            <a href="/admin/true-motm" class="admin-link-card">True Man of the Match</a>
-            <a href="/admin/galleries" class="admin-link-card">Match Galleries</a>
-        </div>
-
-        <div class="admin-grid">
-
-            <!-- CREATE TEAM -->
-            <div class="admin-card">
-                <div class="card-header">
-                    <span class="card-label">@AccountTypeLabel</span>
-                    <h3>Add @AccountTypeLabel</h3>
-                </div>
-
-                <EditForm EditContext="editContext" OnValidSubmit="CreateTeam">
-                    <DataAnnotationsValidator />
-                    <div class="form-group">
-                        <label class="input-label">Account type</label>
-                        <select class="form-input"
-                                value="@createTeamModel.AccountType"
-                                @onchange="OnAccountTypeChanged">
-                            <option value="@AccountType.Team">Team (manager login)</option>
-                            <option value="@AccountType.Referee">Referee</option>
-                            <option value="@AccountType.Admin">Admin</option>
-                        </select>
-
-                        @if (createTeamModel.IsTeam)
-                        {
-                            <InputText class="form-input"
-                                       placeholder="Team name"
-                                       @bind-Value="createTeamModel.TeamName" />
-                            <ValidationMessage For="@(() => createTeamModel.TeamName)" />
-                        }
-
-                        @if (createTeamModel.IsAdmin)
-                        {
-                            <div class="info-msg">
-                                Admins have full control of the league — fixtures, seasons, results and other accounts.
-                                Only create one for someone you trust.
-                            </div>
-                        }
-
-                        <InputText class="form-input"
-                                   placeholder="@EmailPlaceholder"
-                                   @bind-Value="createTeamModel.Email" />
-                        <ValidationMessage For="@(() => createTeamModel.Email)" />
-
-                        <InputText class="form-input"
-                                   type="password"
-                                   placeholder="Password"
-                                   @bind-Value="createTeamModel.Password" />
-                        <div class="validation-wrapper">
-                            <ValidationMessage For="@(() => createTeamModel.Password)" />
-                        </div>
-                    </div>
-
-                    <button type="button" class="primary-btn" @onclick="SubmitForm">
-                        Create @AccountTypeLabel
-                    </button>
-                </EditForm>
-
-                @if (!string.IsNullOrEmpty(teamMessage))
-                {
-                    <div class="@(teamIsError ? "error-msg" : "success-msg")">@teamMessage</div>
-                }
-            </div>
-
-            <!-- GENERATE FIXTURES -->
-            <div class="admin-card">
-                <div class="card-header">
-                    <span class="card-label blue-label">Fixtures</span>
-                    <h3>Generate Fixtures</h3>
-                </div>
-
-                <div class="form-group">
-                    <label class="input-label">Season start date</label>
-                    <InputDate @bind-Value="seasonStartDate" class="form-input date-input" />
-
-                    <label class="input-label">Select teams</label>
-                    <div class="team-grid">
-                        @foreach (var t in teams)
-                        {
-                            <label class="team-check-label">
-                                <input type="checkbox"
-                                       value="@t.Id"
-                                       @onchange="(e) => ToggleTeam(t.Id, e.Value)" />
-                                <span>@t.Name</span>
-                            </label>
-                        }
-                    </div>
-                </div>
-
-                @if (selectedTeamIds.Count % 2 != 0 && selectedTeamIds.Count >= 3)
-                {
-                    <div class="info-msg">Odd number of teams — one team per round will have a bye week.</div>
-                }
-
-                <button class="primary-btn" @onclick="GenerateFixtures">
-                    Generate Fixtures
-                </button>
-
-                @if (!string.IsNullOrEmpty(fixtureMessage))
-                {
-                    <div class="@(fixtureIsError ? "error-msg" : "success-msg")">@fixtureMessage</div>
-                }
-            </div>
-
-            <!-- IMPORT FIXTURES — full width -->
-            <div class="admin-card season-card">
-                <div class="card-header">
-                    <span class="card-label blue-label">Import</span>
-                    <h3>Import Fixtures (CSV)</h3>
-                </div>
-
-                <p class="input-label" style="margin-bottom:12px;">
-                    Upload a CSV to create a whole season manually.
-                    <a href="/fixtures-template.csv" download>Download the template</a>.
-                    Columns: <code>MatchNumber, HomeTeam, AwayTeam, Kickoff, Location, Postcode, Referee</code>.
-                    Team and referee names must match existing records exactly. Kickoff format <code>yyyy-MM-dd HH:mm</code>.
-                </p>
-
-                <div class="form-group">
-                    <div style="display:flex;gap:12px;align-items:flex-end;">
-                        <div style="flex:1;min-width:0;">
-                            <label class="input-label">Season number</label>
-                            <input type="number" min="1" class="form-input" style="width:100%;" @bind="importSeasonNumber" />
-                        </div>
-                        <div style="flex:1;min-width:0;">
-                            <label class="input-label">Season start date</label>
-                            <InputDate @bind-Value="importStartDate" class="form-input date-input" style="width:100%;" />
-                        </div>
-                    </div>
-
-                    <label class="team-check-label" style="margin:12px 0;">
-                        <input type="checkbox" checked="@importMakeActive"
-                               @onchange="(e) => importMakeActive = (bool)e.Value!" />
-                        <span>Make this the active season</span>
-                    </label>
-
-                    <InputFile id="csvInput" OnChange="OnImportFileSelected" accept=".csv" style="display:none" />
-                    <label for="csvInput" class="file-pick-btn">
-                        @(importFile?.Name ?? "Choose CSV file")
-                    </label>
-                </div>
-
-                <button class="primary-btn" @onclick="ImportFixtures" disabled="@(importFile == null || importing)">
-                    @(importing ? "Importing…" : "Import Fixtures")
-                </button>
-
-                @if (!string.IsNullOrEmpty(importMessage))
-                {
-                    <div class="@(importIsError ? "error-msg" : "success-msg")">@importMessage</div>
-                }
-                @if (importErrors.Count > 0)
-                {
-                    <ul class="error-msg" style="margin-top:8px;">
-                        @foreach (var err in importErrors)
-                        {
-                            <li>@err</li>
-                        }
-                    </ul>
-                }
-            </div>
-
-            <!-- SEASONS — full width -->
-            <div class="admin-card season-card">
-                <div class="card-header">
-                    <span class="card-label green-label">History</span>
-                    <h3>Seasons</h3>
-                </div>
-
-                @if (!seasons.Any())
-                {
-                    <p class="empty-seasons">No seasons created yet.</p>
-                }
-                else
-                {
-                    <div class="season-list">
-                        @foreach (var s in seasons.OrderByDescending(x => x.SeasonNumber))
-                        {
-                            <div class="season-row">
-                                <div class="season-info">
-                                    <span class="season-name">Season @s.SeasonNumber</span>
-                                    <span class="season-dates">
-                                        @s.StartDate.ToString("dd MMM yyyy") — @s.EndDate.ToString("dd MMM yyyy")
-                                    </span>
-                                </div>
-                                <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
-                                    @if (s.IsActive)
-                                    {
-                                        <span class="season-badge active">Active</span>
-                                    }
-                                    else
-                                    {
-                                        <button class="activate-btn" @onclick="() => ActivateSeason(s.Id)">
-                                            Activate
-                                        </button>
-                                    }
-                                    @if (!s.IsKnockoutGenerated)
-                                    {
-                                        <button class="activate-btn" @onclick="() => GenerateKnockout(s.Id)">
-                                            Gen Knockout
-                                        </button>
-                                    }
-                                    else
-                                    {
-                                        <span class="season-badge" style="background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.25);color:#60a5fa;">Knockout</span>
-                                    }
-                                    <button class="activate-btn" style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.4);color:#fca5a5;" @onclick="() => DeleteSeason(s.Id, s.SeasonNumber)">
-                                        Delete
-                                    </button>
-                                </div>
-                            </div>
-                        }
-                    </div>
-                }
-
-                @if (!string.IsNullOrEmpty(seasonMessage))
-                {
-                    <div class="@(seasonIsError ? "error-msg" : "success-msg")">@seasonMessage</div>
-                }
-                @if (!string.IsNullOrEmpty(knockoutMessage))
-                {
-                    <div class="@(knockoutIsError ? "error-msg" : "success-msg")">@knockoutMessage</div>
-                }
-            </div>
-
-            <!-- PLAYER REGISTRATION — full width -->
-            <div class="admin-card season-card">
-                <div class="card-header">
-                    <span class="card-label" style="background:#dc2626;color:#fff;">Registration</span>
-                    <h3>Player Registration</h3>
-                </div>
-
-                <div class="season-list">
-                    <div class="season-row">
-                        <div class="season-info">
-                            <span class="season-name">Lock player registration</span>
-                            <span class="season-dates">When locked, managers can no longer add new players to their squads. Admins can still add players.</span>
-                        </div>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-                            <input type="checkbox"
-                                   checked="@playersLocked"
-                                   @onchange="(e) => TogglePlayersLocked((bool)e.Value!)" />
-                            <span>@(playersLocked ? "Locked" : "Open")</span>
-                        </label>
-                    </div>
-
-                    <div class="season-row">
-                        <div class="season-info">
-                            <span class="season-name">Lock all fixtures for editing</span>
-                            <span class="season-dates">When locked, managers and referees can no longer submit stats or edit fixtures. The Submit Stats button is removed. Admins can still edit.</span>
-                        </div>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-                            <input type="checkbox"
-                                   checked="@fixturesLocked"
-                                   @onchange="(e) => ToggleFixturesLocked((bool)e.Value!)" />
-                            <span>@(fixturesLocked ? "Locked" : "Open")</span>
-                        </label>
-                    </div>
-
-                    <div class="season-row">
-                        <div class="season-info">
-                            <span class="season-name">Hide fixtures from the public</span>
-                            <span class="season-dates">When hidden, the public Fixtures page and home page show no fixtures — so you can upload a season and reveal it when ready. Admins/referees still see them.</span>
-                        </div>
-                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-                            <input type="checkbox"
-                                   checked="@fixturesHidden"
-                                   @onchange="(e) => ToggleFixturesHidden((bool)e.Value!)" />
-                            <span>@(fixturesHidden ? "Hidden" : "Visible")</span>
-                        </label>
-                    </div>
-                </div>
-
-                @if (!string.IsNullOrEmpty(playersLockMessage))
-                {
-                    <div class="@(playersLockIsError ? "error-msg" : "success-msg")">@playersLockMessage</div>
-                }
-            </div>
-
-            <!-- NOTIFICATION SETTINGS — full width -->
-            <div class="admin-card season-card">
-                <div class="card-header">
-                    <span class="card-label" style="background:#7c3aed;color:#fff;">Alerts</span>
-                    <h3>Notification Settings</h3>
-                </div>
-
-                @if (notifSettings.Count == 0)
-                {
-                    <p class="empty-seasons">Loading...</p>
-                }
-                else
-                {
-                    <div class="season-list">
-                        @foreach (var s in notifSettings)
-                        {
-                            <div class="season-row">
-                                <div class="season-info">
-                                    <span class="season-name">@s.DisplayName</span>
-                                    <span class="season-dates">@s.Description</span>
-                                </div>
-                                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-                                    <input type="checkbox"
-                                           checked="@s.IsEnabled"
-                                           @onchange="(e) => ToggleNotification(s, (bool)e.Value!)" />
-                                    <span>@(s.IsEnabled ? "On" : "Off")</span>
-                                </label>
-                            </div>
-                        }
-                    </div>
-                }
-            </div>
-
-        </div>
-    </div>
-</div>
-
-@code {
-    private string teamMessage = "";
-    private string fixtureMessage = "";
-    private string seasonMessage = "";
-    private string knockoutMessage = "";
-    private bool teamIsError;
-    private bool fixtureIsError;
-    private bool seasonIsError;
-    private bool knockoutIsError;
-
-    private bool playersLocked;
-    private bool fixturesLocked;
-    private bool fixturesHidden;
-    private string playersLockMessage = "";
-    private bool playersLockIsError;
-
-    private int importSeasonNumber = 1;
-    private DateTime importStartDate = DateTime.Today;
-    private bool importMakeActive;
-    private IBrowserFile? importFile;
-    private bool importing;
-    private string importMessage = "";
-    private bool importIsError;
-    private List<string> importErrors = new();
-
-    private void OnImportFileSelected(InputFileChangeEventArgs e) => importFile = e.File;
-
-    async Task ImportFixtures()
-    {
-        importMessage = "";
-        importErrors = new();
-        if (importFile == null) return;
-
-        importing = true;
-        try
+@* The admin's home: where the season is, what needs sorting, the league's
+   switches, and what has happened lately. Everything else is a section in
+   the sidebar. *@
+<AdminShell Section="overview" Title="Overview" Subtitle="The league at a glance, and anything that needs you.">
+    <Actions>
+        <button type="button" class="adm-btn" @onclick="Load" disabled="@loading">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+            Refresh
+        </button>
+    </Actions>
+    <ChildContent>
+        @if (overview == null)
         {
-            var (created, errors) = await AdminService.ImportFixtures(importFile, importSeasonNumber, importStartDate, importMakeActive);
-            if (errors.Count > 0)
+            @if (loading)
             {
-                importIsError = true;
-                importMessage = "Import failed — fix these rows and try again:";
-                importErrors = errors;
+                <LoadingSpinner />
             }
             else
             {
-                importIsError = false;
-                importMessage = $"Imported {created} fixtures into Season {importSeasonNumber}.";
-                importFile = null;
-                seasons = await AdminService.GetSeasons();
+                <div class="adm-msg is-error">
+                    The overview couldn't be loaded. If the API has just been updated it may need restarting.
+                </div>
             }
+        }
+        else
+        {
+            var o = overview;
+
+            <div class="adm-stats">
+                <a class="adm-stat" href="/admin/season">
+                    <span class="adm-stat-label">Active season</span>
+                    <span class="adm-stat-value">@(o.SeasonNumber is int n ? $"Season {n}" : "None")</span>
+                    <span class="adm-stat-foot">
+                        @if (o.SeasonStart is { } start && o.SeasonEnd is { } end)
+                        {
+                            @($"{start:d MMM} – {end:d MMM yyyy}")
+                        }
+                        else
+                        {
+                            <text>Set one up in Season &amp; fixtures</text>
+                        }
+                    </span>
+                </a>
+
+                <div class="adm-stat">
+                    <span class="adm-stat-label">Match week</span>
+                    <span class="adm-stat-value">@o.CurrentWeek <small>of @o.TotalWeeks</small></span>
+                    <span class="adm-bar"><span style="width:@Pct(o.CurrentWeek, o.TotalWeeks)"></span></span>
+                </div>
+
+                <a class="adm-stat" href="/manager-fixtures">
+                    <span class="adm-stat-label">Fixtures played</span>
+                    <span class="adm-stat-value">@o.FixturesPlayed <small>of @o.FixturesTotal</small></span>
+                    <span class="adm-bar"><span style="width:@Pct(o.FixturesPlayed, o.FixturesTotal)"></span></span>
+                </a>
+
+                <a class="adm-stat" href="/admin/squads">
+                    <span class="adm-stat-label">Teams · players</span>
+                    <span class="adm-stat-value">@o.Teams <small>· @o.Players</small></span>
+                    <span class="adm-stat-foot">@o.PlayersWithCards on player cards</span>
+                </a>
+
+                <a class="adm-stat" href="/admin/cards">
+                    <span class="adm-stat-label">Last points payout</span>
+                    <span class="adm-stat-value" style="font-size:1.4rem">@(o.LastPointsRunAt is { } run ? Ago(run) : "Never")</span>
+                    <span class="adm-stat-foot">@(o.LastPointsRunAt?.ToLocalTime().ToString("ddd d MMM, HH:mm") ?? "Runs weekly")</span>
+                </a>
+            </div>
+
+            <div class="adm-grid">
+                <section class="adm-card" aria-labelledby="attention-title">
+                    <div class="adm-card-head">
+                        <h2 id="attention-title">Needs attention</h2>
+                        @if (o.Attention.Any())
+                        {
+                            <span class="adm-badge is-amber">@o.Attention.Count</span>
+                        }
+                    </div>
+
+                    @if (!o.Attention.Any())
+                    {
+                        <div class="adm-empty">
+                            <span class="adm-badge is-green">All clear</span>
+                            <p style="margin:10px 0 0">Nothing waiting on you right now.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="adm-rows">
+                            @foreach (var a in o.Attention.Take(showAllAttention ? int.MaxValue : 8))
+                            {
+                                var (icon, tone) = AttentionLook(a.Kind);
+                                <a class="adm-row" href="@a.Link">
+                                    <span class="adm-dot @tone"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="@icon" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg></span>
+                                    <span class="adm-row-main">
+                                        <span class="adm-row-title">@a.Title</span>
+                                        <span class="adm-row-sub">@a.Detail@(a.When is { } w ? $" · {w.ToLocalTime():ddd d MMM}" : "")</span>
+                                    </span>
+                                    <span class="adm-muted" aria-hidden="true">›</span>
+                                </a>
+                            }
+                        </div>
+                        @if (o.Attention.Count > 8)
+                        {
+                            <button type="button" class="adm-btn is-small" style="margin-top:12px" @onclick="() => showAllAttention = !showAllAttention">
+                                @(showAllAttention ? "Show fewer" : $"Show all {o.Attention.Count}")
+                            </button>
+                        }
+                    }
+                </section>
+
+                <div>
+                    <section class="adm-card" aria-labelledby="switches-title">
+                        <div class="adm-card-head">
+                            <h2 id="switches-title">League switches</h2>
+                        </div>
+                        <div class="adm-rows">
+                            @Switch("Lock player registration", "Managers can't add players to their squads.",
+                                    o.PlayersLocked, "Locked", "Open", v => SetSwitch("players", v))
+                            @Switch("Lock fixtures", "Managers and referees can't submit stats or edit fixtures.",
+                                    o.FixturesLocked, "Locked", "Open", v => SetSwitch("fixtures", v))
+                            @Switch("Hide fixtures from the public", "For uploading a season before revealing it.",
+                                    o.FixturesHidden, "Hidden", "Visible", v => SetSwitch("hidden", v))
+                        </div>
+
+                        <div class="adm-row" style="border-top:1px solid rgba(255,255,255,.06);margin-top:12px;padding-top:14px">
+                            <span class="adm-row-main">
+                                <span class="adm-row-title">Player card points</span>
+                                <span class="adm-row-sub">Pays out any played fixture not yet credited. Safe to run any time.</span>
+                            </span>
+                            <button type="button" class="adm-btn is-primary" disabled="@runningPayout" @onclick="RunPayout">
+                                @(runningPayout ? "Running…" : "Run payout")
+                            </button>
+                        </div>
+
+                        @if (switchMessage != null)
+                        {
+                            <div class="adm-msg @(switchIsError ? "is-error" : "is-ok")">@switchMessage</div>
+                        }
+                    </section>
+
+                    <section class="adm-card" aria-labelledby="activity-title">
+                        <div class="adm-card-head">
+                            <h2 id="activity-title">Recent activity</h2>
+                            <span class="adm-muted" style="font-size:.8rem">Last 3 weeks</span>
+                        </div>
+                        @if (!o.Activity.Any())
+                        {
+                            <p class="adm-empty">Nothing yet.</p>
+                        }
+                        else
+                        {
+                            <div class="adm-rows">
+                                @foreach (var a in o.Activity)
+                                {
+                                    var (icon, tone) = ActivityLook(a.Kind);
+                                    <a class="adm-row" href="@a.Link">
+                                        <span class="adm-dot @tone"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="@icon" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg></span>
+                                        <span class="adm-row-main">
+                                            <span class="adm-row-title" style="font-weight:500">@a.Text</span>
+                                            <span class="adm-row-sub">@Ago(a.When)</span>
+                                        </span>
+                                    </a>
+                                }
+                            </div>
+                        }
+                    </section>
+                </div>
+            </div>
+        }
+    </ChildContent>
+</AdminShell>
+
+@code {
+    private AdminOverviewDto? overview;
+    private bool loading = true;
+    private bool showAllAttention;
+    private bool runningPayout;
+    private string? switchMessage;
+    private bool switchIsError;
+
+    protected override Task OnInitializedAsync() => Load();
+
+    private async Task Load()
+    {
+        loading = true;
+        overview = await AdminService.GetOverview();
+        loading = false;
+    }
+
+    private RenderFragment Switch(string title, string help, bool on, string onText, string offText, Func<bool, Task> set) =>
+        @<div class="adm-row">
+            <span class="adm-row-main">
+                <span class="adm-row-title">@title</span>
+                <span class="adm-row-sub">@help</span>
+            </span>
+            <label class="adm-switch">
+                <input type="checkbox" role="switch" checked="@on" aria-label="@title"
+                       @onchange="e => set((bool)e.Value!)" />
+                <span></span>
+                <em>@(on ? onText : offText)</em>
+            </label>
+        </div>;
+
+    private async Task SetSwitch(string which, bool value)
+    {
+        if (overview == null) return;
+        switchMessage = null;
+        try
+        {
+            switch (which)
+            {
+                case "players":
+                    await LeagueSettingsSvc.SetPlayersLocked(value);
+                    overview.PlayersLocked = value;
+                    switchMessage = value ? "Player registration locked." : "Player registration open.";
+                    break;
+                case "fixtures":
+                    await LeagueSettingsSvc.SetFixturesLocked(value);
+                    overview.FixturesLocked = value;
+                    switchMessage = value ? "Fixtures locked for editing." : "Fixtures open for editing.";
+                    break;
+                case "hidden":
+                    await LeagueSettingsSvc.SetFixturesHidden(value);
+                    overview.FixturesHidden = value;
+                    switchMessage = value ? "Fixtures hidden from the public." : "Fixtures visible to the public.";
+                    break;
+            }
+            switchIsError = false;
         }
         catch (Exception ex)
         {
-            importIsError = true;
-            importMessage = ex.Message;
+            switchIsError = true;
+            switchMessage = ex.Message;
+        }
+    }
+
+    private async Task RunPayout()
+    {
+        runningPayout = true;
+        switchMessage = null;
+        try
+        {
+            var (fixtures, players, points) = await AdminService.RunPlayerPoints();
+            switchIsError = false;
+            switchMessage = points == 0
+                ? "Nothing to pay out: every played fixture is already settled."
+                : $"Credited {points} point(s) to {players} player(s) across {fixtures} fixture(s).";
+            overview = await AdminService.GetOverview() ?? overview;
+        }
+        catch (Exception ex)
+        {
+            switchIsError = true;
+            switchMessage = ex.Message;
         }
         finally
         {
-            importing = false;
+            runningPayout = false;
         }
     }
 
-    private List<TeamDto> teams = new();
-    private List<SeasonDto> seasons = new();
-    private List<NotificationSettingDto> notifSettings = new();
-    private List<int> selectedTeamIds = new();
-    private DateTime seasonStartDate = DateTime.Today;
-    private CreateTeamViewModel createTeamModel = new();
-    private EditContext editContext = null!;
+    private static string Pct(int part, int whole) =>
+        whole <= 0 ? "0%" : $"{Math.Clamp(100.0 * part / whole, 0, 100):0}%";
 
-    private async Task SubmitForm()
+    private static string Ago(DateTime utc)
     {
-        if (editContext.Validate())
-        {
-            await CreateTeam();
-        }
+        var span = DateTime.UtcNow - DateTime.SpecifyKind(utc, DateTimeKind.Utc);
+        if (span.TotalMinutes < 1) return "Just now";
+        if (span.TotalHours < 1) return $"{(int)span.TotalMinutes} min ago";
+        if (span.TotalDays < 1) return $"{(int)span.TotalHours} hr ago";
+        if (span.TotalDays < 2) return "Yesterday";
+        if (span.TotalDays < 14) return $"{(int)span.TotalDays} days ago";
+        return utc.ToLocalTime().ToString("d MMM");
     }
 
-    protected override async Task OnInitializedAsync()
+    private static (string Icon, string Tone) AttentionLook(string kind) => kind switch
     {
-        editContext = new EditContext(createTeamModel);
-        var teamsTask = AdminService.GetTeams();
-        var seasonsTask = AdminService.GetSeasons();
-        var notifTask = NotificationSvc.GetSettingsAsync();
-        var leagueTask = LeagueSettingsSvc.Get();
-        await Task.WhenAll(teamsTask, seasonsTask, notifTask, leagueTask);
-        teams = teamsTask.Result;
-        seasons = seasonsTask.Result;
-        notifSettings = notifTask.Result;
-        playersLocked = leagueTask.Result.PlayersLocked;
-        fixturesLocked = leagueTask.Result.FixturesLocked;
-        fixturesHidden = leagueTask.Result.FixturesHidden;
-    }
-
-    async Task TogglePlayersLocked(bool locked)
-    {
-        playersLockMessage = "";
-        try
-        {
-            await LeagueSettingsSvc.SetPlayersLocked(locked);
-            playersLocked = locked;
-            playersLockIsError = false;
-            playersLockMessage = locked
-                ? "Player registration locked."
-                : "Player registration open.";
-        }
-        catch (Exception ex)
-        {
-            playersLockIsError = true;
-            playersLockMessage = ex.Message;
-        }
-    }
-
-    async Task ToggleFixturesLocked(bool locked)
-    {
-        playersLockMessage = "";
-        try
-        {
-            await LeagueSettingsSvc.SetFixturesLocked(locked);
-            fixturesLocked = locked;
-            playersLockIsError = false;
-            playersLockMessage = locked
-                ? "All fixtures locked for editing."
-                : "Fixtures unlocked for editing.";
-        }
-        catch (Exception ex)
-        {
-            playersLockIsError = true;
-            playersLockMessage = ex.Message;
-        }
-    }
-
-    async Task ToggleFixturesHidden(bool hidden)
-    {
-        playersLockMessage = "";
-        try
-        {
-            await LeagueSettingsSvc.SetFixturesHidden(hidden);
-            fixturesHidden = hidden;
-            playersLockIsError = false;
-            playersLockMessage = hidden
-                ? "Fixtures hidden from the public."
-                : "Fixtures visible to the public.";
-        }
-        catch (Exception ex)
-        {
-            playersLockIsError = true;
-            playersLockMessage = ex.Message;
-        }
-    }
-
-    string AccountTypeLabel => createTeamModel.AccountType switch
-    {
-        AccountType.Referee => "Referee",
-        AccountType.Admin => "Admin",
-        _ => "Team"
+        "stats" => ("M5 4h14v16H5zM9 9h6m-6 4h3", "is-amber"),
+        "result" => ("M12 8v5m0 3h.01M10.3 3.9 2.6 17a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z", "is-red"),
+        "referee" => ("M12 4v16M5 8l7-4 7 4M5 8v4c0 3 3 5 7 6 4-1 7-3 7-6V8", "is-blue"),
+        "kickoff" => ("M12 7v5l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z", "is-blue"),
+        "signup" => ("M16 19v-1a4 4 0 0 0-8 0v1M12 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19 8v6m3-3h-6", "is-violet"),
+        _ => ("M12 8v5m0 3h.01", "")
     };
 
-    string EmailPlaceholder => createTeamModel.AccountType switch
+    private static (string Icon, string Tone) ActivityLook(string kind) => kind switch
     {
-        AccountType.Referee => "Referee email",
-        AccountType.Admin => "Admin email",
-        _ => "Manager email"
+        "result" => ("M5 12l4 4L19 6", "is-green"),
+        "signup" => ("M16 19v-1a4 4 0 0 0-8 0v1M12 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6z", "is-violet"),
+        "gallery" => ("M4 5h16v14H4zm0 10 5-5 4 4 3-3 4 4", "is-blue"),
+        "motd" => ("M4 5h16v12H4zM8 21h8", "is-blue"),
+        "payout" => ("M12 3v18m4-14H10a3 3 0 0 0 0 6h4a3 3 0 0 1 0 6H8", "is-amber"),
+        _ => ("M12 12h.01", "")
     };
-
-    void OnAccountTypeChanged(ChangeEventArgs e)
-    {
-        createTeamModel.AccountType = Enum.Parse<AccountType>((string)e.Value!);
-        // Team name only applies to team accounts — clear it so a stale value
-        // can't linger behind the hidden field.
-        if (!createTeamModel.IsTeam)
-            createTeamModel.TeamName = "";
-        editContext.NotifyValidationStateChanged();
-    }
-
-    async Task CreateTeam()
-    {
-        try
-        {
-            switch (createTeamModel.AccountType)
-            {
-                case AccountType.Referee:
-                    await AdminService.CreateReferee(createTeamModel.Email, createTeamModel.Password);
-                    teamMessage = "Referee created successfully.";
-                    break;
-                case AccountType.Admin:
-                    await AdminService.CreateAdmin(createTeamModel.Email, createTeamModel.Password);
-                    teamMessage = "Admin created successfully.";
-                    break;
-                default:
-                    await AdminService.CreateTeam(createTeamModel.TeamName, createTeamModel.Email, createTeamModel.Password);
-                    teamMessage = "Team created successfully.";
-                    teams = await AdminService.GetTeams();
-                    break;
-            }
-            teamIsError = false;
-            createTeamModel = new();
-            editContext = new EditContext(createTeamModel);
-        }
-        catch (Exception ex)
-        {
-            teamMessage = ex.Message;
-            teamIsError = true;
-        }
-    }
-
-    void ToggleTeam(int id, object? value)
-    {
-        var isChecked = (bool)value!;
-        if (isChecked)
-            selectedTeamIds.Add(id);
-        else
-            selectedTeamIds.Remove(id);
-    }
-
-    async Task GenerateFixtures()
-    {
-        try
-        {
-            await AdminService.GenerateFixtures(selectedTeamIds, seasonStartDate);
-            fixtureMessage = "Fixtures generated.";
-            fixtureIsError = false;
-            seasons = await AdminService.GetSeasons();
-        }
-        catch (Exception ex)
-        {
-            fixtureMessage = ex.Message;
-            fixtureIsError = true;
-        }
-    }
-
-    async Task ToggleNotification(NotificationSettingDto setting, bool isEnabled)
-    {
-        setting.IsEnabled = isEnabled;
-        await NotificationSvc.UpdateSettingAsync(setting.Type, isEnabled);
-    }
-
-    async Task GenerateKnockout(int id)
-    {
-        try
-        {
-            await KnockoutSvc.GenerateKnockoutAsync(id);
-            knockoutMessage = "Knockout bracket generated.";
-            knockoutIsError = false;
-            seasons = await AdminService.GetSeasons();
-        }
-        catch (Exception ex)
-        {
-            knockoutMessage = ex.Message;
-            knockoutIsError = true;
-        }
-    }
-
-    async Task ActivateSeason(int id)
-    {
-        try
-        {
-            await AdminService.ActivateSeason(id);
-            seasonMessage = "Season activated.";
-            seasonIsError = false;
-            seasons = await AdminService.GetSeasons();
-        }
-        catch (Exception ex)
-        {
-            seasonMessage = ex.Message;
-            seasonIsError = true;
-        }
-    }
-
-    async Task DeleteSeason(int id, int seasonNumber)
-    {
-        var confirmed = await JS.InvokeAsync<bool>("confirm",
-            $"Delete Season {seasonNumber}? This permanently removes all its fixtures, stats and results. This cannot be undone.");
-        if (!confirmed) return;
-
-        try
-        {
-            await AdminService.DeleteSeason(id);
-            seasonMessage = $"Season {seasonNumber} deleted.";
-            seasonIsError = false;
-            seasons = await AdminService.GetSeasons();
-        }
-        catch (Exception ex)
-        {
-            seasonMessage = ex.Message;
-            seasonIsError = true;
-        }
-    }
 }

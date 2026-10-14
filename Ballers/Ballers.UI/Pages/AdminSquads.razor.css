@@ -9,55 +9,6 @@
     padding-bottom: 80px;
 }
 
-.admin-squads-hero {
-    background:
-        radial-gradient(ellipse at top, rgba(250, 204, 21, 0.08), transparent 55%),
-        #07101E;
-    padding: 90px 20px 40px;
-    text-align: center;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.admin-squads-eyebrow {
-    color: var(--ballers-accent);
-    letter-spacing: 0.32em;
-    text-transform: uppercase;
-    font-size: 0.7rem;
-    font-weight: 700;
-    margin: 0 0 8px;
-}
-
-.admin-squads-hero h1 {
-    margin: 0;
-    color: white;
-    font-size: clamp(2rem, 4vw, 2.8rem);
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    font-weight: 800;
-}
-
-.admin-squads-hero h1::after {
-    content: "";
-    display: block;
-    height: 3px;
-    width: 56px;
-    margin: 16px auto 0;
-    background: var(--ballers-accent);
-    border-radius: 1px;
-}
-
-.admin-squads-back {
-    display: inline-block;
-    margin-top: 18px;
-    color: rgba(255, 255, 255, 0.55);
-    text-decoration: none;
-    font-size: 0.85rem;
-    letter-spacing: 0.06em;
-    transition: color 0.18s;
-}
-
-.admin-squads-back:hover { color: var(--ballers-accent); }
-
 .admin-squads-body {
     max-width: 1100px;
     margin: 0 auto;

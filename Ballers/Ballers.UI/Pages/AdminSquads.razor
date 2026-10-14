@@ -13,18 +13,17 @@
 
 <PageTitle>Squad Management — Admin</PageTitle>
 
+<AdminShell Section="squads"
+            Title="@(TeamId.HasValue ? (currentTeam?.Name ?? "Loading…") : "Squads")"
+            Subtitle="@(TeamId.HasValue ? "This team's players. Admins can add players even when registration is locked." : "Pick a team to manage its players.")">
+    <Actions>
+        @if (TeamId.HasValue)
+        {
+            <a class="adm-btn" href="/admin/squads">‹ All teams</a>
+        }
+    </Actions>
+    <ChildContent>
 <div class="admin-squads-page">
-
-    <div class="admin-squads-hero">
-        <div class="admin-squads-hero-inner">
-            <p class="admin-squads-eyebrow">Admin Only</p>
-            <h1>@(TeamId.HasValue ? (currentTeam?.Name ?? "Loading…") : "Squad Management")</h1>
-            @if (TeamId.HasValue)
-            {
-                <a class="admin-squads-back" href="/admin/squads">← All teams</a>
-            }
-        </div>
-    </div>
 
     <div class="admin-squads-body">
 
@@ -146,6 +145,8 @@
         }
     </div>
 </div>
+    </ChildContent>
+</AdminShell>
 
 @code {
     [Parameter] public int? TeamId { get; set; }

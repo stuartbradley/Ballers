@@ -1,16 +1,83 @@
 /* ================================================================
-   TotwCard — card-TOTW.png template
-   Mirrors PlayerCard layout. 65% photo / 35% stats split.
-   Uses cqi units so text scales with card width.
+   TotwCard — a Team of the Week card that turns over.
+   Front: the card-TOTW.png template, laid out like every player card
+   (65% photo / 35% stats, cqi units so text scales with the card).
+   Back: the same shield in navy, this week against the season.
    ================================================================ */
 
-.totw-fut-card {
-    container-type: inline-size;
+/* ── The turn ── */
+
+.totw-flip {
     position: relative;
     width: 100%;
     max-width: 240px;
     margin: 0 auto;
     aspect-ratio: 516 / 716;
+    perspective: 1100px;
+    cursor: pointer;
+    outline: none;
+    transition: transform 220ms ease;
+}
+
+.totw-flip-inner {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    transition: transform 0.7s cubic-bezier(0.34, 1.25, 0.64, 1);
+}
+
+.totw-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+.totw-face-back {
+    transform: rotateY(180deg);
+}
+
+/* With a pointer: lift on hover, turn while it stays there, and the same for
+   keyboard focus. */
+@media (hover: hover) {
+    .totw-flip:hover {
+        transform: translateY(-6px);
+    }
+
+    .totw-flip:hover .totw-flip-inner,
+    .totw-flip:focus-visible .totw-flip-inner {
+        transform: rotateY(180deg);
+    }
+}
+
+/* Without one: a tap turns it, and another turns it back. */
+@media (hover: none) {
+    .totw-flip.is-flipped .totw-flip-inner {
+        transform: rotateY(180deg);
+    }
+}
+
+.totw-flip:focus-visible {
+    outline: 2px solid var(--ballers-accent, #facc15);
+    outline-offset: 6px;
+    border-radius: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .totw-flip,
+    .totw-flip-inner {
+        transition-duration: 0.01ms;
+    }
+}
+
+/* ================================================================
+   FRONT
+   ================================================================ */
+
+.totw-fut-card {
+    container-type: inline-size;
+    position: absolute;
+    inset: 0;
     background-image: url('/images/card-TOTW.png');
     background-size: 100% 100%;
     background-repeat: no-repeat;
@@ -19,34 +86,32 @@
     font-family: 'Saira Semi Condensed', sans-serif;
     font-weight: 400;
     color: #ffffff;
-    transition: transform 200ms ease-in, box-shadow 200ms ease-in;
-    cursor: default;
     overflow: hidden;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
-}
-
-.totw-fut-card:hover {
-    transform: translateY(-8px) scale(1.04);
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+    filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.55));
 }
 
 /* ── Top section: photo zone ── */
 
 .totw-fut-card .totw-card-top {
-    flex: 0 0 65%;
+    flex: 0 0 60%;
     position: relative;
     overflow: hidden;
 }
 
 .totw-fut-card .totw-card-top .totw-master-info {
     position: absolute;
-    top: 28%;
-    left: 20%;
+    top: 30%;
+    left: 19%;
     z-index: 2;
     text-align: center;
     color: var(--ballers-accent, #facc15);
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
-    line-height: 1.1;
+    line-height: 1.05;
+}
+
+.totw-fut-card .totw-rating {
+    font-size: 9cqi;
+    font-weight: 700;
 }
 
 .totw-fut-card .totw-card-top .totw-master-info .totw-position-label {
@@ -59,11 +124,11 @@
 
 .totw-fut-card .totw-card-top .totw-picture {
     position: absolute;
-    bottom: 10%;
+    bottom: 4%;
     left: 50%;
     transform: translateX(-50%);
-    width: 70%;
-    height: 70%;
+    width: 66%;
+    height: 72%;
     display: flex;
     align-items: flex-end;
     justify-content: center;
@@ -76,6 +141,8 @@
     object-fit: cover;
     object-position: top center;
     display: block;
+    -webkit-mask-image: linear-gradient(to bottom, #000 78%, transparent);
+    mask-image: linear-gradient(to bottom, #000 78%, transparent);
 }
 
 .totw-fut-card .totw-card-top .totw-picture .totw-silhouette {
@@ -92,9 +159,9 @@
 .totw-fut-card .totw-card-bottom {
     flex: 1;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
-    padding: 0 8% 20%;
+    padding: 1% 13% 15%;
 }
 
 .totw-fut-card .totw-card-bottom .totw-info {
@@ -113,12 +180,12 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    padding-bottom: 1.5%;
+    padding-bottom: 1%;
 }
 
 .totw-fut-card .totw-card-bottom .totw-info .totw-team {
     display: block;
-    font-size: 3.6cqi;
+    font-size: 3.4cqi;
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -126,11 +193,43 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    padding-bottom: 3%;
+    padding-bottom: 2.5%;
     margin-bottom: 3%;
     border-bottom: 1px solid rgba(255, 255, 255, 0.22);
 }
 
+/* The six card stats: columns sized to their contents, centred as a pair. */
+.totw-attrs {
+    display: grid;
+    grid-template-columns: auto auto;
+    justify-content: center;
+    column-gap: 18%;
+    row-gap: 1.5%;
+}
+
+.totw-attr {
+    display: flex;
+    align-items: baseline;
+    gap: 0.4em;
+}
+
+.totw-attr-value {
+    font-size: 5.2cqi;
+    font-weight: 700;
+    line-height: 1.1;
+    min-width: 2.2ch;
+    text-align: right;
+    color: var(--ballers-accent, #facc15);
+}
+
+.totw-attr-label {
+    font-size: 3.4cqi;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: rgba(255, 255, 255, 0.62);
+}
+
+/* The week's two numbers, for a player without a card. */
 .totw-fut-card .totw-card-bottom .totw-info .totw-features {
     display: flex;
     justify-content: center;
@@ -168,4 +267,184 @@
     text-transform: uppercase;
     letter-spacing: 0.06em;
     color: rgba(255, 255, 255, 0.6);
+}
+
+/* A band of light that crosses the card as the pointer arrives, masked to the
+   shield so it never lights the corners around it. */
+.totw-sheen {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg,
+        transparent 35%,
+        rgba(255, 240, 200, 0.28) 47%,
+        rgba(255, 255, 255, 0.5) 50%,
+        rgba(255, 240, 200, 0.24) 53%,
+        transparent 65%);
+    background-size: 260% 100%;
+    background-position: 120% 0;
+    mix-blend-mode: screen;
+    -webkit-mask: url('/images/card-TOTW.png') center / 100% 100% no-repeat;
+    mask: url('/images/card-TOTW.png') center / 100% 100% no-repeat;
+    pointer-events: none;
+    transition: background-position 0.9s ease;
+}
+
+@media (hover: hover) {
+    .totw-flip:hover .totw-sheen {
+        background-position: -20% 0;
+    }
+}
+
+/* ================================================================
+   BACK
+   ================================================================ */
+
+/* The card's gold rim shows round the edge; a navy shield a little smaller
+   lies over the rest of it. */
+.totw-back {
+    container-type: inline-size;
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 26% 18% 20%;
+    background: url('/images/card-TOTW.png') center / 100% 100% no-repeat;
+    font-family: 'Saira Semi Condensed', sans-serif;
+    color: #fff;
+    filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.55));
+}
+
+.totw-back::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(80% 45% at 50% 20%, rgba(250, 204, 21, 0.14), transparent 70%),
+        linear-gradient(170deg, #142744 0%, #0a1629 60%, #050b16 100%);
+    -webkit-mask: url('/images/card-TOTW.png') center / 93% 95% no-repeat;
+    mask: url('/images/card-TOTW.png') center / 93% 95% no-repeat;
+}
+
+.totw-back > * {
+    position: relative;
+}
+
+.totw-back-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1cqi;
+    padding-bottom: 5cqi;
+    margin-bottom: 4cqi;
+    border-bottom: 1px solid rgba(250, 204, 21, 0.3);
+    text-align: center;
+}
+
+.totw-back-name {
+    max-width: 100%;
+    font-size: 8cqi;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.totw-back-team {
+    font-size: 4.6cqi;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.totw-back-result {
+    display: inline-flex;
+    align-items: center;
+    gap: 2cqi;
+    max-width: 100%;
+    margin-top: 1.5cqi;
+    overflow: hidden;
+    font-size: 4.4cqi;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.totw-result-badge {
+    flex: 0 0 auto;
+    display: inline-grid;
+    place-items: center;
+    width: 6.5cqi;
+    height: 6.5cqi;
+    border-radius: 1.2cqi;
+    font-size: 4cqi;
+    font-weight: 700;
+    color: #050b16;
+}
+
+.totw-result-badge.is-w { background: #4ade80; }
+.totw-result-badge.is-d { background: #cbd5e1; }
+.totw-result-badge.is-l { background: #f87171; }
+
+.totw-back-table {
+    display: flex;
+    flex-direction: column;
+    gap: 3.5cqi;
+    flex: 1;
+}
+
+.totw-back-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: baseline;
+    column-gap: 5cqi;
+}
+
+.totw-back-cols {
+    font-size: 4cqi;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.totw-back-cols span:not(:first-child),
+.totw-back-week,
+.totw-back-season {
+    min-width: 13cqi;
+    text-align: center;
+}
+
+.totw-back-label {
+    font-size: 5.4cqi;
+    color: rgba(255, 255, 255, 0.78);
+    white-space: nowrap;
+}
+
+.totw-back-week {
+    font-size: 8.5cqi;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--ballers-accent, #facc15);
+}
+
+.totw-back-season {
+    font-size: 8.5cqi;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+}
+
+.totw-back-foot {
+    align-self: center;
+    margin-top: 4cqi;
+    padding: 1.2cqi 4cqi;
+    border-radius: 999px;
+    border: 1px solid rgba(250, 204, 21, 0.5);
+    font-size: 3.8cqi;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ballers-accent, #facc15);
 }

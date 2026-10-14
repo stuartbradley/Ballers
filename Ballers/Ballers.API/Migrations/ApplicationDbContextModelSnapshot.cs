@@ -70,6 +70,9 @@ namespace Ballers.API.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<int?>("PlayerId")
+                        .HasColumnType("int");
+
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
@@ -92,6 +95,8 @@ namespace Ballers.API.Migrations
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
+
+                    b.HasIndex("PlayerId");
 
                     b.HasIndex("TeamId");
 
@@ -432,14 +437,50 @@ namespace Ballers.API.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("AttributeCap")
+                        .HasColumnType("int");
+
                     b.Property<bool>("FixturesHidden")
                         .HasColumnType("bit");
 
                     b.Property<bool>("FixturesLocked")
                         .HasColumnType("bit");
 
+                    b.Property<int>("GoldOverallThreshold")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("LastPointsRunAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("PlayerSignupEnabled")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("PlayersLocked")
                         .HasColumnType("bit");
+
+                    b.Property<int>("PointsPerAppearance")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PointsPerAssist")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PointsPerCleanSheet")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PointsPerGoal")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PointsPerMotm")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PointsPerWin")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SignupPointsGrant")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SilverOverallThreshold")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -682,6 +723,142 @@ namespace Ballers.API.Migrations
                     b.ToTable("Players");
                 });
 
+            modelBuilder.Entity("Ballers.API.Models.PlayerAccountRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RequestedName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("RequestedPlayerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RequestedTeamId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ResolvedByUserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RequestedPlayerId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("RequestedTeamId", "Status");
+
+                    b.ToTable("PlayerAccountRequests");
+                });
+
+            modelBuilder.Entity("Ballers.API.Models.PlayerCardStats", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Dribbling")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Finishing")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Pace")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Passing")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PlayerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Strength")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Tackling")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalPointsEarned")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UnspentPoints")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlayerId")
+                        .IsUnique();
+
+                    b.ToTable("PlayerCards");
+                });
+
+            modelBuilder.Entity("Ballers.API.Models.PlayerPointsAward", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AppearancePoints")
+                        .HasColumnType("int");
+
+                    b.Property<int>("AssistPoints")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("AwardedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CleanSheetPoints")
+                        .HasColumnType("int");
+
+                    b.Property<int>("FixtureId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("GoalPoints")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MotmPoints")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PlayerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Points")
+                        .HasColumnType("int");
+
+                    b.Property<int>("WinPoints")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FixtureId");
+
+                    b.HasIndex("PlayerId", "FixtureId")
+                        .IsUnique();
+
+                    b.ToTable("PlayerPointsAwards");
+                });
+
             modelBuilder.Entity("Ballers.API.Models.Referee", b =>
                 {
                     b.Property<int>("Id")
@@ -912,9 +1089,16 @@ namespace Ballers.API.Migrations
 
             modelBuilder.Entity("Ballers.API.Models.ApplicationUser", b =>
                 {
+                    b.HasOne("Ballers.API.Models.Player", "Player")
+                        .WithMany()
+                        .HasForeignKey("PlayerId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("Ballers.API.Models.Team", "Team")
                         .WithMany()
                         .HasForeignKey("TeamId");
+
+                    b.Navigation("Player");
 
                     b.Navigation("Team");
                 });
@@ -1186,6 +1370,62 @@ namespace Ballers.API.Migrations
                         .IsRequired();
 
                     b.Navigation("Team");
+                });
+
+            modelBuilder.Entity("Ballers.API.Models.PlayerAccountRequest", b =>
+                {
+                    b.HasOne("Ballers.API.Models.Player", "RequestedPlayer")
+                        .WithMany()
+                        .HasForeignKey("RequestedPlayerId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Ballers.API.Models.Team", "RequestedTeam")
+                        .WithMany()
+                        .HasForeignKey("RequestedTeamId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Ballers.API.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("RequestedPlayer");
+
+                    b.Navigation("RequestedTeam");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Ballers.API.Models.PlayerCardStats", b =>
+                {
+                    b.HasOne("Ballers.API.Models.Player", "Player")
+                        .WithOne()
+                        .HasForeignKey("Ballers.API.Models.PlayerCardStats", "PlayerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Player");
+                });
+
+            modelBuilder.Entity("Ballers.API.Models.PlayerPointsAward", b =>
+                {
+                    b.HasOne("Ballers.API.Models.Fixture", "Fixture")
+                        .WithMany()
+                        .HasForeignKey("FixtureId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Ballers.API.Models.Player", "Player")
+                        .WithMany()
+                        .HasForeignKey("PlayerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Fixture");
+
+                    b.Navigation("Player");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

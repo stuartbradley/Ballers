@@ -1,0 +1,762 @@
+/* ============================================================
+   MY CARD — stadium night, to match the home page.
+   A floodlit header, the card on its own pool of light, and dark
+   glass panels for spending points and the points log. Colours
+   come from the --night-* and --chalk tokens in site.css.
+   ============================================================ */
+
+.my-card-page {
+    position: relative;
+    isolation: isolate;
+    min-height: calc(100vh - 71px);
+    background: var(--night-900);
+    color: var(--chalk);
+    overflow: hidden;
+}
+
+/* One pool of light from above, and a whisper of grain so the gradients
+   never band. */
+.my-card-page::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(50% 32% at 50% 0%, rgba(250, 204, 21, 0.12), transparent 70%),
+        radial-gradient(80% 50% at 50% 10%, rgba(30, 58, 138, 0.28), transparent 75%);
+    pointer-events: none;
+    z-index: -2;
+}
+
+.my-card-page::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+    opacity: 0.035;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.mc-loading {
+    display: grid;
+    place-items: center;
+    min-height: 60vh;
+}
+
+/* Hidden only once homeReveal.js has said it will reveal them, so without the
+   script everything is simply on the page. */
+html.reveal-ready [data-reveal] {
+    opacity: 0;
+    transform: translateY(18px);
+}
+
+/* ── Header ── */
+
+.mc-hero {
+    text-align: center;
+    padding: clamp(40px, 6vw, 72px) 20px 0;
+}
+
+/* The rank tag: two gold-edged pills, the place number lit. */
+.mc-ranks {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 22px;
+}
+
+.mc-rank {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 7px 16px 7px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(250, 204, 21, 0.45);
+    background: linear-gradient(180deg, rgba(250, 204, 21, 0.12), rgba(250, 204, 21, 0.03));
+    box-shadow: 0 0 18px rgba(250, 204, 21, 0.12);
+}
+
+.mc-rank-num {
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    line-height: 1;
+    color: var(--ballers-accent);
+    text-shadow: 0 0 12px rgba(250, 204, 21, 0.4);
+}
+
+.mc-rank-text {
+    font-size: 0.86rem;
+    color: var(--chalk-dim);
+}
+
+.mc-eyebrow {
+    display: block;
+    margin-bottom: 10px;
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ballers-accent);
+}
+
+.mc-hero h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(2.2rem, 5vw, 3.6rem);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    text-transform: uppercase;
+    color: var(--chalk);
+}
+
+.mc-hero h1::after {
+    content: "";
+    display: block;
+    width: 44px;
+    height: 3px;
+    margin: 16px auto 0;
+    border-radius: 2px;
+    background: var(--ballers-accent);
+    box-shadow: 0 0 12px rgba(250, 204, 21, 0.5);
+}
+
+.mc-meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 14px;
+    margin: 16px 0 0;
+    font-size: 0.92rem;
+    color: var(--chalk-dim);
+}
+
+.mc-meta span + span::before {
+    content: "·";
+    margin-right: 14px;
+    color: var(--chalk-faint);
+}
+
+.mc-chips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 18px;
+}
+
+.mc-chip {
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: rgba(5, 11, 22, 0.55);
+    font-size: 0.84rem;
+    color: var(--chalk-dim);
+}
+
+.mc-chip strong {
+    color: var(--ballers-accent);
+    font-family: var(--font-display);
+    font-weight: 500;
+    margin-left: 4px;
+}
+
+.mc-chip-tier {
+    font-family: var(--font-display);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--night-950);
+    border-color: transparent;
+}
+
+.mc-chip-tier.tier-gold   { background: linear-gradient(180deg, #FFE066, #C8921A); }
+.mc-chip-tier.tier-silver { background: linear-gradient(180deg, #F1F4F8, #9AA3AF); }
+.mc-chip-tier.tier-bronze { background: linear-gradient(180deg, #F0B27A, #A35A22); }
+
+/* ── Body ── */
+
+.mc-body {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: clamp(32px, 5vw, 56px) 20px clamp(64px, 8vw, 100px);
+}
+
+/* Card on the left, the spending panel on the right. Stacks on a phone, card
+   first, so you see what you are changing before the controls. */
+.mc-layout {
+    display: grid;
+    grid-template-columns: minmax(240px, 320px) 1fr;
+    gap: clamp(28px, 4vw, 56px);
+    align-items: start;
+}
+
+/* The card stands in its own floodlight, on a glossy floor. */
+.mc-stage {
+    position: sticky;
+    top: 96px;
+    padding: 12px 10px 0;
+}
+
+.mc-stage::before {
+    content: "";
+    position: absolute;
+    inset: -12% -20% 0;
+    background: radial-gradient(50% 45% at 50% 40%, rgba(250, 204, 21, 0.18), transparent 70%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+.mc-card {
+    position: relative;
+    z-index: 1;
+}
+
+/* The card's own shadow is a rectangle, which on a light page is invisible
+   but here reads as a dark box behind the shield. Shadow the artwork's
+   shape instead. */
+.mc-card ::deep .fut-player-card {
+    box-shadow: none;
+    filter: drop-shadow(0 16px 26px rgba(0, 0, 0, 0.6));
+}
+
+.mc-card ::deep .fut-player-card:hover {
+    box-shadow: none;
+}
+
+/* ── Moving up a tier ──
+   On Save, the card turns away, swaps to its new art at the edge-on moment
+   (a third of the way in, where MyCard.razor's PlayUpgrade swaps it), and
+   turns back in a burst of light in the new tier's colour. */
+
+.mc-stage { --up: #FACC15; }
+.mc-stage.up-silver { --up: #E2E8F0; }
+.mc-stage.up-gold   { --up: #FACC15; }
+
+.mc-stage.is-upgrading .mc-card {
+    animation: mcTurn 1.2s cubic-bezier(0.3, 0.7, 0.2, 1) both;
+}
+
+@keyframes mcTurn {
+    0%   { transform: perspective(900px) translateY(0) rotateY(0) scale(1); }
+    33%  { transform: perspective(900px) translateY(-14px) rotateY(90deg) scale(1.08); }
+    34%  { transform: perspective(900px) translateY(-14px) rotateY(-90deg) scale(1.08); }
+    72%  { transform: perspective(900px) translateY(-10px) rotateY(10deg) scale(1.1); }
+    100% { transform: perspective(900px) translateY(0) rotateY(0) scale(1); }
+}
+
+/* A white-out over the card as it comes round, cut to the shield. */
+.mc-flash {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 42%, #fff 0%, rgba(255, 255, 255, 0.7) 35%, transparent 75%);
+    -webkit-mask: url('/images/card-gold.png') center / 100% 100% no-repeat;
+    mask: url('/images/card-gold.png') center / 100% 100% no-repeat;
+    mix-blend-mode: screen;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.mc-stage.is-upgrading .mc-flash {
+    animation: mcFlash 1.2s ease-out both;
+}
+
+@keyframes mcFlash {
+    0%, 30% { opacity: 0; }
+    40%     { opacity: 0.95; }
+    100%    { opacity: 0; }
+}
+
+/* Rays and a glow bursting from behind the card. */
+.mc-burst {
+    position: absolute;
+    left: 50%;
+    top: 45%;
+    width: 170%;
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    background:
+        radial-gradient(circle, color-mix(in srgb, var(--up) 85%, transparent) 0%, color-mix(in srgb, var(--up) 30%, transparent) 25%, transparent 60%),
+        repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--up) 35%, transparent) 0deg 5deg, transparent 5deg 20deg);
+    -webkit-mask-image: radial-gradient(circle, #000 25%, transparent 68%);
+    mask-image: radial-gradient(circle, #000 25%, transparent 68%);
+    mix-blend-mode: screen;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.mc-stage.is-upgrading .mc-burst {
+    animation: mcBurst 1.6s ease-out both;
+}
+
+@keyframes mcBurst {
+    0%, 30% { opacity: 0; transform: scale(0.3) rotate(0deg); }
+    45%     { opacity: 1; }
+    100%    { opacity: 0; transform: scale(1.15) rotate(40deg); }
+}
+
+/* Sparks thrown outwards on every side. */
+.mc-sparks {
+    position: absolute;
+    left: 50%;
+    top: 45%;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+    z-index: 3;
+}
+
+.mc-sparks span {
+    position: absolute;
+    left: -4px;
+    top: -4px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff, var(--up) 50%, transparent 72%);
+    box-shadow: 0 0 10px var(--up);
+    opacity: 0;
+}
+
+.mc-stage.is-upgrading .mc-sparks span {
+    animation: mcSpark 1.1s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+    animation-delay: calc(0.4s + var(--d));
+}
+
+@keyframes mcSpark {
+    0%   { opacity: 0; transform: rotate(var(--a)) translateY(0) scale(0.4); }
+    15%  { opacity: 1; }
+    100% { opacity: 0; transform: rotate(var(--a)) translateY(-190px) scale(0.6); }
+}
+
+/* "Silver → Gold", popping in under the card. */
+.mc-upgrade-banner,
+.mc-upgrade-hint {
+    position: relative;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: fit-content;
+    margin: 6px auto 0;
+    padding: 8px 18px;
+    border-radius: 999px;
+    font-family: var(--font-display);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.mc-upgrade-banner {
+    border: 1px solid var(--up);
+    background: rgba(5, 11, 22, 0.85);
+    box-shadow: 0 0 24px color-mix(in srgb, var(--up) 45%, transparent);
+    font-size: 1rem;
+    animation: mcBanner 0.5s 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes mcBanner {
+    from { opacity: 0; transform: translateY(10px) scale(0.8); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.mc-upgrade-arrow { color: var(--chalk-faint); }
+
+/* While previewing a spend that would cross a threshold. */
+.mc-upgrade-hint {
+    border: 1px dashed rgba(250, 204, 21, 0.45);
+    background: rgba(250, 204, 21, 0.06);
+    font-size: 0.82rem;
+    color: var(--chalk-dim);
+}
+
+.tier-word.tier-gold   { color: #FACC15; }
+.tier-word.tier-silver { color: #E2E8F0; }
+.tier-word.tier-bronze { color: #E0975A; }
+
+@media (prefers-reduced-motion: reduce) {
+    .mc-stage.is-upgrading .mc-card,
+    .mc-stage.is-upgrading .mc-burst,
+    .mc-stage.is-upgrading .mc-sparks span,
+    .mc-upgrade-banner {
+        animation: none;
+    }
+
+    .mc-stage.is-upgrading .mc-flash {
+        animation-duration: 0.6s;
+    }
+}
+
+.mc-floor {
+    height: 40px;
+    margin: -6px 8% 0;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at 50% 30%, rgba(0, 0, 0, 0.65), transparent 70%);
+    filter: blur(6px);
+}
+
+/* Dark glass, as on the home page. */
+.mc-panel {
+    position: relative;
+    padding: clamp(20px, 3vw, 30px);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.01)), var(--night-card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.06),
+        0 18px 40px rgba(0, 0, 0, 0.35);
+}
+
+/* ── Balance ── */
+
+.points-balance {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    padding-bottom: 0.9rem;
+    border-bottom: 1px solid var(--line);
+}
+
+.points-balance-value {
+    font-family: var(--font-display);
+    font-size: clamp(2.6rem, 6vw, 3.4rem);
+    line-height: 1;
+    background: linear-gradient(180deg, #FFF2C2 0%, var(--ballers-accent) 55%, #C8921A 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 4px 14px rgba(250, 204, 21, 0.25));
+}
+
+.points-balance-label {
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--chalk-dim);
+}
+
+.points-note {
+    font-size: 0.9rem;
+    color: var(--chalk-dim);
+    margin: 0.9rem 0 1.2rem;
+    line-height: 1.6;
+}
+
+/* ── Attribute rows ── */
+
+.attribute-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+
+.attribute-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    grid-template-areas:
+        "label value controls"
+        "bar   bar   bar";
+    align-items: center;
+    gap: 0.45rem 0.9rem;
+    padding: 0.7rem 0.85rem 0.75rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    background: rgba(5, 11, 22, 0.45);
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.attribute-row.is-changed {
+    border-color: rgba(250, 204, 21, 0.35);
+    background: rgba(250, 204, 21, 0.05);
+}
+
+.attribute-row-label {
+    grid-area: label;
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--chalk);
+}
+
+.attribute-row-value {
+    grid-area: value;
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.attribute-row-current { color: var(--chalk); }
+.attribute-row-arrow   { color: var(--chalk-faint); font-size: 1rem; }
+
+/* The value you'd end up with, lit gold so the change reads at a glance. */
+.attribute-row-new {
+    color: var(--ballers-accent);
+    text-shadow: 0 0 12px rgba(250, 204, 21, 0.45);
+}
+
+.attribute-row-controls {
+    grid-area: controls;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.attribute-row-added {
+    min-width: 2.25rem;
+    text-align: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--chalk-faint);
+}
+
+.attribute-row.is-changed .attribute-row-added { color: var(--ballers-accent); }
+
+.step-btn {
+    width: 2.1rem;
+    height: 2.1rem;
+    border-radius: 50%;
+    border: 1px solid rgba(250, 204, 21, 0.5);
+    background: rgba(250, 204, 21, 0.06);
+    color: var(--ballers-accent);
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, opacity 0.15s, transform 0.12s;
+}
+
+.step-btn:hover:not(:disabled) {
+    background: var(--ballers-accent);
+    color: var(--night-950);
+}
+
+.step-btn:active:not(:disabled) { transform: scale(0.92); }
+
+.step-btn:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+}
+
+.step-btn:disabled {
+    opacity: 0.25;
+    cursor: not-allowed;
+}
+
+/* Progress towards the cap, with the points being added glowing on the end. */
+.attribute-row-bar {
+    grid-area: bar;
+    display: flex;
+    height: 4px;
+    border-radius: 2px;
+    overflow: hidden;
+    background: rgba(232, 237, 245, 0.08);
+}
+
+.bar-current {
+    background: linear-gradient(90deg, #8a6512, #C8921A);
+    transition: width 0.25s ease;
+}
+
+.bar-added {
+    background: linear-gradient(90deg, var(--ballers-accent), #FFF2C2);
+    box-shadow: 0 0 10px rgba(250, 204, 21, 0.7);
+    transition: width 0.25s ease;
+}
+
+/* ── Summary and actions ── */
+
+.my-card-summary {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    margin-top: 1.3rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--line);
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--chalk);
+}
+
+.my-card-summary-new { color: var(--ballers-accent); }
+
+.my-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.3rem;
+}
+
+/* The foil gold of the home page's calls to action. */
+.btn-gold {
+    border: 0;
+    border-radius: 4px;
+    padding: 13px 28px;
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #0A1322;
+    background: linear-gradient(180deg, #FFE066 0%, var(--ballers-accent) 48%, #C8921A 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 10px 24px rgba(0, 0, 0, 0.42);
+    cursor: pointer;
+    transition: transform 0.16s ease, filter 0.16s ease, opacity 0.16s ease;
+}
+
+.btn-gold:hover:not(:disabled) {
+    transform: translateY(-2px);
+    filter: brightness(1.06);
+}
+
+.btn-ghost {
+    border: 1px solid rgba(250, 204, 21, 0.45);
+    border-radius: 4px;
+    padding: 12px 24px;
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ballers-accent);
+    background: rgba(250, 204, 21, 0.04);
+    cursor: pointer;
+    transition: background 0.16s ease, opacity 0.16s ease;
+}
+
+.btn-ghost:hover:not(:disabled) { background: rgba(250, 204, 21, 0.12); }
+
+.btn-gold:disabled,
+.btn-ghost:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.btn-gold:focus-visible,
+.btn-ghost:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 3px;
+}
+
+.my-card-error {
+    margin-top: 1rem;
+    color: #fca5a5;
+    font-size: 0.9rem;
+}
+
+.my-card-saved {
+    margin-top: 1rem;
+    color: #4ade80;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* ── Points log ── */
+
+.points-history {
+    margin-top: clamp(32px, 5vw, 56px);
+}
+
+.section-head {
+    margin-bottom: 1.2rem;
+}
+
+.section-head h2 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.4rem, 3vw, 1.9rem);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--chalk);
+}
+
+/* The breakdown column is the one that gets long, so the table scrolls rather
+   than squashing it on a narrow screen. */
+.history-scroll {
+    overflow-x: auto;
+}
+
+.points-history table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.points-history th,
+.points-history td {
+    text-align: left;
+    padding: 0.75rem 0.6rem;
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+}
+
+.points-history tbody tr:last-child td { border-bottom: 0; }
+
+.points-history tbody tr:hover td { background: rgba(250, 204, 21, 0.04); }
+
+.points-history th {
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-size: 0.74rem;
+    color: var(--chalk-faint);
+    border-bottom: 2px solid rgba(250, 204, 21, 0.5);
+}
+
+.points-history td { color: var(--chalk-dim); }
+.points-history .opponent { color: var(--chalk); font-weight: 600; }
+
+.points-history .num {
+    text-align: right;
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    color: var(--ballers-accent);
+}
+
+.points-history .breakdown {
+    white-space: normal;
+    min-width: 220px;
+    color: var(--chalk-faint);
+}
+
+/* ── Phones ── */
+
+@media (max-width: 780px) {
+    .mc-layout {
+        grid-template-columns: 1fr;
+    }
+
+    /* An explicit width: the card sizes itself from its container and has no
+       width of its own, so a shrink-to-fit box would collapse it to nothing. */
+    .mc-stage {
+        position: static;
+        width: 100%;
+        max-width: 260px;
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 420px) {
+    .attribute-row {
+        grid-template-columns: 1fr auto;
+        grid-template-areas:
+            "label    value"
+            "controls controls"
+            "bar      bar";
+    }
+
+    .attribute-row-controls { justify-content: flex-end; }
+}

@@ -18,352 +18,392 @@
 @inject IJSRuntime JS;
 @inject NavigationManager Nav;
 
-<section class="hero">
-    <div class="hero-overlay">
-        <div class="hero-eyebrow">Season 1 &middot; Now Underway</div>
-        <h1>
-            Blackpool <span class="accent">Ballers</span> League
-        </h1>
-        <p class="hero-sub">The Ultimate Local 11-a-Side Competition</p>
-        <button class="cta" @onclick="ScrollToTable">View League Table</button>
-    </div>
-    <div class="scroll-indicator" @onclick="ScrollToTable">
-        <span></span>
-        <span></span>
-    </div>
-</section>
+@* The whole page is one floodlit night: every section shares the shell,
+   heading and card styles in Home.razor.css. Elements marked data-reveal
+   fade up as they come on screen (wwwroot/js/homeReveal.js). *@
+<div class="home" id="home-root">
 
-<section class="about-section">
-    <div class="container">
-        <img src="/images/BBL-Logo.png" alt="BBL Logo" class="about-logo" />
-        <h2>About Ballers</h2>
-        <p class="about-intro">
-            This league isn't just about playing football. It's about competing for trophies, being recognised for playing the game in the right spirit, and giving every team — no matter their level — a genuine chance to become champions.
-        </p>
-        <div class="feature-strip">
-            <div class="feature-item">
-                <strong>Trophies &amp; Recognition</strong>
-                <span>We celebrate properly at the end of the season with a Presentation Evening — trophies, medals, awards, and prizes for players, coaches, and supporters alike.</span>
-            </div>
-            <div class="feature-item">
-                <strong>Fair &amp; Competitive</strong>
-                <span>Every team has a genuine shot at the title regardless of their level. The spirit of the game matters here just as much as the result on the pitch.</span>
-            </div>
-            <div class="feature-item">
-                <strong>Exclusive Membership</strong>
-                <span>All participants enjoy Ballers member perks — cheap drinks, discounted food, games, and access to exclusive Ballers events and social activities.</span>
+    <!-- ── HERO ── -->
+    <section class="hero">
+        <div class="hero-beams" aria-hidden="true">
+            <span class="hero-beam hero-beam-left"></span>
+            <span class="hero-beam hero-beam-right"></span>
+        </div>
+        <div class="hero-overlay">
+            <div class="hero-eyebrow">@SeasonEyebrow</div>
+            <h1>
+                Blackpool <span class="accent">Ballers</span> League
+            </h1>
+            <p class="hero-sub">The Ultimate Local 11-a-Side Competition</p>
+            <div class="hero-actions">
+                <button class="btn-gold" @onclick="@(() => ScrollTo("standings"))">View the table</button>
+                <button class="btn-ghost" @onclick="@(() => ScrollTo("fixtures"))">This week's fixtures</button>
             </div>
         </div>
-    </div>
-</section>
-
-<section class="sponsors">
-    <div class="container">
-        <div class="sponsors-header">
-            <h2>Our Sponsors</h2>
-            <p class="sponsors-sub">Proudly supported by local businesses</p>
-        </div>
-        <div class="sponsor-grid">
-            <a class="sponsor-card" href="https://rimmingtonroofing.co.uk" target="_blank" rel="noopener noreferrer">
-                <img src="/images/RimmingtonRoofing.png" alt="Rimmington Roofing" loading="lazy" />
-            </a>
-        </div>
-    </div>
-</section>
-
-<section class="perks-section">
-    <div class="container">
-        <div class="perk-card">
-            <span class="perk-badge">Player Perk</span>
-            <img class="perk-image" src="/images/jm-massage.jpeg" alt="JM Massage" loading="lazy" />
-            <h2><span class="accent">20% off</span> Sports Massages</h2>
-            <p class="perk-sub">
-                Book with JM Massage and mention the Blackpool Ballers League to claim 20% off any sports massage.
-            </p>
-            <a class="perk-cta" href="https://jmmassage.co.uk" target="_blank" rel="noopener noreferrer">
-                Visit JM Massage →
-            </a>
-        </div>
-    </div>
-</section>
-
-@if (isLoading || seasons.Any())
-{
-    <section id="league-table" class="league-table">
-        <div class="container">
-            <div class="table-header">
-                <h2>League Table</h2>
-                <select class="season-select"
-                @bind="selectedSeasonId"
-                @bind:after="LoadTable">
-                    @foreach (var season in seasons)
-                    {
-                        <option value="@season.Id">Season @season.SeasonNumber</option>
-                    }
-                </select>
-            </div>
-
-            @if (isLoading)
-            {
-                <LoadingSpinner />
-            }
-            else
-            {
-                <table>
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Team</th>
-                            <th>P</th>
-                            <th>W</th>
-                            <th>D</th>
-                            <th>L</th>
-                            <th>GF</th>
-                            <th>GA</th>
-                            <th>GD</th>
-                            <th>Pts</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var team in table)
-                        {
-                            <tr>
-                                <td>@team.Position</td>
-                                <td class="team">@team.Team</td>
-                                <td>@team.Played</td>
-                                <td>@team.Won</td>
-                                <td>@team.Drawn</td>
-                                <td>@team.Lost</td>
-                                <td>@team.GoalsFor</td>
-                                <td>@team.GoalsAgainst</td>
-                                <td>@team.GoalDifference</td>
-                                <td class="points">@team.Points</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            }
-        </div>
+        <button class="scroll-indicator" aria-label="Scroll down" @onclick="@(() => ScrollTo("about"))">
+            <span></span>
+            <span></span>
+        </button>
     </section>
 
-    <section class="league-table penalty-table-section">
-        <div class="container">
-            <div class="table-header">
-                <h2>Penalty League</h2>
-            </div>
-
-            @if (isLoading)
-            {
-                <LoadingSpinner />
-            }
-            else
-            {
-                <table>
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Team</th>
-                            <th>P</th>
-                            <th>W</th>
-                            <th>D</th>
-                            <th>L</th>
-                            <th>PF</th>
-                            <th>PA</th>
-                            <th>PD</th>
-                            <th>Pts</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var row in penaltyTable)
-                        {
-                            <tr>
-                                <td>@row.Position</td>
-                                <td class="team">@row.Team</td>
-                                <td>@row.Played</td>
-                                <td>@row.Won</td>
-                                <td>@row.Drawn</td>
-                                <td>@row.Lost</td>
-                                <td>@row.PenaltiesFor</td>
-                                <td>@row.PenaltiesAgainst</td>
-                                <td>@row.PenaltyDifference</td>
-                                <td class="points">@row.Points</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            }
-        </div>
-    </section>
-}
-
-<section class="fixtures-section">
-    <div class="container">
-    <h2>Next Fixtures</h2>
-
-    @if (isLoading)
+    @* What's on this week, at a glance, straight under the hero. *@
+    @if (currentWeek != null)
     {
-        <LoadingSpinner />
-    }
-    else if (currentWeek != null)
-    {
-        <FixtureWeekCard Week="currentWeek" />
-    }
-    else
-    {
-        <p>No fixtures available.</p>
-    }
-    </div>
-</section>
-
-@if (currentTotw != null)
-{
-    <section class="totw-section">
-        <div class="container">
-            <div class="totw-section-header">
-                <div>
-                    <h2>Team of the Week</h2>
-                    <p class="totw-section-sub">Match Week @currentTotw.MatchNumber · @currentTotw.WeekStart.ToString("d MMM yyyy")</p>
-                </div>
-                <button class="totw-section-link" @onclick="@(() => Nav.NavigateTo("/totw"))">View all weeks →</button>
-            </div>
-            <TotwLineup Totw="currentTotw" />
-        </div>
-    </section>
-}
-
-<section class="stats">
-    <div class="stats-header">
-        <h2>Player Stats</h2>
-    </div>
-    <div class="cards-wrapper">
-
-        <div class="card goals-card">
-            <h3>Top Goalscorers</h3>
-            @if (isLoading)
-            {
-                <LoadingSpinner />
-            }
-            else if (!topScorers.Any())
-            {
-                <p class="empty-stat">No data yet this season.</p>
-            }
-            else
-            {
-                <ul>
-                    @{ int r1 = 0; }
-                    @foreach (var player in topScorers)
-                    {
-                        r1++;
-                        <li class="stat-item">
-                            <span class="rank @RankClass(r1)">@r1</span>
-                            <span class="stat-name">@player.Name</span>
-                            <span class="stat-num">@player.Goals</span>
-                        </li>
-                    }
-                </ul>
-            }
-        </div>
-
-        <div class="card assists-card">
-            <h3>Top Assists</h3>
-            @if (isLoading)
-            {
-                <LoadingSpinner />
-            }
-            else if (!topAssists.Any())
-            {
-                <p class="empty-stat">No data yet this season.</p>
-            }
-            else
-            {
-                <ul>
-                    @{ int r2 = 0; }
-                    @foreach (var player in topAssists)
-                    {
-                        r2++;
-                        <li class="stat-item">
-                            <span class="rank @RankClass(r2)">@r2</span>
-                            <span class="stat-name">@player.Name</span>
-                            <span class="stat-num">@player.Assists</span>
-                        </li>
-                    }
-                </ul>
-            }
-        </div>
-
-        <div class="card motm-card">
-            <h3>Most MOTMs</h3>
-            @if (isLoading)
-            {
-                <LoadingSpinner />
-            }
-            else if (!topMotm.Any())
-            {
-                <p class="empty-stat">No data yet this season.</p>
-            }
-            else
-            {
-                <ul>
-                    @{ int r3 = 0; }
-                    @foreach (var player in topMotm)
-                    {
-                        r3++;
-                        <li class="stat-item">
-                            <span class="rank @RankClass(r3)">@r3</span>
-                            <span class="stat-name">@player.Name</span>
-                            <span class="stat-num">@player.Motm</span>
-                        </li>
-                    }
-                </ul>
-            }
-        </div>
-
-    </div>
-</section>
-
-@if (recentGalleries.Any())
-{
-    <section class="home-galleries">
-        <div class="container">
-            <div class="home-galleries-header">
-                <div>
-                    <h2>Match Photos</h2>
-                    <p class="home-galleries-sub">Shot around the league by our photographers</p>
-                </div>
-                <button class="home-galleries-link" @onclick="@(() => Nav.NavigateTo("/galleries"))">All galleries →</button>
-            </div>
-
-            <div class="home-galleries-strip">
-                @foreach (var gallery in recentGalleries)
+        var next = currentWeek.Matches.FirstOrDefault(m => !m.IsPlayed);
+        <div class="matchday-strip">
+            <div class="container matchday-inner">
+                <span class="matchday-week">Match week @currentWeek.WeekNumber</span>
+                <span class="matchday-dates">@currentWeek.DateRange</span>
+                @if (next != null)
                 {
-                    <button class="home-gallery-card" @onclick="@(() => Nav.NavigateTo($"/gallery/{gallery.Id}"))">
-                        @if (!string.IsNullOrEmpty(gallery.CoverThumbnailUrl))
+                    <span class="matchday-next">
+                        <span class="matchday-label">Next up</span>
+                        <strong>@next.Home</strong> v <strong>@next.Away</strong>
+                        @if (!string.IsNullOrWhiteSpace(next.Day) || !string.IsNullOrWhiteSpace(next.Time))
                         {
-                            @* Two sources, and the browser picks. A phone takes the
-                               small one; a wide or high-density screen, where these
-                               cards are several hundred pixels across, takes the
-                               full-size cover instead of stretching the thumbnail. *@
-                            <img src="@MediaUrls.Absolute(Http, gallery.CoverThumbnailUrl)"
-                                 srcset="@MediaUrls.SrcSet(Http, gallery.CoverThumbnailUrl, gallery.CoverImageUrl)"
-                                 sizes="(max-width: 700px) 92vw, 380px"
-                                 alt="@gallery.HomeTeam versus @gallery.AwayTeam"
-                                 loading="lazy" decoding="async" />
+                            <span class="matchday-when">@next.Day @next.Time</span>
                         }
-                        <div class="home-gallery-overlay">
-                            <span class="home-gallery-teams">@gallery.HomeTeam v @gallery.AwayTeam</span>
-                            <span class="home-gallery-count">@gallery.PhotoCount photos</span>
-                        </div>
-                    </button>
+                    </span>
+                }
+                else if (currentWeek.Matches.Any())
+                {
+                    <span class="matchday-next"><span class="matchday-label">Results are in</span></span>
+                }
+                <a class="matchday-link" href="/fixtures">All fixtures →</a>
+            </div>
+        </div>
+    }
+
+    <!-- ── ABOUT ── -->
+    <section id="about" class="home-section tone-800 about-section">
+        <div class="container">
+            <div class="about-logo-ring" data-reveal>
+                <img src="/images/BBL-Logo.png" alt="Blackpool Ballers League" class="about-logo" />
+            </div>
+            <header class="section-head" data-reveal>
+                <span class="section-eyebrow">The league</span>
+                <h2>About Ballers</h2>
+            </header>
+            <p class="about-intro" data-reveal>
+                This league isn't just about playing football. It's about competing for trophies, being recognised for playing the game in the right spirit, and giving every team — no matter their level — a genuine chance to become champions.
+            </p>
+            <div class="feature-strip" data-reveal-stagger>
+                <div class="glass feature-item feature-gold">
+                    <strong>Trophies &amp; Recognition</strong>
+                    <span>We celebrate properly at the end of the season with a Presentation Evening — trophies, medals, awards, and prizes for players, coaches, and supporters alike.</span>
+                </div>
+                <div class="glass feature-item feature-blue">
+                    <strong>Fair &amp; Competitive</strong>
+                    <span>Every team has a genuine shot at the title regardless of their level. The spirit of the game matters here just as much as the result on the pitch.</span>
+                </div>
+                <div class="glass feature-item feature-green">
+                    <strong>Exclusive Membership</strong>
+                    <span>All participants enjoy Ballers member perks — cheap drinks, discounted food, games, and access to exclusive Ballers events and social activities.</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── THE CARD SHOWCASE ── -->
+    <PlayerCardShowcase />
+
+    <!-- ── NEXT FIXTURES ── -->
+    <section id="fixtures" class="home-section tone-900 fixtures-section">
+        <div class="container">
+            <header class="section-head" data-reveal>
+                <span class="section-eyebrow">This week</span>
+                <h2>Next Fixtures</h2>
+            </header>
+
+            <div data-reveal>
+                @if (isLoading)
+                {
+                    <LoadingSpinner />
+                }
+                else if (currentWeek != null)
+                {
+                    <FixtureWeekCard Week="currentWeek" />
+                }
+                else
+                {
+                    <p class="empty-note">No fixtures scheduled yet. Check back soon.</p>
                 }
             </div>
         </div>
     </section>
-}
+
+    <!-- ── STANDINGS (league + penalty league, tabbed) ── -->
+    @if (isLoading || seasons.Any())
+    {
+        <section id="standings" class="home-section tone-800 standings">
+            <div class="container">
+                <header class="section-head" data-reveal>
+                    <span class="section-eyebrow">Standings</span>
+                    <h2>The Table</h2>
+                </header>
+
+                <div class="standings-bar" data-reveal>
+                    <div class="standings-tabs" role="tablist" aria-label="Choose a table">
+                        <button type="button" role="tab" id="tab-league"
+                                class="standings-tab @(activeTable == "league" ? "is-active" : "")"
+                                aria-selected="@(activeTable == "league" ? "true" : "false")"
+                                aria-controls="panel-league"
+                                @onclick="@(() => activeTable = "league")">League</button>
+                        <button type="button" role="tab" id="tab-penalty"
+                                class="standings-tab @(activeTable == "penalty" ? "is-active" : "")"
+                                aria-selected="@(activeTable == "penalty" ? "true" : "false")"
+                                aria-controls="panel-penalty"
+                                @onclick="@(() => activeTable = "penalty")">Penalty league</button>
+                    </div>
+
+                    <label class="season-picker">
+                        <span class="visually-hidden">Season</span>
+                        <select class="season-select"
+                                @bind="selectedSeasonId"
+                                @bind:after="LoadTable">
+                            @foreach (var season in seasons)
+                            {
+                                <option value="@season.Id">Season @season.SeasonNumber</option>
+                            }
+                        </select>
+                    </label>
+                </div>
+
+                <div class="glass table-card" data-reveal>
+                    @if (isLoading)
+                    {
+                        <LoadingSpinner />
+                    }
+                    else if (activeTable == "league")
+                    {
+                        <div role="tabpanel" id="panel-league" aria-labelledby="tab-league" class="table-scroll">
+                            <table class="standings-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th class="col-team">Team</th>
+                                        <th>P</th>
+                                        <th>W</th>
+                                        <th>D</th>
+                                        <th>L</th>
+                                        <th class="col-extra">GF</th>
+                                        <th class="col-extra">GA</th>
+                                        <th class="col-extra">GD</th>
+                                        <th class="col-pts">Pts</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var team in table)
+                                    {
+                                        <tr class="@RowClass(team.Position)">
+                                            <td class="col-pos">@team.Position</td>
+                                            <td class="col-team">@team.Team</td>
+                                            <td>@team.Played</td>
+                                            <td>@team.Won</td>
+                                            <td>@team.Drawn</td>
+                                            <td>@team.Lost</td>
+                                            <td class="col-extra">@team.GoalsFor</td>
+                                            <td class="col-extra">@team.GoalsAgainst</td>
+                                            <td class="col-extra">@team.GoalDifference</td>
+                                            <td class="col-pts">@team.Points</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                            @if (!table.Any())
+                            {
+                                <p class="empty-note">No results yet this season.</p>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div role="tabpanel" id="panel-penalty" aria-labelledby="tab-penalty" class="table-scroll">
+                            <table class="standings-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th class="col-team">Team</th>
+                                        <th>P</th>
+                                        <th>W</th>
+                                        <th>D</th>
+                                        <th>L</th>
+                                        <th class="col-extra">PF</th>
+                                        <th class="col-extra">PA</th>
+                                        <th class="col-extra">PD</th>
+                                        <th class="col-pts">Pts</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var row in penaltyTable)
+                                    {
+                                        <tr class="@RowClass(row.Position)">
+                                            <td class="col-pos">@row.Position</td>
+                                            <td class="col-team">@row.Team</td>
+                                            <td>@row.Played</td>
+                                            <td>@row.Won</td>
+                                            <td>@row.Drawn</td>
+                                            <td>@row.Lost</td>
+                                            <td class="col-extra">@row.PenaltiesFor</td>
+                                            <td class="col-extra">@row.PenaltiesAgainst</td>
+                                            <td class="col-extra">@row.PenaltyDifference</td>
+                                            <td class="col-pts">@row.Points</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                            @if (!penaltyTable.Any())
+                            {
+                                <p class="empty-note">No shootouts yet this season.</p>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </section>
+    }
+
+    <!-- ── TEAM OF THE WEEK ── -->
+    @if (currentTotw != null)
+    {
+        <section class="home-section tone-900 totw-section">
+            <div class="container">
+                <header class="section-head" data-reveal>
+                    <span class="section-eyebrow">Match week @currentTotw.MatchNumber · @currentTotw.WeekStart.ToString("d MMM yyyy")</span>
+                    <h2>Team of the Week</h2>
+                </header>
+                <div class="totw-pitch" data-reveal>
+                    <TotwLineup Totw="currentTotw" />
+                </div>
+                <div class="section-foot" data-reveal>
+                    <a class="btn-ghost" href="/totw">View all weeks →</a>
+                </div>
+            </div>
+        </section>
+    }
+
+    <!-- ── PLAYER STATS ── -->
+    <section class="home-section tone-800 stats">
+        <div class="container">
+            <header class="section-head" data-reveal>
+                <span class="section-eyebrow">Leaderboards</span>
+                <h2>Player Stats</h2>
+            </header>
+
+            <div class="stats-grid" data-reveal-stagger>
+                @foreach (var board in Boards)
+                {
+                    <div class="glass stat-card stat-@board.Key">
+                        <h3>@board.Title</h3>
+                        @if (isLoading)
+                        {
+                            <LoadingSpinner />
+                        }
+                        else if (!board.Rows.Any())
+                        {
+                            <p class="empty-note">No data yet this season.</p>
+                        }
+                        else
+                        {
+                            <ol class="stat-list">
+                                @{ var rank = 0; }
+                                @foreach (var row in board.Rows)
+                                {
+                                    rank++;
+                                    <li class="stat-item @(rank == 1 ? "is-leader" : "")">
+                                        <span class="rank @RankClass(rank)">@rank</span>
+                                        <span class="stat-name">@row.Name</span>
+                                        <span class="stat-num" data-count="@row.Value">@row.Value</span>
+                                    </li>
+                                }
+                            </ol>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+
+    <!-- ── MATCH PHOTOS ── -->
+    @if (recentGalleries.Any())
+    {
+        <section class="home-section tone-900 home-galleries">
+            <div class="container">
+                <header class="section-head" data-reveal>
+                    <span class="section-eyebrow">Shot around the league by our photographers</span>
+                    <h2>Match Photos</h2>
+                </header>
+
+                <div class="home-galleries-strip" data-reveal-stagger>
+                    @foreach (var gallery in recentGalleries)
+                    {
+                        <button class="home-gallery-card" @onclick="@(() => Nav.NavigateTo($"/gallery/{gallery.Id}"))">
+                            @if (!string.IsNullOrEmpty(gallery.CoverThumbnailUrl))
+                            {
+                                @* Two sources, and the browser picks. A phone takes the
+                                   small one; a wide or high-density screen, where these
+                                   cards are several hundred pixels across, takes the
+                                   full-size cover instead of stretching the thumbnail. *@
+                                <img src="@MediaUrls.Absolute(Http, gallery.CoverThumbnailUrl)"
+                                     srcset="@MediaUrls.SrcSet(Http, gallery.CoverThumbnailUrl, gallery.CoverImageUrl)"
+                                     sizes="(max-width: 700px) 92vw, 380px"
+                                     alt="@gallery.HomeTeam versus @gallery.AwayTeam"
+                                     loading="lazy" decoding="async" />
+                            }
+                            <div class="home-gallery-overlay">
+                                <span class="home-gallery-teams">@gallery.HomeTeam v @gallery.AwayTeam</span>
+                                <span class="home-gallery-count">@gallery.PhotoCount photos</span>
+                            </div>
+                        </button>
+                    }
+                </div>
+
+                <div class="section-foot" data-reveal>
+                    <a class="btn-ghost" href="/galleries">All galleries →</a>
+                </div>
+            </div>
+        </section>
+    }
+
+    <!-- ── PARTNERS: sponsors + player perk ── -->
+    <section class="home-section tone-800 partners">
+        <div class="container">
+            <header class="section-head" data-reveal>
+                <span class="section-eyebrow">Proudly supported by local businesses</span>
+                <h2>Our Partners</h2>
+            </header>
+
+            <div class="partners-grid" data-reveal-stagger>
+                <a class="glass sponsor-card" href="https://rimmingtonroofing.co.uk" target="_blank" rel="noopener noreferrer">
+                    <span class="partner-tag">Sponsor</span>
+                    <img src="/images/RimmingtonRoofing.png" alt="Rimmington Roofing" loading="lazy" />
+                    <span class="partner-name">Rimmington Roofing</span>
+                    <span class="perk-sub">Proud backers of the Blackpool Ballers League.</span>
+                    <span class="partner-link">Visit their website →</span>
+                </a>
+
+                <div class="glass perk-card">
+                    <span class="partner-tag partner-tag-gold">Player perk</span>
+                    <img class="perk-image" src="/images/jm-massage.jpeg" alt="JM Massage" loading="lazy" />
+                    <h3><span class="accent">20% off</span> sports massages</h3>
+                    <p class="perk-sub">
+                        Book with JM Massage and mention the Blackpool Ballers League to claim 20% off any sports massage.
+                    </p>
+                    <a class="btn-gold" href="https://jmmassage.co.uk" target="_blank" rel="noopener noreferrer">
+                        Visit JM Massage →
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</div>
 
 @code {
     private FixtureWeekDto? currentWeek;
     private List<LeagueTableRowDto> table = new();
     private List<SeasonDto> seasons = new();
+    private SeasonDto? currentSeason;
     private int selectedSeasonId;
     private List<PlayerGoalsDto> topScorers = new();
     private List<PlayerAssistDto> topAssists = new();
@@ -373,8 +413,28 @@
     private List<GallerySummaryDto> recentGalleries = new();
     private bool isLoading = true;
 
+    // Which of the two tables the standings section is showing.
+    private string activeTable = "league";
+
+    // The reveal script is run once for the page as first drawn, and again
+    // once the data has arrived and the tables, stats and photos exist.
+    private bool revealedLoaded;
+
     // The strip is a taster, not the full list — that's what /galleries is for.
     private const int HomeGalleryCount = 3;
+
+    private string SeasonEyebrow => currentSeason != null
+        ? $"Season {currentSeason.SeasonNumber} · Now underway"
+        : "Now underway";
+
+    private record Board(string Key, string Title, IReadOnlyList<(string Name, int Value)> Rows);
+
+    private IEnumerable<Board> Boards => new[]
+    {
+        new Board("goals", "Top Goalscorers", topScorers.Select(p => (p.Name, p.Goals)).ToList()),
+        new Board("assists", "Top Assists", topAssists.Select(p => (p.Name, p.Assists)).ToList()),
+        new Board("motm", "Most MOTMs", topMotm.Select(p => (p.Name, p.Motm)).ToList())
+    };
 
     protected override async Task OnInitializedAsync()
     {
@@ -404,7 +464,7 @@
                 .Take(HomeGalleryCount)
                 .ToList();
 
-            var currentSeason = currentSeasonTask.Result;
+            currentSeason = currentSeasonTask.Result;
             selectedSeasonId = currentSeason?.Id ?? seasons.FirstOrDefault()?.Id ?? 0;
 
             if (selectedSeasonId > 0)
@@ -413,6 +473,21 @@
         finally
         {
             isLoading = false;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender && (isLoading || revealedLoaded)) return;
+        if (!isLoading) revealedLoaded = true;
+
+        try
+        {
+            await JS.InvokeVoidAsync("homeReveal.scan", "home-root");
+        }
+        catch (JSException)
+        {
+            // Decoration only. Without the script everything is simply shown.
         }
     }
 
@@ -425,9 +500,9 @@
         penaltyTable = penaltyTask.Result;
     }
 
-    async Task ScrollToTable()
+    async Task ScrollTo(string id)
     {
-        await JS.InvokeVoidAsync("scrollToId", "league-table");
+        await JS.InvokeVoidAsync("scrollToId", id);
     }
 
     static string RankClass(int rank) => rank switch
@@ -435,6 +510,15 @@
         1 => "gold",
         2 => "silver",
         3 => "bronze",
+        _ => ""
+    };
+
+    // Medal strips down the side of the top three rows.
+    static string RowClass(int position) => position switch
+    {
+        1 => "row-gold",
+        2 => "row-silver",
+        3 => "row-bronze",
         _ => ""
     };
 }

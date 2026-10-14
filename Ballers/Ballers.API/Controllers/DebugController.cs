@@ -2,6 +2,7 @@ using Ballers.API.Data;
 using Ballers.API.Models;
 using Ballers.API.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,14 +18,24 @@ namespace Ballers.API.Controllers
         private readonly ApplicationDbContext _db;
         private readonly IServiceProvider _sp;
         private readonly IKnockoutService _knockout;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ILeagueSettingsService _settings;
 
-        public DebugController(IWebHostEnvironment env, IConfiguration config, ApplicationDbContext db, IServiceProvider sp, IKnockoutService knockout)
+        // Every player account gets this password; new ones also get an address on
+        // this domain, so they are easy to spot among real sign-ups.
+        private const string TestPlayerPassword = "Ballers1!";
+        private const string TestPlayerDomain = "players.ballers.com";
+
+        public DebugController(IWebHostEnvironment env, IConfiguration config, ApplicationDbContext db, IServiceProvider sp,
+            IKnockoutService knockout, UserManager<ApplicationUser> userManager, ILeagueSettingsService settings)
         {
             _env = env;
             _config = config;
             _db = db;
             _sp = sp;
             _knockout = knockout;
+            _userManager = userManager;
+            _settings = settings;
         }
 
         private bool IsDebugAllowed() => _env.IsDevelopment() || _config.GetValue<bool>("IsUAT");
@@ -64,7 +75,9 @@ namespace Ballers.API.Controllers
                 await ResetDatabaseAsync();
                 await DevSeeder.SeedAsync(_sp);
                 await UnplayAllFixturesAsync();
-                return Ok(new { message = "Teams, players, and fixtures seeded. All fixtures unplayed." });
+                // A fresh season: every game still to come, starting next week.
+                await MoveActiveSeasonAsync(fixtures => DateTime.UtcNow.Date.AddDays(1) - fixtures.Min(f => f.WindowStart).Date);
+                return Ok(new { message = "Teams, players, and fixtures seeded. Every fixture is in the future, starting tomorrow." });
             }
             catch (Exception ex) { return StatusCode(500, new { message = $"Failed: {ex.Message}" }); }
         }
@@ -77,6 +90,8 @@ namespace Ballers.API.Controllers
             {
                 await ResetDatabaseAsync();
                 await DevSeeder.SeedAsync(_sp);
+                // Every game has been played, so all of them are in the past.
+                await MoveActiveSeasonAsync(fixtures => DateTime.UtcNow.Date.AddDays(-3) - LastKickoff(fixtures).Date);
                 await PlayFixturesAsync(skipLast: false);
                 var season = await _db.Seasons.FirstAsync(s => s.IsActive);
                 await CompleteKnockoutAsync(season.Id);
@@ -94,6 +109,9 @@ namespace Ballers.API.Controllers
             {
                 await ResetDatabaseAsync();
                 await DevSeeder.SeedAsync(_sp);
+                // The last game was yesterday and is waiting for its stats; the
+                // rest were before it.
+                await MoveActiveSeasonAsync(fixtures => DateTime.UtcNow.Date.AddDays(-1) - LastKickoff(fixtures).Date);
                 var last = await PlayFixturesAsync(skipLast: true);
                 if (last == null)
                     return StatusCode(500, new { message = "No fixtures found to skip." });
@@ -110,7 +128,7 @@ namespace Ballers.API.Controllers
                     awayTeam = awayTeam?.Name,
                     homeManager = homeUser?.Email,
                     awayManager = awayUser?.Email,
-                    password = "Manager123!"
+                    password = DevSeeder.ManagerPassword
                 });
             }
             catch (Exception ex) { return StatusCode(500, new { message = $"Failed: {ex.Message}" }); }
@@ -130,6 +148,323 @@ namespace Ballers.API.Controllers
                 return Ok(new { message = $"Season {nextNumber} created. All fixtures unplayed." });
             }
             catch (Exception ex) { return StatusCode(500, new { message = $"Failed: {ex.Message}" }); }
+        }
+
+        /// <summary>
+        /// Makes every player in the league loggable-in with the test password.
+        /// Active squad players with no account get an approved player account;
+        /// players who already have one keep it but have its password reset to
+        /// the test password. Anyone without a card gets one, with ratings spread
+        /// across bronze, silver and gold. Nothing else is touched, and running it
+        /// again only resets the passwords again.
+        /// </summary>
+        [HttpPost("setup-player-accounts")]
+        public async Task<IActionResult> SetupPlayerAccounts()
+        {
+            if (!IsDebugAllowed()) return NotFound();
+            try
+            {
+                var settings = await _settings.GetSettingsEntityAsync();
+                var rng = new Random(2026);
+
+                var existingCards = (await _db.PlayerCards.Select(c => c.PlayerId).ToListAsync()).ToHashSet();
+
+                // Hashing is the slow part, and the password is the same for every
+                // account, so it is hashed once. Each account still checks against
+                // it normally at login.
+                var hash = _userManager.PasswordHasher.HashPassword(new ApplicationUser(), TestPlayerPassword);
+
+                // ── Accounts that already exist: same account, test password ──
+                var linked = await _db.Users
+                    .Include(u => u.Player)
+                    .Where(u => u.PlayerId != null)
+                    .ToListAsync();
+
+                var reset = 0;
+                foreach (var user in linked)
+                {
+                    user.PasswordHash = hash;
+                    // A new stamp signs out anywhere the old password was in use.
+                    user.SecurityStamp = Guid.NewGuid().ToString();
+                    var update = await _userManager.UpdateAsync(user);
+                    if (!update.Succeeded)
+                        return StatusCode(500, new
+                        {
+                            message = $"Stopped resetting {user.Email}: " + string.Join("; ", update.Errors.Select(e => e.Description))
+                        });
+
+                    if (!await _userManager.IsInRoleAsync(user, "Player"))
+                        await _userManager.AddToRoleAsync(user, "Player");
+
+                    if (user.Player != null && existingCards.Add(user.Player.Id))
+                        _db.PlayerCards.Add(BuildTestCard(user.Player, settings, rng));
+
+                    reset++;
+                }
+
+                // ── Everyone else: a new account ──
+                var takenSet = linked.Select(u => u.PlayerId!.Value).ToHashSet();
+                var todo = await _db.Players
+                    .Where(p => p.IsActive)
+                    .OrderBy(p => p.TeamId).ThenBy(p => p.Number)
+                    .ToListAsync();
+                todo = todo.Where(p => !takenSet.Contains(p.Id)).ToList();
+
+                var created = 0;
+                foreach (var player in todo)
+                {
+                    var email = $"{EmailSlug(player.Name)}.{player.Id}@{TestPlayerDomain}";
+                    var user = new ApplicationUser
+                    {
+                        UserName = email,
+                        Email = email,
+                        EmailConfirmed = true,
+                        PasswordHash = hash,
+                        PlayerId = player.Id
+                    };
+
+                    var result = await _userManager.CreateAsync(user);
+                    if (!result.Succeeded)
+                        return StatusCode(500, new
+                        {
+                            message = $"Stopped at {player.Name}: " + string.Join("; ", result.Errors.Select(e => e.Description))
+                        });
+
+                    await _userManager.AddToRoleAsync(user, "Player");
+
+                    if (existingCards.Add(player.Id))
+                        _db.PlayerCards.Add(BuildTestCard(player, settings, rng));
+
+                    created++;
+                }
+
+                await _db.SaveChangesAsync();
+                return Ok(new
+                {
+                    message = $"{created} accounts created and {reset} existing accounts reset. " +
+                              $"Every player now logs in with {TestPlayerPassword}"
+                });
+            }
+            catch (Exception ex) { return StatusCode(500, new { message = $"Failed: {ex.Message}" }); }
+        }
+
+        /// <summary>
+        /// Every player account. The password is shown only where the account
+        /// really does still use the test password: each stored hash is checked
+        /// against it, so an account whose password has since been changed (or a
+        /// sign-up made after the last reset) shows as its own.
+        /// </summary>
+        [HttpGet("player-accounts")]
+        public async Task<IActionResult> GetPlayerAccounts()
+        {
+            if (!IsDebugAllowed()) return NotFound();
+
+            var settings = await _settings.GetSettingsEntityAsync();
+
+            var rows = await _db.Users
+                .Where(u => u.PlayerId != null)
+                .Select(u => new
+                {
+                    u.Email,
+                    u.PasswordHash,
+                    PlayerId = u.PlayerId!.Value,
+                    u.Player!.Name,
+                    u.Player.Number,
+                    u.Player.Position,
+                    Team = u.Player.Team!.Name
+                })
+                .ToListAsync();
+
+            // One reset gives every account the same hash, so checking each
+            // distinct hash once is enough, and keeps this quick.
+            var usesTestPassword = rows
+                .Select(r => r.PasswordHash)
+                .Where(h => !string.IsNullOrEmpty(h))
+                .Distinct()
+                .ToDictionary(h => h!, h => _userManager.PasswordHasher
+                    .VerifyHashedPassword(new ApplicationUser(), h!, TestPlayerPassword) != PasswordVerificationResult.Failed);
+
+            var cards = await _db.PlayerCards.ToDictionaryAsync(c => c.PlayerId);
+
+            var list = rows
+                .Select(r =>
+                {
+                    cards.TryGetValue(r.PlayerId, out var card);
+                    var overall = card == null ? (int?)null : PlayerAttributes.ComputeOverall(card);
+                    return new
+                    {
+                        r.Name,
+                        r.Team,
+                        r.Number,
+                        r.Position,
+                        r.Email,
+                        Password = r.PasswordHash != null && usesTestPassword.GetValueOrDefault(r.PasswordHash)
+                            ? TestPlayerPassword
+                            : null,
+                        Overall = overall,
+                        Tier = overall == null ? null
+                            : PlayerAttributes.Tier(overall.Value, settings.SilverOverallThreshold, settings.GoldOverallThreshold),
+                        UnspentPoints = card?.UnspentPoints
+                    };
+                })
+                .OrderBy(r => r.Team).ThenBy(r => r.Number)
+                .ToList();
+
+            return Ok(list);
+        }
+
+        /// <summary>
+        /// Every manager login, with their team. As with players, the password is
+        /// shown only where the account still uses the seeded one.
+        /// </summary>
+        [HttpGet("manager-accounts")]
+        public async Task<IActionResult> GetManagerAccounts()
+        {
+            if (!IsDebugAllowed()) return NotFound();
+
+            var rows = await (from u in _db.Users
+                              join ur in _db.UserRoles on u.Id equals ur.UserId
+                              join r in _db.Roles on ur.RoleId equals r.Id
+                              where r.Name == "Manager"
+                              select new
+                              {
+                                  u.Email,
+                                  u.PasswordHash,
+                                  Team = u.Team != null ? u.Team.Name : null,
+                                  ManagerName = u.Team != null ? u.Team.ManagerName : null
+                              })
+                .ToListAsync();
+
+            var usesSeedPassword = rows
+                .Select(r => r.PasswordHash)
+                .Where(h => !string.IsNullOrEmpty(h))
+                .Distinct()
+                .ToDictionary(h => h!, h => _userManager.PasswordHasher
+                    .VerifyHashedPassword(new ApplicationUser(), h!, DevSeeder.ManagerPassword) != PasswordVerificationResult.Failed);
+
+            var list = rows
+                .Select(r => new
+                {
+                    Team = r.Team ?? "(no team)",
+                    r.ManagerName,
+                    r.Email,
+                    Password = r.PasswordHash != null && usesSeedPassword.GetValueOrDefault(r.PasswordHash)
+                        ? DevSeeder.ManagerPassword
+                        : null
+                })
+                .OrderBy(r => r.Team)
+                .ToList();
+
+            return Ok(list);
+        }
+
+        /// <summary>
+        /// For testing upgrades: every card goes back to bronze, with its stats
+        /// re-spread to a bronze overall, and gets 200 points to spend. Only
+        /// existing cards are touched; players without an account have none, so
+        /// run "Create Player Accounts" first.
+        /// </summary>
+        [HttpPost("reset-cards-bronze")]
+        public async Task<IActionResult> ResetCardsToBronze()
+        {
+            if (!IsDebugAllowed()) return NotFound();
+            try
+            {
+                const int TestPoints = 200;
+                var settings = await _settings.GetSettingsEntityAsync();
+                var cap = Math.Max(10, settings.AttributeCap);
+                var rng = new Random(2027);
+
+                var cards = await _db.PlayerCards.Include(c => c.Player).ToListAsync();
+                if (cards.Count == 0)
+                    return BadRequest(new { message = "No cards yet. Run \"Create Player Accounts\" first." });
+
+                foreach (var card in cards)
+                {
+                    SetTestStats(card, card.Player!, BronzeOverall(settings, rng), cap, rng);
+                    card.UnspentPoints = TestPoints;
+                    card.TotalPointsEarned = PlayerAttributes.Total(card) + TestPoints;
+                }
+
+                await _db.SaveChangesAsync();
+                return Ok(new { message = $"{cards.Count} cards reset to bronze, each with {TestPoints} points to spend." });
+            }
+            catch (Exception ex) { return StatusCode(500, new { message = $"Failed: {ex.Message}" }); }
+        }
+
+        // A card for a test player. The overall is drawn so roughly four in ten
+        // are bronze, a third silver and a quarter gold, against whatever the
+        // league's thresholds are; the six stats lean the way the position would
+        // (forwards finish, defenders tackle) and add up to that overall.
+        private static PlayerCardStats BuildTestCard(Player player, LeagueSetting settings, Random rng)
+        {
+            var silver = settings.SilverOverallThreshold;
+            var gold = settings.GoldOverallThreshold;
+            var cap = Math.Max(10, settings.AttributeCap);
+
+            var roll = rng.Next(100);
+            var overall = roll < 40 ? BronzeOverall(settings, rng)
+                        : roll < 75 ? rng.Next(silver, Math.Max(silver + 1, gold))
+                        : rng.Next(gold, Math.Max(gold + 1, Math.Min(cap, gold + 25) + 1));
+
+            var card = new PlayerCardStats { PlayerId = player.Id };
+            SetTestStats(card, player, overall, cap, rng);
+
+            var unspent = rng.Next(0, 41);
+            card.UnspentPoints = unspent;
+            card.TotalPointsEarned = PlayerAttributes.Total(card) + unspent;
+            return card;
+        }
+
+        // A bronze overall: somewhere in the lower two thirds of the bronze band.
+        private static int BronzeOverall(LeagueSetting settings, Random rng)
+        {
+            var silver = settings.SilverOverallThreshold;
+            return rng.Next(Math.Max(5, silver / 3), Math.Max(6, silver));
+        }
+
+        // Spreads an overall across the six stats, leaning the way the position
+        // would (forwards finish, defenders tackle), so they add up to exactly
+        // that overall.
+        private static void SetTestStats(PlayerCardStats card, Player player, int overall, int cap, Random rng)
+        {
+            // Weights in card order: FIN, TAC, PAS, DRI, PAC, STR.
+            double[] lean = player.Position switch
+            {
+                "FWD" => new[] { 1.5, 0.5, 0.9, 1.2, 1.3, 0.8 },
+                "MID" => new[] { 0.9, 0.9, 1.5, 1.3, 1.0, 0.8 },
+                "DEF" => new[] { 0.5, 1.5, 0.9, 0.7, 1.0, 1.4 },
+                "GK"  => new[] { 0.4, 1.3, 1.0, 0.6, 0.8, 1.5 },
+                _     => new[] { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 }
+            };
+
+            var weights = lean.Select(w => w * (0.85 + rng.NextDouble() * 0.3)).ToArray();
+            var sum = weights.Sum();
+            var total = overall * PlayerAttributes.Count;
+            var stats = weights.Select(w => Math.Clamp((int)Math.Round(total * w / sum), 1, cap)).ToArray();
+
+            // Rounding can leave the total a point or two out; settle it on the
+            // strongest stat so the overall comes out exactly as drawn.
+            var strongest = Array.IndexOf(stats, stats.Max());
+            stats[strongest] = Math.Clamp(stats[strongest] + (total - stats.Sum()), 1, cap);
+
+            card.Finishing = stats[0];
+            card.Tackling = stats[1];
+            card.Passing = stats[2];
+            card.Dribbling = stats[3];
+            card.Pace = stats[4];
+            card.Strength = stats[5];
+        }
+
+        // "Jamie O'Neill" -> "jamie.oneill"
+        private static string EmailSlug(string name)
+        {
+            var parts = name.ToLowerInvariant()
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                .Select(p => new string(p.Where(char.IsLetterOrDigit).ToArray()))
+                .Where(p => p.Length > 0);
+            var slug = string.Join(".", parts);
+            return slug.Length == 0 ? "player" : slug;
         }
 
         // ── Helpers ───────────────────────────────────────────────────────────────
@@ -239,12 +574,44 @@ namespace Ballers.API.Controllers
             foreach (var f in fixtures)
             {
                 f.IsPlayed = false;
+                f.HomeStatsSubmitted = false;
+                f.AwayStatsSubmitted = false;
                 f.HomeScore = 0;
                 f.AwayScore = 0;
                 f.HomeCaptainId = null;
                 f.HomeViceCaptainId = null;
                 f.AwayCaptainId = null;
                 f.AwayViceCaptainId = null;
+            }
+            await _db.SaveChangesAsync();
+        }
+
+        private static DateTime LastKickoff(List<Fixture> fixtures) =>
+            fixtures.Max(f => f.Kickoff ?? f.WindowEnd);
+
+        /// <summary>
+        /// Moves the active season through time, fixtures and all, by whole days
+        /// (so kickoff times of day stay put). The shift is worked out from the
+        /// season's fixtures, e.g. "so the first week starts tomorrow".
+        /// </summary>
+        private async Task MoveActiveSeasonAsync(Func<List<Fixture>, TimeSpan> shiftFor)
+        {
+            var season = await _db.Seasons.FirstOrDefaultAsync(s => s.IsActive);
+            if (season == null) return;
+
+            var fixtures = await _db.Fixtures.Where(f => f.SeasonId == season.Id).ToListAsync();
+            if (fixtures.Count == 0) return;
+
+            var shift = TimeSpan.FromDays(Math.Round(shiftFor(fixtures).TotalDays));
+            if (shift == TimeSpan.Zero) return;
+
+            season.StartDate += shift;
+            season.EndDate += shift;
+            foreach (var f in fixtures)
+            {
+                f.WindowStart += shift;
+                f.WindowEnd += shift;
+                if (f.Kickoff.HasValue) f.Kickoff = f.Kickoff.Value + shift;
             }
             await _db.SaveChangesAsync();
         }
@@ -283,6 +650,9 @@ namespace Ballers.API.Controllers
                 f.HomeScore = homeGoals;
                 f.AwayScore = awayGoals;
                 f.IsPlayed = true;
+                // A result only counts once both sides have sent their stats.
+                f.HomeStatsSubmitted = true;
+                f.AwayStatsSubmitted = true;
 
                 var homeOutfield = homeSquad.Where(p => p.Position != "GK").ToList();
                 var awayOutfield = awaySquad.Where(p => p.Position != "GK").ToList();

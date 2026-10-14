@@ -445,3 +445,50 @@
 }
 
 .remove-btn:hover { background: rgba(255, 255, 255, 0.06); }
+
+/* ── Player sign-ups waiting for approval ── */
+
+.account-requests {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+/* This page is dark, so the row is tinted and lit to match the squad cards
+   around it rather than the light surfaces used elsewhere. */
+.account-request {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border: 1px solid rgba(250, 204, 21, 0.18);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.account-request-who {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+}
+
+.account-request-name {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #F8FAFC;
+}
+
+.account-request-email,
+.account-request-claim {
+    font-size: 0.78rem;
+    color: rgba(248, 250, 252, 0.6);
+}
+
+.account-request-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}

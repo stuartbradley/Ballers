@@ -6,6 +6,9 @@ namespace Ballers.API.Data
 {
     public static class DevSeeder
     {
+        // Every seeded manager logs in with this.
+        public const string ManagerPassword = "Manager123!";
+
         private static readonly Random _rng = new(42);
 
         private static readonly (string Name, string Manager, int YearFormed, string Phone, string Bio)[] TeamData =
@@ -76,7 +79,8 @@ namespace Ballers.API.Data
             var teams = await db.Teams.ToListAsync();
             if (teams.Count == 0) throw new InvalidOperationException("No teams found.");
 
-            var seasonStart = DateTime.UtcNow.Date;
+            // Tomorrow, so every game of the new season is still to come.
+            var seasonStart = DateTime.UtcNow.Date.AddDays(1);
             var season = new Season
             {
                 SeasonNumber = seasonNumber,
@@ -223,7 +227,7 @@ namespace Ballers.API.Data
                     TeamId = teams[i].Id,
                     IsAdmin = false
                 };
-                var result = await userManager.CreateAsync(user, "Manager123!");
+                var result = await userManager.CreateAsync(user, ManagerPassword);
                 if (result.Succeeded)
                     await userManager.AddToRoleAsync(user, "Manager");
             }
@@ -322,7 +326,10 @@ namespace Ballers.API.Data
                     Kickoff     = kickoff,
                     Location    = venue.Location,
                     Postcode    = venue.Postcode,
-                    IsPlayed    = kickoff < DateTime.UtcNow
+                    IsPlayed    = kickoff < DateTime.UtcNow,
+                    // A played result has both sides' stats in.
+                    HomeStatsSubmitted = kickoff < DateTime.UtcNow,
+                    AwayStatsSubmitted = kickoff < DateTime.UtcNow
                 });
             }
 

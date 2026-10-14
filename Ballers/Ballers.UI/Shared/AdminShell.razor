@@ -1,0 +1,99 @@
+@* The frame round every admin page: a sidebar of sections (a strip of tabs on
+   a phone) and the page's title. Styles are in wwwroot/css/admin.css.
+
+   Section is the key of the page's own sidebar entry, so it shows as current.
+   Links marked Out leave the admin area for a page that managers or the
+   public also use. *@
+<div class="adm-shell">
+    <aside class="adm-side" aria-label="Admin sections">
+        <span class="adm-side-brand">League admin</span>
+        @foreach (var group in Groups)
+        {
+            <div class="adm-side-group">
+                <span class="adm-side-label">@group.Label</span>
+                @foreach (var item in group.Items)
+                {
+                    <a href="@item.Href" class="@(item.Key == Section ? "is-active" : "")"
+                       aria-current="@(item.Key == Section ? "page" : null)">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="@item.Icon" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                        @item.Label
+                        @if (item.Out)
+                        {
+                            <span class="adm-side-out" title="Opens the shared page">↗</span>
+                        }
+                    </a>
+                }
+            </div>
+        }
+    </aside>
+
+    <nav class="adm-tabs" aria-label="Admin sections">
+        @foreach (var item in Groups.SelectMany(g => g.Items))
+        {
+            <a href="@item.Href" class="@(item.Key == Section ? "is-active" : "")"
+               aria-current="@(item.Key == Section ? "page" : null)">@item.Label</a>
+        }
+    </nav>
+
+    <main class="adm-main">
+        <header class="adm-head">
+            <div>
+                <h1>@Title</h1>
+                @if (!string.IsNullOrEmpty(Subtitle))
+                {
+                    <p>@Subtitle</p>
+                }
+            </div>
+            @if (Actions != null)
+            {
+                <div class="adm-head-actions">@Actions</div>
+            }
+        </header>
+
+        @ChildContent
+    </main>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Section { get; set; } = "";
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+    [Parameter] public string? Subtitle { get; set; }
+    [Parameter] public RenderFragment? Actions { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private record Item(string Key, string Label, string Href, string Icon, bool Out = false);
+    private record Group(string Label, Item[] Items);
+
+    // Icon paths are 24×24 line drawings.
+    private static readonly Group[] Groups =
+    {
+        new("League", new Item[]
+        {
+            new("overview", "Overview", "/admin", "M4 13h6V4H4zm10 7h6v-9h-6zM4 20h6v-4H4zm10-11h6V4h-6z"),
+            new("season", "Season & fixtures", "/admin/season", "M4 6h16M4 6v13h16V6M8 3v6m8-6v6M4 11h16"),
+            new("results", "Results", "/manager-fixtures", "M5 4h14v16H5zM9 9h6m-6 4h6m-6 4h3", Out: true),
+            new("knockout", "Knockout", "/knockout", "M4 5h5v4H4zm0 10h5v4H4zm11-5h5v4h-5zM9 7h3v10H9m3-5h3", Out: true),
+        }),
+        new("People", new Item[]
+        {
+            new("accounts", "Accounts", "/admin/accounts", "M16 19v-1a4 4 0 0 0-8 0v1M12 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm8 8v-1a3 3 0 0 0-2-2.8M4 19v-1a3 3 0 0 1 2-2.8"),
+            new("squads", "Squads", "/admin/squads", "M7 5h10l2 4-3 2v8H8v-8L5 9z"),
+            new("referees", "Referees", "/referees", "M12 4v16M5 8l7-4 7 4M5 8v4c0 3 3 5 7 6 4-1 7-3 7-6V8", Out: true),
+            new("cards", "Player cards", "/admin/cards", "M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm5 5v4m-3 3h6"),
+        }),
+        new("Content", new Item[]
+        {
+            new("motd", "Match of the Day", "/admin/motd", "M4 5h16v12H4zM8 21h8M10 17v4m4-4v4"),
+            new("galleries", "Galleries", "/admin/galleries", "M4 5h16v14H4zm0 10 5-5 4 4 3-3 4 4M15 9h.01"),
+        }),
+        new("Awards", new Item[]
+        {
+            new("fairplay", "Fairplay", "/admin/fairplay", "M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"),
+            new("truemotm", "True MOTM", "/admin/true-motm", "M12 3l2.5 5 5.5.8-4 3.9.9 5.5L12 15.6 7.1 18.2l.9-5.5-4-3.9 5.5-.8z"),
+        }),
+        new("Setup", new Item[]
+        {
+            new("settings", "Settings", "/admin/settings", "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19 12l2-1-2-4-2 1-2-1V5h-6v2l-2 1-2-1-2 4 2 1v0l-2 1 2 4 2-1 2 1v2h6v-2l2-1 2 1 2-4z"),
+        }),
+    };
+}

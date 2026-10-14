@@ -10,14 +10,25 @@
 
 @inherits LayoutComponentBase
 
-<header class="main-header">
+@* Dark over the pages that are dark from top to bottom (home, My Card,
+   Fixtures, Teams, each team's page, Stats, Team of the Week, the
+   galleries, the admin pages and the manager's pages);
+   white everywhere else. The layout re-renders on every navigation, so this
+   follows the route. *@
+<header class="main-header @(IsDarkPage ? "header-dark" : "")">
     <div class="header-inner">
 
         <div class="logo-area">
             <div class="logo"><img src="/images/BBL-Logo.png" alt="BBL Logo" class="logo-img" /></div>
             <AuthorizeView Context="auth">
                 <Authorized>
-                    <span class="hello-text">Hello @teamName</span>
+                    @* A player's nav fills the header, leaving the greeting only
+                       enough room to render as "Hello …". Their name is in the
+                       mobile drawer instead. *@
+                    @if (!auth.User.IsInRole("Player"))
+                    {
+                        <span class="hello-text">Hello @teamName</span>
+                    }
                 </Authorized>
             </AuthorizeView>
         </div>
@@ -42,8 +53,23 @@
             }
             <AuthorizeView>
                 <Authorized>
-                    <NavLink href="/dashboard">Dashboard</NavLink>
-                    <NavLink href="/guide">Guide</NavLink>
+                    @* A player's card is their home, so it takes the Dashboard's
+                       place rather than adding a link. The header is capped at
+                       1380px and has no room for another one at this width. *@
+                    @if (context.User.IsInRole("Player"))
+                    {
+                        <NavLink href="/my-card">My Card</NavLink>
+                    }
+                    else if (context.User.IsInRole("Admin"))
+                    {
+                        <NavLink href="/admin">Admin</NavLink>
+                    }
+                    else
+                    {
+                        @* A manager's dashboard is their HQ; a referee's stays a dashboard. *@
+                        <NavLink href="/dashboard">@(context.User.IsInRole("Manager") ? "HQ" : "Dashboard")</NavLink>
+                    }
+                    @* The guide is reached from the manager's Help tab and the referee dashboard. *@
                     <NotificationBell />
                     <a class="logout-link" @onclick="Logout" @onclick:preventDefault>Logout</a>
                 </Authorized>
@@ -93,8 +119,19 @@
         <NavLink href="/sponsor-us" @onclick="CloseNav">Sponsor Us</NavLink>
         <AuthorizeView>
             <Authorized>
-                <NavLink href="/dashboard" @onclick="CloseNav">Dashboard</NavLink>
-                <NavLink href="/guide" @onclick="CloseNav">Guide</NavLink>
+                @* A player's card is their home; they have no dashboard. *@
+                @if (context.User.IsInRole("Player"))
+                {
+                    <NavLink href="/my-card" @onclick="CloseNav">My Card</NavLink>
+                }
+                else if (context.User.IsInRole("Admin"))
+                {
+                    <NavLink href="/admin" @onclick="CloseNav">Admin</NavLink>
+                }
+                else
+                {
+                    <NavLink href="/dashboard" @onclick="CloseNav">@(context.User.IsInRole("Manager") ? "HQ" : "Dashboard")</NavLink>
+                }
                 <NavLink href="/change-password" @onclick="CloseNav">Change Password</NavLink>
                 <button class="mobile-logout-btn" @onclick="Logout">Logout</button>
             </Authorized>
@@ -127,7 +164,10 @@
         var user = authState.User;
 
         if (user.Identity?.IsAuthenticated == true)
-            teamName = user.FindFirst("TeamName")?.Value
+            // A player is greeted by their own name rather than their team's, since
+            // the team is their manager's, not theirs.
+            teamName = (user.IsInRole("Player") ? user.FindFirst("PlayerName")?.Value : null)
+                       ?? user.FindFirst("TeamName")?.Value
                        ?? (user.IsInRole("Admin") ? "Admin"
                            : user.IsInRole("Referee") ? "Referee"
                            : user.Identity?.Name);
@@ -136,6 +176,24 @@
         knockoutGenerated = season?.IsKnockoutGenerated ?? false;
 
         StateHasChanged();
+    }
+
+    private static readonly HashSet<string> DarkPages = new(StringComparer.OrdinalIgnoreCase) { "", "my-card", "fixtures", "teams", "stats", "totw", "galleries", "admin",
+        "dashboard", "manager-fixtures", "my-squad", "my-team", "referees" };
+
+    // Pages under a dark prefix, such as /team/3.
+    private static readonly string[] DarkPrefixes = { "team/", "gallery/", "admin/", "fixture/" };
+
+    private bool IsDarkPage
+    {
+        get
+        {
+            var path = Nav.ToBaseRelativePath(Nav.Uri);
+            var end = path.IndexOfAny(new[] { '?', '#' });
+            var page = (end >= 0 ? path[..end] : path).Trim('/');
+            return DarkPages.Contains(page)
+                || DarkPrefixes.Any(p => page.StartsWith(p, StringComparison.OrdinalIgnoreCase));
+        }
     }
 
     private void ToggleNav() => navOpen = !navOpen;

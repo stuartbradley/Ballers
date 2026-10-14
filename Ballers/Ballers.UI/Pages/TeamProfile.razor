@@ -1,160 +1,351 @@
 @page "/team/{TeamId:int}"
 @using Ballers.Models
 @using Ballers.Services
-@using Microsoft.AspNetCore.Components.WebAssembly.Hosting
+@using Ballers.Shared
 @inject TeamService TeamService
+@inject FixtureService FixtureService
+@inject SeasonService SeasonService
 @inject HttpClient Http
-@inject IWebAssemblyHostEnvironment HostEnv
 
 <PageTitle>@(profile?.Name ?? "Team Profile")</PageTitle>
 
-<div class="team-profile-page">
+@* A club's page: its season at a glance, its next game and form, who leads it,
+   and its squad as player cards that turn over to show their season. Tinted
+   by the club's home kit colour. *@
+<div class="team-profile-page" style="@KitStyle(profile?.HomeKitColour)">
 
     @if (isLoading)
     {
-        <div class="profile-loading">
-            <LoadingSpinner />
-        </div>
+        <div class="tp-loading"><LoadingSpinner /></div>
     }
     else if (profile == null)
     {
-        <div class="profile-404">
+        <div class="tp-404">
             <h2>Team not found</h2>
-            <NavLink href="/">Back to home</NavLink>
+            <a href="/teams">Back to all teams</a>
         </div>
     }
     else
     {
-        <div class="profile-hero">
-            <div class="profile-hero-inner">
-                <div class="profile-crest-wrap">
-                    @if (!string.IsNullOrEmpty(profile.ProfileImageUrl))
-                    {
-                        <img class="profile-crest"
-                             src="@(Http.BaseAddress!.ToString().TrimEnd('/') + profile.ProfileImageUrl)"
-                             alt="@profile.Name crest" />
-                    }
-                    else
-                    {
-                        <div class="profile-crest-placeholder">
-                            <span>@Initials(profile.Name)</span>
-                        </div>
-                    }
-                </div>
-                <div class="profile-hero-info">
-                    <p class="profile-eyebrow">Club Profile</p>
-                    <h1 class="profile-team-name">@profile.Name</h1>
-                    <div class="profile-meta-pills">
-                        @if (profile.YearFormed.HasValue)
-                        {
-                            <span class="meta-pill">Est. @profile.YearFormed</span>
-                        }
-                        @if (!string.IsNullOrEmpty(profile.ManagerName))
-                        {
-                            <span class="meta-pill">@profile.ManagerName</span>
-                        }
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- ── HERO ── -->
+        <header class="tp-hero">
+            <a class="tp-backlink" href="/teams">← All teams</a>
 
-        <div class="profile-body">
-
-            @if (!string.IsNullOrEmpty(profile.Bio))
-            {
-                <div class="profile-card bio-card">
-                    <h3>About the Club</h3>
-                    <p class="bio-text">@profile.Bio</p>
-                </div>
-            }
-
-            @if (!string.IsNullOrEmpty(profile.ManagerName))
-            {
-                <div class="profile-card manager-card-section">
-                    <h3>Manager</h3>
-                    <div class="manager-card-wrap">
-                        <PlayerCard Name="@profile.ManagerName"
-                                    Number="@profile.Wins"
-                                    Position="MGR"
-                                    TierOverride="@ManagerTier(profile.Wins)"
-                                    ImageUrl="@profile.ManagerImageBase64" />
-                    </div>
-                </div>
-            }
-
-            @if (playerCards.Any())
-            {
-                <div class="profile-card squad-card">
-                    <h3>Squad</h3>
-                    <div class="player-cards-grid">
-                        @foreach (var p in playerCards)
-                        {
-                            <PlayerCard Name="@p.Name"
-                                                Number="@p.Number"
-                                                Position="@p.Position"
-                                                Goals="@p.Goals"
-                                                Assists="@p.Assists"
-                                                Motm="@p.Motm"
-                                                CleanSheets="@p.CleanSheets"
-                                                ImageUrl="@p.ImageUrl" />
-                        }
-                    </div>
-                </div>
-            }
-
-            @if (!string.IsNullOrEmpty(profile.HomeKitColour) || !string.IsNullOrEmpty(profile.AwayKitColour))
-            {
-                <div class="profile-card kit-card">
-                    <h3>Kits</h3>
-                    <div class="kit-grid">
-                        @if (!string.IsNullOrEmpty(profile.HomeKitColour))
-                        {
-                            <div class="kit-item">
-                                @KitJersey(profile.HomeKitColour!)
-                                <span class="kit-label">Home</span>
-                            </div>
-                        }
-                        @if (!string.IsNullOrEmpty(profile.AwayKitColour))
-                        {
-                            <div class="kit-item">
-                                @KitJersey(profile.AwayKitColour!)
-                                <span class="kit-label">Away</span>
-                            </div>
-                        }
-                    </div>
-                </div>
-            }
-
-            <div class="profile-card contact-card">
-                <h3>Club Info</h3>
-                <div class="info-grid">
-                    @if (!string.IsNullOrEmpty(profile.ManagerName))
-                    {
-                        <div class="info-row">
-                            <span class="info-label">Manager</span>
-                            <span class="info-value">@profile.ManagerName</span>
-                        </div>
-                    }
-                    @if (profile.YearFormed.HasValue)
-                    {
-                        <div class="info-row">
-                            <span class="info-label">Founded</span>
-                            <span class="info-value">@profile.YearFormed</span>
-                        </div>
-                    }
-                    @if (!string.IsNullOrEmpty(profile.PhoneNumber))
-                    {
-                        <div class="info-row">
-                            <span class="info-label">Contact</span>
-                            <a class="info-value info-phone" href="tel:@profile.PhoneNumber">@profile.PhoneNumber</a>
-                        </div>
-                    }
-                </div>
-                @if (string.IsNullOrEmpty(profile.ManagerName) && !profile.YearFormed.HasValue && string.IsNullOrEmpty(profile.PhoneNumber))
+            <div class="tp-crest-wrap">
+                @if (!string.IsNullOrEmpty(profile.ProfileImageUrl))
                 {
-                    <p class="no-info">No club information available yet.</p>
+                    <img class="tp-crest" src="@(Http.BaseAddress!.ToString().TrimEnd('/') + profile.ProfileImageUrl)" alt="@profile.Name crest" />
+                }
+                else
+                {
+                    <div class="tp-crest tp-crest-placeholder"><span>@Initials(profile.Name)</span></div>
                 }
             </div>
+
+            <span class="tp-eyebrow">Club profile</span>
+            <h1>@profile.Name</h1>
+            <div class="tp-pills">
+                @if (profile.YearFormed.HasValue)
+                {
+                    <span class="tp-pill">Est. @profile.YearFormed</span>
+                }
+                @if (!string.IsNullOrEmpty(profile.ManagerName))
+                {
+                    <span class="tp-pill">Manager: @profile.ManagerName</span>
+                }
+            </div>
+
+            @* The season at a glance. *@
+            @if (overview != null)
+            {
+                <div class="tp-strip">
+                    <div class="tp-stat tp-stat-pos">
+                        <strong>@(overview.Position is int p ? $"#{p}" : "—")</strong>
+                        <span>League</span>
+                    </div>
+                    <div class="tp-stat"><strong>@overview.Played</strong><span>Played</span></div>
+                    <div class="tp-stat"><strong>@overview.Won</strong><span>Won</span></div>
+                    <div class="tp-stat"><strong>@overview.Drawn</strong><span>Drawn</span></div>
+                    <div class="tp-stat"><strong>@overview.Lost</strong><span>Lost</span></div>
+                    <div class="tp-stat tp-stat-pts"><strong>@overview.Points</strong><span>Points</span></div>
+                    <div class="tp-stat tp-stat-form">
+                        <span class="tp-form">
+                            @if (overview.Form.Any())
+                            {
+                                @foreach (var r in overview.Form)
+                                {
+                                    <span class="tp-dot tp-dot-@r.ToLower()">@r</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="tp-none">—</span>
+                            }
+                        </span>
+                        <span>Form</span>
+                    </div>
+                    <div class="tp-stat tp-stat-rating tier-@(overview.SquadTier ?? "none")">
+                        <strong>@(overview.SquadOverall?.ToString() ?? "—")</strong>
+                        <span>Squad rating</span>
+                    </div>
+                </div>
+            }
+        </header>
+
+        <div class="tp-body">
+
+            <!-- ── NEXT GAME + FORM ── -->
+            @if (nextGame != null || recent.Any())
+            {
+                <section class="tp-section">
+                    <h2 class="tp-h2">This season</h2>
+                    <div class="tp-season">
+                        <div class="tp-panel tp-next">
+                            <span class="tp-panel-label">Next game</span>
+                            @if (nextGame is { } ng)
+                            {
+                                var home = ng.Match.Home == profile.Name;
+                                <div class="tp-next-vs">
+                                    <span class="tp-ha">@(home ? "Home" : "Away")</span>
+                                    <span class="tp-next-opp">v @(home ? ng.Match.Away : ng.Match.Home)</span>
+                                </div>
+                                <div class="tp-next-meta">
+                                    <span>Week @ng.Week</span>
+                                    @if (!string.IsNullOrEmpty(ng.Match.Day) || !string.IsNullOrEmpty(ng.Match.Time))
+                                    {
+                                        <span>@ng.Match.Day@(string.IsNullOrEmpty(ng.Match.Time) ? "" : $" · {ng.Match.Time}")</span>
+                                    }
+                                    @if (!string.IsNullOrEmpty(ng.Match.Location))
+                                    {
+                                        <span>@ng.Match.Location</span>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="tp-muted">No more games this season.</p>
+                            }
+                            <a class="tp-link" href="/fixtures">All fixtures →</a>
+                        </div>
+
+                        <div class="tp-panel tp-recent">
+                            <span class="tp-panel-label">Last @recent.Count results</span>
+                            @if (recent.Any())
+                            {
+                                <ul class="tp-results">
+                                    @foreach (var (week, m) in recent)
+                                    {
+                                        var home = m.Home == profile.Name;
+                                        var us = home ? m.HomeScore : m.AwayScore;
+                                        var them = home ? m.AwayScore : m.HomeScore;
+                                        var res = us > them ? "w" : us == them ? "d" : "l";
+                                        <li>
+                                            <span class="tp-dot tp-dot-@res">@res.ToUpper()</span>
+                                            <span class="tp-res-opp">@(home ? "v" : "@") @(home ? m.Away : m.Home)</span>
+                                            <span class="tp-res-score">@us – @them</span>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <p class="tp-muted">No results yet.</p>
+                            }
+                        </div>
+                    </div>
+                </section>
+            }
+
+            <!-- ── TEAM LEADERS ── -->
+            @if (playerCards.Any())
+            {
+                <section class="tp-section">
+                    <h2 class="tp-h2">Team leaders</h2>
+                    <div class="tp-leaders">
+                        @foreach (var leader in Leaders)
+                        {
+                            <div class="tp-panel tp-leader">
+                                <span class="tp-panel-label">@leader.Title</span>
+                                @if (leader.Player != null && leader.Value > 0)
+                                {
+                                    <span class="tp-leader-value">@leader.Value</span>
+                                    <span class="tp-leader-name">@leader.Player.Name</span>
+                                    <span class="tp-leader-sub">#@leader.Player.Number · @leader.Player.Position</span>
+                                }
+                                else
+                                {
+                                    <span class="tp-muted">Nobody yet</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                </section>
+            }
+
+            <!-- ── SQUAD ── -->
+            @if (playerCards.Any())
+            {
+                <section class="tp-section">
+                    <div class="tp-squad-head">
+                        <h2 class="tp-h2">Squad</h2>
+                        <div class="tp-tiers">
+                            @foreach (var (tier, count) in TierCounts)
+                            {
+                                <span class="tp-tier-chip tier-@tier">@count @tier</span>
+                            }
+                            @if (playerCards.Count(p => p.Attributes == null) is var noCard and > 0)
+                            {
+                                <span class="tp-tier-chip">@noCard without a card</span>
+                            }
+                        </div>
+                        <div class="tp-sort" role="group" aria-label="Arrange squad">
+                            <button type="button" class="tp-sort-btn @(byPosition ? "is-active" : "")" aria-pressed="@(byPosition ? "true" : "false")" @onclick="() => byPosition = true">By position</button>
+                            <button type="button" class="tp-sort-btn @(!byPosition ? "is-active" : "")" aria-pressed="@(!byPosition ? "true" : "false")" @onclick="() => byPosition = false">By rating</button>
+                        </div>
+                    </div>
+
+                    @* The highest-rated card, shown large. *@
+                    @if (TopRated is { } star)
+                    {
+                        <div class="tp-featured">
+                            <div class="tp-featured-card">
+                                <PlayerCard Name="@star.Name" Number="@star.Number" Position="@star.Position"
+                                            Goals="@star.Goals" Assists="@star.Assists" Motm="@star.Motm" CleanSheets="@star.CleanSheets"
+                                            Attributes="@star.Attributes" Tier="@star.Tier" ImageUrl="@star.ImageUrl" />
+                            </div>
+                            <div class="tp-featured-text">
+                                <span class="tp-panel-label">Top rated</span>
+                                <h3>@star.Name</h3>
+                                <p>
+                                    Overall <strong>@star.Attributes!.Overall</strong>, a <strong class="tier-word tier-@star.Tier">@star.Tier</strong> card.
+                                    @star.Goals @(star.Goals == 1 ? "goal" : "goals"), @star.Assists @(star.Assists == 1 ? "assist" : "assists")
+                                    and @star.Motm man of the match @(star.Motm == 1 ? "award" : "awards") this season.
+                                </p>
+                            </div>
+                        </div>
+                    }
+
+                    <p class="tp-hint">Hover a card (or tap it) to see its season.</p>
+
+                    @foreach (var group in SquadGroups)
+                    {
+                        @if (group.Title != null)
+                        {
+                            <h3 class="tp-group">@group.Title <span>@group.Players.Count</span></h3>
+                        }
+                        <div class="tp-squad-grid">
+                            @foreach (var p in group.Players)
+                            {
+                                var isFlipped = flipped.Contains(p.Id);
+                                <div class="tp-flip @(isFlipped ? "is-flipped" : "")"
+                                     tabindex="0" role="button"
+                                     aria-pressed="@(isFlipped ? "true" : "false")"
+                                     aria-label="@($"{p.Name}. Show season stats")"
+                                     @onclick="() => Toggle(p.Id)"
+                                     @onkeydown="e => OnKey(e, p.Id)">
+                                    <div class="tp-flip-inner">
+                                        <div class="tp-face tp-front">
+                                            <PlayerCard Name="@p.Name" Number="@p.Number" Position="@p.Position"
+                                                        Goals="@p.Goals" Assists="@p.Assists" Motm="@p.Motm" CleanSheets="@p.CleanSheets"
+                                                        Attributes="@p.Attributes" Tier="@p.Tier" ImageUrl="@p.ImageUrl" />
+                                        </div>
+                                        <div class="tp-face tp-back">
+                                            <span class="tp-back-name">@p.Name</span>
+                                            <span class="tp-back-sub">#@p.Number · @p.Position</span>
+                                            @if (p.Attributes != null)
+                                            {
+                                                <span class="tp-back-ovr tier-@p.Tier">@p.Attributes.Overall <small>@p.Tier</small></span>
+                                            }
+                                            <dl class="tp-back-stats">
+                                                <div><dt>Goals</dt><dd>@p.Goals</dd></div>
+                                                <div><dt>Assists</dt><dd>@p.Assists</dd></div>
+                                                <div><dt>MOTM</dt><dd>@p.Motm</dd></div>
+                                                @if (p.Position is "GK" or "DEF")
+                                                {
+                                                    <div><dt>Clean sheets</dt><dd>@p.CleanSheets</dd></div>
+                                                }
+                                            </dl>
+                                            <span class="tp-back-foot">This season</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </section>
+            }
+
+            <!-- ── ABOUT, MANAGER, KITS, INFO ── -->
+            <section class="tp-section tp-info-grid">
+                @if (!string.IsNullOrEmpty(profile.Bio))
+                {
+                    <div class="tp-panel tp-bio">
+                        <span class="tp-panel-label">About the club</span>
+                        <p>@profile.Bio</p>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(profile.ManagerName))
+                {
+                    <div class="tp-panel tp-manager">
+                        <span class="tp-panel-label">Manager</span>
+                        <div class="tp-manager-row">
+                            @if (!string.IsNullOrEmpty(profile.ManagerImageBase64))
+                            {
+                                <img class="tp-manager-photo" src="@profile.ManagerImageBase64" alt="@profile.ManagerName" />
+                            }
+                            else
+                            {
+                                <div class="tp-manager-photo tp-manager-initials">@Initials(profile.ManagerName)</div>
+                            }
+                            <div>
+                                <span class="tp-manager-name">@profile.ManagerName</span>
+                                <span class="tp-manager-wins">@profile.Wins @(profile.Wins == 1 ? "win" : "wins") this season</span>
+                                <span class="tp-tier-chip tier-@ManagerTier(profile.Wins)">@ManagerTier(profile.Wins) manager</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(profile.HomeKitColour) || !string.IsNullOrEmpty(profile.AwayKitColour))
+                {
+                    <div class="tp-panel tp-kits">
+                        <span class="tp-panel-label">Kits</span>
+                        <div class="tp-kit-row">
+                            @if (!string.IsNullOrEmpty(profile.HomeKitColour))
+                            {
+                                <div class="tp-kit">@KitJersey(profile.HomeKitColour!)<span>Home</span></div>
+                            }
+                            @if (!string.IsNullOrEmpty(profile.AwayKitColour))
+                            {
+                                <div class="tp-kit">@KitJersey(profile.AwayKitColour!)<span>Away</span></div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <div class="tp-panel tp-contact">
+                    <span class="tp-panel-label">Club info</span>
+                    <dl class="tp-info">
+                        @if (!string.IsNullOrEmpty(profile.ManagerName))
+                        {
+                            <div><dt>Manager</dt><dd>@profile.ManagerName</dd></div>
+                        }
+                        @if (profile.YearFormed.HasValue)
+                        {
+                            <div><dt>Founded</dt><dd>@profile.YearFormed</dd></div>
+                        }
+                        @if (!string.IsNullOrEmpty(profile.PhoneNumber))
+                        {
+                            <div><dt>Contact</dt><dd><a href="tel:@profile.PhoneNumber">@profile.PhoneNumber</a></dd></div>
+                        }
+                    </dl>
+                    @if (string.IsNullOrEmpty(profile.ManagerName) && !profile.YearFormed.HasValue && string.IsNullOrEmpty(profile.PhoneNumber))
+                    {
+                        <p class="tp-muted">No club information available yet.</p>
+                    }
+                </div>
+            </section>
 
         </div>
     }
@@ -165,13 +356,68 @@
     [Parameter] public int TeamId { get; set; }
 
     private TeamProfileDto? profile;
+    private TeamOverviewDto? overview;
     private List<PlayerCardDto> playerCards = new();
     private bool isLoading = true;
+    private bool byPosition = true;
+
+    // Cards turned over by a tap (screens with no pointer to hover with).
+    private readonly HashSet<int> flipped = new();
+
+    private (int Week, FixtureMatchDto Match)? nextGame;
+    private List<(int Week, FixtureMatchDto Match)> recent = new();
+
+    private static readonly string[] PositionOrder = { "GK", "DEF", "MID", "FWD" };
+    private static readonly Dictionary<string, string> PositionNames = new()
+    {
+        ["GK"] = "Goalkeepers", ["DEF"] = "Defenders", ["MID"] = "Midfielders", ["FWD"] = "Forwards"
+    };
 
     // bronze < 3 wins ≤ silver < 6 wins ≤ gold
     static string ManagerTier(int wins) => wins >= 6 ? "gold" : wins >= 3 ? "silver" : "bronze";
 
-    RenderFragment KitJersey(string colour) => @<svg class="kit-jersey" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    private PlayerCardDto? TopRated => playerCards
+        .Where(p => p.Attributes != null)
+        .OrderByDescending(p => p.Attributes!.Overall)
+        .ThenBy(p => p.Name)
+        .FirstOrDefault();
+
+    private IEnumerable<(string Tier, int Count)> TierCounts => new[] { "gold", "silver", "bronze" }
+        .Select(t => (t, playerCards.Count(p => p.Tier == t)))
+        .Where(t => t.Item2 > 0);
+
+    private record Leader(string Title, PlayerCardDto? Player, int Value);
+
+    private IEnumerable<Leader> Leaders
+    {
+        get
+        {
+            Leader Top(string title, Func<PlayerCardDto, int> by)
+            {
+                var p = playerCards.OrderByDescending(by).ThenBy(p => p.Name).FirstOrDefault();
+                return new Leader(title, p, p == null ? 0 : by(p));
+            }
+            yield return Top("Top scorer", p => p.Goals);
+            yield return Top("Most assists", p => p.Assists);
+            yield return Top("Most MOTMs", p => p.Motm);
+        }
+    }
+
+    private record SquadGroup(string? Title, List<PlayerCardDto> Players);
+
+    // Best-rated first in every list; players without a card follow, by shirt.
+    private IEnumerable<PlayerCardDto> RatingOrder(IEnumerable<PlayerCardDto> players) => players
+        .OrderByDescending(p => p.Attributes?.Overall ?? -1)
+        .ThenBy(p => p.Number);
+
+    private IEnumerable<SquadGroup> SquadGroups => byPosition
+        ? playerCards
+            .GroupBy(p => p.Position)
+            .OrderBy(g => Array.IndexOf(PositionOrder, g.Key) is var i and >= 0 ? i : PositionOrder.Length)
+            .Select(g => new SquadGroup(PositionNames.GetValueOrDefault(g.Key, g.Key), RatingOrder(g).ToList()))
+        : new[] { new SquadGroup(null, RatingOrder(playerCards).ToList()) };
+
+    RenderFragment KitJersey(string colour) => @<svg class="tp-jersey" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
         <path d="M22 6 L8 14 L4 26 L14 32 L16 28 L16 58 L48 58 L48 28 L50 32 L60 26 L56 14 L42 6 C40 12 34 14 32 14 C30 14 24 12 22 6 Z"
               fill="@colour" stroke="rgba(0,0,0,0.35)" stroke-width="1.5" stroke-linejoin="round" />
     </svg>;
@@ -179,13 +425,54 @@
     protected override async Task OnParametersSetAsync()
     {
         isLoading = true;
+        flipped.Clear();
+
         var profileTask = TeamService.GetProfile(TeamId);
         var squadTask = TeamService.GetSquad(TeamId);
-        await Task.WhenAll(profileTask, squadTask);
+        var overviewTask = TeamService.GetOverview();
+        var seasonTask = SeasonService.GetCurrentSeason();
+        await Task.WhenAll(profileTask, squadTask, overviewTask, seasonTask);
+
         profile = profileTask.Result;
         playerCards = squadTask.Result;
+        overview = overviewTask.Result.FirstOrDefault(t => t.Id == TeamId);
+
+        nextGame = null;
+        recent = new();
+        if (profile != null && seasonTask.Result is { } season)
+        {
+            // The public schedule, narrowed to this club (matched by name, as the
+            // schedule identifies teams by name).
+            var weeks = await FixtureService.GetFixtureWeeks(season.Id);
+            var ours = weeks
+                .SelectMany(w => w.Matches.Select(m => (Week: w.WeekNumber, Match: m)))
+                .Where(x => x.Match.Home == profile.Name || x.Match.Away == profile.Name)
+                .ToList();
+
+            var upcoming = ours.Where(x => !x.Match.IsPlayed).OrderBy(x => x.Week).ToList();
+            nextGame = upcoming.Count > 0 ? upcoming[0] : null;
+            recent = ours.Where(x => x.Match.IsPlayed).OrderByDescending(x => x.Week).Take(5).ToList();
+        }
+
         isLoading = false;
     }
+
+    private void Toggle(int playerId)
+    {
+        if (!flipped.Add(playerId)) flipped.Remove(playerId);
+    }
+
+    private void OnKey(KeyboardEventArgs e, int playerId)
+    {
+        if (e.Key is "Enter" or " ") Toggle(playerId);
+    }
+
+    // The club's home kit colour tints the page. Only a plain hex colour is used,
+    // so nothing else can be injected into the style attribute.
+    private static string? KitStyle(string? colour)
+        => colour != null && System.Text.RegularExpressions.Regex.IsMatch(colour, "^#[0-9a-fA-F]{3,8}$")
+            ? $"--kit:{colour}"
+            : null;
 
     static string Initials(string name)
     {

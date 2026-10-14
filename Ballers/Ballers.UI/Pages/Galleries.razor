@@ -4,105 +4,166 @@
 @using Ballers.UI.Infrastructure
 
 @inject GalleryService GalleryService
-@inject NavigationManager Nav
 @inject HttpClient Http
 
 <PageTitle>Match Galleries</PageTitle>
 
+@* Every match gallery. The newest is shown large at the top; the rest are
+   grouped by match week, and can be narrowed to one team or one week. *@
 <div class="galleries-page">
 
-    <div class="galleries-hero">
-        <div class="galleries-hero-inner">
-            <p class="galleries-eyebrow">Blackpool Ballers League</p>
-            <h1>Match Galleries</h1>
-            <p class="galleries-sub">
-                Photos from around the league, match by match.
-            </p>
-        </div>
-    </div>
+    <header class="gl-hero">
+        <span class="gl-eyebrow">Ballers League</span>
+        <h1>Match Galleries</h1>
+        <p class="gl-sub">Photos from around the league, match by match.</p>
+    </header>
 
-    <div class="galleries-body">
-
+    <div class="gl-body">
         @if (isLoading)
         {
-            <LoadingSpinner />
+            <div class="gl-loading"><LoadingSpinner /></div>
         }
         else if (!galleries.Any())
         {
-            <div class="galleries-empty">
-                <p>No galleries yet.</p>
-                <p class="galleries-empty-sub">Photos will appear here once they've been added.</p>
+            <div class="gl-empty">
+                <p class="gl-empty-title">No galleries yet</p>
+                <p>Photos will appear here once they've been added.</p>
             </div>
         }
         else
         {
-            <div class="gallery-grid">
-                @foreach (var gallery in galleries)
-                {
-                    <button class="gallery-card" @onclick="() => Open(gallery.Id)">
-                        <div class="gallery-card-image">
-                            @if (!string.IsNullOrEmpty(gallery.CoverThumbnailUrl))
-                            {
-                                @* Browser picks: small on a phone, full size where the
-                                   card is drawn large or the screen is high density. *@
-                                <img src="@Abs(gallery.CoverThumbnailUrl)"
-                                     srcset="@MediaUrls.SrcSet(Http, gallery.CoverThumbnailUrl, gallery.CoverImageUrl)"
-                                     sizes="(max-width: 560px) 92vw, 340px"
-                                     alt="@gallery.HomeTeam versus @gallery.AwayTeam"
-                                     loading="lazy" decoding="async" />
-                            }
-                            else
-                            {
-                                <div class="gallery-card-placeholder">No photos yet</div>
-                            }
+            @if (Featured is { } f)
+            {
+                <a class="gl-feature" href="/gallery/@f.Id">
+                    @if (!string.IsNullOrEmpty(f.CoverThumbnailUrl))
+                    {
+                        <img class="gl-feature-img" src="@Abs(f.CoverImageUrl ?? f.CoverThumbnailUrl)"
+                             srcset="@MediaUrls.SrcSet(Http, f.CoverThumbnailUrl, f.CoverImageUrl)"
+                             sizes="(max-width: 1180px) 100vw, 1180px"
+                             alt="@f.HomeTeam versus @f.AwayTeam" decoding="async" />
+                    }
+                    <span class="gl-feature-shade" aria-hidden="true"></span>
+                    <span class="gl-feature-body">
+                        <span class="gl-feature-tag">Latest gallery · Match Week @f.Week</span>
+                        <span class="gl-feature-fixture">
+                            <span>@f.HomeTeam</span>
+                            <span class="gl-feature-score">@(f.IsPlayed ? $"{f.HomeScore}–{f.AwayScore}" : "v")</span>
+                            <span>@f.AwayTeam</span>
+                        </span>
+                        <span class="gl-feature-meta">
+                            @if (f.Kickoff.HasValue) { <span>@f.Kickoff.Value.ToString("dddd d MMMM")</span> }
+                            <span>@f.PhotoCount photos</span>
+                            @if (!string.IsNullOrEmpty(f.PhotographerName)) { <span>by @f.PhotographerName</span> }
+                        </span>
+                        <span class="gl-feature-cta">View photos <span aria-hidden="true">→</span></span>
+                    </span>
+                </a>
+            }
 
-                            <span class="gallery-card-count">@gallery.PhotoCount photos</span>
+            @if (galleries.Count > 1)
+            {
+            <div class="gl-filters">
+                <label class="gl-team">
+                    <span class="gl-label">Team</span>
+                    <select @bind="teamFilter">
+                        <option value="">All teams</option>
+                        @foreach (var t in Teams)
+                        {
+                            <option value="@t">@t</option>
+                        }
+                    </select>
+                </label>
 
-                            @if (!gallery.IsPublished)
-                            {
-                                <span class="gallery-card-hidden">Hidden</span>
-                            }
-                        </div>
-
-                        <div class="gallery-card-body">
-                            <div class="gallery-card-week">Match Week @gallery.Week</div>
-
-                            <div class="gallery-card-fixture">
-                                <span class="gallery-card-team">@gallery.HomeTeam</span>
-                                @if (gallery.IsPlayed)
-                                {
-                                    <span class="gallery-card-score">@gallery.HomeScore–@gallery.AwayScore</span>
-                                }
-                                else
-                                {
-                                    <span class="gallery-card-vs">v</span>
-                                }
-                                <span class="gallery-card-team">@gallery.AwayTeam</span>
-                            </div>
-
-                            <div class="gallery-card-meta">
-                                @if (gallery.Kickoff.HasValue)
-                                {
-                                    <span>@gallery.Kickoff.Value.ToString("ddd d MMM yyyy")</span>
-                                }
-                                @if (!string.IsNullOrEmpty(gallery.PhotographerName))
-                                {
-                                    <span class="gallery-card-photographer">@gallery.PhotographerName</span>
-                                }
-                            </div>
-                        </div>
-                    </button>
-                }
+                <div class="gl-weeks" role="group" aria-label="Match week">
+                    <button type="button" class="gl-chip @(weekFilter == null ? "is-active" : "")"
+                            aria-pressed="@(weekFilter == null ? "true" : "false")"
+                            @onclick="() => weekFilter = null">All weeks</button>
+                    @foreach (var w in Weeks)
+                    {
+                        <button type="button" class="gl-chip @(weekFilter == w ? "is-active" : "")"
+                                aria-pressed="@(weekFilter == w ? "true" : "false")"
+                                @onclick="() => weekFilter = w">MW@(w)</button>
+                    }
+                </div>
             </div>
+            }
+
+            @* With no filter on, an empty list just means the banner is the only
+               gallery. *@
+            @if (!Groups.Any() && Filtering)
+            {
+                <p class="gl-none">No galleries match. <button type="button" class="gl-clear" @onclick="ClearFilters">Clear filters</button></p>
+            }
+
+            @foreach (var g in Groups)
+            {
+                <section class="gl-week" aria-labelledby="gl-week-@g.Week">
+                    <h2 class="gl-week-title" id="gl-week-@g.Week">
+                        Match Week @g.Week
+                        <span>@g.Galleries.Count @(g.Galleries.Count == 1 ? "gallery" : "galleries")</span>
+                    </h2>
+                    <div class="gl-grid">
+                        @foreach (var gallery in g.Galleries)
+                        {
+                            <a class="gl-card" href="/gallery/@gallery.Id">
+                                <span class="gl-card-image">
+                                    @if (!string.IsNullOrEmpty(gallery.CoverThumbnailUrl))
+                                    {
+                                        @* Browser picks: small on a phone, full size where the
+                                           card is drawn large or the screen is high density. *@
+                                        <img src="@Abs(gallery.CoverThumbnailUrl)"
+                                             srcset="@MediaUrls.SrcSet(Http, gallery.CoverThumbnailUrl, gallery.CoverImageUrl)"
+                                             sizes="(max-width: 560px) 92vw, 360px"
+                                             alt="@gallery.HomeTeam versus @gallery.AwayTeam"
+                                             loading="lazy" decoding="async" />
+                                    }
+                                    else
+                                    {
+                                        <span class="gl-card-placeholder">No photos yet</span>
+                                    }
+                                    <span class="gl-card-sheen" aria-hidden="true"></span>
+                                    <span class="gl-card-count">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h3l2-2h6l2 2h3v12H4z M12 10a3.5 3.5 0 1 0 0 7a3.5 3.5 0 0 0 0-7z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" /></svg>
+                                        @gallery.PhotoCount
+                                    </span>
+                                    @if (!gallery.IsPublished)
+                                    {
+                                        <span class="gl-card-hidden">Hidden</span>
+                                    }
+                                </span>
+
+                                <span class="gl-card-body">
+                                    <span class="gl-card-fixture">
+                                        <span class="gl-card-team">@gallery.HomeTeam</span>
+                                        <span class="gl-card-score">@(gallery.IsPlayed ? $"{gallery.HomeScore}–{gallery.AwayScore}" : "v")</span>
+                                        <span class="gl-card-team">@gallery.AwayTeam</span>
+                                    </span>
+                                    <span class="gl-card-meta">
+                                        @if (gallery.Kickoff.HasValue)
+                                        {
+                                            <span>@gallery.Kickoff.Value.ToString("ddd d MMM yyyy")</span>
+                                        }
+                                        @if (!string.IsNullOrEmpty(gallery.PhotographerName))
+                                        {
+                                            <span class="gl-card-photographer">@gallery.PhotographerName</span>
+                                        }
+                                    </span>
+                                </span>
+                            </a>
+                        }
+                    </div>
+                </section>
+            }
         }
-
     </div>
-
 </div>
 
 @code {
     private bool isLoading = true;
-    private List<GallerySummaryDto> galleries = new();
+    private List<GallerySummaryDto> galleries = new();   // newest first, as the API sends them
+
+    private string teamFilter = "";
+    private int? weekFilter;
 
     protected override async Task OnInitializedAsync()
     {
@@ -110,7 +171,43 @@
         isLoading = false;
     }
 
-    private void Open(int galleryId) => Nav.NavigateTo($"/gallery/{galleryId}");
+    private bool Filtering => teamFilter != "" || weekFilter != null;
+
+    // The newest gallery with photos gets the banner, unless a filter is on,
+    // when everything matching is listed together instead.
+    private GallerySummaryDto? Featured =>
+        Filtering ? null : galleries.FirstOrDefault(g => g.PhotoCount > 0 && !string.IsNullOrEmpty(g.CoverThumbnailUrl));
+
+    private IEnumerable<string> Teams => galleries
+        .SelectMany(g => new[] { g.HomeTeam, g.AwayTeam })
+        .Where(t => !string.IsNullOrEmpty(t))
+        .Distinct()
+        .OrderBy(t => t);
+
+    private IEnumerable<int> Weeks => galleries.Select(g => g.Week).Distinct().OrderByDescending(w => w);
+
+    private record WeekGroup(int Week, List<GallerySummaryDto> Galleries);
+
+    private IEnumerable<WeekGroup> Groups
+    {
+        get
+        {
+            var featured = Featured;
+            return galleries
+                .Where(g => g != featured)
+                .Where(g => teamFilter == "" || g.HomeTeam == teamFilter || g.AwayTeam == teamFilter)
+                .Where(g => weekFilter == null || g.Week == weekFilter)
+                .GroupBy(g => g.Week)
+                .OrderByDescending(g => g.Key)
+                .Select(g => new WeekGroup(g.Key, g.ToList()));
+        }
+    }
+
+    private void ClearFilters()
+    {
+        teamFilter = "";
+        weekFilter = null;
+    }
 
     // Images are served by the API, which sits on a different origin to the UI.
     private string? Abs(string? url) => MediaUrls.Absolute(Http, url);

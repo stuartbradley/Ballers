@@ -110,6 +110,87 @@ namespace Ballers.Tests
             Assert.Equal("Home FC", result[0].HomeTeam);
         }
 
+        [Fact]
+        public async Task GetForUser_GivesTheManagerTheirSquadCaptainAndPens()
+        {
+            var db = await SeedBase(nameof(GetForUser_GivesTheManagerTheirSquadCaptainAndPens));
+            db.Fixtures.Add(MakeFixture(1, 1, 2).With(f => { f.HomeScore = 3; f.AwayScore = 1; f.HomeCaptainId = 10; }));
+            for (var i = 10; i < 13; i++)
+                db.Players.Add(new Player { Id = i, Name = $"P{i}", TeamId = 1 });
+            db.Players.Add(new Player { Id = 20, Name = "Theirs", TeamId = 2 });
+            db.FixturePlayers.AddRange(
+                new FixturePlayer { FixtureId = 1, PlayerId = 10 },
+                new FixturePlayer { FixtureId = 1, PlayerId = 11 },
+                new FixturePlayer { FixtureId = 1, PlayerId = 20 });
+            db.PenaltyShootouts.Add(new PenaltyShootout
+            {
+                FixtureId = 1,
+                Kicks = { new PenaltyKick { PlayerId = 10, TeamId = 1, Order = 1, Scored = true } }
+            });
+            await db.SaveChangesAsync();
+
+            var svc = new FixtureService(db, Mock.Of<IKnockoutService>());
+            var mine = (await svc.GetForUserAsync(isAdmin: false, teamId: 1)).Single();
+            var theirs = (await svc.GetForUserAsync(isAdmin: false, teamId: 2)).Single();
+
+            Assert.Equal((3, 1), (mine.HomeScore, mine.AwayScore));
+            Assert.Equal(2, mine.ManagerSquadCount);
+            Assert.True(mine.ManagerCaptainSet);
+            Assert.True(mine.ManagerPensSubmitted);
+
+            Assert.Equal(1, theirs.ManagerSquadCount);
+            Assert.False(theirs.ManagerCaptainSet);
+            Assert.False(theirs.ManagerPensSubmitted);
+        }
+
+        // ── SwapHomeAwayAsync ───────────────────────────────────────────
+
+        [Fact]
+        public async Task Swap_TurnsAwayIntoHome_KeepingCaptainsAndSetup()
+        {
+            var db = await SeedBase(nameof(Swap_TurnsAwayIntoHome_KeepingCaptainsAndSetup));
+            var kickoff = DateTime.UtcNow.AddDays(2);
+            db.Fixtures.Add(MakeFixture(1, 1, 2).With(f =>
+            {
+                f.Kickoff = kickoff; f.Location = "Stanley Park"; f.RefereeId = null;
+                f.HomeCaptainId = 10; f.AwayCaptainId = 20; f.AwayViceCaptainId = 21;
+            }));
+            await db.SaveChangesAsync();
+
+            var problem = await new FixtureService(db, Mock.Of<IKnockoutService>()).SwapHomeAwayAsync(1, DateTime.UtcNow);
+
+            Assert.Null(problem);
+            var f = db.Fixtures.Single();
+            Assert.Equal((2, 1), (f.HomeTeamId, f.AwayTeamId));
+            Assert.Equal((20, 10), (f.HomeCaptainId, f.AwayCaptainId));
+            Assert.Equal((21, (int?)null), (f.HomeViceCaptainId, f.AwayViceCaptainId));
+            Assert.Equal((kickoff, "Stanley Park"), (f.Kickoff!.Value, f.Location));
+        }
+
+        [Theory]
+        [InlineData("played")]
+        [InlineData("stats")]
+        [InlineData("kickedOff")]
+        [InlineData("knockout")]
+        public async Task Swap_IsRefused_OnceTheGameIsUnderway(string state)
+        {
+            var db = await SeedBase(nameof(Swap_IsRefused_OnceTheGameIsUnderway) + state);
+            db.Fixtures.Add(MakeFixture(1, 1, 2).With(f =>
+            {
+                f.Kickoff = DateTime.UtcNow.AddDays(2);
+                if (state == "played") f.IsPlayed = true;
+                if (state == "stats") f.AwayStatsSubmitted = true;
+                if (state == "kickedOff") f.Kickoff = DateTime.UtcNow.AddHours(-1);
+                if (state == "knockout") f.IsKnockout = true;
+            }));
+            await db.SaveChangesAsync();
+
+            var problem = await new FixtureService(db, Mock.Of<IKnockoutService>()).SwapHomeAwayAsync(1, DateTime.UtcNow);
+
+            Assert.NotNull(problem);
+            Assert.Equal(1, db.Fixtures.Single().HomeTeamId);
+        }
+
         // ── GetTableAsync ───────────────────────────────────────────────
 
         [Fact]

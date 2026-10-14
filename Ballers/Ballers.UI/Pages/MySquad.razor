@@ -7,6 +7,7 @@
 
 @inject PlayerService PlayerService
 @inject LeagueSettingsService LeagueSettingsSvc
+@inject PlayerAccountService AccountService
 @inject AuthenticationStateProvider AuthProvider
 
 @if (_editPlayer != null)
@@ -47,6 +48,9 @@
 <PageTitle>My Squad</PageTitle>
 
 <div class="squad-page">
+    @* The manager's own menu; admins and referees use this page too. *@
+    <AuthorizeView Roles="Manager"><ManagerNav Current="squad" /></AuthorizeView>
+
 
     <div class="squad-hero">
         <div class="squad-hero-inner">
@@ -65,6 +69,50 @@
         }
         else
         {
+
+        @if (accountRequests.Count > 0)
+        {
+            <!-- Players waiting to be let in. Until approved their account can do
+                 nothing, so this is the only thing standing between them and a card. -->
+            <div class="form-card">
+                <p class="form-card-label">Player Sign-ups Waiting (@accountRequests.Count)</p>
+
+                @if (!string.IsNullOrEmpty(requestError))
+                {
+                    <div class="form-error">@requestError</div>
+                }
+
+                <div class="account-requests">
+                    @foreach (var request in accountRequests)
+                    {
+                        <div class="account-request">
+                            <div class="account-request-who">
+                                <span class="account-request-name">@request.RequestedName</span>
+                                <span class="account-request-email">@request.Email</span>
+                                <span class="account-request-claim">
+                                    @if (request.PlayerId != null)
+                                    {
+                                        @($"Claiming {request.PlayerName}")
+                                    }
+                                    else
+                                    {
+                                        @("Not on the squad list yet — approving adds them")
+                                    }
+                                </span>
+                            </div>
+                            <div class="account-request-actions">
+                                <button type="button" class="add-btn"
+                                        disabled="@(resolvingRequestId == request.Id)"
+                                        @onclick="() => ApproveRequest(request.Id)">Approve</button>
+                                <button type="button" class="remove-btn"
+                                        disabled="@(resolvingRequestId == request.Id)"
+                                        @onclick="() => RejectRequest(request.Id)">Reject</button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
 
         @if (playersLocked && !isAdmin)
         {
@@ -193,6 +241,10 @@
     private bool _showCropModal;
     private PlayerDto? _cropPlayer;
 
+    private List<Ballers.Shared.PlayerAccountRequestDto> accountRequests = new();
+    private int? resolvingRequestId;
+    private string requestError = "";
+
     private PlayerDto? _editPlayer;
     private string _editName = "";
     private int _editNumber;
@@ -215,6 +267,55 @@
         catch { /* non-fatal: default to unlocked */ }
 
         await LoadPlayers();
+        await LoadAccountRequests();
+    }
+
+    async Task LoadAccountRequests()
+    {
+        try
+        {
+            accountRequests = await AccountService.GetRequests();
+        }
+        catch
+        {
+            // A manager with no team, or an endpoint that refused: the panel just
+            // stays hidden rather than breaking the squad page.
+            accountRequests = new();
+        }
+    }
+
+    async Task ApproveRequest(int requestId) => await ResolveRequest(requestId, approve: true);
+
+    async Task RejectRequest(int requestId) => await ResolveRequest(requestId, approve: false);
+
+    async Task ResolveRequest(int requestId, bool approve)
+    {
+        resolvingRequestId = requestId;
+        requestError = "";
+
+        try
+        {
+            if (approve)
+            {
+                await AccountService.Approve(requestId);
+                // Approving can create a squad row, so the list is reloaded too.
+                await LoadPlayers();
+            }
+            else
+            {
+                await AccountService.Reject(requestId);
+            }
+
+            await LoadAccountRequests();
+        }
+        catch (Exception ex)
+        {
+            requestError = ex.Message;
+        }
+        finally
+        {
+            resolvingRequestId = null;
+        }
     }
 
     async Task LoadPlayers()

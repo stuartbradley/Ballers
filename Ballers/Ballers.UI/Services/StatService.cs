@@ -40,11 +40,21 @@ namespace Ballers.Services
             return await _http.GetFromJsonAsync<List<PlayerLeaderboardDto>>(url) ?? new();
         }
 
-        public async Task<WinLossDto?> GetWinLoss()
+        // Empty on failure, so the page can hide the team tab and the totals
+        // rather than show zeros.
+        public async Task<List<TeamStatsDto>> GetTeamStats(int? seasonId = null)
         {
-            var response = await _http.GetAsync("api/stats/winloss");
-            if (!response.IsSuccessStatusCode) return null;
-            return await response.Content.ReadFromJsonAsync<WinLossDto>();
+            var url = seasonId.HasValue
+                ? $"api/stats/teams?seasonId={seasonId}"
+                : "api/stats/teams";
+            try
+            {
+                return await _http.GetFromJsonAsync<List<TeamStatsDto>>(url) ?? new();
+            }
+            catch (HttpRequestException)
+            {
+                return new();
+            }
         }
     }
 }

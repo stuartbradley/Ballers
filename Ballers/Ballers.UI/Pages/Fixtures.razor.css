@@ -1,216 +1,460 @@
-/* ================================================================
-   FIXTURES PAGE — dark stadium aesthetic
-   ================================================================ */
+/* ============================================================
+   FIXTURES — stadium night, to match the home page.
+   A floodlit header, a toolbar that stays in view (tabs, filters
+   and the week strip), then the weeks: full match cards for games
+   to come, one-line scoreboards for results. Colours come from the
+   --night-* and --chalk tokens in site.css.
+   ============================================================ */
 
-@keyframes fadeUp {
-    from { opacity: 0; transform: translateY(20px); }
+@keyframes fxUp {
+    from { opacity: 0; transform: translateY(14px); }
     to   { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes heroReveal {
-    from { clip-path: inset(100% 0 0 0); opacity: 0; transform: translateY(12px); }
-    to   { clip-path: inset(0% 0 0 0); opacity: 1; transform: translateY(0); }
-}
-
-@keyframes eyebrowPulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0); }
-    50%       { box-shadow: 0 0 0 6px rgba(250, 204, 21, 0.18); }
-}
-
-/* ================================================================
-   PAGE SHELL
-   ================================================================ */
-
 .fixtures-page {
+    position: relative;
+    isolation: isolate;
     min-height: calc(100vh - 71px);
-    background: #07101E;
+    background: var(--night-900);
+    color: var(--chalk);
 }
 
-/* ================================================================
-   HERO BANNER
-   ================================================================ */
-
-.fixtures-hero {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 28vh;
-    overflow: hidden;
-    background: #0B1628;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-/* Pitch texture overlay */
-.fixtures-hero::before {
+/* One pool of light from above, as on the home page. */
+.fixtures-page::before {
     content: "";
     position: absolute;
-    inset: 0;
+    inset: 0 0 auto;
+    height: 520px;
     background:
-        linear-gradient(135deg, rgba(30, 58, 138, 0.4) 0%, rgba(8, 13, 35, 0.85) 100%),
-        repeating-linear-gradient(
-            90deg,
-            transparent 0px,
-            transparent 59px,
-            rgba(255, 255, 255, 0.018) 59px,
-            rgba(255, 255, 255, 0.018) 60px
-        ),
-        repeating-linear-gradient(
-            0deg,
-            transparent 0px,
-            transparent 59px,
-            rgba(255, 255, 255, 0.018) 59px,
-            rgba(255, 255, 255, 0.018) 60px
-        );
+        radial-gradient(50% 60% at 50% 0%, rgba(250, 204, 21, 0.12), transparent 70%),
+        radial-gradient(80% 80% at 50% 0%, rgba(30, 58, 138, 0.3), transparent 75%);
     pointer-events: none;
+    z-index: -1;
 }
 
-/* Decorative centre-circle graphic */
-.fixtures-hero::after {
-    content: "";
+.visually-hidden {
     position: absolute;
-    top: 50%;
-    right: 8%;
-    transform: translateY(-50%);
-    width: 380px;
-    height: 380px;
-    border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.04);
-    pointer-events: none;
-}
-
-/* Yellow accent strip on left edge */
-.fixtures-hero-inner {
-    position: relative;
-    z-index: 2;
-    text-align: center;
-    padding: 52px 24px 52px;
-}
-
-/* Yellow season pill */
-.fixtures-eyebrow {
-    display: inline-block;
-    font-family: var(--font-display);
-    font-size: 0.65rem;
-    font-weight: 700;
-    letter-spacing: 0.28em;
-    text-transform: uppercase;
-    color: var(--ballers-primary);
-    background: var(--ballers-accent);
-    padding: 5px 16px;
-    border-radius: 100px;
-    margin-bottom: 18px;
-    animation: eyebrowPulse 3s 1.2s ease-in-out infinite, fadeUp 0.5s ease both;
-}
-
-.fixtures-hero-inner h1 {
-    font-family: var(--font-display);
-    font-size: clamp(3.5rem, 8vw, 6rem);
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: white;
-    line-height: 1;
-    margin: 0 0 14px;
-    animation: heroReveal 0.65s 0.15s ease both;
-}
-
-.fixtures-sub {
-    font-family: var(--font-display);
-    font-size: 0.8rem;
-    font-weight: 600;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.4);
-    margin: 0;
-    animation: fadeUp 0.6s 0.4s ease both;
-}
-
-/* ================================================================
-   BODY — week cards container
-   ================================================================ */
-
-.fixtures-body {
-    max-width: 860px;
-    margin: 0 auto;
-    padding: 32px 24px 80px;
-    display: flex;
-    flex-direction: column;
-    gap: 40px;
-}
-
-.season-selector-bar {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.season-selector-label {
-    font-family: var(--font-display);
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.4);
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
     white-space: nowrap;
 }
 
-.season-selector {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 8px;
-    color: white;
-    font-family: var(--font-display);
-    font-size: 0.82rem;
-    font-weight: 600;
-    padding: 8px 14px;
-    cursor: pointer;
-    transition: border-color 0.2s, background 0.2s;
-    appearance: none;
-    -webkit-appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='rgba(255,255,255,0.4)' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 12px center;
-    padding-right: 32px;
-}
+/* ── Header ── */
 
-.season-selector:focus {
-    outline: none;
-    border-color: var(--ballers-accent);
-}
-
-.season-selector option {
-    background: #0f1c35;
-    color: white;
-}
-
-/* ================================================================
-   EMPTY STATE
-   ================================================================ */
-
-.empty-state {
+.fx-hero {
     text-align: center;
-    padding: 80px 20px;
-    color: rgba(255, 255, 255, 0.35);
+    padding: clamp(44px, 6vw, 72px) 20px clamp(28px, 4vw, 40px);
+}
+
+.fx-eyebrow {
+    display: block;
+    margin-bottom: 10px;
     font-family: var(--font-display);
-    font-size: 0.8rem;
+    font-size: 0.78rem;
+    font-weight: 500;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    animation: fadeUp 0.5s ease both;
+    color: var(--ballers-accent);
 }
 
-/* ================================================================
-   RESPONSIVE
-   ================================================================ */
-
-@media (max-width: 768px) {
-    .fixtures-hero { min-height: 22vh; }
-    .fixtures-hero-inner { padding: 36px 16px; }
-    .fixtures-body { padding: 28px 14px 56px; gap: 28px; }
+.fx-hero h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(2.6rem, 6vw, 4rem);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    text-transform: uppercase;
+    color: var(--chalk);
 }
 
-@media (max-width: 480px) {
-    .fixtures-hero { min-height: 17vh; }
-    .fixtures-hero-inner { padding: 26px 12px; }
-    .fixtures-body { padding: 18px 10px 40px; gap: 22px; }
+.fx-hero h1::after {
+    content: "";
+    display: block;
+    width: 44px;
+    height: 3px;
+    margin: 16px auto 0;
+    border-radius: 2px;
+    background: var(--ballers-accent);
+    box-shadow: 0 0 12px rgba(250, 204, 21, 0.5);
+}
+
+.fx-sub {
+    margin: 16px 0 0;
+    font-size: 0.95rem;
+    color: var(--chalk-dim);
+}
+
+/* ── Toolbar ──
+   Stays under the site header while the weeks scroll past. */
+
+.fx-toolbar {
+    position: sticky;
+    top: 71px;
+    z-index: 20;
+    background: rgba(7, 16, 30, 0.86);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+}
+
+.fx-toolbar-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 12px 20px 8px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.fx-tabs {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: rgba(5, 11, 22, 0.55);
+}
+
+.fx-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 0;
+    border-radius: 999px;
+    padding: 8px 18px;
+    background: transparent;
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--chalk-dim);
+    cursor: pointer;
+    transition: background 0.18s, color 0.18s;
+}
+
+.fx-tab:hover { color: var(--chalk); }
+
+.fx-tab.is-active {
+    background: var(--ballers-accent);
+    color: var(--night-950);
+    box-shadow: 0 4px 14px rgba(250, 204, 21, 0.25);
+}
+
+.fx-count {
+    min-width: 1.6em;
+    padding: 1px 6px;
+    border-radius: 999px;
+    font-family: var(--font-main);
+    font-size: 0.72rem;
+    letter-spacing: 0;
+    background: rgba(232, 237, 245, 0.1);
+}
+
+.fx-tab.is-active .fx-count { background: rgba(5, 11, 22, 0.18); }
+
+.fx-tab:focus-visible,
+.fx-week-chip:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+}
+
+.fx-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.fx-select select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding: 9px 36px 9px 14px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23FACC15' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 14px center,
+        rgba(5, 11, 22, 0.55);
+    color: var(--chalk);
+    font-size: 0.88rem;
+    cursor: pointer;
+}
+
+.fx-select select:focus-visible {
+    outline: 2px solid var(--ballers-accent);
+    outline-offset: 2px;
+}
+
+.fx-select option {
+    background: var(--night-800);
+    color: var(--chalk);
+}
+
+/* The week strip: one chip per week in the list, the current one lit. */
+.fx-weeks {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 4px 20px 12px;
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    /* No scrollbar: the faded edges already say there is more either side. */
+    scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 20px, #000 calc(100% - 20px), transparent);
+    mask-image: linear-gradient(to right, transparent, #000 20px, #000 calc(100% - 20px), transparent);
+}
+
+.fx-weeks::-webkit-scrollbar { display: none; }
+
+.fx-week-chip {
+    flex: 0 0 auto;
+    padding: 6px 12px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: transparent;
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    letter-spacing: 0.06em;
+    color: var(--chalk-dim);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.fx-week-chip:hover {
+    border-color: rgba(250, 204, 21, 0.5);
+    color: var(--chalk);
+}
+
+.fx-week-chip.is-current {
+    border-color: var(--ballers-accent);
+    background: rgba(250, 204, 21, 0.12);
+    color: var(--ballers-accent);
+    box-shadow: 0 0 12px rgba(250, 204, 21, 0.25);
+}
+
+/* ── The list ── */
+
+.fx-body {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 28px 20px 90px;
+    display: flex;
+    flex-direction: column;
+    gap: 34px;
+}
+
+/* Clear of the site header and this page's toolbar when a chip jumps here. */
+.fx-week {
+    position: relative;
+    scroll-margin-top: 190px;
+    animation: fxUp 0.45s ease both;
+}
+
+/* This week's games get a tag. */
+.fx-now {
+    position: absolute;
+    top: -2px;
+    right: 0;
+    z-index: 1;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--night-950);
+    background: var(--ballers-accent);
+    box-shadow: 0 0 14px rgba(250, 204, 21, 0.4);
+}
+
+.fx-empty {
+    padding: 70px 20px;
+    text-align: center;
+    color: var(--chalk-faint);
+    font-size: 0.95rem;
+}
+
+/* ── Results: one line per game ── */
+
+.fx-week-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.fx-week-head::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+}
+
+.fx-week-badge {
+    padding: 4px 12px;
+    border-radius: 3px;
+    font-family: var(--font-display);
+    font-size: 0.74rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--night-950);
+    background: var(--ballers-accent);
+}
+
+.fx-week-dates {
+    font-family: var(--font-display);
+    font-size: 0.82rem;
+    letter-spacing: 0.06em;
+    color: var(--chalk-faint);
+}
+
+.fx-results {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.fx-result {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01)), var(--night-card);
+    transition: border-color 0.15s;
+}
+
+.fx-result:hover,
+.fx-result[open] {
+    border-color: rgba(250, 204, 21, 0.35);
+}
+
+.fx-result summary {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr 18px;
+    align-items: center;
+    gap: 14px;
+    padding: 13px 16px;
+    cursor: pointer;
+    list-style: none;
+}
+
+.fx-result summary::-webkit-details-marker { display: none; }
+
+.fx-result summary:focus-visible {
+    outline: 2px solid var(--ballers-accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+}
+
+.fx-team {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+    color: var(--chalk-dim);
+}
+
+.fx-team.fx-home { text-align: right; }
+.fx-team.is-winner { color: var(--chalk); font-weight: 700; }
+
+/* The scoreboard in the middle, winner's number lit. */
+.fx-score {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 6px;
+    background: rgba(5, 11, 22, 0.7);
+    border: 1px solid var(--line);
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--chalk-dim);
+}
+
+.fx-score .is-winner { color: var(--ballers-accent); }
+.fx-dash { color: var(--chalk-faint); }
+
+.fx-chevron {
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid var(--chalk-faint);
+    border-bottom: 2px solid var(--chalk-faint);
+    transform: rotate(45deg);
+    justify-self: center;
+    transition: transform 0.2s;
+}
+
+.fx-result[open] .fx-chevron { transform: rotate(225deg); }
+
+/* No entrance animation here: inside a closed <details> it never starts, and
+   the panel opens stuck at its first, invisible frame. */
+.fx-detail {
+    padding: 2px 16px 14px;
+    border-top: 1px solid var(--line);
+}
+
+.fx-scorers {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    padding: 12px 0 4px;
+    font-size: 0.86rem;
+}
+
+.fx-scorers-col {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    color: var(--chalk-dim);
+}
+
+.fx-scorers-col.fx-home { text-align: right; }
+.fx-scorers-col span::before { content: "⚽ "; }
+.fx-scorers-col .is-og { color: var(--chalk-faint); font-style: italic; }
+
+.fx-meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 18px;
+    padding-top: 10px;
+    font-size: 0.82rem;
+    color: var(--chalk-faint);
+}
+
+.fx-meta a {
+    color: var(--ballers-accent);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.fx-meta a:hover { text-decoration: underline; }
+
+/* ── Phones ── */
+
+@media (max-width: 640px) {
+    .fx-toolbar-inner { justify-content: center; }
+    .fx-filters { justify-content: center; width: 100%; }
+    .fx-select { flex: 1; }
+    .fx-select select { width: 100%; }
+
+    .fx-result summary {
+        gap: 8px;
+        padding: 12px 10px;
+        grid-template-columns: 1fr auto 1fr 14px;
+    }
+
+    .fx-team { font-size: 0.88rem; }
+    .fx-score { font-size: 1.05rem; padding: 3px 9px; }
+    .fx-scorers { gap: 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fx-week { animation: none; }
 }

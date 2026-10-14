@@ -55,6 +55,17 @@ html, body {
     --ballers-blue: #0b3c82;
     --ballers-yellow: #ffd447;
     --ballers-green: #2fbf71;
+    /* ===== NIGHT (dark sections: home page, footer) ===== */
+    --night-950: #050B16;
+    --night-900: #07101E;
+    --night-800: #0B1628;
+    --night-card: #111D33;
+    --chalk: #E8EDF5;
+    --chalk-dim: rgba(232, 237, 245, 0.62);
+    --chalk-faint: rgba(232, 237, 245, 0.4);
+    --line: rgba(232, 237, 245, 0.1);
+    --radius-sm: 8px;
+    --radius-lg: 14px;
 }
 
 body {

@@ -7,6 +7,22 @@
             <AuthorizeRouteView RouteData="@routeData"
                                 DefaultLayout="@typeof(MainLayout)">
                 <Authorizing />
+                <NotAuthorized>
+                    @* A signed-in account that simply lacks the role — a player on
+                       a manager's page, say — is told so instead of being left on
+                       a blank screen. Anonymous visitors are deliberately left as
+                       they were: redirecting them is a site-wide change this
+                       feature has no business making. *@
+                    @if (context.User.Identity?.IsAuthenticated == true)
+                    {
+                        <PageTitle>No Access</PageTitle>
+                        <div class="not-found-container">
+                            <h2 class="not-found-title">No Access</h2>
+                            <p class="not-found-text">This page isn't available to your account.</p>
+                            <a href="/" class="not-found-btn">Back to Home</a>
+                        </div>
+                    }
+                </NotAuthorized>
             </AuthorizeRouteView>
         </Found>
 

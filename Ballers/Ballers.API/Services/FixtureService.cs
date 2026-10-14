@@ -15,13 +15,14 @@ namespace Ballers.API.Services
         Task<List<LeagueTableRowDto>> GetTableAsync(int seasonId);
         Task<FixtureWeekDto?> GetCurrentWeekAsync();
         Task<List<FixtureWeekDto>> GetAllWeeksAsync(int? seasonId = null);
-        Task<List<PlayerSummary>?> GetPlayersAsync(int fixtureId, bool isAdmin, int? userTeamId, int? requestedTeamId);
+        Task<List<FixturePlayerOption>?> GetPlayersAsync(int fixtureId, bool isAdmin, int? userTeamId, int? requestedTeamId);
         Task<List<SquadEntry>> GetSquadAsync(int fixtureId);
         Task UpdateSquadAsync(int fixtureId, List<int> playerIds, int? teamId);
         Task<List<PlayerStatDto>> GetStatsAsync(int fixtureId);
         Task SubmitStatsAsync(int fixtureId, List<PlayerStatDto> stats, int? teamId);
         Task<bool> UpdateScheduleAsync(int fixtureId, string? location, string? postcode, DateTime? kickoff);
         Task AssignRefereeAsync(int fixtureId, int? refereeId);
+        Task<string?> SwapHomeAwayAsync(int fixtureId, DateTime now);
         Task GenerateFixturesAsync(List<int> teamIds, DateTime startDate);
         Task<ImportFixturesResult> ImportFixturesAsync(Stream csv, int seasonNumber, DateTime startDate, bool makeActive);
         Task<List<OpponentPlayerStat>> GetOpponentStatsAsync(int fixtureId, int opponentTeamId);
@@ -106,7 +107,22 @@ namespace Ballers.API.Services
                 {
                     IsKnockout = f.IsKnockout,
                     KnockoutTournament = f.KnockoutTournament ?? "",
-                    KnockoutRound = f.KnockoutRound ?? ""
+                    KnockoutRound = f.KnockoutRound ?? "",
+                    HomeTeamId = f.HomeTeamId,
+                    AwayTeamId = f.AwayTeamId,
+                    HomeScore = f.HomeScore,
+                    AwayScore = f.AwayScore,
+                    Postcode = f.Postcode,
+                    RefereeName = f.Referee != null ? f.Referee.Name : null,
+                    WindowStart = f.WindowStart,
+                    WindowEnd = f.WindowEnd,
+                    SeasonId = f.SeasonId,
+                    SeasonNumber = f.Season != null ? f.Season.SeasonNumber : 0,
+                    SeasonIsActive = f.Season != null && f.Season.IsActive,
+                    HomeStatsSubmitted = f.HomeStatsSubmitted,
+                    AwayStatsSubmitted = f.AwayStatsSubmitted,
+                    ManagerCaptainSet = teamId != null &&
+                        ((f.HomeTeamId == teamId && f.HomeCaptainId != null) || (f.AwayTeamId == teamId && f.AwayCaptainId != null))
                 })
                 .ToListAsync();
 
@@ -123,19 +139,28 @@ namespace Ballers.API.Services
                     .Distinct()
                     .ToListAsync();
 
-                var squadFixtureIds = await _db.FixturePlayers
+                // How many of ours are picked for each fixture.
+                var squadCounts = await _db.FixturePlayers
                     .Where(fp => teamPlayerIds.Contains(fp.PlayerId))
-                    .Select(fp => fp.FixtureId)
+                    .GroupBy(fp => fp.FixtureId)
+                    .Select(g => new { FixtureId = g.Key, Count = g.Count() })
+                    .ToDictionaryAsync(x => x.FixtureId, x => x.Count);
+
+                var pensFixtureIds = await _db.PenaltyKicks
+                    .Where(k => k.TeamId == teamId.Value)
+                    .Select(k => k.Shootout!.FixtureId)
                     .Distinct()
                     .ToListAsync();
 
                 var submittedSet = submittedFixtureIds.ToHashSet();
-                var squadSet = squadFixtureIds.ToHashSet();
+                var pensSet = pensFixtureIds.ToHashSet();
                 fixtures = fixtures
                     .Select(f => f with
                     {
                         ManagerStatsSubmitted = submittedSet.Contains(f.Id),
-                        ManagerSquadSubmitted = squadSet.Contains(f.Id)
+                        ManagerSquadSubmitted = squadCounts.ContainsKey(f.Id),
+                        ManagerSquadCount = squadCounts.GetValueOrDefault(f.Id),
+                        ManagerPensSubmitted = pensSet.Contains(f.Id)
                     })
                     .ToList();
             }
@@ -373,7 +398,7 @@ namespace Ballers.API.Services
                 .ToList();
         }
 
-        public async Task<List<PlayerSummary>?> GetPlayersAsync(int fixtureId, bool isAdmin, int? userTeamId, int? requestedTeamId)
+        public async Task<List<FixturePlayerOption>?> GetPlayersAsync(int fixtureId, bool isAdmin, int? userTeamId, int? requestedTeamId)
         {
             var fixture = await _db.Fixtures.FindAsync(fixtureId);
             if (fixture == null) return null;
@@ -385,7 +410,8 @@ namespace Ballers.API.Services
 
             return await _db.Players
                 .Where(p => p.TeamId == resolvedTeamId && p.IsActive)
-                .Select(p => new PlayerSummary(p.Id, p.Name))
+                .OrderBy(p => p.Number)
+                .Select(p => new FixturePlayerOption(p.Id, p.Name, p.Number, p.Position))
                 .ToListAsync();
         }
 
@@ -675,6 +701,33 @@ namespace Ballers.API.Services
             if (fixture == null) return;
             fixture.RefereeId = refereeId;
             await _db.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Swaps the home and away sides. Each team keeps its own captains (and its
+        /// picked squad, which is stored per player); the time, venue and referee
+        /// stay as they are for the new home side to change. Returns why it can't
+        /// be swapped, or null once it has been.
+        /// </summary>
+        public async Task<string?> SwapHomeAwayAsync(int fixtureId, DateTime now)
+        {
+            var f = await _db.Fixtures.FindAsync(fixtureId)
+                ?? throw new KeyNotFoundException("Fixture not found.");
+
+            if (f.IsKnockout)
+                return "Knockout games can't be swapped; the bracket decides who's at home.";
+            if (f.IsPlayed || f.HomeStatsSubmitted || f.AwayStatsSubmitted)
+                return "Stats are already in for this game, so it can't be swapped.";
+            if ((f.Kickoff ?? f.WindowEnd) <= now)
+                return "This game has already kicked off, so it can't be swapped.";
+
+            (f.HomeTeamId, f.AwayTeamId) = (f.AwayTeamId, f.HomeTeamId);
+            (f.HomeCaptainId, f.AwayCaptainId) = (f.AwayCaptainId, f.HomeCaptainId);
+            (f.HomeViceCaptainId, f.AwayViceCaptainId) = (f.AwayViceCaptainId, f.HomeViceCaptainId);
+            (f.HomeScore, f.AwayScore) = (f.AwayScore, f.HomeScore);
+
+            await _db.SaveChangesAsync();
+            return null;
         }
 
         public async Task<bool> UpdateScheduleAsync(int fixtureId, string? location, string? postcode, DateTime? kickoff)

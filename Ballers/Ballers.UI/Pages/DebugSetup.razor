@@ -1,4 +1,5 @@
 @page "/debug"
+@using System.Net.Http.Json
 @using Microsoft.AspNetCore.Components.WebAssembly.Hosting
 @inject HttpClient Http
 @inject IWebAssemblyHostEnvironment HostEnv
@@ -60,6 +61,22 @@ else
             </div>
 
             <div class="debug-card">
+                <h3>Create Player Accounts</h3>
+                <p>Every player in the league gets a login: new approved accounts for those without one, and existing player accounts have their password reset. Anyone without a card gets one, rated across bronze, silver and gold. Keeps all other data. Password for all: <strong>Ballers1!</strong></p>
+                <button class="debug-btn" @onclick='() => RunAction("setup-player-accounts")' disabled="@IsLoading">
+                    @(ActiveAction == "setup-player-accounts" ? "Creating..." : "Create Player Accounts")
+                </button>
+            </div>
+
+            <div class="debug-card">
+                <h3>Reset Cards to Bronze</h3>
+                <p>Every existing card goes back to bronze, with its stats re-spread to a bronze rating, and gets 200 points to spend. For testing upgrades. Run "Create Player Accounts" first.</p>
+                <button class="debug-btn" @onclick='() => RunAction("reset-cards-bronze")' disabled="@IsLoading">
+                    @(ActiveAction == "reset-cards-bronze" ? "Resetting..." : "Reset to Bronze + 200")
+                </button>
+            </div>
+
+            <div class="debug-card">
                 <h3>Create Next Season</h3>
                 <p>Deactivates the current season and creates the next one with a fresh unplayed fixture schedule. Teams and players are kept.</p>
                 <button class="debug-btn" @onclick='() => RunAction("setup-next-season")' disabled="@IsLoading">
@@ -94,6 +111,124 @@ else
                 <div class="creds-password">Password: <strong>@LastFixture.Password</strong></div>
             </div>
         }
+
+        <!-- ── Player accounts ── -->
+        <section class="accounts">
+            <div class="accounts-head">
+                <h2>Player Accounts</h2>
+                <button class="debug-btn" @onclick="LoadAccounts" disabled="@accountsLoading">
+                    @(accountsLoading ? "Loading..." : accounts == null ? "Show accounts" : "Refresh")
+                </button>
+            </div>
+
+            @if (accounts != null)
+            {
+                @if (accounts.Count == 0)
+                {
+                    <p class="accounts-empty">No player accounts yet. Use "Create Player Accounts" above.</p>
+                }
+                else
+                {
+                    <div class="accounts-filters">
+                        <select @bind="teamFilter">
+                            <option value="">All teams (@accounts.Count)</option>
+                            @foreach (var team in accounts.Select(a => a.Team).Distinct().OrderBy(t => t))
+                            {
+                                <option value="@team">@team (@accounts.Count(a => a.Team == team))</option>
+                            }
+                        </select>
+                        <input type="search" placeholder="Search name or email" @bind="search" @bind:event="oninput" />
+                    </div>
+
+                    <div class="accounts-scroll">
+                        <table class="accounts-table">
+                            <thead>
+                                <tr>
+                                    <th>Team</th>
+                                    <th>#</th>
+                                    <th>Name</th>
+                                    <th>Pos</th>
+                                    <th>OVR</th>
+                                    <th>Tier</th>
+                                    <th>Unspent</th>
+                                    <th>Email</th>
+                                    <th>Password</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var a in FilteredAccounts)
+                                {
+                                    <tr>
+                                        <td>@a.Team</td>
+                                        <td>@a.Number</td>
+                                        <td>@a.Name</td>
+                                        <td>@a.Position</td>
+                                        <td>@(a.Overall?.ToString() ?? "—")</td>
+                                        <td>
+                                            @if (a.Tier != null)
+                                            {
+                                                <span class="tier tier-@a.Tier">@a.Tier</span>
+                                            }
+                                        </td>
+                                        <td>@(a.UnspentPoints?.ToString() ?? "—")</td>
+                                        <td class="mono">@a.Email</td>
+                                        <td class="mono">@(a.Password ?? "(their own)")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            }
+        </section>
+
+        <!-- ── Manager accounts ── -->
+        <section class="accounts">
+            <div class="accounts-head">
+                <h2>Manager Accounts</h2>
+                <button class="debug-btn" @onclick="LoadManagers" disabled="@managersLoading">
+                    @(managersLoading ? "Loading..." : managers == null ? "Show accounts" : "Refresh")
+                </button>
+            </div>
+
+            @if (managers != null)
+            {
+                @if (managers.Count == 0)
+                {
+                    <p class="accounts-empty">No manager accounts yet. Use one of the "Setup Teams" options above.</p>
+                }
+                else
+                {
+                    <div class="accounts-filters">
+                        <input type="search" placeholder="Search team or email" @bind="managerSearch" @bind:event="oninput" />
+                    </div>
+
+                    <div class="accounts-scroll">
+                        <table class="accounts-table">
+                            <thead>
+                                <tr>
+                                    <th>Team</th>
+                                    <th>Manager</th>
+                                    <th>Email</th>
+                                    <th>Password</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var m in FilteredManagers)
+                                {
+                                    <tr>
+                                        <td>@m.Team</td>
+                                        <td>@(m.ManagerName ?? "—")</td>
+                                        <td class="mono">@m.Email</td>
+                                        <td class="mono">@(m.Password ?? "(their own)")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            }
+        </section>
     </div>
 }
 
@@ -119,6 +254,8 @@ else
             "setup-almost-complete"  => "api/debug/setup-almost-complete",
             "setup-full-season"      => "api/debug/setup-full-season",
             "setup-next-season"      => "api/debug/setup-next-season",
+            "setup-player-accounts"  => "api/debug/setup-player-accounts",
+            "reset-cards-bronze"     => "api/debug/reset-cards-bronze",
             _                        => throw new ArgumentException($"Unknown action: {action}")
         };
 
@@ -153,7 +290,74 @@ else
         {
             ActiveAction = null;
         }
+
+        // Anything that adds or wipes accounts leaves the lists out of date.
+        if (accounts != null) await LoadAccounts();
+        if (managers != null) await LoadManagers();
     }
+
+    private List<ManagerAccountRow>? managers;
+    private bool managersLoading;
+    private string managerSearch = "";
+
+    private IEnumerable<ManagerAccountRow> FilteredManagers => (managers ?? new())
+        .Where(m => string.IsNullOrWhiteSpace(managerSearch)
+                 || m.Team.Contains(managerSearch, StringComparison.OrdinalIgnoreCase)
+                 || (m.Email ?? "").Contains(managerSearch, StringComparison.OrdinalIgnoreCase));
+
+    private async Task LoadManagers()
+    {
+        managersLoading = true;
+        try
+        {
+            var opts = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            managers = await Http.GetFromJsonAsync<List<ManagerAccountRow>>("api/debug/manager-accounts", opts) ?? new();
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Could not load manager accounts: {ex.Message}";
+            IsError = true;
+        }
+        finally
+        {
+            managersLoading = false;
+        }
+    }
+
+    private record ManagerAccountRow(string Team, string? ManagerName, string? Email, string? Password);
+
+    private List<PlayerAccountRow>? accounts;
+    private bool accountsLoading;
+    private string teamFilter = "";
+    private string search = "";
+
+    private IEnumerable<PlayerAccountRow> FilteredAccounts => (accounts ?? new())
+        .Where(a => teamFilter == "" || a.Team == teamFilter)
+        .Where(a => string.IsNullOrWhiteSpace(search)
+                 || a.Name.Contains(search, StringComparison.OrdinalIgnoreCase)
+                 || (a.Email ?? "").Contains(search, StringComparison.OrdinalIgnoreCase));
+
+    private async Task LoadAccounts()
+    {
+        accountsLoading = true;
+        try
+        {
+            var opts = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            accounts = await Http.GetFromJsonAsync<List<PlayerAccountRow>>("api/debug/player-accounts", opts) ?? new();
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Could not load accounts: {ex.Message}";
+            IsError = true;
+        }
+        finally
+        {
+            accountsLoading = false;
+        }
+    }
+
+    private record PlayerAccountRow(string Name, string Team, int Number, string Position, string? Email,
+        string? Password, int? Overall, string? Tier, int? UnspentPoints);
 
     private record DebugResult(string Message);
     private record AlmostCompleteResult(string Message, string HomeTeam, string AwayTeam, string HomeManager, string AwayManager, string Password);

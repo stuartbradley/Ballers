@@ -9,14 +9,9 @@
 
 <PageTitle>Match of the Day · Admin</PageTitle>
 
+<AdminShell Section="motd" Title="Match of the Day" Subtitle="Write up a match, with a cover and photos, for the public MOTD page.">
+    <ChildContent>
 <div class="motda-page">
-
-    <div class="motda-hero">
-        <div class="motda-hero-inner">
-            <p class="motda-eyebrow">Admin Only</p>
-            <h1>Match of the Day</h1>
-        </div>
-    </div>
 
     <div class="motda-body">
 
@@ -135,6 +130,8 @@
     </div>
 
 </div>
+    </ChildContent>
+</AdminShell>
 
 @code {
     private List<MotdListItemDto> posts = new();

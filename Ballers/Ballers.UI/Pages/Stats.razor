@@ -1,152 +1,200 @@
 @page "/stats"
 @using Ballers.Models
 @using Ballers.Services
-
 @inject StatService StatService
 @inject SeasonService SeasonService
+@inject HttpClient Http
+@inject IJSRuntime JS
 
 <PageTitle>Player Stats | Ballers</PageTitle>
 
-<div class="stats-page">
+@* The league's numbers: a strip of season totals, the leaders in each
+   category, and a full table of players (or of teams). A player's row opens
+   to show their card. *@
+<div class="stats-page" id="stats-page">
 
-    <div class="stats-hero">
-        <div class="stats-hero-inner">
-            <p class="stats-eyebrow">Ballers League</p>
-            <h1>Player Stats</h1>
-            <p class="stats-sub">Season statistics for every player</p>
-        </div>
-    </div>
+    <header class="st-hero">
+        <span class="st-eyebrow">Ballers League</span>
+        <h1>Stats</h1>
+        <p class="st-sub">Who's scoring, who's creating and who's keeping them out.</p>
+    </header>
 
-    <div class="stats-body">
-
+    <div class="st-body">
         @if (isLoading)
         {
-            <LoadingSpinner />
+            <div class="st-loading"><LoadingSpinner /></div>
         }
         else
         {
-            <div class="stats-filters">
-                <div class="filter-group">
-                    <span class="filter-label">Season</span>
-                    <div class="select-wrapper">
-                        <select class="season-select" @bind="selectedSeasonId" @bind:after="LoadLeaderboard">
-                            <option value="0">All Seasons</option>
-                            @foreach (var s in seasons)
-                            {
-                                <option value="@s.Id">Season @s.SeasonNumber</option>
-                            }
-                        </select>
-                    </div>
+            <div class="st-controls">
+                <div class="st-tabs" role="tablist" aria-label="Show stats for">
+                    <button type="button" role="tab" class="st-tab @(tab == "players" ? "is-active" : "")"
+                            aria-selected="@(tab == "players" ? "true" : "false")"
+                            @onclick='() => tab = "players"'>Players</button>
+                    @if (teamStats.Any())
+                    {
+                        <button type="button" role="tab" class="st-tab @(tab == "teams" ? "is-active" : "")"
+                                aria-selected="@(tab == "teams" ? "true" : "false")"
+                                @onclick='() => tab = "teams"'>Teams</button>
+                    }
                 </div>
 
-                <div class="filter-group">
-                    <span class="filter-label">Position</span>
-                    <div class="pos-filters">
-                        @foreach (var pos in new[] { "All", "GK", "DEF", "MID", "FWD" })
+                <label class="st-season">
+                    <span class="st-label">Season</span>
+                    <select @bind="selectedSeasonId" @bind:after="LoadSeason">
+                        <option value="0">All seasons</option>
+                        @foreach (var s in seasons)
                         {
-                            <button class="pos-btn @(selectedPos == pos ? "active" : "")"
-                                    @onclick="() => selectedPos = pos">@pos</button>
+                            <option value="@s.Id">Season @s.SeasonNumber</option>
                         }
-                    </div>
-                </div>
-
-                <div class="filter-group search-group">
-                    <input class="player-search" placeholder="Search player…" @bind="nameSearch" @bind:event="oninput" />
-                </div>
+                    </select>
+                </label>
             </div>
 
-            @if (!allPlayers.Any())
+            @* Keyed by season so the numbers are rebuilt, and count up again,
+               when the season changes. *@
+            @if (gamesPlayed > 0)
             {
-                <div class="stats-empty">
-                    <p class="stats-empty-title">No stats yet</p>
-                    <p class="stats-empty-sub">Stats will appear here once fixtures have been played and results recorded.</p>
+                <div class="st-totals" @key="selectedSeasonId">
+                    <div class="st-total"><strong data-count="@gamesPlayed">@gamesPlayed</strong><span>Games played</span></div>
+                    <div class="st-total"><strong data-count="@totalGoals">@totalGoals</strong><span>Goals</span></div>
+                    <div class="st-total"><strong>@GoalsPerGame</strong><span>Goals per game</span></div>
+                    <div class="st-total"><strong data-count="@totalCleanSheets">@totalCleanSheets</strong><span>Clean sheets</span></div>
+                    <div class="st-total st-total-yellow"><strong data-count="@totalYellows">@totalYellows</strong><span>Yellow cards</span></div>
+                    <div class="st-total st-total-red"><strong data-count="@totalReds">@totalReds</strong><span>Red cards</span></div>
+                </div>
+            }
+
+            @if (tab == "teams" && teamStats.Any())
+            {
+                @TeamsView
+            }
+            else if (!allPlayers.Any())
+            {
+                <div class="st-empty">
+                    <p class="st-empty-title">No stats yet</p>
+                    <p class="st-empty-sub">Stats will appear here once fixtures have been played and results recorded.</p>
                 </div>
             }
             else
             {
-            <div class="stats-card">
-                <table class="stats-leaderboard">
-                    <thead>
-                        <tr>
-                            <th class="col-rank">#</th>
-                            <th class="col-player @SortClass("name")"   @onclick='() => SortBy("name")'>Player</th>
-                            <th class="col-team  @SortClass("team")"    @onclick='() => SortBy("team")'>Team</th>
-                            <th class="col-pos">Pos</th>
-                            <th class="col-num   @SortClass("apps")"    @onclick='() => SortBy("apps")'>Apps</th>
-                            <th class="col-num   @SortClass("goals")"   @onclick='() => SortBy("goals")'>G</th>
-                            <th class="col-num   @SortClass("assists")" @onclick='() => SortBy("assists")'>A</th>
-                            <th class="col-num   @SortClass("cs")"      @onclick='() => SortBy("cs")'>CS</th>
-                            <th class="col-num   @SortClass("yellow")"  @onclick='() => SortBy("yellow")'>
-                                <span class="card-icon yellow-icon">Y</span>
-                            </th>
-                            <th class="col-num   @SortClass("red")"     @onclick='() => SortBy("red")'>
-                                <span class="card-icon red-icon">R</span>
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (!Filtered.Any())
-                        {
-                            <tr><td colspan="10" class="empty-row">No stats recorded yet.</td></tr>
-                        }
-                        else
-                        {
-                            int rank = 1;
-                            @foreach (var p in Sorted)
-                            {
-                                <tr>
-                                    <td class="col-rank"><span class="rank-num">@(rank++)</span></td>
-                                    <td class="col-player">@p.Name</td>
-                                    <td class="col-team">@p.Team</td>
-                                    <td class="col-pos">
-                                        <span class="pos-badge pos-@p.Position.ToLower()">@p.Position</span>
-                                    </td>
-                                    <td class="col-num">@p.Appearances</td>
-                                    <td class="col-num goals-col">@p.Goals</td>
-                                    <td class="col-num">@p.Assists</td>
-                                    <td class="col-num">@(EarnsCleanSheets(p.Position) ? p.CleanSheets.ToString() : "–")</td>
-                                    <td class="col-num">@(p.YellowCards > 0 ? p.YellowCards.ToString() : "–")</td>
-                                    <td class="col-num @(p.RedCards > 0 ? "red-stat" : "")">@(p.RedCards > 0 ? p.RedCards.ToString() : "–")</td>
-                                </tr>
-                            }
-                        }
-                    </tbody>
-                </table>
-            </div>
+                @PlayersView
+            }
         }
-        }
-
     </div>
 </div>
 
 @code {
     private bool isLoading = true;
     private List<SeasonDto> seasons = new();
-    private int selectedSeasonId = 0;
-    private string selectedPos = "All";
+    private int selectedSeasonId;
     private List<PlayerLeaderboardDto> allPlayers = new();
+    private List<TeamStatsDto> teamStats = new();
+    private string tab = "players";
 
-    private string sortCol = "goals";
-    private bool sortAsc = false;
+    private string selectedPos = "All";
     private string nameSearch = "";
+    private string sortCol = "goals";
+    private bool sortAsc;
+    private int? expandedId;
+
+    private string teamSortCol = "gf";
+    private bool teamSortAsc;
+
+    // Season totals. Each game appears twice in the team list, once per side.
+    private int gamesPlayed, totalGoals, totalCleanSheets, totalYellows, totalReds;
+    private string GoalsPerGame => gamesPlayed == 0 ? "–" : ((double)totalGoals / gamesPlayed).ToString("0.0");
+
+    private bool countPending;
+
+    protected override async Task OnInitializedAsync()
+    {
+        seasons = await SeasonService.GetSeasons();
+        var current = await SeasonService.GetCurrentSeason();
+        selectedSeasonId = current?.Id ?? 0;
+        await LoadSeason();
+        isLoading = false;
+    }
+
+    async Task LoadSeason()
+    {
+        int? sid = selectedSeasonId > 0 ? selectedSeasonId : null;
+        var playersTask = StatService.GetLeaderboard(sid);
+        var teamsTask = StatService.GetTeamStats(sid);
+        await Task.WhenAll(playersTask, teamsTask);
+
+        allPlayers = playersTask.Result;
+        teamStats = teamsTask.Result;
+        expandedId = null;
+        if (!teamStats.Any()) tab = "players";
+
+        gamesPlayed = teamStats.Sum(t => t.Played) / 2;
+        totalGoals = teamStats.Sum(t => t.GoalsFor);
+        totalCleanSheets = teamStats.Sum(t => t.CleanSheets);
+        totalYellows = teamStats.Sum(t => t.YellowCards);
+        totalReds = teamStats.Sum(t => t.RedCards);
+        countPending = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (isLoading || !countPending) return;
+        countPending = false;
+        try { await JS.InvokeVoidAsync("homeReveal.scan", "stats-page"); }
+        catch (JSException) { /* decoration only */ }
+    }
+
+    // ── Players ──
 
     private IEnumerable<PlayerLeaderboardDto> Filtered =>
         allPlayers.Where(p =>
             (selectedPos == "All" || p.Position == selectedPos) &&
             (string.IsNullOrEmpty(nameSearch) || p.Name.Contains(nameSearch, StringComparison.OrdinalIgnoreCase)));
 
-    private IEnumerable<PlayerLeaderboardDto> Sorted => sortCol switch
+    private static double PerGame(int value, int apps) => apps == 0 ? 0 : (double)value / apps;
+
+    private IEnumerable<PlayerLeaderboardDto> Sorted
     {
-        "name"    => sortAsc ? Filtered.OrderBy(x => x.Name)        : Filtered.OrderByDescending(x => x.Name),
-        "team"    => sortAsc ? Filtered.OrderBy(x => x.Team)        : Filtered.OrderByDescending(x => x.Team),
-        "apps"    => sortAsc ? Filtered.OrderBy(x => x.Appearances) : Filtered.OrderByDescending(x => x.Appearances),
-        "goals"   => sortAsc ? Filtered.OrderBy(x => x.Goals)       : Filtered.OrderByDescending(x => x.Goals),
-        "assists" => sortAsc ? Filtered.OrderBy(x => x.Assists)     : Filtered.OrderByDescending(x => x.Assists),
-        "cs"      => sortAsc ? Filtered.OrderBy(x => x.CleanSheets) : Filtered.OrderByDescending(x => x.CleanSheets),
-        "yellow"  => sortAsc ? Filtered.OrderBy(x => x.YellowCards) : Filtered.OrderByDescending(x => x.YellowCards),
-        "red"     => sortAsc ? Filtered.OrderBy(x => x.RedCards)    : Filtered.OrderByDescending(x => x.RedCards),
-        _         => Filtered.OrderByDescending(x => x.Goals).ThenByDescending(x => x.Assists)
-    };
+        get
+        {
+            Func<PlayerLeaderboardDto, object> key = sortCol switch
+            {
+                "name" => p => p.Name,
+                "team" => p => p.Team,
+                "ovr" => p => p.Attributes?.Overall ?? -1,
+                "apps" => p => p.Appearances,
+                "assists" => p => p.Assists,
+                "gpg" => p => PerGame(p.Goals, p.Appearances),
+                "cs" => p => EarnsCleanSheets(p.Position) ? p.CleanSheets : -1,
+                "motm" => p => p.Motm,
+                "yellow" => p => p.YellowCards,
+                "red" => p => p.RedCards,
+                _ => p => p.Goals
+            };
+            var ordered = sortAsc ? Filtered.OrderBy(key) : Filtered.OrderByDescending(key);
+            // Ties go to whoever has more goals, then more assists.
+            return ordered.ThenByDescending(p => p.Goals).ThenByDescending(p => p.Assists).ThenBy(p => p.Name);
+        }
+    }
+
+    void SortBy(string col)
+    {
+        if (sortCol == col) sortAsc = !sortAsc;
+        else { sortCol = col; sortAsc = col is "name" or "team"; }
+    }
+
+    string SortClass(string col) =>
+        sortCol == col ? (sortAsc ? "sorted asc" : "sorted desc") : "sortable";
+
+    string? AriaSort(string col) =>
+        sortCol == col ? (sortAsc ? "ascending" : "descending") : null;
+
+    void Toggle(int playerId) => expandedId = expandedId == playerId ? null : playerId;
+
+    void OnRowKey(KeyboardEventArgs e, int playerId)
+    {
+        if (e.Key is "Enter" or " ") Toggle(playerId);
+    }
 
     // Only goalkeepers and defenders are credited with clean sheets; everyone
     // else shows a dash rather than a misleading zero.
@@ -154,27 +202,339 @@
         string.Equals(position, "GK", StringComparison.OrdinalIgnoreCase) ||
         string.Equals(position, "DEF", StringComparison.OrdinalIgnoreCase);
 
-    protected override async Task OnInitializedAsync()
+    private record Leader(string Title, string Unit, List<(PlayerLeaderboardDto Player, int Value)> Top);
+
+    // The top three in each category, across every position. A category with
+    // nobody on the board yet is left out.
+    private IEnumerable<Leader> Leaders
     {
-        seasons = await SeasonService.GetSeasons();
-        var current = await SeasonService.GetCurrentSeason();
-        selectedSeasonId = current?.Id ?? 0;
-        await LoadLeaderboard();
-        isLoading = false;
+        get
+        {
+            Leader Top(string title, string unit, Func<PlayerLeaderboardDto, int> value,
+                       Func<PlayerLeaderboardDto, bool>? who = null) => new(title, unit,
+                allPlayers.Where(p => who == null || who(p))
+                    .Select(p => (Player: p, Value: value(p)))
+                    .Where(x => x.Value > 0)
+                    .OrderByDescending(x => x.Value)
+                    .ThenBy(x => x.Player.Appearances)
+                    .ThenBy(x => x.Player.Name)
+                    .Take(3)
+                    .ToList());
+
+            return new[]
+            {
+                Top("Top scorer", "goals", p => p.Goals),
+                Top("Most assists", "assists", p => p.Assists),
+                Top("Most clean sheets", "clean sheets", p => p.CleanSheets, p => EarnsCleanSheets(p.Position)),
+                Top("Most MOTMs", "MOTMs", p => p.Motm)
+            }.Where(l => l.Top.Count > 0);
+        }
     }
 
-    async Task LoadLeaderboard()
+    // A tiny card in the player's tier with their rating on it; a plain
+    // number badge for players without a card.
+    RenderFragment MiniCard(PlayerLeaderboardDto p) => p.Attributes != null && p.Tier != null
+        ? @<span class="st-mini st-mini-@p.Tier" title="@($"{p.Tier} card, rated {p.Attributes.Overall}")"><span>@p.Attributes.Overall</span></span>
+        : @<span class="st-mini st-mini-none" title="No card yet"><span>#@p.Number</span></span>;
+
+    RenderFragment PlayersView => @<text>
+        @if (Leaders.Any())
+        {
+            <section class="st-leaders" aria-label="League leaders">
+                @foreach (var l in Leaders)
+                {
+                    var (first, firstValue) = l.Top[0];
+                    <article class="st-leader">
+                        <span class="st-leader-title">@l.Title</span>
+                        <button type="button" class="st-leader-main" @onclick="() => ShowPlayer(first.PlayerId)">
+                            @MiniCard(first)
+                            <span class="st-leader-who">
+                                <span class="st-leader-name">@first.Name</span>
+                                <span class="st-leader-team">@first.Team</span>
+                            </span>
+                            <span class="st-leader-value">@firstValue</span>
+                        </button>
+                        @if (l.Top.Count > 1)
+                        {
+                            <ol class="st-runners" start="2">
+                                @foreach (var (p, v) in l.Top.Skip(1))
+                                {
+                                    <li>
+                                        <span class="st-runner-name">@p.Name</span>
+                                        <span class="st-runner-value">@v</span>
+                                    </li>
+                                }
+                            </ol>
+                        }
+                    </article>
+                }
+            </section>
+        }
+
+        <div class="st-filters">
+            <div class="st-chips" role="group" aria-label="Position">
+                @foreach (var pos in new[] { "All", "GK", "DEF", "MID", "FWD" })
+                {
+                    <button type="button" class="st-chip @(selectedPos == pos ? "is-active" : "")"
+                            aria-pressed="@(selectedPos == pos ? "true" : "false")"
+                            @onclick="() => selectedPos = pos">@pos</button>
+                }
+            </div>
+            <input class="st-search" type="search" placeholder="Search player…" aria-label="Search player"
+                   @bind="nameSearch" @bind:event="oninput" />
+        </div>
+
+        <div class="st-table-wrap">
+            <table class="st-table st-players">
+                <thead>
+                    <tr>
+                        <th class="c-rank">#</th>
+                        <th class="c-player @SortClass("name")" aria-sort="@AriaSort("name")" @onclick='() => SortBy("name")'>Player</th>
+                        <th class="c-team @SortClass("team")" aria-sort="@AriaSort("team")" @onclick='() => SortBy("team")'>Team</th>
+                        <th class="c-num c-apps @SortClass("apps")" aria-sort="@AriaSort("apps")" @onclick='() => SortBy("apps")' title="Appearances">Apps</th>
+                        <th class="c-num c-goals @SortClass("goals")" aria-sort="@AriaSort("goals")" @onclick='() => SortBy("goals")' title="Goals">G</th>
+                        <th class="c-num c-assists @SortClass("assists")" aria-sort="@AriaSort("assists")" @onclick='() => SortBy("assists")' title="Assists">A</th>
+                        <th class="c-num c-gpg @SortClass("gpg")" aria-sort="@AriaSort("gpg")" @onclick='() => SortBy("gpg")' title="Goals per game">G/Gm</th>
+                        <th class="c-num c-cs @SortClass("cs")" aria-sort="@AriaSort("cs")" @onclick='() => SortBy("cs")' title="Clean sheets">CS</th>
+                        <th class="c-num c-motm @SortClass("motm")" aria-sort="@AriaSort("motm")" @onclick='() => SortBy("motm")' title="Man of the Match">MOTM</th>
+                        <th class="c-num c-card @SortClass("yellow")" aria-sort="@AriaSort("yellow")" @onclick='() => SortBy("yellow")' title="Yellow cards"><span class="st-card-icon is-yellow"></span></th>
+                        <th class="c-num c-card @SortClass("red")" aria-sort="@AriaSort("red")" @onclick='() => SortBy("red")' title="Red cards"><span class="st-card-icon is-red"></span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Filtered.Any())
+                    {
+                        <tr><td colspan="11" class="st-empty-row">No players match.</td></tr>
+                    }
+                    else
+                    {
+                        var rank = 1;
+                        @foreach (var p in Sorted)
+                        {
+                            var open = expandedId == p.PlayerId;
+                            var r = rank++;
+                            <tr class="st-row @(r <= 3 ? $"is-top{r}" : "") @(open ? "is-open" : "")" id="player-@p.PlayerId"
+                                tabindex="0" aria-expanded="@(open ? "true" : "false")"
+                                @onclick="() => Toggle(p.PlayerId)" @onkeydown="e => OnRowKey(e, p.PlayerId)">
+                                <td class="c-rank"><span class="st-rank">@r</span></td>
+                                <td class="c-player">
+                                    <span class="st-player">
+                                        @MiniCard(p)
+                                        <span class="st-player-text">
+                                            <span class="st-player-name">@p.Name</span>
+                                            <span class="st-pos st-pos-@p.Position.ToLower()">@p.Position</span>
+                                        </span>
+                                        <span class="st-chevron" aria-hidden="true"></span>
+                                    </span>
+                                </td>
+                                <td class="c-team">@p.Team</td>
+                                <td class="c-num c-apps">@p.Appearances</td>
+                                <td class="c-num c-goals">@p.Goals</td>
+                                <td class="c-num c-assists">@p.Assists</td>
+                                <td class="c-num c-gpg">@(p.Appearances == 0 ? "–" : PerGame(p.Goals, p.Appearances).ToString("0.00"))</td>
+                                <td class="c-num c-cs">@(EarnsCleanSheets(p.Position) ? p.CleanSheets.ToString() : "–")</td>
+                                <td class="c-num c-motm">@(p.Motm > 0 ? p.Motm.ToString() : "–")</td>
+                                <td class="c-num c-card">@(p.YellowCards > 0 ? p.YellowCards.ToString() : "–")</td>
+                                <td class="c-num c-card @(p.RedCards > 0 ? "is-red" : "")">@(p.RedCards > 0 ? p.RedCards.ToString() : "–")</td>
+                            </tr>
+                            @if (open)
+                            {
+                                <tr class="st-detail-row">
+                                    <td colspan="11">
+                                        @PlayerDetail(p)
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </text>;
+
+    RenderFragment PlayerDetail(PlayerLeaderboardDto p) => @<div class="st-detail">
+        <div class="st-detail-card">
+            <PlayerCard Name="@p.Name" Number="@p.Number" Position="@p.Position"
+                        Goals="@p.Goals" Assists="@p.Assists" Motm="@p.Motm" CleanSheets="@p.CleanSheets"
+                        Attributes="@p.Attributes" Tier="@p.Tier" />
+        </div>
+        <div class="st-detail-body">
+            <p class="st-detail-head">
+                <span class="st-detail-name">@p.Name</span>
+                <span class="st-detail-sub">#@p.Number · @p.Position · <a href="/team/@p.TeamId">@p.Team</a></span>
+            </p>
+            <dl class="st-detail-stats">
+                <div><dt>Appearances</dt><dd>@p.Appearances</dd></div>
+                <div><dt>Goals</dt><dd>@p.Goals</dd></div>
+                <div><dt>Assists</dt><dd>@p.Assists</dd></div>
+                <div><dt>Goal involvements</dt><dd>@(p.Goals + p.Assists)</dd></div>
+                <div><dt>Goals per game</dt><dd>@PerGame(p.Goals, p.Appearances).ToString("0.00")</dd></div>
+                <div><dt>Involvements per game</dt><dd>@PerGame(p.Goals + p.Assists, p.Appearances).ToString("0.00")</dd></div>
+                @if (EarnsCleanSheets(p.Position))
+                {
+                    <div><dt>Clean sheets</dt><dd>@p.CleanSheets</dd></div>
+                }
+                <div><dt>Man of the Match</dt><dd>@p.Motm</dd></div>
+                @if (p.OwnGoals > 0)
+                {
+                    <div><dt>Own goals</dt><dd>@p.OwnGoals</dd></div>
+                }
+                <div><dt>Cards</dt><dd><span class="st-card-icon is-yellow"></span>@p.YellowCards <span class="st-card-icon is-red"></span>@p.RedCards</dd></div>
+            </dl>
+            @if (p.Attributes == null)
+            {
+                <p class="st-detail-note">No player card yet.</p>
+            }
+        </div>
+    </div>;
+
+    // A leader's card opens their row in the table, clearing any filter that
+    // would hide it.
+    async Task ShowPlayer(int playerId)
     {
-        int? sid = selectedSeasonId > 0 ? selectedSeasonId : null;
-        allPlayers = await StatService.GetLeaderboard(sid);
+        selectedPos = "All";
+        nameSearch = "";
+        expandedId = playerId;
+        StateHasChanged();
+        await Task.Yield();
+        try { await JS.InvokeVoidAsync("scrollToId", $"player-{playerId}"); }
+        catch (JSException) { /* the row is open either way */ }
     }
 
-    void SortBy(string col)
+    // ── Teams ──
+
+    private IEnumerable<TeamStatsDto> SortedTeams
     {
-        if (sortCol == col) sortAsc = !sortAsc;
-        else { sortCol = col; sortAsc = false; }
+        get
+        {
+            Func<TeamStatsDto, object> key = teamSortCol switch
+            {
+                "name" => t => t.Name,
+                "p" => t => t.Played,
+                "w" => t => t.Won,
+                "d" => t => t.Drawn,
+                "l" => t => t.Lost,
+                "ga" => t => t.GoalsAgainst,
+                "gd" => t => t.GoalsFor - t.GoalsAgainst,
+                "cs" => t => t.CleanSheets,
+                "yellow" => t => t.YellowCards,
+                "red" => t => t.RedCards,
+                _ => t => t.GoalsFor
+            };
+            var ordered = teamSortAsc ? teamStats.OrderBy(key) : teamStats.OrderByDescending(key);
+            return ordered.ThenBy(t => t.Name);
+        }
     }
 
-    string SortClass(string col) =>
-        sortCol == col ? (sortAsc ? "sorted asc" : "sorted desc") : "sortable";
+    void SortTeamsBy(string col)
+    {
+        if (teamSortCol == col) teamSortAsc = !teamSortAsc;
+        // Fewer is better for these, so they start lowest first.
+        else { teamSortCol = col; teamSortAsc = col is "name" or "ga" or "l" or "yellow" or "red"; }
+    }
+
+    string TeamSortClass(string col) =>
+        teamSortCol == col ? (teamSortAsc ? "sorted asc" : "sorted desc") : "sortable";
+
+    string? TeamAriaSort(string col) =>
+        teamSortCol == col ? (teamSortAsc ? "ascending" : "descending") : null;
+
+    private record Highlight(string Title, TeamStatsDto Team, string Value);
+
+    // Best attack, best defence and best discipline, among teams that have
+    // played. A red counts as three yellows.
+    private IEnumerable<Highlight> TeamHighlights
+    {
+        get
+        {
+            var played = teamStats.Where(t => t.Played > 0).ToList();
+            if (!played.Any()) yield break;
+
+            var attack = played.OrderByDescending(t => (double)t.GoalsFor / t.Played).ThenBy(t => t.Name).First();
+            yield return new("Best attack", attack, $"{(double)attack.GoalsFor / attack.Played:0.0} goals a game");
+
+            var defence = played.OrderBy(t => (double)t.GoalsAgainst / t.Played).ThenBy(t => t.Name).First();
+            yield return new("Best defence", defence, $"{(double)defence.GoalsAgainst / defence.Played:0.0} conceded a game");
+
+            var fair = played.OrderBy(t => (double)(t.YellowCards + 3 * t.RedCards) / t.Played).ThenBy(t => t.Name).First();
+            yield return new("Fair play", fair, $"{fair.YellowCards} yellow, {fair.RedCards} red");
+        }
+    }
+
+    // The club's home kit colour, as a plain hex only, so nothing else can be
+    // injected into the style attribute.
+    private static string? KitStyle(string? colour)
+        => colour != null && System.Text.RegularExpressions.Regex.IsMatch(colour, "^#[0-9a-fA-F]{3,8}$")
+            ? $"--kit:{colour}"
+            : null;
+
+    static string Initials(string name)
+    {
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length >= 2
+            ? $"{parts[0][0]}{parts[1][0]}".ToUpper()
+            : name.Length >= 2 ? name[..2].ToUpper() : name.ToUpper();
+    }
+
+    RenderFragment Crest(TeamStatsDto t) => !string.IsNullOrEmpty(t.ProfileImageUrl)
+        ? @<img class="st-crest" src="@(Http.BaseAddress!.ToString().TrimEnd('/') + t.ProfileImageUrl)" alt="" />
+        : @<span class="st-crest st-crest-none">@Initials(t.Name)</span>;
+
+    RenderFragment TeamsView => @<text>
+        <section class="st-highlights" aria-label="Team highlights">
+            @foreach (var h in TeamHighlights)
+            {
+                <a class="st-highlight" href="/team/@h.Team.TeamId" style="@KitStyle(h.Team.HomeKitColour)">
+                    <span class="st-leader-title">@h.Title</span>
+                    <span class="st-highlight-team">@Crest(h.Team)<span>@h.Team.Name</span></span>
+                    <span class="st-highlight-value">@h.Value</span>
+                </a>
+            }
+        </section>
+
+        <div class="st-table-wrap">
+            <table class="st-table st-teams">
+                <thead>
+                    <tr>
+                        <th class="c-rank">#</th>
+                        <th class="c-player @TeamSortClass("name")" aria-sort="@TeamAriaSort("name")" @onclick='() => SortTeamsBy("name")'>Team</th>
+                        <th class="c-num t-p @TeamSortClass("p")" aria-sort="@TeamAriaSort("p")" @onclick='() => SortTeamsBy("p")' title="Played">P</th>
+                        <th class="c-num t-w @TeamSortClass("w")" aria-sort="@TeamAriaSort("w")" @onclick='() => SortTeamsBy("w")' title="Won">W</th>
+                        <th class="c-num t-d @TeamSortClass("d")" aria-sort="@TeamAriaSort("d")" @onclick='() => SortTeamsBy("d")' title="Drawn">D</th>
+                        <th class="c-num t-l @TeamSortClass("l")" aria-sort="@TeamAriaSort("l")" @onclick='() => SortTeamsBy("l")' title="Lost">L</th>
+                        <th class="c-num c-goals @TeamSortClass("gf")" aria-sort="@TeamAriaSort("gf")" @onclick='() => SortTeamsBy("gf")' title="Goals for">GF</th>
+                        <th class="c-num t-ga @TeamSortClass("ga")" aria-sort="@TeamAriaSort("ga")" @onclick='() => SortTeamsBy("ga")' title="Goals against">GA</th>
+                        <th class="c-num t-gd @TeamSortClass("gd")" aria-sort="@TeamAriaSort("gd")" @onclick='() => SortTeamsBy("gd")' title="Goal difference">GD</th>
+                        <th class="c-num c-cs @TeamSortClass("cs")" aria-sort="@TeamAriaSort("cs")" @onclick='() => SortTeamsBy("cs")' title="Clean sheets">CS</th>
+                        <th class="c-num c-card @TeamSortClass("yellow")" aria-sort="@TeamAriaSort("yellow")" @onclick='() => SortTeamsBy("yellow")' title="Yellow cards"><span class="st-card-icon is-yellow"></span></th>
+                        <th class="c-num c-card @TeamSortClass("red")" aria-sort="@TeamAriaSort("red")" @onclick='() => SortTeamsBy("red")' title="Red cards"><span class="st-card-icon is-red"></span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{ var rank = 1; }
+                    @foreach (var t in SortedTeams)
+                    {
+                        var r = rank++;
+                        var gd = t.GoalsFor - t.GoalsAgainst;
+                        <tr class="st-row @(r <= 3 ? $"is-top{r}" : "")" style="@KitStyle(t.HomeKitColour)">
+                            <td class="c-rank"><span class="st-rank">@r</span></td>
+                            <td class="c-player">
+                                <a class="st-team-link" href="/team/@t.TeamId">@Crest(t)<span>@t.Name</span></a>
+                            </td>
+                            <td class="c-num t-p">@t.Played</td>
+                            <td class="c-num t-w">@t.Won</td>
+                            <td class="c-num t-d">@t.Drawn</td>
+                            <td class="c-num t-l">@t.Lost</td>
+                            <td class="c-num c-goals">@t.GoalsFor</td>
+                            <td class="c-num t-ga">@t.GoalsAgainst</td>
+                            <td class="c-num t-gd @(gd > 0 ? "is-pos" : gd < 0 ? "is-neg" : "")">@(gd > 0 ? $"+{gd}" : gd.ToString())</td>
+                            <td class="c-num c-cs">@t.CleanSheets</td>
+                            <td class="c-num c-card">@t.YellowCards</td>
+                            <td class="c-num c-card @(t.RedCards > 0 ? "is-red" : "")">@t.RedCards</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </text>;
 }

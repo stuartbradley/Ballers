@@ -1,7 +1,10 @@
-<div class="fut-player-card @Position?.ToLower() card-@CardTier">
+<div class="fut-player-card @Position?.ToLower() card-@CardTier @(HasAttributes ? "has-attributes" : "")">
     <div class="player-card-top">
         <div class="player-master-info">
-            <div class="player-rating"><span>@Number</span></div>
+            @* A player with a card shows their overall rating here, the way a FIFA
+               card does. Without one there is no rating to show, so the shirt
+               number keeps the spot it has always had. *@
+            <div class="player-rating"><span>@(HasAttributes ? Attributes!.Overall : Number)</span></div>
             <div class="player-position"><span>@Position</span></div>
         </div>
         <div class="player-picture">
@@ -20,8 +23,30 @@
     </div>
     <div class="player-card-bottom">
         <div class="player-info">
-            <div class="player-name"><span>@Name</span></div>
-            @if (Goals.HasValue || Assists.HasValue || Motm.HasValue)
+            <div class="player-name">
+                <span>
+                    @if (HasAttributes)
+                    {
+                        @* The number is displaced from the rating slot, so it rides
+                           alongside the name instead of disappearing. *@
+                        <span class="player-shirt">@Number</span>
+                    }
+                    @Name
+                </span>
+            </div>
+            @if (HasAttributes)
+            {
+                <div class="player-attributes">
+                    @foreach (var (value, label) in AttributeCells)
+                    {
+                        <div class="player-attribute">
+                            <span class="player-attribute-value">@value</span>
+                            <span class="player-attribute-label">@label</span>
+                        </div>
+                    }
+                </div>
+            }
+            else if (Goals.HasValue || Assists.HasValue || Motm.HasValue)
             {
                 <div class="player-features">
                     <div class="player-features-col">
@@ -85,13 +110,46 @@
     /// <summary>When set ("gold"/"silver"/"bronze"), overrides the stat-derived tier (used by manager cards).</summary>
     [Parameter] public string? TierOverride { get; set; }
 
+    /// <summary>
+    /// The player's six card attributes. Null for a player with no login yet, which
+    /// leaves the card rendering exactly as it did before cards had ratings.
+    /// </summary>
+    [Parameter] public PlayerAttributesDto? Attributes { get; set; }
+
+    /// <summary>
+    /// Tier worked out from the overall rating against the league's thresholds.
+    /// Only meaningful alongside <see cref="Attributes"/>.
+    /// </summary>
+    [Parameter] public string? Tier { get; set; }
+
+    private bool HasAttributes => Attributes != null;
+
+    // Laid out down the left column then down the right, so the pairs read
+    // FIN/DRI, TAC/PAC, PAS/STR across the card.
+    private IEnumerable<(int Value, string Label)> AttributeCells
+    {
+        get
+        {
+            var a = Attributes!;
+            yield return (a.Finishing, "FIN");
+            yield return (a.Dribbling, "DRI");
+            yield return (a.Tackling, "TAC");
+            yield return (a.Pace, "PAC");
+            yield return (a.Passing, "PAS");
+            yield return (a.Strength, "STR");
+        }
+    }
+
     // Goals and assists are a poor measure of a goalkeeper or defender, so those
     // two positions can also earn their tier through clean sheets.
     private bool EarnsCleanSheets =>
         string.Equals(Position, "GK", StringComparison.OrdinalIgnoreCase) ||
         string.Equals(Position, "DEF", StringComparison.OrdinalIgnoreCase);
 
-    private string CardTier => TierOverride ?? BestTier();
+    // A card with a rating takes its tier from that rating. Everyone else falls
+    // back to the goals-and-assists logic below, so squads of players who have not
+    // signed up look no different than they did.
+    private string CardTier => TierOverride ?? Tier ?? BestTier();
 
     // Whichever of the two routes to a tier is better — a defender who scores and
     // assists still gets gold without the clean sheets, and vice versa.

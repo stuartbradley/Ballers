@@ -1,57 +1,126 @@
 @page "/teams"
 @using Ballers.Models
 @using Ballers.Services
+@using Ballers.Shared
 @inject TeamService TeamService
 @inject HttpClient Http
+@inject IJSRuntime JS
 
 <PageTitle>The Teams</PageTitle>
 
+@* Every club as a card: where it sits in the table, how it's playing, and how
+   its squad rates on the player cards. Cards lean towards the pointer
+   (wwwroot/js/cardTilt.js). *@
 <div class="teams-page">
 
-    <div class="teams-hero">
-        <div class="teams-hero-inner">
-            <p class="teams-eyebrow">Ballers League</p>
-            <h1>The Teams</h1>
-            <p class="teams-sub">Meet the clubs</p>
-        </div>
-    </div>
+    <header class="tm-hero">
+        <span class="tm-eyebrow">Ballers League</span>
+        <h1>The Teams</h1>
+        <p class="tm-sub">Meet the clubs: their form, their table position and how their squads rate.</p>
+    </header>
 
-    <div class="teams-body">
+    <div class="tm-body">
         @if (isLoading)
         {
-            <div class="teams-loading"><LoadingSpinner /></div>
+            <div class="tm-loading"><LoadingSpinner /></div>
         }
         else if (!teams.Any())
         {
-            <div class="teams-empty">No teams registered yet.</div>
+            <div class="tm-empty">No teams registered yet.</div>
         }
         else
         {
-            <div class="teams-grid">
-                @foreach (var team in teams)
+            @if (hasStats)
+            {
+            <div class="tm-sort" role="group" aria-label="Sort teams">
+                <span class="tm-sort-label">Sort by</span>
+                @foreach (var (key, label) in SortOptions)
                 {
-                    <a class="team-card" href="/team/@team.Id">
-                        <div class="team-card-crest-wrap">
-                            @if (!string.IsNullOrEmpty(team.ProfileImageUrl))
+                    <button type="button"
+                            class="tm-sort-btn @(sort == key ? "is-active" : "")"
+                            aria-pressed="@(sort == key ? "true" : "false")"
+                            @onclick="() => sort = key">@label</button>
+                }
+            </div>
+            }
+            else
+            {
+                <p class="tm-note">Table and squad stats are unavailable right now.</p>
+            }
+
+            <div class="tm-grid" id="teams-grid">
+                @foreach (var team in Sorted)
+                {
+                    <a class="tm-card" href="/team/@team.Id" style="@KitStyle(team.HomeKitColour)">
+                        <span class="tm-sheen" aria-hidden="true"></span>
+
+                        <div class="tm-card-top">
+                            @if (team.Position is int pos)
                             {
-                                <img class="team-card-crest"
-                                     src="@(Http.BaseAddress!.ToString().TrimEnd('/') + team.ProfileImageUrl)"
-                                     alt="@team.Name crest" />
+                                <span class="tm-pos @(pos <= 3 ? $"tm-pos-{pos}" : "")" title="League position">#@pos</span>
                             }
                             else
                             {
-                                <div class="team-card-placeholder">
-                                    <span>@Initials(team.Name)</span>
+                                <span></span>
+                            }
+                            <span class="tm-form" aria-label="@FormLabel(team)">
+                                @foreach (var r in team.Form)
+                                {
+                                    <span class="tm-dot tm-dot-@r.ToLower()">@r</span>
+                                }
+                            </span>
+                        </div>
+
+                        <div class="tm-crest-wrap">
+                            @if (!string.IsNullOrEmpty(team.ProfileImageUrl))
+                            {
+                                <img class="tm-crest" src="@(Http.BaseAddress!.ToString().TrimEnd('/') + team.ProfileImageUrl)" alt="@team.Name crest" />
+                            }
+                            else
+                            {
+                                <div class="tm-crest tm-crest-placeholder"><span>@Initials(team.Name)</span></div>
+                            }
+                        </div>
+
+                        <p class="tm-name">@team.Name</p>
+                        @if (!string.IsNullOrEmpty(team.ManagerName))
+                        {
+                            <p class="tm-manager">@team.ManagerName</p>
+                        }
+
+                        @if (hasStats)
+                        {
+                        <div class="tm-record">
+                            <span><strong>@team.Played</strong>P</span>
+                            <span><strong>@team.Won</strong>W</span>
+                            <span><strong>@team.Drawn</strong>D</span>
+                            <span><strong>@team.Lost</strong>L</span>
+                            <span class="tm-pts"><strong>@team.Points</strong>Pts</span>
+                        </div>
+
+                        <div class="tm-foot">
+                            <div class="tm-rating tier-@(team.SquadTier ?? "none")">
+                                <span class="tm-rating-num">@(team.SquadOverall?.ToString() ?? "—")</span>
+                                <span class="tm-rating-label">
+                                    Squad rating
+                                    <small>@team.CardCount of @team.SquadSize on cards</small>
+                                </span>
+                            </div>
+
+                            @if (team.TopPlayer is { } star)
+                            {
+                                @* A miniature card: the tier artwork with the rating on it. *@
+                                <div class="tm-star" title="Top-rated player">
+                                    <span class="tm-mini tm-mini-@star.Tier"><span>@star.Overall</span></span>
+                                    <span class="tm-star-text">
+                                        <span class="tm-star-label">Star</span>
+                                        <span class="tm-star-name">@star.Name</span>
+                                        <span class="tm-star-pos">@star.Position</span>
+                                    </span>
                                 </div>
                             }
                         </div>
-                        <div class="team-card-info">
-                            <p class="team-card-name">@team.Name</p>
-                            @if (!string.IsNullOrEmpty(team.ManagerName))
-                            {
-                                <p class="team-card-manager">@team.ManagerName</p>
-                            }
-                        </div>
+                        }
                     </a>
                 }
             </div>
@@ -61,14 +130,67 @@
 </div>
 
 @code {
-    private List<TeamProfileDto> teams = new();
+    private List<TeamOverviewDto> teams = new();
     private bool isLoading = true;
+    private bool hasStats;
+    private bool tiltBound;
+    private string sort = "table";
+
+    private static readonly (string Key, string Label)[] SortOptions =
+    {
+        ("table", "League position"),
+        ("rating", "Squad rating"),
+        ("name", "A–Z")
+    };
+
+    // Teams with no table place or no rating go to the end, not the start.
+    private IEnumerable<TeamOverviewDto> Sorted => sort switch
+    {
+        "rating" => teams.OrderByDescending(t => t.SquadOverall ?? -1).ThenBy(t => t.Name),
+        "name" => teams.OrderBy(t => t.Name),
+        _ => teams.OrderBy(t => t.Position ?? int.MaxValue).ThenBy(t => t.Name)
+    };
 
     protected override async Task OnInitializedAsync()
     {
-        teams = await TeamService.GetAllTeams();
+        teams = await TeamService.GetOverview();
+        hasStats = teams.Count > 0;
+
+        // Without the overview, still list the clubs, just without the stats
+        // (which would otherwise all read as zero).
+        if (!hasStats)
+        {
+            teams = (await TeamService.GetAllTeams())
+                .Select(t => new TeamOverviewDto
+                {
+                    Id = t.Id,
+                    Name = t.Name,
+                    ProfileImageUrl = t.ProfileImageUrl,
+                    ManagerName = t.ManagerName
+                })
+                .ToList();
+        }
+
         isLoading = false;
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (isLoading || tiltBound || !teams.Any()) return;
+        tiltBound = true;
+        try { await JS.InvokeVoidAsync("cardTilt.bind", "teams-grid", ".tm-card", 7); }
+        catch (JSException) { /* decoration only */ }
+    }
+
+    // The club's home kit colour tints its card. Only a plain hex colour is
+    // used, so nothing else can be injected into the style attribute.
+    private static string? KitStyle(string? colour)
+        => colour != null && System.Text.RegularExpressions.Regex.IsMatch(colour, "^#[0-9a-fA-F]{3,8}$")
+            ? $"--kit:{colour}"
+            : null;
+
+    private static string FormLabel(TeamOverviewDto t)
+        => t.Form.Count == 0 ? "No games played yet" : "Last results, oldest first: " + string.Join(", ", t.Form);
 
     static string Initials(string name)
     {

@@ -17,17 +17,20 @@ namespace Ballers.API.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ImageModerationService _moderation;
         private readonly IWebHostEnvironment _env;
+        private readonly IPlayerCardService _cards;
 
         public TeamProfileController(
             ApplicationDbContext db,
             UserManager<ApplicationUser> userManager,
             ImageModerationService moderation,
-            IWebHostEnvironment env)
+            IWebHostEnvironment env,
+            IPlayerCardService cards)
         {
             _db = db;
             _userManager = userManager;
             _moderation = moderation;
             _env = env;
+            _cards = cards;
         }
 
         [HttpGet("{id}/profile")]
@@ -127,15 +130,23 @@ namespace Ballers.API.Controllers
                     // A clean sheet is an appearance in a played fixture where this
                     // player's team conceded nothing. Counted for every position
                     // here; only goalkeepers and defenders are given the figure below.
+                    // Spelled out rather than calling PlayerPositions.IsCleanSheetFor
+                    // because EF has to translate this into SQL — if that rule
+                    // changes, change it here too.
                     CleanSheets = g.Count(x =>
                         (team.Id == x.Fixture!.HomeTeamId && x.Fixture.AwayScore == 0) ||
                         (team.Id == x.Fixture!.AwayTeamId && x.Fixture.HomeScore == 0))
                 })
                 .ToListAsync();
 
+            // Attributes exist only for players who have signed up. The rest come
+            // back with nulls, which is what tells the card to render the old way.
+            var attributes = await _cards.GetPublicCardsAsync(playerIds);
+
             var cards = players.Select(p =>
             {
                 var s = stats.FirstOrDefault(x => x.PlayerId == p.Id);
+                var hasCard = attributes.TryGetValue(p.Id, out var card);
                 return new PlayerCardDto
                 {
                     Id = p.Id,
@@ -146,7 +157,9 @@ namespace Ballers.API.Controllers
                     Assists = s?.Assists ?? 0,
                     Motm = s?.Motm ?? 0,
                     CleanSheets = PlayerPositions.EarnsCleanSheets(p.Position) ? s?.CleanSheets ?? 0 : 0,
-                    ImageUrl = p.ProfileImageBase64
+                    ImageUrl = p.ProfileImageBase64,
+                    Attributes = hasCard ? card.Attributes : null,
+                    Tier = hasCard ? card.Tier : null
                 };
             });
 

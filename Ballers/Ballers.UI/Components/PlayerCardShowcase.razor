@@ -1,0 +1,485 @@
+@* Marketing showcase for the player card feature. Deliberately not the real
+   PlayerCard component: it carries callouts, big stats and tier labels the
+   real card has no business showing. It shows the league's card of the week
+   when there is one, and an invented example card until there is. *@
+@using Microsoft.AspNetCore.Components.Authorization
+@using Ballers.Services
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+@inject PlayerCardService Cards
+
+<section class="card-showcase card-tier-@CardTier" id="@_rootId"
+         data-silver="@_thresholds?.SilverOverallThreshold"
+         data-gold="@_thresholds?.GoldOverallThreshold"
+         data-cap="@(_thresholds?.AttributeCap ?? 99)">
+
+    @* The lit area: heading, card and everything that moves. The acts play
+       while the pointer is over the section (or, on a touch screen, while it
+       is on screen). *@
+    <div class="showcase-frame">
+
+        @* Floodlights and drifting dust, behind everything. *@
+        <div class="sc-atmos" aria-hidden="true">
+            <div class="sc-beam sc-beam-left"></div>
+            <div class="sc-beam sc-beam-right"></div>
+            <div class="sc-beam sc-beam-centre"></div>
+            <canvas class="sc-dust"></canvas>
+        </div>
+
+        <div class="showcase-inner">
+
+            <div class="showcase-copy">
+                @* One line. The site sets every heading in uppercase Oswald, so
+                   a smaller line stacked above this one would just read as the
+                   eyebrow label this deliberately does without. *@
+                <h2 class="showcase-head">Every player gets a card</h2>
+                <p class="showcase-sub">
+                    Claim your squad place and build your rating. Points land every
+                    Sunday from what you did on the pitch, and you decide which stats
+                    they go into.
+                </p>
+                @if (_featured != null)
+                {
+                    <p class="sc-featured">
+                        <span class="sc-featured-label">Card of the week</span>
+                        <span>@FeaturedLine</span>
+                    </p>
+                }
+            </div>
+
+            <div class="showcase-stage">
+
+                @* A glossy floor for the cards to stand on, with pitch lines
+                   running away from you. *@
+                <div class="sc-floor" aria-hidden="true"></div>
+
+                @* The glow that bursts from behind the card as it is revealed. *@
+                <div class="sc-burst" aria-hidden="true"></div>
+
+                @* The tilt is a separate layer so the turn driven from JS stays
+                   a clean rotateY and the two transforms cannot fight. *@
+                <div class="showcase-tilt">
+                    @* The other tiers, fanned out behind. Inside the tilt so they
+                       shift against the main card as it leans, outside the rotor
+                       so they stay put while it turns. Whatever tier the main
+                       card is, the fan holds the other three. *@
+                    <div class="sc-fan" aria-hidden="true">
+                        @foreach (var fan in FanCards)
+                        {
+                            @* The outer element is the script's (the fan and the
+                               row); the inner face floats on its own CSS loop, so
+                               the two motions never write to the same transform. *@
+                            <div class="sc-fan-card sc-fan-@fan.Pose sc-art-@fan.Tier" data-tier="@fan.Tier">
+                                <div class="sc-fan-face"><div class="sc-fan-flash"></div></div>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="showcase-rotor" data-tier="@CardTier">
+                        <div class="showcase-card">
+
+                            <!-- ── FRONT ── -->
+                            @* The artwork, the container query and the foil all
+                               live on .sc-inner rather than on the face. A filter
+                               or a container-type on the face itself flattens it
+                               out of the card's 3D context, and the back then
+                               paints over it. *@
+                            <div class="showcase-face showcase-front">
+                                <div class="sc-inner">
+                                    @* Holds the photo zone open. The photo and
+                                       rating themselves sit on raised layers. *@
+                                    <div class="sc-top"></div>
+
+                                    <div class="sc-bottom">
+                                        <div class="sc-name"><span class="sc-shirt">@Number</span> @Name</div>
+                                        <div class="sc-attrs">
+                                            @for (var i = 0; i < 6; i++)
+                                            {
+                                                var stat = StatList[i];
+                                                <div class="sc-attr">
+                                                    <span class="sc-attr-value">
+                                                        @if (_featured == null && i == 0)
+                                                        {
+                                                            @* The example card shows a stat
+                                                               being raised; a real card is
+                                                               shown as it stands. *@
+                                                            <span class="sc-num sc-num-before">54</span>
+                                                            <span class="sc-num sc-num-after">@stat.Value</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            @stat.Value
+                                                        }
+                                                    </span>
+                                                    <span class="sc-attr-label">@stat.Short</span>
+                                                    @if (_featured == null && i == 0)
+                                                    {
+                                                        <span class="sc-pop">+18</span>
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+
+                                    @* Foil, in two layers: a hard specular band
+                                       that travels across the card, and a much
+                                       weaker spectral wash underneath it. *@
+                                    <div class="sc-holo" aria-hidden="true"></div>
+                                    <div class="sc-foil" aria-hidden="true"></div>
+                                    @* The light that follows the pointer. *@
+                                    <div class="sc-glare" aria-hidden="true"></div>
+                                    @* The white-out as the card is revealed or
+                                       upgraded. *@
+                                    <div class="sc-flash" aria-hidden="true"></div>
+                                </div>
+
+                                @* Raised off the card surface, so they shift
+                                   against it as the card leans and turns.
+                                   Outside .sc-inner because its overflow clip
+                                   flattens everything in it; each layer is its
+                                   own container, so the cqi sizes still measure
+                                   the card. *@
+                                <div class="sc-layer sc-layer-photo">
+                                    @if (_featured == null)
+                                    {
+                                        <img class="sc-photo" src="/images/showcase-player.png" alt="" draggable="false" />
+                                    }
+                                    else if (!string.IsNullOrEmpty(_featured.ImageUrl))
+                                    {
+                                        @* An ordinary rectangular upload, not a
+                                           cut-out, so its edges are faded into
+                                           the card instead of showing a box. *@
+                                        <img class="sc-photo-real" src="@_featured.ImageUrl" alt="" draggable="false" />
+                                    }
+                                    else
+                                    {
+                                        <svg class="sc-silhouette" viewBox="0 0 60 90" xmlns="http://www.w3.org/2000/svg" fill="currentColor" aria-hidden="true">
+                                            <circle cx="30" cy="14" r="12" />
+                                            <path d="M10 36 L3 55 L15 59 L18 46 L18 78 L42 78 L42 46 L45 59 L57 55 L50 36 C46 31 38 27 30 27 C22 27 14 31 10 36Z" />
+                                        </svg>
+                                    }
+                                </div>
+                                <div class="sc-layer sc-layer-rating">
+                                    <div class="sc-master">
+                                        <span class="sc-rating">
+                                            @if (_featured == null)
+                                            {
+                                                <span class="sc-num sc-num-before">64</span>
+                                                <span class="sc-num sc-num-after">67</span>
+                                            }
+                                            else
+                                            {
+                                                @_featured.Attributes.Overall
+                                            }
+                                        </span>
+                                        <span class="sc-position">@Position</span>
+                                        @if (_featured != null)
+                                        {
+                                            <span class="sc-pop sc-pop-week">+@_featured.WeekPoints pts</span>
+                                        }
+                                    </div>
+                                </div>
+
+                                @* Mirrored in the glossy floor. *@
+                                <div class="sc-reflect" aria-hidden="true"></div>
+                            </div>
+
+                            <!-- ── BACK ── -->
+                            <div class="showcase-face showcase-back">
+                                <div class="sc-back-inner">
+                                    <div class="sc-back-head">
+                                        <span class="sc-back-name">@Name</span>
+                                        <span class="sc-back-season">@SeasonLabel</span>
+                                    </div>
+
+                                    <ul class="sc-tally">
+                                        @foreach (var row in Tally)
+                                        {
+                                            <li>
+                                                <span class="sc-tally-value">@row.Count</span>
+                                                <span class="sc-tally-label">@row.Label</span>
+                                                <span class="sc-tally-points">@row.Points pts</span>
+                                            </li>
+                                        }
+                                    </ul>
+
+                                    <div class="sc-back-foot">
+                                        <span>@Played played, @Won won</span>
+                                        <span class="sc-back-total">@SeasonPoints points earned</span>
+                                    </div>
+
+                                    <div class="sc-holo sc-holo-back" aria-hidden="true"></div>
+                                    <div class="sc-glare sc-glare-back" aria-hidden="true"></div>
+                                </div>
+                                <div class="sc-reflect sc-reflect-back" aria-hidden="true"></div>
+                            </div>
+
+                            @* The card's thickness: shield-shaped slices stacked
+                               between the two faces, so it has a solid edge when
+                               it leans or turns instead of vanishing to a line. *@
+                            @for (var i = 0; i < SliceCount; i++)
+                            {
+                                <div class="sc-slice" style="--i:@i" aria-hidden="true"></div>
+                            }
+
+                            @* Catches the light as the card passes edge-on, so
+                               the turn reads as a solid object rather than a
+                               plane. *@
+                            <div class="sc-edge" aria-hidden="true"></div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sc-shadow" aria-hidden="true"></div>
+
+                @* Gold sparks; the script fills this and fires them. *@
+                <div class="sc-sparks" aria-hidden="true"></div>
+
+                @* Travels along the tier row, counting a rating up past each
+                   threshold. *@
+                <div class="sc-chip" aria-hidden="true">
+                    <span class="sc-chip-label">Overall</span>
+                    <span class="sc-chip-value">0</span>
+                </div>
+
+                @* What earns each card. Shown under the cards while they are
+                   spread out in a row; the script places each one under its
+                   card. Order matches the row, left to right. *@
+                <ul class="sc-tiers">
+                    @foreach (var tier in Tiers)
+                    {
+                        <li class="sc-tier sc-tier-@tier.Key">
+                            <svg class="sc-tier-arrow" viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                <path d="M12 34 C 8 24, 16 16, 12 4" />
+                                <path d="M12 3 L6 12 M12 3 L18 11" />
+                            </svg>
+                            <span class="sc-tier-name">@tier.Name</span>
+                            <span class="sc-tier-rule">@tier.Rule</span>
+                        </li>
+                    }
+                </ul>
+
+                @* The six stats, pulled off the card and blown up around it.
+                   Same order as the card's grid, so the script can match each
+                   one to the stat it flies out of. *@
+                <div class="sc-bigstats-backdrop" aria-hidden="true"></div>
+                <ul class="sc-bigstats">
+                    @foreach (var stat in StatList)
+                    {
+                        <li class="sc-bigstat" data-value="@stat.Value">
+                            <span class="sc-bigstat-value">@stat.Value</span>
+                            <span class="sc-bigstat-name">@stat.Name</span>
+                            <span class="sc-bigstat-meaning">@stat.Meaning</span>
+                            <span class="sc-bigstat-bar"><span class="sc-bigstat-fill"></span></span>
+                        </li>
+                    }
+                </ul>
+
+                <!-- ── Callouts: on screen only while the front faces you ── -->
+                @* In the order they appear: the script staggers them by
+                   position. *@
+                <div class="sc-notes" aria-hidden="true">
+                    <div class="sc-note sc-note-rating">
+                        <span class="sc-note-text">Your overall and position. The overall is your six stats divided by six</span>
+                        <svg class="sc-arrow" viewBox="0 0 120 60" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4 10 C 50 6, 86 18, 108 42" />
+                            <path d="M108 42 L92 38 M108 42 L102 27" />
+                        </svg>
+                    </div>
+
+                    <div class="sc-note sc-note-photo">
+                        <svg class="sc-arrow" viewBox="0 0 120 60" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M116 20 C 80 14, 40 18, 12 34" />
+                            <path d="M12 34 L27 27 M12 34 L26 41" />
+                        </svg>
+                        <span class="sc-note-text">Your photo, added by your team manager</span>
+                    </div>
+
+                    <div class="sc-note sc-note-name">
+                        <span class="sc-note-text">Your name and shirt number</span>
+                        <svg class="sc-arrow" viewBox="0 0 120 60" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4 44 C 40 48, 76 40, 108 26" />
+                            <path d="M108 26 L93 25 M108 26 L98 38" />
+                        </svg>
+                    </div>
+
+                    <div class="sc-note sc-note-attrs">
+                        <svg class="sc-arrow" viewBox="0 0 120 60" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M116 14 C 72 10, 36 22, 12 44" />
+                            <path d="M12 44 L28 40 M12 44 L18 29" />
+                        </svg>
+                        <span class="sc-note-text">Six stats, and you choose which ones your points go into</span>
+                    </div>
+                </div>
+
+            </div>
+
+            @* Where you are in the story, and a way to jump to any part of
+               it. Each button jumps to the start of its act. *@
+            <nav class="sc-acts" aria-label="Card showcase sections">
+                @for (var i = 0; i < ActNames.Length; i++)
+                {
+                    <button type="button" class="sc-act" data-act="@i" aria-label="@ActNames[i]">
+                        <span class="sc-act-dot"></span>
+                        <span class="sc-act-name">@ActNames[i]</span>
+                    </button>
+                }
+            </nav>
+            <p class="sc-play-hint" aria-hidden="true">Hover to play</p>
+
+            <AuthorizeView Roles="Player">
+                <Authorized>
+                    <a class="showcase-cta" href="/my-card">View my card</a>
+                </Authorized>
+                <NotAuthorized>
+                    <a class="showcase-cta" href="/signup">Claim your card</a>
+                </NotAuthorized>
+            </AuthorizeView>
+
+        </div>
+    </div>
+</section>
+
+@code {
+    // Unique per instance so two showcases on one page could not fight over the
+    // same registry entry in the JS module.
+    private readonly string _rootId = $"card-showcase-{Guid.NewGuid():N}";
+    private bool _loaded;
+    private bool _startRequested;
+    private bool _started;
+
+    // Enough to read as a solid edge without a visible gap between slices.
+    private const int SliceCount = 7;
+
+    private static readonly string[] ActNames = { "Card", "Stats", "Tiers", "Season" };
+
+    // The thresholds are admin-editable, so they are read rather than written
+    // in. Until they arrive, or if they never do, the labels describe the tiers
+    // without numbers rather than show ones that might be wrong.
+    private CardTierThresholdsDto? _thresholds;
+
+    // The league's card of the week. Null shows the invented example card.
+    private FeaturedCardDto? _featured;
+
+    private string FeaturedLine
+    {
+        get
+        {
+            var f = _featured!;
+            var team = string.IsNullOrEmpty(f.TeamName) ? "" : $", {f.TeamName}";
+            var points = f.WeekPoints == 1 ? "point" : "points";
+            return $"{f.Name}{team}: {f.WeekPoints} {points} in the week to {f.WeekEnding:d MMM}";
+        }
+    }
+
+    private string CardTier => _featured?.Tier ?? "gold";
+    private string Name => _featured?.Name ?? "Your name";
+    private int Number => _featured?.Number ?? 9;
+    private string Position => _featured?.Position ?? "FWD";
+
+    private record Stat(int Value, string Short, string Name, string Meaning);
+
+    // In the card's grid order: left column FIN, TAC, PAS; right column DRI,
+    // PAC, STR. The example's finishing is shown after its +18.
+    private IReadOnlyList<Stat> StatList
+    {
+        get
+        {
+            var a = _featured?.Attributes;
+            return new[]
+            {
+                new Stat(a?.Finishing ?? 72, "Fin", "Finishing", "Putting your chances away"),
+                new Stat(a?.Dribbling ?? 61, "Dri", "Dribbling", "Beating a player with the ball"),
+                new Stat(a?.Tackling ?? 55, "Tac", "Tackling", "Winning the ball back"),
+                new Stat(a?.Pace ?? 70, "Pac", "Pace", "Speed over the ground"),
+                new Stat(a?.Passing ?? 64, "Pas", "Passing", "Finding a teammate"),
+                new Stat(a?.Strength ?? 58, "Str", "Strength", "Holding off a challenge")
+            };
+        }
+    }
+
+    private string SeasonLabel => _featured == null
+        ? "Season 1"
+        : _featured.SeasonNumber is int n ? $"Season {n}" : "This season";
+
+    private IEnumerable<(int Count, string Label, int Points)> Tally
+    {
+        get
+        {
+            var f = _featured;
+            yield return (f?.Goals ?? 12, "Goals", f?.GoalPoints ?? 36);
+            yield return (f?.Assists ?? 7, "Assists", f?.AssistPoints ?? 14);
+            yield return (f?.CleanSheets ?? 4, "Clean sheets", f?.CleanSheetPoints ?? 12);
+        }
+    }
+
+    private int Played => _featured?.Played ?? 14;
+    private int Won => _featured?.Won ?? 9;
+    private int SeasonPoints => _featured?.SeasonPoints ?? 85;
+
+    // The fan holds every tier except the main card's own. TOTW always sits
+    // behind; the other two take the left and right of the fan.
+    private IEnumerable<(string Tier, string Pose)> FanCards
+    {
+        get
+        {
+            var sides = new[] { "bronze", "silver", "gold" }.Where(t => t != CardTier).ToList();
+            yield return ("totw", "back");
+            yield return (sides[1], "left");
+            yield return (sides[0], "right");
+        }
+    }
+
+    private IEnumerable<(string Key, string Name, string Rule)> Tiers
+    {
+        get
+        {
+            var t = _thresholds;
+            yield return ("bronze", "Bronze", t == null ? "Where everyone starts" : $"Under {t.SilverOverallThreshold} overall");
+            yield return ("silver", "Silver", t == null ? "Build your rating" : $"{t.SilverOverallThreshold}+ overall");
+            yield return ("gold", "Gold", t == null ? "Top rated" : $"{t.GoldOverallThreshold}+ overall");
+            yield return ("totw", "TOTW", "Picked in Team of the Week");
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var thresholds = Cards.GetTierThresholds();
+        var featured = Cards.GetFeaturedCard();
+        _thresholds = await thresholds;
+        _featured = await featured;
+        _loaded = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Wait for the data: the script measures where every stat sits on the
+        // card, so it has to see the card as it will finally render.
+        if (!_loaded || _startRequested) return;
+        _startRequested = true;
+
+        try
+        {
+            _started = await JS.InvokeAsync<bool>("cardShowcase.start", _rootId);
+        }
+        catch (JSException)
+        {
+            // The animation is decoration. If Motion did not load, the card
+            // still renders — it just sits still — so this is not worth
+            // surfacing to the visitor.
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (!_started) return;
+
+        try
+        {
+            await JS.InvokeVoidAsync("cardShowcase.stop", _rootId);
+        }
+        catch (JSDisconnectedException) { /* navigating away; nothing to clean up */ }
+        catch (JSException) { /* ditto */ }
+    }
+}

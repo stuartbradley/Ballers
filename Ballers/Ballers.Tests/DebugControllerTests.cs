@@ -38,7 +38,12 @@ namespace Ballers.Tests
         {
             sp ??= Mock.Of<IServiceProvider>();
             knockout ??= Mock.Of<IKnockoutService>();
-            return new DebugController(MakeEnv(isDev), MakeConfig(isUat), db, sp, knockout);
+            // None of these tests reach the player-account or card endpoints, the
+            // only ones that use the user manager and league settings.
+            var userManager = new Mock<UserManager<ApplicationUser>>(
+                Mock.Of<IUserStore<ApplicationUser>>(), null!, null!, null!, null!, null!, null!, null!, null!);
+            return new DebugController(MakeEnv(isDev), MakeConfig(isUat), db, sp, knockout,
+                userManager.Object, Mock.Of<ILeagueSettingsService>());
         }
 
         private static IServiceProvider BuildServiceProvider(ApplicationDbContext db)

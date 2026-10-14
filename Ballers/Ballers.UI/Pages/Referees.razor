@@ -10,6 +10,9 @@
 <PageTitle>Referees</PageTitle>
 
 <div class="referees-page">
+    @* The manager's own menu; admins and referees use this page too. *@
+    <AuthorizeView Roles="Manager"><ManagerNav Current="referees" /></AuthorizeView>
+
 
     <div class="referees-hero">
         <div class="referees-hero-inner">

@@ -1,0 +1,199 @@
+@page "/admin/cards"
+@using Ballers.Services
+@using Ballers.Shared
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Admin")]
+
+@inject AdminService AdminService
+
+<PageTitle>Admin · Player cards</PageTitle>
+
+@* How players earn card points, where the tiers start, sign-ups, and the
+   payout. *@
+<AdminShell Section="cards" Title="Player cards" Subtitle="How players earn points, where the tiers start, and the weekly payout.">
+    <ChildContent>
+        @if (settings == null)
+        {
+            <LoadingSpinner />
+        }
+        else
+        {
+            <section class="adm-card">
+                <div class="adm-rows">
+                    <div class="adm-row">
+                        <span class="adm-row-main">
+                            <span class="adm-row-title">Player sign-up</span>
+                            <span class="adm-row-sub">When closed, players can't create their own accounts. Existing ones are unaffected.</span>
+                        </span>
+                        <label class="adm-switch">
+                            <input type="checkbox" role="switch" checked="@settings.PlayerSignupEnabled" aria-label="Player sign-up"
+                                   @onchange="e => { settings.PlayerSignupEnabled = (bool)e.Value!; dirty = true; }" />
+                            <span></span>
+                            <em>@(settings.PlayerSignupEnabled ? "Open" : "Closed")</em>
+                        </label>
+                    </div>
+                    <div class="adm-row">
+                        <span class="adm-row-main">
+                            <span class="adm-row-title">Payout</span>
+                            <span class="adm-row-sub">
+                                Runs weekly by itself. Running it now pays any played fixture not yet credited; it never pays twice.
+                                @(settings.LastPointsRunAt is { } last ? $"Last run {last.ToLocalTime():ddd d MMM, HH:mm}." : "It hasn't run yet.")
+                            </span>
+                        </span>
+                        <button type="button" class="adm-btn" disabled="@running" @onclick="RunPayout">@(running ? "Running…" : "Run payout now")</button>
+                    </div>
+                </div>
+            </section>
+
+            <div class="adm-grid" style="margin-top:18px">
+                <section class="adm-card">
+                    <div class="adm-card-head">
+                        <div>
+                            <h2>Points per…</h2>
+                            <p class="adm-card-sub">Paid to each player after every played fixture.</p>
+                        </div>
+                    </div>
+                    @foreach (var f in EarnFields)
+                    {
+                        @Field(f)
+                    }
+                </section>
+
+                <section class="adm-card">
+                    <div class="adm-card-head">
+                        <div>
+                            <h2>Cards and tiers</h2>
+                            <p class="adm-card-sub">A card's overall is the average of its six attributes.</p>
+                        </div>
+                    </div>
+                    @foreach (var f in CardFields)
+                    {
+                        @Field(f)
+                    }
+
+                    @* A new card's overall is about the grant spread over six
+                       attributes, so show where that lands against the tiers. *@
+                    @{ var startOverall = settings.SignupPointsGrant / 6; }
+                    <div class="adm-msg @(startOverall >= settings.SilverOverallThreshold ? "is-error" : "is-info")" style="margin-top:4px">
+                        A new player starts around <strong>@startOverall</strong> overall:
+                        @(startOverall >= settings.GoldOverallThreshold ? "already gold."
+                          : startOverall >= settings.SilverOverallThreshold ? "already silver, so new cards skip bronze."
+                          : $"bronze, {settings.SilverOverallThreshold - startOverall} short of silver.")
+                    </div>
+                </section>
+            </div>
+
+            <div class="adm-toolbar" style="margin-top:18px;justify-content:flex-end">
+                @if (dirty)
+                {
+                    <span class="adm-muted" style="font-size:.85rem">Unsaved changes</span>
+                }
+                <button type="button" class="adm-btn is-primary" disabled="@(saving || !dirty)" @onclick="Save">
+                    @(saving ? "Saving…" : "Save changes")
+                </button>
+            </div>
+
+            @if (message != null)
+            {
+                <div class="adm-msg @(isError ? "is-error" : "is-ok")">@message</div>
+            }
+        }
+    </ChildContent>
+</AdminShell>
+
+@code {
+    private PointsSettingsDto? settings;
+    private bool dirty, saving, running, isError;
+    private string? message;
+
+    private record NumberField(string Label, string Hint, Func<int> Get, Action<int> Set);
+
+    private IEnumerable<NumberField> EarnFields
+    {
+        get
+        {
+            var s = settings!;
+            yield return new("Appearance", "Featuring in a played fixture", () => s.PointsPerAppearance, v => s.PointsPerAppearance = v);
+            yield return new("Win", "Being on the winning side", () => s.PointsPerWin, v => s.PointsPerWin = v);
+            yield return new("Goal", "Each goal scored", () => s.PointsPerGoal, v => s.PointsPerGoal = v);
+            yield return new("Assist", "Each assist", () => s.PointsPerAssist, v => s.PointsPerAssist = v);
+            yield return new("Clean sheet", "Keepers and defenders only", () => s.PointsPerCleanSheet, v => s.PointsPerCleanSheet = v);
+            yield return new("Man of the Match", "Their team's nomination", () => s.PointsPerMotm, v => s.PointsPerMotm = v);
+        }
+    }
+
+    private IEnumerable<NumberField> CardFields
+    {
+        get
+        {
+            var s = settings!;
+            yield return new("Sign-up grant", "Points a new player starts with", () => s.SignupPointsGrant, v => s.SignupPointsGrant = v);
+            yield return new("Attribute cap", "Highest any one attribute can go", () => s.AttributeCap, v => s.AttributeCap = v);
+            yield return new("Silver from", "Overall a silver card starts at", () => s.SilverOverallThreshold, v => s.SilverOverallThreshold = v);
+            yield return new("Gold from", "Overall a gold card starts at", () => s.GoldOverallThreshold, v => s.GoldOverallThreshold = v);
+        }
+    }
+
+    private RenderFragment Field(NumberField f) =>
+        @<div class="adm-row">
+            <span class="adm-row-main">
+                <span class="adm-row-title">@f.Label</span>
+                <span class="adm-row-sub">@f.Hint</span>
+            </span>
+            <input class="adm-input" type="number" min="0" style="width:90px;text-align:right"
+                   aria-label="@f.Label" value="@f.Get()"
+                   @onchange="e => { f.Set(int.TryParse(e.Value?.ToString(), out var v) ? Math.Max(0, v) : f.Get()); dirty = true; }" />
+        </div>;
+
+    protected override async Task OnInitializedAsync()
+        => settings = await AdminService.GetPointsSettings();
+
+    private async Task Save()
+    {
+        if (settings == null) return;
+        saving = true;
+        message = null;
+        try
+        {
+            await AdminService.UpdatePointsSettings(settings);
+            settings = await AdminService.GetPointsSettings();
+            dirty = false;
+            isError = false;
+            message = "Saved.";
+        }
+        catch (Exception ex)
+        {
+            isError = true;
+            message = ex.Message;
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private async Task RunPayout()
+    {
+        running = true;
+        message = null;
+        try
+        {
+            var (fixtures, players, points) = await AdminService.RunPlayerPoints();
+            isError = false;
+            message = points == 0
+                ? "Nothing to pay out: every played fixture is already settled."
+                : $"Credited {points} point(s) to {players} player(s) across {fixtures} fixture(s).";
+            var fresh = await AdminService.GetPointsSettings();
+            if (fresh != null && settings != null) settings.LastPointsRunAt = fresh.LastPointsRunAt;
+        }
+        catch (Exception ex)
+        {
+            isError = true;
+            message = ex.Message;
+        }
+        finally
+        {
+            running = false;
+        }
+    }
+}

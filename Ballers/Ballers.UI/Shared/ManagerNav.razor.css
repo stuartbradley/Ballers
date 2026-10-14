@@ -1,0 +1,53 @@
+/* A row of chunky comic "stickers", scrolling sideways on a phone. */
+.mgr-nav {
+    display: flex;
+    gap: 10px;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 16px 20px 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.mgr-nav::-webkit-scrollbar { display: none; }
+
+.mgr-nav-item {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border: 3px solid #050b16;
+    border-radius: 14px;
+    background: #1b2a47;
+    box-shadow: 4px 4px 0 #050b16;
+    font-family: 'Bangers', var(--font-display);
+    font-size: 1.15rem;
+    letter-spacing: 0.06em;
+    color: var(--chalk);
+    text-decoration: none;
+    transition: translate 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.mgr-nav-item:hover {
+    translate: -2px -2px;
+    box-shadow: 6px 6px 0 #050b16;
+    background: #22355a;
+}
+
+.mgr-nav-item:active { translate: 2px 2px; box-shadow: 1px 1px 0 #050b16; }
+
+.mgr-nav-item.is-active {
+    background: var(--ballers-accent);
+    color: #050b16;
+    rotate: -2deg;
+}
+
+.mgr-nav-item:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+
+.mgr-nav-emoji { font-size: 1.05rem; }
+
+@media (prefers-reduced-motion: reduce) {
+    .mgr-nav-item { transition: none; }
+    .mgr-nav-item.is-active { rotate: none; }
+}

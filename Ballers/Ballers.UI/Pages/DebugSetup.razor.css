@@ -164,3 +164,96 @@
     font-size: 0.875rem;
     color: #495057;
 }
+
+/* ── Player accounts list ── */
+
+.accounts {
+    margin-top: 2rem;
+}
+
+.accounts-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.accounts-head h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.accounts-empty {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.accounts-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.accounts-filters select,
+.accounts-filters input {
+    padding: 0.45rem 0.65rem;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 0.875rem;
+}
+
+.accounts-filters input {
+    flex: 1;
+    min-width: 200px;
+}
+
+.accounts-scroll {
+    overflow-x: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.accounts-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+}
+
+.accounts-table th {
+    position: sticky;
+    top: 0;
+    background: #f8f9fa;
+    text-align: left;
+    font-weight: 600;
+    padding: 0.55rem 0.7rem;
+    border-bottom: 1px solid #dee2e6;
+    white-space: nowrap;
+}
+
+.accounts-table td {
+    padding: 0.45rem 0.7rem;
+    border-bottom: 1px solid #f1f3f5;
+    white-space: nowrap;
+}
+
+.accounts-table .mono {
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 0.78rem;
+}
+
+.tier {
+    display: inline-block;
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.tier-gold   { background: #fef3c7; color: #92400e; }
+.tier-silver { background: #e5e7eb; color: #374151; }
+.tier-bronze { background: #fde2cc; color: #7c2d12; }

@@ -127,6 +127,71 @@
     display: block;
 }
 
+/* Shirt number beside the name, where the rating displaced it to. Dimmed so the
+   name still reads as the headline of the band. */
+.fut-player-card .player-card-bottom .player-info .player-name .player-shirt {
+    display: inline;
+    font-size: 4.4cqi;
+    font-weight: 600;
+    color: rgba(90, 50, 0, 0.55);
+    margin-right: 0.4em;
+}
+
+/* ── Six attributes: two columns of three, filled column-first ── */
+
+/* Columns sized to their contents and the pair centred as a block. Equal
+   halves left each column hugging the left of its half, which pushed the
+   left column out over the edge of the shield. */
+.fut-player-card .player-card-bottom .player-info .player-attributes {
+    display: grid;
+    grid-template-columns: auto auto;
+    justify-content: center;
+    column-gap: 14%;
+    row-gap: 1%;
+}
+
+/* With six stats the block is three rows deep, and centred in the band its
+   last row sank into the shield's tapering point. Start it just under the
+   photo instead, a little tighter, so it all stays on the card. */
+.fut-player-card.has-attributes .player-card-top {
+    flex-basis: 61%;
+}
+
+/* 6.5cqi is 20px on the 300px card on My Card, and scales with the card. */
+.fut-player-card.has-attributes .player-card-bottom {
+    align-items: flex-start;
+    padding: 6.5cqi 12% 0;
+}
+
+.fut-player-card.has-attributes .player-card-bottom .player-info .player-name {
+    padding-bottom: 2%;
+    margin-bottom: 2.5%;
+}
+
+.fut-player-card .player-card-bottom .player-info .player-attributes .player-attribute {
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-start;
+    gap: 0.4em;
+}
+
+.fut-player-card .player-card-bottom .player-info .player-attributes .player-attribute-value {
+    font-size: 5.4cqi;
+    font-weight: 700;
+    line-height: 1;
+    color: #5a3200;
+    min-width: 2.2ch;
+    text-align: right;
+}
+
+.fut-player-card .player-card-bottom .player-info .player-attributes .player-attribute-label {
+    font-size: 3.6cqi;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: rgba(90, 50, 0, 0.65);
+}
+
 .fut-player-card .player-card-bottom .player-info .player-features {
     display: flex;
     justify-content: center;

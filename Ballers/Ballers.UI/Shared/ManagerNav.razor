@@ -1,0 +1,26 @@
+@* The manager's own menu, along the top of each of their pages, so the
+   handful of things a manager does are always one tap away. Current is the
+   key of the page it sits on. *@
+<nav class="mgr-nav" aria-label="Manager menu">
+    @foreach (var (key, label, emoji, href) in Items)
+    {
+        <a href="@href" class="mgr-nav-item @(key == Current ? "is-active" : "")"
+           aria-current="@(key == Current ? "page" : null)">
+            <span class="mgr-nav-emoji" aria-hidden="true">@emoji</span>@label
+        </a>
+    }
+</nav>
+
+@code {
+    [Parameter] public string Current { get; set; } = "";
+
+    private static readonly (string Key, string Label, string Emoji, string Href)[] Items =
+    {
+        ("hq", "HQ", "🧢", "/dashboard"),
+        ("fixtures", "Fixtures", "⚽", "/manager-fixtures"),
+        ("squad", "Squad", "👕", "/my-squad"),
+        ("team", "Club", "🛡️", "/my-team"),
+        ("referees", "Refs", "🟨", "/referees"),
+        ("guide", "Help", "❓", "/guide"),
+    };
+}

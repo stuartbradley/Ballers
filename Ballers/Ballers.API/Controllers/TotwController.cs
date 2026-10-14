@@ -31,6 +31,10 @@ namespace Ballers.API.Controllers
             return Ok(weeks);
         }
 
+        [HttpGet("appearances")]
+        public async Task<IActionResult> GetAppearances()
+            => Ok(await _svc.GetAppearancesAsync());
+
         [HttpGet("{matchNumber:int}")]
         public async Task<IActionResult> GetWeek(int matchNumber)
         {

@@ -1,0 +1,194 @@
+@page "/signup"
+@using Ballers.Models
+@using Ballers.Services
+@using Ballers.Shared
+@inject PlayerAccountService Accounts
+@inject TeamService Teams
+@inject NavigationManager Nav
+
+<PageTitle>Player Sign-up</PageTitle>
+
+<div class="signup-page">
+    <div class="signup-card">
+        @if (submitted)
+        {
+            <h1>Request sent</h1>
+            <p class="signup-intro">
+                Your account is waiting for @(teamName ?? "your team")'s manager to approve it.
+                Once they do, log in and you'll have 80 points to put on your card.
+            </p>
+            <a class="signup-btn" href="/login">Go to login</a>
+        }
+        else
+        {
+            <h1>Player Sign-up</h1>
+            <p class="signup-intro">
+                Create your account, claim your squad place, and build your card.
+                Your manager approves it before you get started.
+            </p>
+
+            <div class="form-group">
+                <label>Your team</label>
+                <select @onchange="OnTeamChanged">
+                    <option value="">Choose a team…</option>
+                    @foreach (var team in teams)
+                    {
+                        <option value="@team.Id" selected="@(team.Id == teamId)">@team.Name</option>
+                    }
+                </select>
+            </div>
+
+            @if (teamId != null)
+            {
+                <div class="form-group">
+                    <label>Which player are you?</label>
+                    @if (loadingSquad)
+                    {
+                        <p class="signup-hint">Loading the squad…</p>
+                    }
+                    else
+                    {
+                        <select @onchange="OnPlayerChanged">
+                            <option value="">I'm not on the list yet</option>
+                            @foreach (var player in squad)
+                            {
+                                <option value="@player.Id" disabled="@(!player.IsClaimable)">
+                                    @player.Number. @player.Name @(player.IsClaimable ? "" : "(already claimed)")
+                                </option>
+                            }
+                        </select>
+                        <p class="signup-hint">
+                            Pick yourself from your manager's squad list. If you're not there
+                            yet, leave this as it is and your manager will add you.
+                        </p>
+                    }
+                </div>
+            }
+
+            <div class="form-group">
+                <label>Your name</label>
+                <input @bind="name" @bind:event="oninput" placeholder="Alex Smith" />
+            </div>
+
+            <div class="form-group">
+                <label>Email</label>
+                <input @bind="email" @bind:event="oninput" placeholder="you@example.com" />
+            </div>
+
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" @bind="password" @bind:event="oninput" />
+                <p class="signup-hint">
+                    At least 6 characters, with an upper and lower case letter, a number
+                    and a symbol.
+                </p>
+            </div>
+
+            <div class="form-group">
+                <label>Confirm password</label>
+                <input type="password" @bind="confirmPassword" @bind:event="oninput" />
+            </div>
+
+            @if (error != null)
+            {
+                <div class="signup-error">@error</div>
+            }
+
+            <button class="signup-btn" disabled="@saving" @onclick="Submit">
+                @(saving ? "Sending…" : "Create account")
+            </button>
+
+            <div class="signup-footer">
+                Already have an account? <a href="/login">Log in</a>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private List<TeamProfileDto> teams = new();
+    private List<ClaimablePlayerDto> squad = new();
+
+    private int? teamId;
+    private int? playerId;
+    private string? name;
+    private string? email;
+    private string? password;
+    private string? confirmPassword;
+    private string? teamName;
+
+    private bool loadingSquad;
+    private bool saving;
+    private bool submitted;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+        => teams = await Teams.GetAllTeams();
+
+    private async Task OnTeamChanged(ChangeEventArgs e)
+    {
+        error = null;
+        playerId = null;
+        squad = new();
+
+        teamId = int.TryParse(e.Value?.ToString(), out var id) ? id : null;
+        teamName = teams.FirstOrDefault(t => t.Id == teamId)?.Name;
+
+        if (teamId == null) return;
+
+        loadingSquad = true;
+        squad = await Accounts.GetClaimablePlayers(teamId.Value);
+        loadingSquad = false;
+    }
+
+    private void OnPlayerChanged(ChangeEventArgs e)
+    {
+        error = null;
+        playerId = int.TryParse(e.Value?.ToString(), out var id) ? id : null;
+
+        // Claiming a squad place fills the name in from it, so the manager sees a
+        // request that matches a row they recognise.
+        var claimed = squad.FirstOrDefault(p => p.Id == playerId);
+        if (claimed != null) name = claimed.Name;
+    }
+
+    private async Task Submit()
+    {
+        error = Validate();
+        if (error != null) return;
+
+        saving = true;
+
+        try
+        {
+            await Accounts.Register(new PlayerSignupRequest
+            {
+                Email = email!.Trim(),
+                Password = password!,
+                TeamId = teamId!.Value,
+                PlayerId = playerId,
+                Name = name!.Trim()
+            });
+
+            submitted = true;
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private string? Validate()
+    {
+        if (teamId == null) return "Choose your team.";
+        if (string.IsNullOrWhiteSpace(name)) return "Enter your name.";
+        if (string.IsNullOrWhiteSpace(email)) return "Enter your email address.";
+        if (string.IsNullOrWhiteSpace(password)) return "Enter a password.";
+        if (password != confirmPassword) return "The two passwords don't match.";
+        return null;
+    }
+}

@@ -15,8 +15,8 @@
 
         <div class="login-card">
 
-            <h1>Manager Login</h1>
-            <p class="subtitle">Access your team dashboard</p>
+            <h1>Login</h1>
+            <p class="subtitle">Managers, referees and players</p>
 
             <div class="form-group">
                 <label>Email</label>
@@ -39,6 +39,10 @@
 
             <div style="margin-top:0.75rem;text-align:center;">
                 <a href="/forgot-password">Forgot password?</a>
+            </div>
+
+            <div style="margin-top:0.5rem;text-align:center;">
+                Are you a player? <a href="/signup">Create an account</a>
             </div>
 
         </div>
@@ -69,8 +73,16 @@
     {
         var state = await AuthProvider.GetAuthenticationStateAsync();
         if (state.User.Identity?.IsAuthenticated == true)
-            Nav.NavigateTo("/dashboard", replace: true);
+            Nav.NavigateTo(HomeFor(state.User), replace: true);
     }
+
+    // A player's home is their card and an admin's is the admin overview; they
+    // have no dashboard. Everyone else, including a player still waiting for
+    // approval, starts on the dashboard.
+    static string HomeFor(System.Security.Claims.ClaimsPrincipal user)
+        => user.IsInRole("Player") ? "/my-card"
+         : user.IsInRole("Admin") ? "/admin"
+         : "/dashboard";
 
     async Task OnKeyDown(KeyboardEventArgs e)
     {
@@ -88,7 +100,8 @@
         if (success)
         {
             ((AuthStateProvider)AuthProvider).NotifyAuthChanged();
-            Nav.NavigateTo("/dashboard");
+            var state = await AuthProvider.GetAuthenticationStateAsync();
+            Nav.NavigateTo(HomeFor(state.User));
         }
         else
         {

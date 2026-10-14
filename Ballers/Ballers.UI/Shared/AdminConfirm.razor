@@ -1,0 +1,82 @@
+@* A confirm box for the admin pages, in place of the browser's own. For the
+   worst actions it can ask for a word to be typed first, so it can't be
+   clicked through by accident.
+
+   Usage: <AdminConfirm @ref="confirm" />
+          if (await confirm.Ask("Delete Season 2?", "…", "Delete", danger: true, typeToConfirm: "2")) … *@
+@if (open)
+{
+    <div class="adm-dialog-back" @onclick="() => Close(false)">
+        <div class="adm-dialog @(danger ? "is-danger" : "")" role="alertdialog" aria-modal="true"
+             aria-labelledby="adm-confirm-title" @onclick:stopPropagation @onkeydown="OnKey">
+            <h2 id="adm-confirm-title">@title</h2>
+            <p>@message</p>
+
+            @if (typeToConfirm != null)
+            {
+                <label class="adm-field">
+                    <span>Type <strong>@typeToConfirm</strong> to confirm</span>
+                    <input @ref="input" class="adm-input" @bind="typed" @bind:event="oninput" autocomplete="off" />
+                </label>
+            }
+
+            <div class="adm-dialog-foot">
+                <button type="button" class="adm-btn" @onclick="() => Close(false)">Cancel</button>
+                <button type="button" class="adm-btn @(danger ? "is-danger" : "is-primary")"
+                        disabled="@(!CanConfirm)" @onclick="() => Close(true)">@confirmLabel</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool open;
+    private string title = "", message = "", confirmLabel = "OK";
+    private bool danger;
+    private string? typeToConfirm;
+    private string typed = "";
+    private ElementReference input;
+    private bool focusPending;
+    private TaskCompletionSource<bool>? pending;
+
+    private bool CanConfirm => typeToConfirm == null
+        || string.Equals(typed.Trim(), typeToConfirm, StringComparison.OrdinalIgnoreCase);
+
+    public Task<bool> Ask(string title, string message, string confirmLabel = "OK",
+                          bool danger = false, string? typeToConfirm = null)
+    {
+        pending?.TrySetResult(false);
+        pending = new TaskCompletionSource<bool>();
+
+        this.title = title;
+        this.message = message;
+        this.confirmLabel = confirmLabel;
+        this.danger = danger;
+        this.typeToConfirm = typeToConfirm;
+        typed = "";
+        open = true;
+        focusPending = typeToConfirm != null;
+        StateHasChanged();
+        return pending.Task;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!focusPending) return;
+        focusPending = false;
+        try { await input.FocusAsync(); } catch (InvalidOperationException) { } catch (JSException) { }
+    }
+
+    private void OnKey(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape") Close(false);
+        else if (e.Key == "Enter" && CanConfirm) Close(true);
+    }
+
+    private void Close(bool result)
+    {
+        open = false;
+        pending?.TrySetResult(result);
+        pending = null;
+    }
+}

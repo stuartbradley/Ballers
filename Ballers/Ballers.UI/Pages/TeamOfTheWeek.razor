@@ -3,94 +3,222 @@
 @using Ballers.Services
 @implements IDisposable
 @inject TotwService TotwSvc
+@inject IJSRuntime JS
 
 <PageTitle>Team of the Week — Blackpool Ballers League</PageTitle>
 
+@* Each week's Man of the Match winners, set out on a pitch by position. A
+   strip of weeks along the top jumps to any week; the arrows, the arrow keys
+   and a swipe across the pitch step through them. *@
 <div class="totw-page">
-    <header class="totw-page-header">
+
+    <header class="tw-hero">
+        <span class="tw-eyebrow">Ballers League</span>
         <h1>Team of the Week</h1>
-        <p class="totw-page-sub">Each week's standout performers — the Man of the Match from every game.</p>
+        <p class="tw-sub">The Man of the Match from every game, together on one pitch.</p>
     </header>
 
-    @if (loading)
-    {
-        <p class="totw-loading">Loading…</p>
-    }
-    else if (weeks.Count == 0 || current == null)
-    {
-        <p class="totw-empty">No Teams of the Week have been published yet.</p>
-    }
-    else
-    {
-        <div class="totw-selector">
-            <button class="totw-arrow"
-                    @onclick="GoNewer"
-                    disabled="@(!CanGoNewer || fetching)"
-                    aria-label="Newer week">
-                ◄
-            </button>
+    <div class="tw-body">
+        @if (loading)
+        {
+            <div class="tw-loading"><LoadingSpinner /></div>
+        }
+        else if (weeks.Count == 0 || current == null)
+        {
+            <p class="tw-empty">No Teams of the Week have been published yet.</p>
+        }
+        else
+        {
+            <nav class="tw-weeks" aria-label="Match weeks">
+                <button type="button" class="tw-arrow" @onclick="GoOlder"
+                        disabled="@(!CanGoOlder || fetching)" aria-label="Previous week">
+                    <span aria-hidden="true">‹</span>
+                </button>
 
-            <div class="totw-pill">
-                <div class="totw-pill-mw">Match Week <span class="totw-pill-num">@current.MatchNumber</span></div>
-                <div class="totw-pill-date">@current.WeekStart.ToString("dddd, d MMMM yyyy")</div>
-                <div class="totw-pill-count">@(currentIndex + 1) of @weeks.Count</div>
+                <div class="tw-strip" id="tw-strip" role="tablist" aria-label="Choose a week" @onkeydown="OnStripKey">
+                    @foreach (var (w, i) in Chronological)
+                    {
+                        var active = i == currentIndex;
+                        <button type="button" role="tab" class="tw-chip @(active ? "is-active" : "")"
+                                aria-selected="@(active ? "true" : "false")"
+                                tabindex="@(active ? 0 : -1)"
+                                aria-label="@($"Match week {w.MatchNumber}, {w.Date:d MMMM}")"
+                                @onclick="() => Select(i)">
+                            <span class="tw-chip-mw">MW@(w.MatchNumber)</span>
+                            <span class="tw-chip-date">@w.Date.ToString("d MMM")</span>
+                        </button>
+                    }
+                </div>
+
+                <button type="button" class="tw-arrow" @onclick="GoNewer"
+                        disabled="@(!CanGoNewer || fetching)" aria-label="Next week">
+                    <span aria-hidden="true">›</span>
+                </button>
+            </nav>
+
+            @if (current.Summary is { } s)
+            {
+                <div class="tw-summary">
+                    <div class="tw-stat"><strong>@s.Games</strong><span>@(s.Games == 1 ? "Game" : "Games")</span></div>
+                    <div class="tw-stat"><strong>@s.Goals</strong><span>Goals</span></div>
+                    <div class="tw-stat"><strong>@(s.Games == 0 ? "–" : ((double)s.Goals / s.Games).ToString("0.0"))</strong><span>Goals per game</span></div>
+                    <div class="tw-stat tw-stat-wide">
+                        @if (s.TopScorerName != null)
+                        {
+                            <strong>@s.TopScorerName <em>@s.TopScorerGoals</em></strong>
+                            <span>Top scorer · @s.TopScorerTeam</span>
+                        }
+                        else
+                        {
+                            <strong>—</strong>
+                            <span>Top scorer</span>
+                        }
+                    </div>
+                </div>
+            }
+
+            @* What the download captures: the title and the pitch. *@
+            <section class="tw-poster @(fetching ? "is-fetching" : "")" id="tw-poster" aria-label="Team of the Week lineup"
+                     @ontouchstart="OnTouchStart" @ontouchend="OnTouchEnd">
+                <div class="tw-poster-head">
+                    <span class="tw-poster-brand">Ballers League · Team of the Week</span>
+                    <span class="tw-poster-week">Match Week <strong>@current.MatchNumber</strong></span>
+                    <span class="tw-poster-date">@current.WeekStart.ToString("dddd d MMMM yyyy")</span>
+                </div>
+
+                <div class="tw-pitch" @key="current.MatchNumber">
+                    <div class="tw-pitch-lines" aria-hidden="true">
+                        <span class="tw-box tw-box-top"></span>
+                        <span class="tw-halfway"></span>
+                        <span class="tw-circle"></span>
+                        <span class="tw-box tw-box-bottom"></span>
+                    </div>
+
+                    @foreach (var line in Lines)
+                    {
+                        <div class="tw-line" aria-label="@line.Name">
+                            @foreach (var p in line.Players)
+                            {
+                                <div class="tw-slot">
+                                    <TotwCard Player="p" />
+                                    @if (Caption(p) is { } cap)
+                                    {
+                                        <span class="tw-caption">
+                                            <span class="tw-res is-@cap.Code.ToLower()">@cap.Code</span>
+                                            @cap.Text
+                                        </span>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </section>
+
+            <div class="tw-actions">
+                <span class="tw-hint">Hover or tap a card to see this week against the season.</span>
+                <button type="button" class="tw-download" @onclick="Download" disabled="@downloading">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                    @(downloading ? "Saving…" : "Download image")
+                </button>
             </div>
 
-            <button class="totw-arrow"
-                    @onclick="GoOlder"
-                    disabled="@(!CanGoOlder || fetching)"
-                    aria-label="Older week">
-                ►
-            </button>
-        </div>
-
-        <section class="totw-page-section @(fetching ? "is-fetching" : "")">
-            <TotwLineup Totw="current" />
-        </section>
-    }
+            @if (appearances.Any())
+            {
+                <section class="tw-apps" aria-labelledby="tw-apps-title">
+                    <div class="tw-apps-head">
+                        <span class="tw-eyebrow">This season</span>
+                        <h2 id="tw-apps-title">Most Team of the Week appearances</h2>
+                    </div>
+                    <ol class="tw-apps-list">
+                        @foreach (var (a, i) in appearances.Take(10).Select((a, i) => (a, i)))
+                        {
+                            <li class="tw-app @(i < 3 ? $"is-top{i + 1}" : "")">
+                                <span class="tw-app-rank">@(i + 1)</span>
+                                @if (a.Attributes != null && a.Tier != null)
+                                {
+                                    <span class="tw-mini tw-mini-@a.Tier" title="@($"{a.Tier} card, rated {a.Attributes.Overall}")"><span>@a.Attributes.Overall</span></span>
+                                }
+                                else
+                                {
+                                    <span class="tw-mini tw-mini-none" title="No card yet"></span>
+                                }
+                                <span class="tw-app-who">
+                                    <span class="tw-app-name">@a.Name</span>
+                                    <span class="tw-app-team">@a.TeamName · @a.Position</span>
+                                </span>
+                                <span class="tw-app-bar" aria-hidden="true">
+                                    <span style="width:@BarWidth(a.Count)"></span>
+                                </span>
+                                <span class="tw-app-count">@a.Count<small>@(a.Count == 1 ? "week" : "weeks")</small></span>
+                            </li>
+                        }
+                    </ol>
+                </section>
+            }
+        }
+    </div>
 </div>
 
 @code {
     private bool loading = true;
-    private bool fetching = false;
-    private List<TotwWeekRefDto> weeks = new();
+    private bool fetching;
+    private bool downloading;
+    private List<TotwWeekRefDto> weeks = new();   // newest first, as the API sends them
     private TeamOfTheWeekDto? current;
-    private int currentIndex = 0;
+    private int currentIndex;                      // into Chronological, oldest first
+    private List<TotwAppearanceDto> appearances = new();
+    private bool centrePending;
 
     private readonly Dictionary<int, TeamOfTheWeekDto> cache = new();
     private CancellationTokenSource? prefetchCts;
 
-    private bool CanGoNewer => currentIndex > 0;
-    private bool CanGoOlder => currentIndex < weeks.Count - 1;
+    // Oldest on the left, so the strip reads like a season.
+    private List<(TotwWeekRefDto Week, int Index)> Chronological =>
+        weeks.AsEnumerable().Reverse().Select((w, i) => (w, i)).ToList();
+
+    private bool CanGoNewer => currentIndex < weeks.Count - 1;
+    private bool CanGoOlder => currentIndex > 0;
 
     protected override async Task OnInitializedAsync()
     {
         var weeksTask = TotwSvc.GetWeeks();
         var currentTask = TotwSvc.GetCurrent();
-        await Task.WhenAll(weeksTask, currentTask);
+        var appsTask = TotwSvc.GetAppearances();
+        await Task.WhenAll(weeksTask, currentTask, appsTask);
 
         weeks = weeksTask.Result;
         current = currentTask.Result;
+        appearances = appsTask.Result;
 
         if (current != null)
         {
             cache[current.MatchNumber] = current;
-            var idx = weeks.FindIndex(w => w.MatchNumber == current.MatchNumber);
-            currentIndex = idx >= 0 ? idx : 0;
+            var idx = Chronological.FindIndex(x => x.Week.MatchNumber == current.MatchNumber);
+            currentIndex = idx >= 0 ? idx : weeks.Count - 1;
         }
 
         loading = false;
+        centrePending = true;
 
         prefetchCts = new CancellationTokenSource();
         _ = PrefetchOthersAsync(prefetchCts.Token);
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!centrePending || loading) return;
+        centrePending = false;
+        try { await JS.InvokeVoidAsync("totwPage.centreChip", "tw-strip"); }
+        catch (JSException) { /* cosmetic */ }
+    }
+
+    // Nearest weeks first, so the arrows rarely wait.
     private async Task PrefetchOthersAsync(CancellationToken ct)
     {
-        var ordered = weeks
-            .Select((w, i) => (Week: w, Distance: Math.Abs(i - currentIndex)))
+        var ordered = Chronological
             .Where(x => !cache.ContainsKey(x.Week.MatchNumber))
-            .OrderBy(x => x.Distance)
+            .OrderBy(x => Math.Abs(x.Index - currentIndex))
             .Select(x => x.Week)
             .ToList();
 
@@ -104,23 +232,15 @@
         }
     }
 
-    private async Task GoNewer()
-    {
-        if (!CanGoNewer) return;
-        await Select(currentIndex - 1);
-    }
-
-    private async Task GoOlder()
-    {
-        if (!CanGoOlder) return;
-        await Select(currentIndex + 1);
-    }
+    private Task GoNewer() => CanGoNewer ? Select(currentIndex + 1) : Task.CompletedTask;
+    private Task GoOlder() => CanGoOlder ? Select(currentIndex - 1) : Task.CompletedTask;
 
     private async Task Select(int newIndex)
     {
-        if (newIndex < 0 || newIndex >= weeks.Count) return;
+        if (newIndex < 0 || newIndex >= weeks.Count || fetching) return;
 
-        var matchNumber = weeks[newIndex].MatchNumber;
+        var matchNumber = Chronological[newIndex].Week.MatchNumber;
+        centrePending = true;
 
         if (cache.TryGetValue(matchNumber, out var hit))
         {
@@ -141,6 +261,76 @@
         }
 
         fetching = false;
+    }
+
+    private Task OnStripKey(KeyboardEventArgs e) => e.Key switch
+    {
+        "ArrowLeft" => GoOlder(),
+        "ArrowRight" => GoNewer(),
+        "Home" => Select(0),
+        "End" => Select(weeks.Count - 1),
+        _ => Task.CompletedTask
+    };
+
+    // A sideways swipe across the pitch changes week; anything mostly
+    // vertical is a scroll and is left alone.
+    private double touchX, touchY;
+
+    private void OnTouchStart(TouchEventArgs e)
+    {
+        if (e.ChangedTouches.Length == 0) return;
+        touchX = e.ChangedTouches[0].ClientX;
+        touchY = e.ChangedTouches[0].ClientY;
+    }
+
+    private Task OnTouchEnd(TouchEventArgs e)
+    {
+        if (e.ChangedTouches.Length == 0) return Task.CompletedTask;
+        var dx = e.ChangedTouches[0].ClientX - touchX;
+        var dy = e.ChangedTouches[0].ClientY - touchY;
+        if (Math.Abs(dx) < 60 || Math.Abs(dx) < Math.Abs(dy) * 1.5) return Task.CompletedTask;
+        return dx < 0 ? GoNewer() : GoOlder();
+    }
+
+    private record Line(string Name, List<TotwPlayerDto> Players);
+
+    // Attack at the top, goalkeepers at the bottom, as a lineup graphic reads.
+    private static readonly (string Code, string Name)[] LineOrder =
+        { ("FWD", "Forwards"), ("MID", "Midfielders"), ("DEF", "Defenders"), ("GK", "Goalkeepers") };
+
+    private IEnumerable<Line> Lines
+    {
+        get
+        {
+            var players = current?.Players ?? new();
+            string LineOf(TotwPlayerDto p) =>
+                p.IsGoalkeeper ? "GK" : LineOrder.Any(l => l.Code == p.Position) ? p.Position : "MID";
+
+            return LineOrder
+                .Select(l => new Line(l.Name, players.Where(p => LineOf(p) == l.Code).ToList()))
+                .Where(l => l.Players.Count > 0);
+        }
+    }
+
+    private static (string Code, string Text)? Caption(TotwPlayerDto p) =>
+        p.TeamScore is int us && p.OpponentScore is int them && p.OpponentName != null
+            ? (us > them ? "W" : us == them ? "D" : "L", $"{us}–{them} vs {p.OpponentName}")
+            : null;
+
+    private string BarWidth(int count)
+    {
+        var max = appearances.Count == 0 ? 1 : appearances.Max(a => a.Count);
+        return $"{Math.Round(100.0 * count / max)}%";
+    }
+
+    private async Task Download()
+    {
+        if (current == null) return;
+        downloading = true;
+        StateHasChanged();
+        try { await JS.InvokeAsync<bool>("totwPage.download", "tw-poster", $"ballers-totw-mw{current.MatchNumber}.png"); }
+        catch (JSException) { /* the button just comes back */ }
+        downloading = false;
     }
 
     public void Dispose()

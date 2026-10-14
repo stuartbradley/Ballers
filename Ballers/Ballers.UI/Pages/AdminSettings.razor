@@ -1,0 +1,157 @@
+@page "/admin/settings"
+@using Ballers.Client.Services
+@using Ballers.Services
+@using Ballers.Shared
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Admin")]
+
+@inject LeagueSettingsService LeagueSettingsSvc
+@inject NotificationService NotificationSvc
+
+<PageTitle>Admin · Settings</PageTitle>
+
+@* The league's on/off switches and which notifications go out. Each switch
+   saves as soon as it's flipped. *@
+<AdminShell Section="settings" Title="Settings" Subtitle="League switches and notifications. Changes save as soon as you flip them.">
+    <ChildContent>
+        @if (!loaded)
+        {
+            <LoadingSpinner />
+        }
+        else
+        {
+            <div class="adm-grid">
+                <section class="adm-card" aria-labelledby="league-title">
+                    <div class="adm-card-head"><h2 id="league-title">League</h2></div>
+                    <div class="adm-rows">
+                        @Switch("Lock player registration",
+                                "Managers can no longer add players to their squads. Admins still can.",
+                                playersLocked, "Locked", "Open", SetPlayersLocked)
+                        @Switch("Lock fixtures",
+                                "Managers and referees can no longer submit stats or edit fixtures. Admins still can.",
+                                fixturesLocked, "Locked", "Open", SetFixturesLocked)
+                        @Switch("Hide fixtures from the public",
+                                "The public Fixtures page and home page show none, so a season can be loaded and revealed later. Admins and referees still see them.",
+                                fixturesHidden, "Hidden", "Visible", SetFixturesHidden)
+                    </div>
+                    @if (leagueMessage != null)
+                    {
+                        <div class="adm-msg @(leagueIsError ? "is-error" : "is-ok")">@leagueMessage</div>
+                    }
+                </section>
+
+                <section class="adm-card" aria-labelledby="notif-title">
+                    <div class="adm-card-head">
+                        <div>
+                            <h2 id="notif-title">Notifications</h2>
+                            <p class="adm-card-sub">Alerts in the bell for managers and referees.</p>
+                        </div>
+                    </div>
+                    @if (!notifications.Any())
+                    {
+                        <p class="adm-empty">No notification types found.</p>
+                    }
+                    else
+                    {
+                        <div class="adm-rows">
+                            @foreach (var n in notifications)
+                            {
+                                @Switch(n.DisplayName, n.Description, n.IsEnabled, "On", "Off", on => SetNotification(n, on))
+                            }
+                        </div>
+                    }
+                    @if (notifMessage != null)
+                    {
+                        <div class="adm-msg is-error">@notifMessage</div>
+                    }
+                </section>
+            </div>
+        }
+    </ChildContent>
+</AdminShell>
+
+@code {
+    private bool loaded;
+    private bool playersLocked, fixturesLocked, fixturesHidden;
+    private List<NotificationSettingDto> notifications = new();
+    private string? leagueMessage;
+    private bool leagueIsError;
+    private string? notifMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var leagueTask = LeagueSettingsSvc.Get();
+        var notifTask = NotificationSvc.GetSettingsAsync();
+        await Task.WhenAll(leagueTask, notifTask);
+
+        playersLocked = leagueTask.Result.PlayersLocked;
+        fixturesLocked = leagueTask.Result.FixturesLocked;
+        fixturesHidden = leagueTask.Result.FixturesHidden;
+        notifications = notifTask.Result;
+        loaded = true;
+    }
+
+    private RenderFragment Switch(string title, string help, bool on, string onText, string offText, Func<bool, Task> set) =>
+        @<div class="adm-row">
+            <span class="adm-row-main">
+                <span class="adm-row-title">@title</span>
+                <span class="adm-row-sub">@help</span>
+            </span>
+            <label class="adm-switch">
+                <input type="checkbox" role="switch" checked="@on" aria-label="@title"
+                       @onchange="e => set((bool)e.Value!)" />
+                <span></span>
+                <em>@(on ? onText : offText)</em>
+            </label>
+        </div>;
+
+    private Task SetPlayersLocked(bool v) => League(async () =>
+    {
+        await LeagueSettingsSvc.SetPlayersLocked(v);
+        playersLocked = v;
+        return v ? "Player registration locked." : "Player registration open.";
+    });
+
+    private Task SetFixturesLocked(bool v) => League(async () =>
+    {
+        await LeagueSettingsSvc.SetFixturesLocked(v);
+        fixturesLocked = v;
+        return v ? "Fixtures locked for editing." : "Fixtures open for editing.";
+    });
+
+    private Task SetFixturesHidden(bool v) => League(async () =>
+    {
+        await LeagueSettingsSvc.SetFixturesHidden(v);
+        fixturesHidden = v;
+        return v ? "Fixtures hidden from the public." : "Fixtures visible to the public.";
+    });
+
+    private async Task League(Func<Task<string>> change)
+    {
+        leagueMessage = null;
+        try
+        {
+            leagueMessage = await change();
+            leagueIsError = false;
+        }
+        catch (Exception ex)
+        {
+            leagueIsError = true;
+            leagueMessage = ex.Message;
+        }
+    }
+
+    private async Task SetNotification(NotificationSettingDto n, bool on)
+    {
+        notifMessage = null;
+        try
+        {
+            await NotificationSvc.UpdateSettingAsync(n.Type, on);
+            n.IsEnabled = on;
+        }
+        catch (Exception ex)
+        {
+            notifMessage = ex.Message;
+        }
+    }
+}

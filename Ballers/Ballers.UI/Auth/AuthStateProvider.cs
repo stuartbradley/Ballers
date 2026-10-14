@@ -44,12 +44,33 @@ namespace Ballers.Auth
                 claims.Add(new Claim("TeamName", userInfo.TeamName));
             }
 
+            if (userInfo.PlayerId != null)
+            {
+                claims.Add(new Claim("PlayerId", userInfo.PlayerId.Value.ToString()));
+            }
+
+            if (!string.IsNullOrWhiteSpace(userInfo.PlayerName))
+            {
+                claims.Add(new Claim("PlayerName", userInfo.PlayerName));
+            }
+
+            // Explicit precedence, and no catch-all. A player account must not fall
+            // through to Manager: that would hand it the squad, team and stat
+            // submission pages. An account that is none of these — a player still
+            // waiting on their manager — gets no role at all, which is correct.
             if (userInfo.IsAdmin)
                 claims.Add(new Claim(ClaimTypes.Role, "Admin"));
             else if (userInfo.IsReferee)
                 claims.Add(new Claim(ClaimTypes.Role, "Referee"));
-            else
+            else if (userInfo.PlayerId != null)
+                claims.Add(new Claim(ClaimTypes.Role, "Player"));
+            else if (userInfo.TeamId != null)
                 claims.Add(new Claim(ClaimTypes.Role, "Manager"));
+
+            if (userInfo.IsPendingPlayer)
+            {
+                claims.Add(new Claim("PendingPlayer", "true"));
+            }
 
             var identity = new ClaimsIdentity(claims, "serverAuth");
 

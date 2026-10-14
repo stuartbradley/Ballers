@@ -1,66 +1,183 @@
 @using Ballers.Shared
 
-<div class="totw-fut-card @(Player.IsGoalkeeper ? "is-gk" : "")">
-    <div class="totw-card-top">
-        <div class="totw-master-info">
-            <div class="totw-position-label"><span>@PositionLabel</span></div>
-        </div>
-        <div class="totw-picture">
-            @if (!string.IsNullOrWhiteSpace(Player.ProfileImageBase64))
-            {
-                <img src="@Player.ProfileImageBase64" alt="@Player.Name" draggable="false" />
-            }
-            else
-            {
-                <svg class="totw-silhouette" viewBox="0 0 60 90" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
-                    <circle cx="30" cy="14" r="12" />
-                    <path d="M10 36 L3 55 L15 59 L18 46 L18 78 L42 78 L42 46 L45 59 L57 55 L50 36 C46 31 38 27 30 27 C22 27 14 31 10 36Z" />
-                </svg>
-            }
-        </div>
-    </div>
-    <div class="totw-card-bottom">
-        <div class="totw-info">
-            <div class="totw-name"><span>@Player.Name</span></div>
-            <div class="totw-team"><span>@Player.TeamName</span></div>
-            <div class="totw-features">
-                @if (Player.IsGoalkeeper)
-                {
-                    <div class="totw-features-col">
-                        <span>
-                            <div class="totw-feature-value">@(Player.GoalsConceded ?? 0)</div>
-                            <div class="totw-feature-title">GA</div>
-                        </span>
+@* A Team of the Week card that turns over. The front is the player's card: their
+   rating and six stats if they have signed up, or the week's numbers if not.
+   The back sets this week against the season so far. It turns on hover (or
+   keyboard focus) where there is a pointer, and on tap where there isn't. *@
+<div class="totw-flip @(flipped ? "is-flipped" : "")"
+     tabindex="0"
+     role="button"
+     aria-pressed="@(flipped ? "true" : "false")"
+     aria-label="@($"{Player.Name}, {Player.TeamName}. Show this week and season stats")"
+     @onclick="Toggle"
+     @onkeydown="OnKey">
+    <div class="totw-flip-inner">
+
+        <!-- ── FRONT ── -->
+        <div class="totw-face totw-face-front" aria-hidden="@(flipped ? "true" : "false")">
+            <div class="totw-fut-card">
+                <div class="totw-card-top">
+                    <div class="totw-master-info">
+                        @if (Player.Attributes != null)
+                        {
+                            <div class="totw-rating">@Player.Attributes.Overall</div>
+                        }
+                        <div class="totw-position-label"><span>@PositionLabel</span></div>
                     </div>
-                    <div class="totw-features-col">
-                        <span>
-                            <div class="totw-feature-value">@(Player.CleanSheets ?? 0)</div>
-                            <div class="totw-feature-title">CS</div>
-                        </span>
+                    <div class="totw-picture">
+                        @if (!string.IsNullOrWhiteSpace(Player.ProfileImageBase64))
+                        {
+                            <img src="@Player.ProfileImageBase64" alt="@Player.Name" draggable="false" />
+                        }
+                        else
+                        {
+                            <svg class="totw-silhouette" viewBox="0 0 60 90" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+                                <circle cx="30" cy="14" r="12" />
+                                <path d="M10 36 L3 55 L15 59 L18 46 L18 78 L42 78 L42 46 L45 59 L57 55 L50 36 C46 31 38 27 30 27 C22 27 14 31 10 36Z" />
+                            </svg>
+                        }
                     </div>
-                }
-                else
-                {
-                    <div class="totw-features-col">
-                        <span>
-                            <div class="totw-feature-value">@Player.Goals</div>
-                            <div class="totw-feature-title">GOL</div>
-                        </span>
+                </div>
+                <div class="totw-card-bottom">
+                    <div class="totw-info">
+                        <div class="totw-name"><span>@Player.Name</span></div>
+                        <div class="totw-team"><span>@Player.TeamName</span></div>
+
+                        @if (Player.Attributes is { } a)
+                        {
+                            @* The card's six stats, in the same two columns as
+                               every other player card. *@
+                            <div class="totw-attrs">
+                                @foreach (var (value, label) in AttributeCells(a))
+                                {
+                                    <div class="totw-attr">
+                                        <span class="totw-attr-value">@value</span>
+                                        <span class="totw-attr-label">@label</span>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="totw-features">
+                                @if (Player.IsGoalkeeper)
+                                {
+                                    <div class="totw-features-col">
+                                        <span>
+                                            <div class="totw-feature-value">@(Player.GoalsConceded ?? 0)</div>
+                                            <div class="totw-feature-title">GA</div>
+                                        </span>
+                                    </div>
+                                    <div class="totw-features-col">
+                                        <span>
+                                            <div class="totw-feature-value">@(Player.CleanSheets ?? 0)</div>
+                                            <div class="totw-feature-title">CS</div>
+                                        </span>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="totw-features-col">
+                                        <span>
+                                            <div class="totw-feature-value">@Player.Goals</div>
+                                            <div class="totw-feature-title">GOL</div>
+                                        </span>
+                                    </div>
+                                    <div class="totw-features-col">
+                                        <span>
+                                            <div class="totw-feature-value">@Player.Assists</div>
+                                            <div class="totw-feature-title">AST</div>
+                                        </span>
+                                    </div>
+                                }
+                            </div>
+                        }
                     </div>
-                    <div class="totw-features-col">
-                        <span>
-                            <div class="totw-feature-value">@Player.Assists</div>
-                            <div class="totw-feature-title">AST</div>
-                        </span>
-                    </div>
-                }
+                </div>
+                @* Catches the light as the pointer moves onto the card. *@
+                <div class="totw-sheen" aria-hidden="true"></div>
             </div>
         </div>
+
+        <!-- ── BACK ── -->
+        <div class="totw-face totw-face-back" aria-hidden="@(flipped ? "false" : "true")">
+            <div class="totw-back">
+                <div class="totw-back-head">
+                    <span class="totw-back-name">@Player.Name</span>
+                    <span class="totw-back-team">@Player.TeamName</span>
+                    @if (Result is { } result)
+                    {
+                        <span class="totw-back-result">
+                            <span class="totw-result-badge is-@result.Code.ToLower()">@result.Code</span>
+                            @result.Score vs @Player.OpponentName
+                        </span>
+                    }
+                </div>
+
+                <div class="totw-back-table" role="table" aria-label="This week and season">
+                    <div class="totw-back-row totw-back-cols" role="row">
+                        <span role="columnheader"></span>
+                        <span role="columnheader">Week</span>
+                        <span role="columnheader">Season</span>
+                    </div>
+                    <div class="totw-back-row" role="row">
+                        <span class="totw-back-label" role="rowheader">Goals</span>
+                        <span class="totw-back-week" role="cell">@Player.Goals</span>
+                        <span class="totw-back-season" role="cell">@Player.SeasonGoals</span>
+                    </div>
+                    <div class="totw-back-row" role="row">
+                        <span class="totw-back-label" role="rowheader">Assists</span>
+                        <span class="totw-back-week" role="cell">@Player.Assists</span>
+                        <span class="totw-back-season" role="cell">@Player.SeasonAssists</span>
+                    </div>
+                    <div class="totw-back-row" role="row">
+                        <span class="totw-back-label" role="rowheader">Clean sheets</span>
+                        <span class="totw-back-week" role="cell">@(Player.CleanSheets ?? 0)</span>
+                        <span class="totw-back-season" role="cell">@Player.SeasonCleanSheets</span>
+                    </div>
+                </div>
+
+                <div class="totw-back-foot">
+                    Man of the match@(Player.TotwAppearances > 1 ? $" · {Player.TotwAppearances}× TOTW" : "")
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 
 @code {
     [Parameter, EditorRequired] public TotwPlayerDto Player { get; set; } = default!;
 
+    // Only used where there is no pointer to hover with: the stylesheet turns
+    // the card on hover or focus everywhere else and ignores this.
+    private bool flipped;
+
     private string PositionLabel => string.IsNullOrEmpty(Player.Position) ? "—" : Player.Position;
+
+    // The winning game from the player's side: W/D/L and the score, theirs
+    // first. Null when the API sent no result.
+    private (string Code, string Score)? Result =>
+        Player.TeamScore is int us && Player.OpponentScore is int them && Player.OpponentName != null
+            ? (us > them ? "W" : us == them ? "D" : "L", $"{us}–{them}")
+            : null;
+
+    private void Toggle() => flipped = !flipped;
+
+    private void OnKey(KeyboardEventArgs e)
+    {
+        if (e.Key is "Enter" or " ") Toggle();
+    }
+
+    // Same order as every other card: down the left column, then the right,
+    // so the pairs read FIN/DRI, TAC/PAC, PAS/STR across.
+    private static IEnumerable<(int Value, string Label)> AttributeCells(PlayerAttributesDto a)
+    {
+        yield return (a.Finishing, "FIN");
+        yield return (a.Dribbling, "DRI");
+        yield return (a.Tackling, "TAC");
+        yield return (a.Pace, "PAC");
+        yield return (a.Passing, "PAS");
+        yield return (a.Strength, "STR");
+    }
 }

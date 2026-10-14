@@ -13,7 +13,7 @@ namespace Ballers.Tests
             db.Teams.Add(new Team { Id = 1, Name = "FC Test" });
             db.Seasons.Add(new Season
             {
-                Id = 1, SeasonNumber = 1,
+                Id = 1, SeasonNumber = 1, IsActive = true,
                 StartDate = DateTime.UtcNow.AddMonths(-1),
                 EndDate = DateTime.UtcNow.AddMonths(5)
             });
@@ -140,7 +140,7 @@ namespace Ballers.Tests
                 new Team { Id = 2, Name = "Team B" });
             db.Seasons.Add(new Season
             {
-                Id = 1, SeasonNumber = 1,
+                Id = 1, SeasonNumber = 1, IsActive = true,
                 StartDate = DateTime.UtcNow.AddMonths(-1),
                 EndDate = DateTime.UtcNow.AddMonths(5)
             });
@@ -435,6 +435,84 @@ namespace Ballers.Tests
             var result = await svc.GetLeaderboardAsync(null);
 
             Assert.Equal("Team B", result[0].Team);
+        }
+
+        [Fact]
+        public async Task GetLeaderboard_IncludesMotmOwnGoalsAndCard()
+        {
+            var db = await SeedLeaderboardBase(nameof(GetLeaderboard_IncludesMotmOwnGoalsAndCard));
+            db.Players.Add(new Player { Id = 1, Name = "Star", Number = 9, TeamId = 1, Position = "FWD" });
+            db.PlayerCards.Add(new PlayerCardStats
+            {
+                PlayerId = 1, Finishing = 60, Tackling = 30, Passing = 40, Dribbling = 50, Pace = 40, Strength = 20
+            });
+            db.FixturePlayerStats.AddRange(
+                new FixturePlayerStat { PlayerId = 1, FixtureId = 1, Goals = 1, ManOfTheMatch = true },
+                new FixturePlayerStat { PlayerId = 1, FixtureId = 2, OwnGoals = 1 });
+            await db.SaveChangesAsync();
+
+            var svc = new StatsService(db);
+            var result = await svc.GetLeaderboardAsync(null);
+
+            Assert.Equal(1, result[0].Motm);
+            Assert.Equal(1, result[0].OwnGoals);
+            Assert.Equal(1, result[0].TeamId);
+            Assert.Equal(9, result[0].Number);
+            Assert.Equal(40, result[0].Attributes!.Overall);
+            // Default thresholds: silver 20, gold 35.
+            Assert.Equal("gold", result[0].Tier);
+        }
+
+        [Fact]
+        public async Task GetLeaderboard_PlayerWithoutCard_HasNoTier()
+        {
+            var db = await SeedLeaderboardBase(nameof(GetLeaderboard_PlayerWithoutCard_HasNoTier));
+            db.Players.Add(new Player { Id = 1, Name = "NoCard", TeamId = 1, Position = "MID" });
+            db.FixturePlayerStats.Add(new FixturePlayerStat { PlayerId = 1, FixtureId = 1 });
+            await db.SaveChangesAsync();
+
+            var result = await new StatsService(db).GetLeaderboardAsync(null);
+
+            Assert.Null(result[0].Attributes);
+            Assert.Null(result[0].Tier);
+        }
+
+        [Fact]
+        public async Task GetTeamStats_RecordsResultsGoalsAndCleanSheets()
+        {
+            var db = await SeedLeaderboardBase(nameof(GetTeamStats_RecordsResultsGoalsAndCleanSheets));
+
+            var result = await new StatsService(db).GetTeamStatsAsync(1);
+
+            var a = result.Single(t => t.TeamId == 1);
+            Assert.Equal((2, 1, 1, 0), (a.Played, a.Won, a.Drawn, a.Lost));
+            Assert.Equal((2, 1, 1), (a.GoalsFor, a.GoalsAgainst, a.CleanSheets));
+
+            var b = result.Single(t => t.TeamId == 2);
+            Assert.Equal((2, 0, 1, 1), (b.Played, b.Won, b.Drawn, b.Lost));
+            Assert.Equal((1, 2, 1), (b.GoalsFor, b.GoalsAgainst, b.CleanSheets));
+        }
+
+        [Fact]
+        public async Task GetTeamStats_AllSeasons_CountsCardsByTeam()
+        {
+            var db = await SeedLeaderboardBase(nameof(GetTeamStats_AllSeasons_CountsCardsByTeam));
+            db.Players.AddRange(
+                new Player { Id = 1, Name = "A1", TeamId = 1, Position = "DEF" },
+                new Player { Id = 2, Name = "B1", TeamId = 2, Position = "DEF" });
+            db.FixturePlayerStats.AddRange(
+                new FixturePlayerStat { PlayerId = 1, FixtureId = 1, YellowCards = true },
+                new FixturePlayerStat { PlayerId = 1, FixtureId = 3, YellowCards = true, RedCard = true },
+                new FixturePlayerStat { PlayerId = 2, FixtureId = 2 });
+            await db.SaveChangesAsync();
+
+            var result = await new StatsService(db).GetTeamStatsAsync(null);
+
+            var a = result.Single(t => t.TeamId == 1);
+            Assert.Equal(3, a.Played);
+            Assert.Equal((2, 1), (a.YellowCards, a.RedCards));
+            var b = result.Single(t => t.TeamId == 2);
+            Assert.Equal((0, 0), (b.YellowCards, b.RedCards));
         }
     }
 }

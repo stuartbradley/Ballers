@@ -169,6 +169,50 @@ namespace Ballers.API.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// Hands hosting to the other side: the away team becomes home and takes
+        /// over the setup. For the home manager (say their pitch is unavailable)
+        /// or an admin, and only before the game, with no stats in yet.
+        /// </summary>
+        [HttpPost("{fixtureId}/swap-home-away")]
+        public async Task<IActionResult> SwapHomeAway(int fixtureId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
+
+            var fixture = await _fixtures.GetByIdAsync(fixtureId);
+            if (fixture == null) return NotFound();
+
+            if (!user.IsAdmin && user.TeamId != fixture.HomeTeamId)
+                return Forbid();
+
+            if (await FixturesLockedFor(user))
+                return Conflict("Fixtures are locked by the admin — editing is disabled.");
+
+            var problem = await _fixtures.SwapHomeAwayAsync(fixtureId, DateTime.UtcNow);
+            if (problem != null) return Conflict(problem);
+
+            // Old names: fixture was loaded before the swap.
+            var swapped = $"{fixture.HomeTeam} v {fixture.AwayTeam} is now {fixture.AwayTeam} v {fixture.HomeTeam}.";
+            await _notifications.CreateForTeamAsync(
+                fixture.AwayTeamId,
+                NotificationType.FixtureUpdated,
+                $"{swapped} You're at home now, so the time, venue and referee are yours to sort.",
+                $"/fixture/{fixtureId}?tab=setup",
+                fixtureId);
+
+            // The old home side made the change themselves unless an admin did.
+            if (user.IsAdmin)
+                await _notifications.CreateForTeamAsync(
+                    fixture.HomeTeamId,
+                    NotificationType.FixtureUpdated,
+                    $"{swapped} An admin swapped it; you're away now.",
+                    $"/fixture/{fixtureId}",
+                    fixtureId);
+
+            return Ok();
+        }
+
         [HttpGet("{fixtureId}/players")]
         public async Task<IActionResult> GetFixturePlayers(int fixtureId, [FromQuery] int? teamId = null)
         {

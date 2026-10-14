@@ -9,13 +9,13 @@
 @inject HttpClient Http
 @inject IJSRuntime JS
 
-<PageTitle>@(gallery?.Title ?? "Gallery")</PageTitle>
+<PageTitle>@(gallery?.Title ?? (gallery != null ? $"{gallery.HomeTeam} v {gallery.AwayTeam} photos" : "Gallery"))</PageTitle>
 
 <div class="gal-page">
 
     @if (isLoading)
     {
-        <LoadingSpinner />
+        <div class="gal-loading"><LoadingSpinner /></div>
     }
     else if (gallery == null)
     {
@@ -26,14 +26,26 @@
     }
     else
     {
-        <!-- ── Fixture header ── -->
+        <!-- ── Fixture header, over the gallery's cover photo ── -->
         <header class="gal-hero">
+            @if (CoverUrl is { } cover)
+            {
+                <img class="gal-hero-bg" src="@cover" alt="" aria-hidden="true" decoding="async" />
+            }
+            <span class="gal-hero-shade" aria-hidden="true"></span>
+
             <div class="gal-hero-inner">
-                <a href="/galleries" class="gal-back-link">← All galleries</a>
+                <div class="gal-hero-top">
+                    <a href="/galleries" class="gal-back-link">← All galleries</a>
+                    <button type="button" class="gal-share" @onclick="Share">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4M18 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm12 7a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /></svg>
+                        @(shareLabel ?? "Share")
+                    </button>
+                </div>
 
-                <p class="gal-week">Match Week @gallery.Week</p>
+                <span class="gal-week">Match Week @gallery.Week</span>
 
-                <div class="gal-fixture">
+                <h1 class="gal-fixture">
                     <span class="gal-team">@gallery.HomeTeam</span>
                     @if (gallery.IsPlayed)
                     {
@@ -44,7 +56,7 @@
                         <span class="gal-vs">v</span>
                     }
                     <span class="gal-team">@gallery.AwayTeam</span>
-                </div>
+                </h1>
 
                 <div class="gal-meta">
                     @if (gallery.Kickoff.HasValue)
@@ -83,51 +95,50 @@
                         {
                             <p class="gal-credit-bio">@photographer.Bio</p>
                         }
+                    </div>
 
-                        <div class="gal-credit-links">
-                            @if (!string.IsNullOrWhiteSpace(photographer.Website))
-                            {
-                                <a href="@Href(photographer.Website)" target="_blank" rel="noopener noreferrer">Website</a>
-                            }
-                            @if (!string.IsNullOrWhiteSpace(photographer.Instagram))
-                            {
-                                <a href="@Href(photographer.Instagram)" target="_blank" rel="noopener noreferrer">Instagram</a>
-                            }
-                            @if (!string.IsNullOrWhiteSpace(photographer.Facebook))
-                            {
-                                <a href="@Href(photographer.Facebook)" target="_blank" rel="noopener noreferrer">Facebook</a>
-                            }
-                            @if (!string.IsNullOrWhiteSpace(photographer.Email))
-                            {
-                                <a href="mailto:@photographer.Email">Email</a>
-                            }
-                        </div>
+                    <div class="gal-credit-links">
+                        @if (!string.IsNullOrWhiteSpace(photographer.Website))
+                        {
+                            <a href="@Href(photographer.Website)" target="_blank" rel="noopener noreferrer">Website</a>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(photographer.Instagram))
+                        {
+                            <a href="@Href(photographer.Instagram)" target="_blank" rel="noopener noreferrer">Instagram</a>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(photographer.Facebook))
+                        {
+                            <a href="@Href(photographer.Facebook)" target="_blank" rel="noopener noreferrer">Facebook</a>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(photographer.Email))
+                        {
+                            <a href="mailto:@photographer.Email">Email</a>
+                        }
                     </div>
                 </div>
             </section>
         }
 
-        <!-- ── Mosaic ── -->
+        <!-- ── Photos ── -->
         <div class="gal-body">
             @if (!photos.Any() && !isLoadingMore)
             {
                 <p class="gal-empty">No photos in this gallery yet.</p>
             }
 
-            <div class="gal-mosaic">
+            @* Justified rows: every photo keeps its own shape, and each row
+               stretches to the full width (see .gal-rows). *@
+            <div class="gal-rows">
                 @foreach (var (photo, index) in photos.Select((p, i) => (p, i)))
                 {
-                    <button class="gal-tile @TileClass(photo, index)"
-                            style="--gal-aspect: @photo.AspectRatio.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)"
+                    var ratio = Ratio(photo);
+                    <button class="gal-tile"
+                            style="--r: @ratio.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)"
                             @onclick="() => OpenLightbox(index)"
                             aria-label="Open photo @(index + 1)">
-                        @* Feature and wide tiles are drawn at roughly twice the size
-                           of a normal one, so they get their own sizes hint and will
-                           reach for the full-size image on a large or high-density
-                           screen where a thumbnail would look soft. *@
                         <img src="@Abs(photo.ThumbnailUrl)"
                              srcset="@MediaUrls.SrcSet(Http, photo.ThumbnailUrl, photo.ImageUrl)"
-                             sizes="@TileSizes(photo, index)"
+                             sizes="@TileSizes(ratio)"
                              width="@photo.Width" height="@photo.Height"
                              alt="Match photo @(index + 1)"
                              loading="lazy" decoding="async" />
@@ -142,6 +153,33 @@
 
             <!-- Watched by IntersectionObserver to pull the next page. -->
             <div id="@SentinelId" class="gal-sentinel"></div>
+
+            <!-- ── The galleries either side of this one ── -->
+            @if (Newer != null || Older != null)
+            {
+                <nav class="gal-neighbours" aria-label="Other galleries">
+                    @foreach (var (g, label, cls) in new[] { (Older, "Previous match", "is-prev"), (Newer, "Next match", "is-next") })
+                    {
+                        if (g == null)
+                        {
+                            <span class="gal-neighbour-gap"></span>
+                            continue;
+                        }
+                        <a class="gal-neighbour @cls" href="/gallery/@g.Id">
+                            @if (!string.IsNullOrEmpty(g.CoverThumbnailUrl))
+                            {
+                                <img src="@Abs(g.CoverThumbnailUrl)" alt="" loading="lazy" decoding="async" />
+                            }
+                            <span class="gal-neighbour-shade" aria-hidden="true"></span>
+                            <span class="gal-neighbour-body">
+                                <span class="gal-neighbour-label">@(cls == "is-prev" ? "← " : "")@label@(cls == "is-next" ? " →" : "")</span>
+                                <span class="gal-neighbour-fixture">@g.HomeTeam @(g.IsPlayed ? $"{g.HomeScore}–{g.AwayScore}" : "v") @g.AwayTeam</span>
+                                <span class="gal-neighbour-meta">Match Week @g.Week · @g.PhotoCount photos</span>
+                            </span>
+                        </a>
+                    }
+                </nav>
+            }
         </div>
 
         <!-- ── Lightbox ── -->
@@ -149,29 +187,60 @@
         {
             var photo = photos[current];
 
-            <div class="gal-lightbox" @onclick="CloseLightbox">
-                <button class="gal-lightbox-close" @onclick="CloseLightbox" aria-label="Close">✕</button>
+            <div class="gal-lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer"
+                 tabindex="-1" @ref="lightboxRef"
+                 @onclick="CloseLightbox" @onkeydown="OnLightboxKey"
+                 @ontouchstart="OnTouchStart" @ontouchend="OnTouchEnd">
 
-                @if (current > 0)
+                <div class="gal-lb-bar" @onclick:stopPropagation>
+                    <span class="gal-lb-counter">@(current + 1) / @gallery.PhotoCount</span>
+                    <div class="gal-lb-tools">
+                        <button type="button" class="gal-lb-btn" @onclick="DownloadCurrent" aria-label="Download full-size photo">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                            <span>Download</span>
+                        </button>
+                        <button type="button" class="gal-lb-btn gal-lb-close" @onclick="CloseLightbox" aria-label="Close">✕</button>
+                    </div>
+                </div>
+
+                <div class="gal-lb-stage">
+                    @if (current > 0)
+                    {
+                        <button class="gal-lightbox-nav prev"
+                                @onclick="ShowPrevious" @onclick:stopPropagation
+                                aria-label="Previous photo">‹</button>
+                    }
+
+                    @* Keyed so each photo fades in rather than swapping in place. *@
+                    <img class="gal-lightbox-image" @key="photo.Id"
+                         src="@Abs(photo.ImageUrl)"
+                         alt="Match photo @(current + 1)"
+                         @onclick:stopPropagation />
+
+                    @if (current < photos.Count - 1)
+                    {
+                        <button class="gal-lightbox-nav next"
+                                @onclick="ShowNext" @onclick:stopPropagation
+                                aria-label="Next photo">›</button>
+                    }
+                </div>
+
+                <div class="gal-lb-thumbs" id="gal-thumbs" @onclick:stopPropagation>
+                    @foreach (var (p, i) in photos.Select((p, i) => (p, i)))
+                    {
+                        <button type="button" class="gal-lb-thumb @(i == current ? "is-active" : "")"
+                                aria-label="Photo @(i + 1)" aria-current="@(i == current ? "true" : null)"
+                                @onclick="() => ShowAt(i)">
+                            <img src="@Abs(p.ThumbnailUrl)" alt="" loading="lazy" decoding="async" />
+                        </button>
+                    }
+                </div>
+
+                @* The next photo, loading out of sight, so stepping on is instant. *@
+                @if (current + 1 < photos.Count)
                 {
-                    <button class="gal-lightbox-nav prev"
-                            @onclick="ShowPrevious" @onclick:stopPropagation
-                            aria-label="Previous photo">‹</button>
+                    <img class="gal-preload" src="@Abs(photos[current + 1].ImageUrl)" alt="" aria-hidden="true" />
                 }
-
-                <img class="gal-lightbox-image"
-                     src="@Abs(photo.ImageUrl)"
-                     alt="Match photo @(current + 1)"
-                     @onclick:stopPropagation />
-
-                @if (current < photos.Count - 1)
-                {
-                    <button class="gal-lightbox-nav next"
-                            @onclick="ShowNext" @onclick:stopPropagation
-                            aria-label="Next photo">›</button>
-                }
-
-                <div class="gal-lightbox-counter">@(current + 1) / @gallery.PhotoCount</div>
             </div>
         }
     }
@@ -185,16 +254,33 @@
 
     private GalleryDetailDto? gallery;
     private readonly List<GalleryPhotoDto> photos = new();
+    private List<GallerySummaryDto> allGalleries = new();   // newest first
 
     private bool isLoading = true;
     private bool isLoadingMore;
     private bool hasMore = true;
     private int? lightboxIndex;
+    private string? shareLabel;
+
+    private ElementReference lightboxRef;
+    private bool focusLightbox;
+    private bool centreThumb;
 
     private DotNetObjectReference<Gallery>? selfRef;
     private bool observerAttached;
+    private string? attachedSentinel;
 
     private string SentinelId => $"gal-sentinel-{Id}";
+
+    private GallerySummaryDto? Summary => allGalleries.FirstOrDefault(g => g.Id == Id);
+
+    private int SummaryIndex => allGalleries.FindIndex(g => g.Id == Id);
+    private GallerySummaryDto? Newer => SummaryIndex > 0 ? allGalleries[SummaryIndex - 1] : null;
+    private GallerySummaryDto? Older => SummaryIndex >= 0 && SummaryIndex < allGalleries.Count - 1 ? allGalleries[SummaryIndex + 1] : null;
+
+    // The gallery's chosen cover, or its first photo when it has none listed.
+    private string? CoverUrl =>
+        Abs(Summary?.CoverImageUrl ?? Summary?.CoverThumbnailUrl ?? photos.FirstOrDefault()?.ImageUrl);
 
     protected override async Task OnParametersSetAsync()
     {
@@ -202,8 +288,23 @@
         photos.Clear();
         hasMore = true;
         lightboxIndex = null;
+        shareLabel = null;
 
-        gallery = await GalleryService.GetGallery(Id);
+        // A new gallery (the next/previous links) means a new sentinel to
+        // watch. Id has already changed, so the old one goes by its saved name.
+        if (attachedSentinel != null)
+        {
+            try { await JS.InvokeVoidAsync("galleryScroll.disconnect", attachedSentinel); } catch (JSException) { }
+            attachedSentinel = null;
+            observerAttached = false;
+        }
+
+        var galleryTask = GalleryService.GetGallery(Id);
+        var listTask = allGalleries.Any() ? Task.FromResult(allGalleries) : GalleryService.GetGalleries();
+        await Task.WhenAll(galleryTask, listTask);
+
+        gallery = galleryTask.Result;
+        allGalleries = listTask.Result;
 
         if (gallery != null)
         {
@@ -215,6 +316,18 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (focusLightbox)
+        {
+            focusLightbox = false;
+            try { await lightboxRef.FocusAsync(); } catch (JSException) { } catch (InvalidOperationException) { }
+        }
+
+        if (centreThumb)
+        {
+            centreThumb = false;
+            try { await JS.InvokeVoidAsync("galleryScroll.centreThumb", "gal-thumbs"); } catch (JSException) { }
+        }
+
         // The sentinel only exists once the gallery has rendered.
         if (gallery == null || observerAttached) return;
 
@@ -224,6 +337,7 @@
         {
             var attached = await JS.InvokeAsync<bool>("galleryScroll.observe", SentinelId, selfRef);
             observerAttached = attached;
+            if (attached) attachedSentinel = SentinelId;
         }
         catch (JSException)
         {
@@ -257,43 +371,43 @@
     }
 
     /// <summary>
-    /// Gives the mosaic its rhythm: portrait shots run tall, and every so often
-    /// one is promoted to a wide feature so the grid doesn't read as a plain
-    /// uniform table of thumbnails.
+    /// Width over height. Photos missing their size are drawn as 3:2, the
+    /// usual camera shape, and extreme panoramas are capped so a row can hold them.
     /// </summary>
-    private string TileClass(GalleryPhotoDto photo, int index)
-    {
-        var isPortrait = photo.AspectRatio > 1.15;
-        var isWide = photo.AspectRatio < 0.7;
-
-        // Feature every 7th photo, provided its shape suits the space.
-        if (index % 7 == 3 && !isPortrait) return "tile-feature";
-        if (isPortrait) return "tile-tall";
-        if (isWide) return "tile-wide";
-
-        return "tile-normal";
-    }
+    private static double Ratio(GalleryPhotoDto photo) =>
+        photo.Width > 0 && photo.Height > 0
+            ? Math.Clamp((double)photo.Width / photo.Height, 0.4, 3.5)
+            : 1.5;
 
     /// <summary>
-    /// Roughly how wide each tile is drawn, which is what the browser uses to
-    /// choose between the thumbnail and the full-size image.
+    /// Roughly how wide a tile is drawn: its shape times the row height, plus
+    /// some for the stretch that fills each row. The browser uses it to choose
+    /// between the thumbnail and the full-size image.
     /// </summary>
-    private string TileSizes(GalleryPhotoDto photo, int index)
-    {
-        var cls = TileClass(photo, index);
-        var isLarge = cls is "tile-feature" or "tile-wide";
+    private static string TileSizes(double ratio) =>
+        $"(max-width: 640px) {Math.Round(ratio * 190)}px, {Math.Round(ratio * 320)}px";
 
-        return isLarge
-            ? "(max-width: 640px) 92vw, 400px"
-            : "(max-width: 640px) 46vw, 200px";
+    // ── Lightbox ──
+
+    private void OpenLightbox(int index)
+    {
+        lightboxIndex = index;
+        focusLightbox = true;
+        centreThumb = true;
     }
 
-    private void OpenLightbox(int index) => lightboxIndex = index;
     private void CloseLightbox() => lightboxIndex = null;
+
+    private void ShowAt(int index)
+    {
+        if (index < 0 || index >= photos.Count) return;
+        lightboxIndex = index;
+        centreThumb = true;
+    }
 
     private void ShowPrevious()
     {
-        if (lightboxIndex is > 0) lightboxIndex--;
+        if (lightboxIndex is > 0) ShowAt(lightboxIndex.Value - 1);
     }
 
     private async Task ShowNext()
@@ -304,7 +418,71 @@
         // through the lightbox keeps working past the first chunk.
         if (current >= photos.Count - 2 && hasMore) await LoadNextPageAsync();
 
-        if (current < photos.Count - 1) lightboxIndex = current + 1;
+        if (current < photos.Count - 1) ShowAt(current + 1);
+    }
+
+    private Task OnLightboxKey(KeyboardEventArgs e)
+    {
+        switch (e.Key)
+        {
+            case "ArrowLeft": ShowPrevious(); break;
+            case "ArrowRight": return ShowNext();
+            case "Escape": CloseLightbox(); break;
+        }
+        return Task.CompletedTask;
+    }
+
+    // A sideways swipe steps through the photos; mostly-vertical movement is
+    // left alone.
+    private double touchX, touchY;
+
+    private void OnTouchStart(TouchEventArgs e)
+    {
+        if (e.ChangedTouches.Length == 0) return;
+        touchX = e.ChangedTouches[0].ClientX;
+        touchY = e.ChangedTouches[0].ClientY;
+    }
+
+    private Task OnTouchEnd(TouchEventArgs e)
+    {
+        if (e.ChangedTouches.Length == 0) return Task.CompletedTask;
+        var dx = e.ChangedTouches[0].ClientX - touchX;
+        var dy = e.ChangedTouches[0].ClientY - touchY;
+        if (Math.Abs(dx) < 50 || Math.Abs(dx) < Math.Abs(dy) * 1.5) return Task.CompletedTask;
+        if (dx > 0) { ShowPrevious(); return Task.CompletedTask; }
+        return ShowNext();
+    }
+
+    private async Task DownloadCurrent()
+    {
+        if (gallery == null || lightboxIndex is not { } i || i >= photos.Count) return;
+        var name = $"ballers-mw{gallery.Week}-{Slug(gallery.HomeTeam)}-v-{Slug(gallery.AwayTeam)}-{i + 1}.jpg";
+        try { await JS.InvokeVoidAsync("galleryScroll.download", Abs(photos[i].ImageUrl), name); }
+        catch (JSException) { }
+    }
+
+    private static string Slug(string s) =>
+        new string(s.ToLowerInvariant().Select(c => char.IsLetterOrDigit(c) ? c : '-').ToArray()).Trim('-');
+
+    private async Task Share()
+    {
+        if (gallery == null) return;
+        var title = $"{gallery.HomeTeam} v {gallery.AwayTeam} — Match Week {gallery.Week} photos";
+        string result;
+        try { result = await JS.InvokeAsync<string>("galleryScroll.share", title, Nav.Uri); }
+        catch (JSException) { result = "failed"; }
+
+        shareLabel = result switch
+        {
+            "copied" => "Link copied",
+            "failed" => "Couldn't share",
+            _ => null
+        };
+        if (shareLabel == null) return;
+
+        StateHasChanged();
+        await Task.Delay(2500);
+        shareLabel = null;
     }
 
     private string? Abs(string? url) => MediaUrls.Absolute(Http, url);
@@ -320,7 +498,7 @@
     {
         try
         {
-            await JS.InvokeVoidAsync("galleryScroll.disconnect", SentinelId);
+            await JS.InvokeVoidAsync("galleryScroll.disconnect", attachedSentinel ?? SentinelId);
         }
         catch (JSException) { }
         catch (TaskCanceledException) { }

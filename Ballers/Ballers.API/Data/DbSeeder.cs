@@ -18,7 +18,7 @@ namespace Ballers.API.Data
             await SeedNotificationSettings(db);
             await SeedLeagueSettings(db);
 
-            string[] roles = ["Admin", "Manager", "Referee"];
+            string[] roles = ["Admin", "Manager", "Referee", "Player"];
 
             foreach (var role in roles)
                 if (!await roleManager.RoleExistsAsync(role))

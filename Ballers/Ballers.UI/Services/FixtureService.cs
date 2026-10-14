@@ -110,6 +110,19 @@ namespace Ballers.Services
                 throw new Exception("unable to update fixture");
         }
 
+        // Hands hosting to the other team. Throws with the API's reason when it
+        // can't be done (kicked off, stats in, locked…).
+        public async Task SwapHomeAway(int fixtureId)
+        {
+            var response = await _httpClient.PostAsync($"api/fixtures/{fixtureId}/swap-home-away", null);
+            if (response.IsSuccessStatusCode) return;
+
+            var reason = (await response.Content.ReadAsStringAsync()).Trim().Trim('"');
+            throw new Exception(string.IsNullOrWhiteSpace(reason) || reason.StartsWith("{")
+                ? "Couldn't swap home and away."
+                : reason);
+        }
+
         public async Task SubmitStats(
                         int fixtureId,
                         List<FixturePlayerStatInput> stats,

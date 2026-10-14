@@ -56,7 +56,11 @@
     min-width: 0;
 }
 
+/* The crest keeps its box whatever else is in the header. Without this the
+   logo area is free to collapse to nothing once the nav is wide enough, and
+   the image then spills over the first nav link. */
 .logo {
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     gap: 9px;
@@ -111,19 +115,21 @@
 
 /* ===== DESKTOP NAV ===== */
 
+/* Tight on purpose: a signed-in player carries the most links of anyone, and
+   the row has to clear the crest at the 1380px container width. */
 .nav-links {
     display: flex;
     align-items: center;
-    gap: 18px;
+    gap: 12px;
     flex-shrink: 0;
 }
 
 .nav-links a,
 .logout-link {
     font-family: var(--font-display);
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-weight: 600;
-    letter-spacing: 0.07em;
+    letter-spacing: 0.05em;
     white-space: nowrap;
     text-transform: uppercase;
     color: var(--ballers-primary);
@@ -197,6 +203,44 @@
 .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
 .hamburger.open span:nth-child(2) { opacity: 0; width: 0; }
 .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* ===== DARK HEADER (home page only) =====
+   The home page is dark from top to bottom, and a white bar over it reads as
+   a hard seam. Same layout, night colours. */
+
+.main-header.header-dark {
+    background: rgba(5, 11, 22, 0.82);
+    border-bottom-color: rgba(232, 237, 245, 0.08);
+}
+
+/* ::deep because the links are NavLink's own anchors, which this file's
+   scoping attribute never reaches. */
+.header-dark ::deep .nav-links a,
+.header-dark .logout-link,
+.header-dark .hello-text {
+    color: var(--chalk, #E8EDF5);
+}
+
+.header-dark ::deep .nav-links a:hover,
+.header-dark .logout-link:hover {
+    color: var(--ballers-accent);
+    opacity: 1;
+}
+
+.header-dark ::deep .nav-links a.active {
+    color: var(--chalk, #E8EDF5);
+    opacity: 1;
+}
+
+.header-dark .hamburger {
+    background: rgba(232, 237, 245, 0.08);
+    box-shadow: inset 0 0 0 1px rgba(232, 237, 245, 0.16);
+}
+
+.header-dark .hamburger:hover,
+.header-dark .hamburger.open {
+    background: rgba(250, 204, 21, 0.18);
+}
 
 /* ================================================================
    BACKDROP — semi-transparent scrim behind the drawer
@@ -380,8 +424,14 @@
    RESPONSIVE — show mobile elements
    ================================================================ */
 
+/* The greeting is the first thing to go when the header gets tight — a player's
+   nav carries an extra link, and the name is repeated in the mobile drawer. */
+@media (max-width: 1500px) {
+    .hello-text { display: none; }
+}
+
 @media (max-width: 1100px) {
-    .nav-links { gap: 18px; }
+    .nav-links { gap: 14px; }
     .nav-links a, .logout-link { font-size: 0.78rem; letter-spacing: 0.07em; }
 }
 

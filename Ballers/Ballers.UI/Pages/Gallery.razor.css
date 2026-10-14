@@ -1,15 +1,34 @@
 /* ================================================================
-   GALLERY — one match, shown as a mosaic
+   GALLERY — one match: the score over its cover photo, the
+   photographer, the photos in justified rows, and a lightbox to
+   page through them.
    ================================================================ */
 
-@keyframes fadeUp {
-    from { opacity: 0; transform: translateY(12px); }
-    to   { opacity: 1; transform: translateY(0); }
+@keyframes galUp {
+    from { opacity: 0; translate: 0 12px; }
+    to   { opacity: 1; translate: 0 0; }
+}
+
+@keyframes galFade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes galDrift {
+    from { scale: 1.08; }
+    to   { scale: 1.16; }
 }
 
 .gal-page {
     min-height: calc(100vh - 71px);
-    background: #07101E;
+    background: var(--night-900);
+    color: var(--chalk);
+}
+
+.gal-loading {
+    display: grid;
+    place-items: center;
+    min-height: 50vh;
 }
 
 .gal-error {
@@ -17,190 +36,258 @@
     margin: 0 auto;
     padding: 80px 24px;
     text-align: center;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--chalk-dim);
 }
 
 .gal-back-link {
     display: inline-block;
     font-family: var(--font-display);
-    font-size: 0.65rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
+    font-size: 0.82rem;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.4);
+    color: var(--chalk-dim);
     text-decoration: none;
     transition: color 0.18s;
 }
 
 .gal-back-link:hover { color: var(--ballers-accent); }
 
-/* ── Fixture header ── */
+/* ── Header over the cover ── */
 
 .gal-hero {
-    background: #0B1628;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     position: relative;
+    isolation: isolate;
     overflow: hidden;
+    background: var(--night-800);
 }
 
-.gal-hero::after {
-    content: "";
+/* The cover, blurred a touch and drifting slowly, so the score reads over it. */
+.gal-hero-bg {
     position: absolute;
-    left: 0; top: 0; bottom: 0;
-    width: 4px;
-    background: linear-gradient(180deg, var(--ballers-accent) 0%, rgba(250, 204, 21, 0.2) 100%);
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: blur(2px) saturate(1.1);
+    animation: galDrift 24s ease-in-out infinite alternate;
+    z-index: -2;
+}
+
+.gal-hero-shade {
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(0deg, var(--night-900) 0%, rgba(7, 16, 30, 0.75) 35%, rgba(7, 16, 30, 0.45) 100%),
+        radial-gradient(60% 80% at 50% 100%, rgba(250, 204, 21, 0.12), transparent 70%);
+    z-index: -1;
 }
 
 .gal-hero-inner {
-    position: relative;
-    z-index: 1;
     max-width: 1180px;
     margin: 0 auto;
-    padding: 28px 24px 34px;
+    padding: 22px 24px clamp(36px, 6vw, 64px);
+    text-align: center;
+}
+
+.gal-hero-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: clamp(30px, 6vw, 70px);
+    text-align: left;
+}
+
+.gal-share {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 999px;
+    background: rgba(5, 11, 22, 0.55);
+    font-family: var(--font-display);
+    font-size: 0.82rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--chalk);
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+    transition: background 0.18s, color 0.18s, border-color 0.18s;
+}
+
+.gal-share svg { width: 16px; height: 16px; }
+
+.gal-share:hover {
+    border-color: var(--ballers-accent);
+    background: var(--ballers-accent);
+    color: var(--night-950);
 }
 
 .gal-week {
+    display: inline-block;
+    margin-bottom: 14px;
+    padding: 4px 14px;
+    border-radius: 999px;
+    background: var(--ballers-accent);
     font-family: var(--font-display);
-    font-size: 0.62rem;
-    font-weight: 600;
-    letter-spacing: 0.3em;
+    font-size: 0.78rem;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--ballers-accent);
-    opacity: 0.75;
-    margin: 18px 0 10px;
+    color: var(--night-950);
+    animation: galUp 0.5s ease both;
 }
 
 .gal-fixture {
     display: flex;
-    align-items: center;
-    gap: 16px;
     flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px 22px;
+    margin: 0;
+    animation: galUp 0.55s 0.06s ease both;
 }
 
 .gal-team {
     font-family: var(--font-display);
-    font-size: clamp(1.3rem, 3.4vw, 2.2rem);
-    font-weight: 700;
-    letter-spacing: 0.04em;
+    font-size: clamp(1.7rem, 5vw, 3.4rem);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0.03em;
     text-transform: uppercase;
-    color: white;
+    color: var(--chalk);
+    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.6);
 }
 
 .gal-score {
+    padding: 4px 18px;
+    border: 1px solid rgba(250, 204, 21, 0.4);
+    border-radius: var(--radius-sm);
+    background: rgba(5, 11, 22, 0.6);
     font-family: var(--font-display);
-    font-size: clamp(1.4rem, 3.6vw, 2.3rem);
-    font-weight: 700;
+    font-size: clamp(1.8rem, 5vw, 3.4rem);
+    font-weight: 600;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
     color: var(--ballers-accent);
-    letter-spacing: 0.04em;
+    backdrop-filter: blur(6px);
 }
 
 .gal-score-sep {
-    color: rgba(255, 255, 255, 0.3);
-    margin: 0 4px;
+    margin: 0 6px;
+    color: rgba(255, 255, 255, 0.35);
 }
 
 .gal-vs {
-    color: rgba(255, 255, 255, 0.3);
-    font-size: 1rem;
+    font-family: var(--font-display);
+    font-size: 1.4rem;
     text-transform: uppercase;
+    color: var(--chalk-faint);
 }
 
 .gal-meta {
     display: flex;
-    gap: 16px;
     flex-wrap: wrap;
-    margin-top: 12px;
-    font-size: 0.82rem;
-    color: rgba(255, 255, 255, 0.42);
+    justify-content: center;
+    gap: 6px 18px;
+    margin-top: 16px;
+    font-size: 0.9rem;
+    color: var(--chalk-dim);
+    animation: galUp 0.55s 0.12s ease both;
+}
+
+.gal-meta span + span::before {
+    content: "·";
+    margin-right: 18px;
+    color: var(--chalk-faint);
 }
 
 .gal-description {
-    margin: 14px 0 0;
     max-width: 70ch;
-    color: rgba(255, 255, 255, 0.6);
-    font-size: 0.9rem;
+    margin: 16px auto 0;
+    font-size: 0.95rem;
     line-height: 1.6;
+    color: var(--chalk-dim);
 }
 
 /* ── Photographer credit ── */
 
 .gal-credit {
-    background: linear-gradient(180deg, rgba(250, 204, 21, 0.06), transparent);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 0; /* site.css pads every <section> */
 }
 
 .gal-credit-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px 22px;
     max-width: 1180px;
     margin: 0 auto;
-    padding: 22px 24px;
-    display: flex;
-    gap: 20px;
-    align-items: center;
-    flex-wrap: wrap;
+    padding: 18px 22px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent), var(--night-card);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .gal-credit-logo {
-    width: 72px;
-    height: 72px;
-    object-fit: contain;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.04);
-    padding: 6px;
     flex-shrink: 0;
+    width: 64px;
+    height: 64px;
+    padding: 6px;
+    border-radius: 12px;
+    object-fit: contain;
+    background: rgba(255, 255, 255, 0.06);
 }
 
-.gal-credit-text { flex: 1; min-width: 240px; }
+.gal-credit-text { flex: 1; min-width: 200px; }
 
 .gal-credit-label {
-    font-family: var(--font-display);
-    font-size: 0.58rem;
-    font-weight: 700;
-    letter-spacing: 0.24em;
+    margin: 0 0 2px;
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.3);
-    margin: 0 0 4px;
+    color: var(--ballers-accent);
 }
 
 .gal-credit-name {
-    font-family: var(--font-display);
-    font-size: 1.2rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: white;
     margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--chalk);
 }
 
 .gal-credit-bio {
-    margin: 8px 0 0;
     max-width: 70ch;
-    font-size: 0.85rem;
+    margin: 6px 0 0;
+    font-size: 0.88rem;
     line-height: 1.55;
-    color: rgba(255, 255, 255, 0.55);
+    color: var(--chalk-dim);
 }
 
 .gal-credit-links {
     display: flex;
-    gap: 10px;
     flex-wrap: wrap;
-    margin-top: 12px;
+    gap: 8px;
 }
 
 .gal-credit-links a {
-    padding: 6px 14px;
+    padding: 7px 14px;
     border: 1px solid rgba(250, 204, 21, 0.35);
     border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
     color: var(--ballers-accent);
     text-decoration: none;
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
     transition: background 0.16s, color 0.16s;
 }
 
 .gal-credit-links a:hover {
     background: var(--ballers-accent);
-    color: #07101E;
+    color: var(--night-950);
 }
 
 /* ── Mosaic ── */
@@ -208,46 +295,67 @@
 .gal-body {
     max-width: 1180px;
     margin: 0 auto;
-    padding: 26px 24px 64px;
+    padding: 24px 24px 80px;
 }
+
+.gal-credit + .gal-body { padding-top: 24px; }
 
 .gal-empty {
-    text-align: center;
-    color: rgba(255, 255, 255, 0.35);
     padding: 50px 0;
+    text-align: center;
+    color: var(--chalk-faint);
 }
 
-/* Dense packing lets the tall and wide tiles fill gaps rather than
-   leaving holes, which is what gives the grid its scrapbook feel. */
-.gal-mosaic {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-    grid-auto-rows: 150px;
-    grid-auto-flow: dense;
-    gap: 10px;
+/* Justified rows. Each tile's flex-basis is its shape (--r, width over
+   height) times the row height, and it grows in that same proportion, so
+   every tile in a row stretches by the same factor: the row fills the width,
+   all its photos end up the same height, and each keeps its own shape.
+   The ::after spacer soaks up the space in the last row, so a short last
+   row stays at the row height instead of ballooning. */
+.gal-rows {
+    --row-h: 240px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.gal-rows::after {
+    content: "";
+    flex-grow: 999999;
 }
 
 .gal-tile {
+    position: relative;
+    flex-grow: calc(var(--r) * 100);
+    flex-basis: calc(var(--r) * var(--row-h));
     padding: 0;
     border: none;
-    border-radius: 10px;
+    border-radius: 8px;
     overflow: hidden;
-    background: #0B1628;
-    cursor: pointer;
-    position: relative;
-    animation: fadeUp 0.35s ease both;
+    background: var(--night-800);
+    cursor: zoom-in;
+    animation: galUp 0.35s ease both;
+}
+
+/* Holds the tile at the photo's shape at whatever width the row gives it. */
+.gal-tile::before {
+    content: "";
+    display: block;
+    padding-bottom: calc(100% / var(--r));
 }
 
 .gal-tile img {
+    position: absolute;
+    inset: 0;
+    display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    display: block;
-    transition: transform 0.4s ease, filter 0.25s ease;
+    transition: scale 0.5s cubic-bezier(0.22, 1, 0.36, 1), filter 0.25s ease;
 }
 
 .gal-tile:hover img {
-    transform: scale(1.06);
+    scale: 1.06;
     filter: brightness(1.08);
 }
 
@@ -261,21 +369,101 @@
     pointer-events: none;
 }
 
-.gal-tile:hover::after { border-color: rgba(250, 204, 21, 0.55); }
+.gal-tile:hover::after,
+.gal-tile:focus-visible::after { border-color: rgba(250, 204, 21, 0.6); }
 
-.tile-normal  { grid-row: span 2; }
-.tile-tall    { grid-row: span 3; }
-.tile-wide    { grid-column: span 2; grid-row: span 2; }
-.tile-feature { grid-column: span 2; grid-row: span 3; }
+.gal-tile:focus-visible { outline: none; }
 
 .gal-loading-more {
-    text-align: center;
     padding: 24px 0;
-    color: rgba(255, 255, 255, 0.4);
+    text-align: center;
     font-size: 0.85rem;
+    color: var(--chalk-faint);
 }
 
 .gal-sentinel { height: 1px; }
+
+/* ── Previous / next gallery ── */
+
+.gal-neighbours {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 48px;
+}
+
+.gal-neighbour {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    min-height: 150px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--night-card);
+    text-decoration: none;
+    color: var(--chalk);
+    transition: border-color 0.2s, translate 0.2s;
+}
+
+.gal-neighbour:hover { border-color: rgba(250, 204, 21, 0.45); translate: 0 -3px; }
+
+.gal-neighbour img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.55;
+    transition: scale 0.6s ease, opacity 0.3s;
+}
+
+.gal-neighbour:hover img { scale: 1.06; opacity: 0.7; }
+
+.gal-neighbour-shade {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(0deg, rgba(5, 11, 22, 0.95), rgba(5, 11, 22, 0.2));
+}
+
+.gal-neighbour-body {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 16px 18px;
+}
+
+.gal-neighbour.is-next { justify-content: flex-end; text-align: right; }
+.gal-neighbour.is-next .gal-neighbour-body { align-items: flex-end; }
+
+.gal-neighbour-label {
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ballers-accent);
+}
+
+.gal-neighbour-fixture {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.gal-neighbour-meta {
+    font-size: 0.8rem;
+    color: var(--chalk-dim);
+}
+
+.gal-back-link:focus-visible,
+.gal-share:focus-visible,
+.gal-neighbour:focus-visible,
+.gal-credit-links a:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+}
 
 /* ── Lightbox ── */
 
@@ -283,82 +471,189 @@
     position: fixed;
     inset: 0;
     z-index: 1000;
-    background: rgba(4, 8, 16, 0.94);
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    background: rgba(3, 7, 14, 0.96);
+    animation: galFade 0.2s ease both;
+    outline: none;
+}
+
+.gal-lb-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 18px;
+}
+
+.gal-lb-counter {
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    letter-spacing: 0.12em;
+    color: var(--chalk-dim);
+}
+
+.gal-lb-tools {
+    display: flex;
+    gap: 8px;
+}
+
+.gal-lb-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 42px;
+    min-width: 42px;
+    padding: 0 14px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    font-family: var(--font-display);
+    font-size: 0.82rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--chalk);
+    cursor: pointer;
+    transition: background 0.16s, color 0.16s, border-color 0.16s;
+}
+
+.gal-lb-btn svg { width: 17px; height: 17px; }
+
+.gal-lb-btn:hover {
+    border-color: var(--ballers-accent);
+    background: var(--ballers-accent);
+    color: var(--night-950);
+}
+
+.gal-lb-close { padding: 0; font-size: 1rem; }
+
+.gal-lb-stage {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 40px 60px;
-    animation: fadeUp 0.2s ease both;
+    min-height: 0;
+    padding: 0 72px;
 }
 
 .gal-lightbox-image {
     max-width: 100%;
     max-height: 100%;
-    object-fit: contain;
     border-radius: 6px;
+    object-fit: contain;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+    animation: galFade 0.3s ease both;
 }
-
-.gal-lightbox-close {
-    position: absolute;
-    top: 18px;
-    right: 22px;
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    background: rgba(255, 255, 255, 0.06);
-    color: white;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background 0.16s;
-}
-
-.gal-lightbox-close:hover { background: rgba(255, 255, 255, 0.16); }
 
 .gal-lightbox-nav {
     position: absolute;
     top: 50%;
-    transform: translateY(-50%);
-    width: 48px;
-    height: 72px;
+    translate: 0 -50%;
+    width: 50px;
+    height: 76px;
     border: none;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.06);
-    color: white;
-    font-size: 2rem;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.07);
+    font-size: 2.2rem;
     line-height: 1;
+    color: white;
     cursor: pointer;
-    transition: background 0.16s;
+    transition: background 0.16s, color 0.16s;
 }
 
-.gal-lightbox-nav:hover { background: rgba(250, 204, 21, 0.85); color: #07101E; }
-.gal-lightbox-nav.prev { left: 14px; }
-.gal-lightbox-nav.next { right: 14px; }
+.gal-lightbox-nav:hover { background: var(--ballers-accent); color: var(--night-950); }
+.gal-lightbox-nav.prev { left: 12px; }
+.gal-lightbox-nav.next { right: 12px; }
 
-.gal-lightbox-counter {
+.gal-lb-btn:focus-visible,
+.gal-lightbox-nav:focus-visible,
+.gal-lb-thumb:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+}
+
+/* Every loaded photo, small, along the bottom. */
+.gal-lb-thumbs {
+    display: flex;
+    gap: 6px;
+    padding: 12px 18px 16px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.gal-lb-thumb {
+    flex: 0 0 auto;
+    width: 68px;
+    height: 48px;
+    padding: 0;
+    border: 2px solid transparent;
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--night-800);
+    opacity: 0.45;
+    cursor: pointer;
+    transition: opacity 0.16s, border-color 0.16s;
+}
+
+.gal-lb-thumb img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.gal-lb-thumb:hover { opacity: 0.85; }
+
+.gal-lb-thumb.is-active {
+    border-color: var(--ballers-accent);
+    opacity: 1;
+}
+
+.gal-preload {
     position: absolute;
-    bottom: 18px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-family: var(--font-display);
-    font-size: 0.75rem;
-    letter-spacing: 0.14em;
-    color: rgba(255, 255, 255, 0.55);
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
 }
+
+/* ── Smaller screens ── */
 
 @media (max-width: 640px) {
-    .gal-mosaic {
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-        grid-auto-rows: 110px;
-        gap: 7px;
-    }
+    .gal-hero-inner,
+    .gal-body { padding-left: 12px; padding-right: 12px; }
 
-    /* A two-column-wide feature would fill the screen on a phone, so the
-       oversized tiles step back down to normal. */
-    .tile-wide, .tile-feature { grid-column: span 2; grid-row: span 2; }
+    .gal-credit-inner { margin: 0 12px; }
 
-    .gal-lightbox { padding: 20px 12px 60px; }
-    .gal-lightbox-nav { width: 38px; height: 58px; font-size: 1.5rem; }
-    .gal-hero-inner, .gal-body, .gal-credit-inner { padding-left: 16px; padding-right: 16px; }
+    /* Home team, score, away team, one above another. */
+    .gal-fixture { flex-direction: column; gap: 10px; }
+    .gal-hero-top { margin-bottom: 28px; }
+    .gal-meta { gap: 2px 14px; }
+    .gal-meta span + span::before { display: none; }
+
+    /* Shorter rows, so two landscape shots or three portraits share a row. */
+    .gal-rows { --row-h: 115px; gap: 5px; }
+    .gal-tile { border-radius: 5px; }
+
+    .gal-neighbours { grid-template-columns: 1fr; }
+    .gal-neighbour-gap { display: none; }
+
+    /* Swiping does the paging on a phone; the arrows would cover the photo. */
+    .gal-lb-stage { padding: 0 8px; }
+    .gal-lightbox-nav { display: none; }
+    .gal-lb-btn span { display: none; }
+    .gal-lb-btn { padding: 0; }
+    .gal-lb-thumb { width: 54px; height: 40px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .gal-hero-bg { animation: none; scale: 1.08; }
+    .gal-week,
+    .gal-fixture,
+    .gal-meta,
+    .gal-tile,
+    .gal-lightbox,
+    .gal-lightbox-image { animation: none; }
 }

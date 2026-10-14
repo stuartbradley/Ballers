@@ -17,6 +17,22 @@ namespace Ballers.Services
             return await response.Content.ReadFromJsonAsync<List<TeamProfileDto>>() ?? new List<TeamProfileDto>();
         }
 
+        /// <summary>
+        /// Every club with its record, form and squad rating. Empty if it could
+        /// not be fetched, so the pages can carry on without it.
+        /// </summary>
+        public async Task<List<Ballers.Shared.TeamOverviewDto>> GetOverview()
+        {
+            try
+            {
+                var response = await _http.GetAsync("api/teams/overview");
+                if (!response.IsSuccessStatusCode) return new();
+                return await response.Content.ReadFromJsonAsync<List<Ballers.Shared.TeamOverviewDto>>() ?? new();
+            }
+            catch (HttpRequestException) { return new(); }
+            catch (System.Text.Json.JsonException) { return new(); }
+        }
+
         public async Task<TeamProfileDto?> GetProfile(int teamId)
         {
             var response = await _http.GetAsync($"api/teams/{teamId}/profile");

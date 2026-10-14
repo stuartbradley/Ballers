@@ -21,6 +21,19 @@ namespace Ballers.Services
         public async Task<List<TotwWeekRefDto>> GetWeeks()
             => await _http.GetFromJsonAsync<List<TotwWeekRefDto>>("api/totw/weeks") ?? new();
 
+        // Empty on failure: the table is an extra, not worth an error.
+        public async Task<List<TotwAppearanceDto>> GetAppearances()
+        {
+            try
+            {
+                return await _http.GetFromJsonAsync<List<TotwAppearanceDto>>("api/totw/appearances") ?? new();
+            }
+            catch (HttpRequestException)
+            {
+                return new();
+            }
+        }
+
         public async Task<TeamOfTheWeekDto?> GetWeek(int matchNumber)
         {
             var resp = await _http.GetAsync($"api/totw/{matchNumber}");

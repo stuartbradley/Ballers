@@ -35,6 +35,7 @@ builder.Services.AddScoped(sp =>
 builder.Services.AddScoped<FixtureService>();
 builder.Services.AddScoped<PlayerService>();
 builder.Services.AddScoped<AdminService>();
+builder.Services.AddScoped<ManagerService>();
 builder.Services.AddScoped<SeasonService>();
 builder.Services.AddScoped<LeagueService>();
 builder.Services.AddScoped<StatService>();
@@ -49,4 +50,6 @@ builder.Services.AddScoped<TotwService>();
 builder.Services.AddScoped<MotdService>();
 builder.Services.AddScoped<LeagueSettingsService>();
 builder.Services.AddScoped<AnalyticsService>();
+builder.Services.AddScoped<PlayerCardService>();
+builder.Services.AddScoped<PlayerAccountService>();
 await builder.Build().RunAsync();

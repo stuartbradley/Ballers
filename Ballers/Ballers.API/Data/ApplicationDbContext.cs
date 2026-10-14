@@ -31,6 +31,9 @@ namespace Ballers.API.Data
         public DbSet<Photographer> Photographers => Set<Photographer>();
         public DbSet<Gallery> Galleries => Set<Gallery>();
         public DbSet<GalleryPhoto> GalleryPhotos => Set<GalleryPhoto>();
+        public DbSet<PlayerCardStats> PlayerCards => Set<PlayerCardStats>();
+        public DbSet<PlayerPointsAward> PlayerPointsAwards => Set<PlayerPointsAward>();
+        public DbSet<PlayerAccountRequest> PlayerAccountRequests => Set<PlayerAccountRequest>();
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -215,6 +218,76 @@ namespace Ballers.API.Data
 
             builder.Entity<GalleryPhoto>()
                 .HasIndex(p => new { p.GalleryId, p.SortOrder });
+
+            // TeamId has always worked by convention; spelled out here so the new
+            // PlayerId sitting beside it is configured in one obvious place.
+            // ClientSetNull is the convention default it already had — stated
+            // explicitly rather than changed, so no existing foreign key moves.
+            builder.Entity<ApplicationUser>()
+                .HasOne(u => u.Team)
+                .WithMany()
+                .HasForeignKey(u => u.TeamId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
+
+            // Removing a player from a squad must not delete their login with them.
+            builder.Entity<ApplicationUser>()
+                .HasOne(u => u.Player)
+                .WithMany()
+                .HasForeignKey(u => u.PlayerId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.Entity<PlayerCardStats>()
+                .HasOne(s => s.Player)
+                .WithOne()
+                .HasForeignKey<PlayerCardStats>(s => s.PlayerId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<PlayerCardStats>()
+                .HasIndex(s => s.PlayerId)
+                .IsUnique();
+
+            builder.Entity<PlayerPointsAward>()
+                .HasOne(a => a.Player)
+                .WithMany()
+                .HasForeignKey(a => a.PlayerId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // NoAction for the same reason as the captaincy and true-MOTM links:
+            // cascading from both Player and Fixture is a multiple cascade path,
+            // which SQL Server refuses.
+            builder.Entity<PlayerPointsAward>()
+                .HasOne(a => a.Fixture)
+                .WithMany()
+                .HasForeignKey(a => a.FixtureId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // The guarantee that a fixture is never paid out twice, and so the
+            // thing that lets the payout job be re-run freely.
+            builder.Entity<PlayerPointsAward>()
+                .HasIndex(a => new { a.PlayerId, a.FixtureId })
+                .IsUnique();
+
+            builder.Entity<PlayerAccountRequest>()
+                .HasOne(r => r.User)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<PlayerAccountRequest>()
+                .HasOne(r => r.RequestedTeam)
+                .WithMany()
+                .HasForeignKey(r => r.RequestedTeamId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<PlayerAccountRequest>()
+                .HasOne(r => r.RequestedPlayer)
+                .WithMany()
+                .HasForeignKey(r => r.RequestedPlayerId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Managers read their queue by team and status on every squad page load.
+            builder.Entity<PlayerAccountRequest>()
+                .HasIndex(r => new { r.RequestedTeamId, r.Status });
         }
 
     }

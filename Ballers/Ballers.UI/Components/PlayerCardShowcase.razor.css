@@ -1,0 +1,1567 @@
+/* ============================================================
+   PLAYER CARD SHOWCASE
+   A foil trading card under stadium lights. Layout, depth and
+   surface only — the acts are driven by Motion from
+   wwwroot/js/cardShowcase.js, played while the pointer is over the
+   section. The only CSS loops are ambient: the fan cards' drift and
+   the floodlights.
+   ============================================================ */
+
+.card-showcase {
+    --pitch-deep: #050B16;
+    --foil-dark: #C8921A;
+    --specular: #FFF7D6;
+    --chalk: #E8EDF5;
+    --chalk-dim: rgba(232, 237, 245, 0.62);
+
+    position: relative;
+    overflow: hidden;
+    background: var(--pitch-deep);
+    isolation: isolate;
+}
+
+/* The lit area: everything down to the card's floor, with the light, the
+   grain and the atmosphere behind it. */
+.showcase-frame {
+    position: relative;
+    overflow: hidden;
+    padding: 110px 20px 120px;
+    isolation: isolate;
+}
+
+/* One pool of light behind the card, falling off to a dark surround. The card
+   is the only bright thing in the section. */
+.showcase-frame::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(60% 46% at 50% 44%, rgba(250, 204, 21, 0.16), transparent 70%),
+        radial-gradient(90% 70% at 50% 40%, rgba(30, 58, 138, 0.26), transparent 72%);
+    pointer-events: none;
+    z-index: -2;
+}
+
+/* Film grain. Keeps the large flat areas from banding and stops the gradients
+   reading as plastic. */
+.showcase-frame::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+    opacity: 0.04;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.showcase-inner {
+    position: relative;
+    width: 100%;
+    max-width: 1180px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 34px;
+}
+
+/* ── Card of the week ── */
+
+.sc-featured {
+    display: inline-flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: baseline;
+    gap: 2px 10px;
+    margin: 14px 0 0;
+    padding: 5px 14px;
+    border: 1px solid rgba(250, 204, 21, 0.35);
+    border-radius: 999px;
+    background: rgba(250, 204, 21, 0.06);
+    font-size: 0.86rem;
+    color: var(--chalk);
+}
+
+.sc-featured-label {
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ballers-accent);
+}
+
+/* ── Stadium atmosphere ──
+   Three floodlight beams swinging slowly from above, and a canvas of dust the
+   script drifts through them. All behind the content. */
+.sc-atmos {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    overflow: hidden;
+    /* Faded at the sides, or the beams' glow stops dead at the section edge
+       and draws a seam against the page behind. */
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+    mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+}
+
+.sc-beam {
+    position: absolute;
+    top: -20%;
+    width: 34%;
+    height: 140%;
+    background: linear-gradient(180deg,
+        rgba(255, 247, 214, 0.16) 0%,
+        rgba(255, 247, 214, 0.05) 45%,
+        transparent 80%);
+    clip-path: polygon(44% 0, 56% 0, 100% 100%, 0 100%);
+    filter: blur(6px);
+    mix-blend-mode: screen;
+    transform-origin: 50% 0;
+    animation: sc-sweep 13s ease-in-out infinite alternate;
+}
+
+.sc-beam-left   { left: 2%;  --from: -24deg; --to: -8deg; }
+.sc-beam-right  { right: 2%; --from: 24deg;  --to: 8deg; animation-duration: 15s; animation-delay: -5s; }
+.sc-beam-centre { left: 33%; --from: -6deg;  --to: 6deg; opacity: 0.6; animation-duration: 18s; animation-delay: -9s; }
+
+@keyframes sc-sweep {
+    from { transform: rotate(var(--from)); }
+    to   { transform: rotate(var(--to)); }
+}
+
+.sc-dust {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sc-beam { animation: none; transform: rotate(var(--to)); }
+}
+
+/* ── Heading ── */
+
+.showcase-copy {
+    text-align: center;
+    max-width: 46ch;
+}
+
+/* Size does the work. No word is coloured, and there is no label above it. */
+.showcase-head {
+    margin: 0 0 18px;
+    font-size: clamp(2.2rem, 5.4vw, 4rem);
+    line-height: 0.96;
+    letter-spacing: 0.005em;
+    color: var(--chalk);
+}
+
+.showcase-sub {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--chalk-dim);
+}
+
+/* ── Stage ── */
+
+.showcase-stage {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Shallow enough that the card does not smear at the extremes, with the
+       vanishing point above centre so you look slightly down on it. */
+    perspective: 1500px;
+    perspective-origin: 50% 38%;
+    /* Tight: the card artwork tapers to a point, so generous padding here reads
+       as a hole between the card and what sits below it. */
+    padding: 16px 0 18px;
+}
+
+/* The lean, kept off the rotor so it cannot collide with the spin. This is the
+   resting pose; the script takes over the transform to follow the pointer. */
+.showcase-tilt {
+    position: relative;
+    transform: rotateX(7deg);
+    transform-style: preserve-3d;
+    will-change: transform;
+}
+
+/* ── The other tiers, fanned out behind ── */
+
+.sc-fan {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    pointer-events: none;
+}
+
+/* Pushed well back: the gold card sweeps half its own width through depth as it
+   turns, and anything closer than that would cut through it. The scale buys
+   back what the distance takes away. These are the resting poses; once the
+   script runs it owns the transform and filter, and repeats these values as
+   the first and last frame of each card's move into the row. */
+.sc-fan-card {
+    position: absolute;
+    inset: 0;
+    transform-origin: 50% 88%;
+}
+
+/* Poses, not tiers: whichever tier the main card is, the other two take the
+   left and right of the fan and TOTW sits behind. The side cards are turned
+   in on their vertical axis as well as fanned, the way cards held in a hand
+   curve round towards you; they swing flat as they come out into the row. */
+.sc-fan-left {
+    /* Same order Motion writes them in, so the hand-over has no jump. */
+    transform: translate3d(-20%, 2%, -200px) scale(0.98) rotate(-9deg) rotateY(20deg);
+    filter: brightness(0.5) saturate(0.85);
+}
+
+.sc-fan-right {
+    transform: translate3d(20%, 2%, -200px) scale(0.98) rotate(9deg) rotateY(-20deg);
+    filter: brightness(0.5) saturate(0.85);
+}
+
+.sc-fan-back {
+    transform: translate3d(0, -5%, -260px) scale(1.2);
+    filter: brightness(0.75);
+}
+
+.sc-fan-face {
+    position: absolute;
+    inset: 0;
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    animation: sc-float 5.6s ease-in-out infinite alternate;
+}
+
+.sc-fan-left .sc-fan-face {
+    animation-duration: 4.8s;
+    animation-delay: -1.2s;
+}
+
+.sc-fan-right .sc-fan-face {
+    animation-duration: 5.3s;
+    animation-delay: -3.1s;
+    animation-direction: alternate-reverse;
+}
+
+.sc-fan-back .sc-fan-face {
+    animation-duration: 6.4s;
+}
+
+.sc-art-gold   .sc-fan-face { background-image: url('/images/card-gold.png'); }
+.sc-art-silver .sc-fan-face { background-image: url('/images/silver-card.png'); }
+.sc-art-bronze .sc-fan-face { background-image: url('/images/card-bronze.png'); }
+.sc-art-totw   .sc-fan-face { background-image: url('/images/card-TOTW.png'); }
+
+/* Each fan card's own reflection in the floor: the same art, upside down,
+   fading out. */
+.sc-fan-face::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    /* 86%, not 100%: the shield's tip is above the box's bottom edge, and
+       the mirrored tip has to meet it. */
+    top: 86%;
+    height: 100%;
+    background: inherit;
+    background-size: 100% 100%;
+    transform: scaleY(-1);
+    opacity: 0.1;
+    -webkit-mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent 26%);
+    mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent 26%);
+    pointer-events: none;
+}
+
+/* The white-out when a card is upgraded in the tier row. */
+.sc-fan-flash {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 45%, #fff, rgba(255, 247, 214, 0.6) 40%, transparent 72%);
+    mix-blend-mode: screen;
+    opacity: 0;
+    -webkit-mask: url('/images/card-gold.png') center / 100% 100% no-repeat;
+    mask: url('/images/card-gold.png') center / 100% 100% no-repeat;
+}
+
+/* The one CSS loop here: a slow drift of each background card on its own
+   rhythm, so they never move in step with each other or with the gold card.
+   It runs on the inner face, under the script's transform on the card. */
+@keyframes sc-float {
+    from { transform: translateY(0) rotate(-1.2deg); }
+    to   { transform: translateY(-3.5%) rotate(1.2deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sc-fan-face { animation: none; }
+}
+
+.showcase-rotor {
+    position: relative;
+    z-index: 1;
+    transform-style: preserve-3d;
+    will-change: transform;
+}
+
+.showcase-card {
+    position: relative;
+    width: clamp(252px, 29vw, 332px);
+    aspect-ratio: 516 / 716;
+    transform-style: preserve-3d;
+}
+
+/* The faces sit half the card's thickness out from its middle, front and back,
+   with the slices filling the space between. */
+.showcase-card {
+    --half-thick: 4px;
+}
+
+.showcase-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    transform-style: preserve-3d;
+}
+
+.showcase-front {
+    transform: translateZ(var(--half-thick));
+}
+
+/* Each raised layer is the card's full size, so the art inside it lines up
+   with the card and cqi still means the card's width. Backface hidden on
+   each: as their own 3D objects, they would otherwise show through the back
+   of the card, mirrored. */
+.sc-layer {
+    position: absolute;
+    inset: 0;
+    container-type: inline-size;
+    backface-visibility: hidden;
+    pointer-events: none;
+}
+
+.sc-layer-photo {
+    transform: translateZ(16px);
+}
+
+.sc-layer-rating {
+    transform: translateZ(26px);
+}
+
+/* Shield-shaped slices through the card's thickness, darker towards the
+   middle so the edge has some shading to it. */
+.sc-slice {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, var(--edge-a), var(--edge-b) 30%, var(--edge-b) 70%, var(--edge-a));
+    -webkit-mask: url('/images/card-gold.png') center / 100% 100% no-repeat;
+    mask: url('/images/card-gold.png') center / 100% 100% no-repeat;
+    transform: translateZ(calc(var(--half-thick) * (2 * var(--i) / 6 - 1) * 0.95));
+    pointer-events: none;
+}
+
+/* Contact shadow. A separate element on the floor rather than a filter: a
+   filter anywhere in the 3D chain flattens it. */
+.sc-shadow {
+    position: absolute;
+    left: 50%;
+    bottom: 2px;
+    width: clamp(200px, 24vw, 280px);
+    height: 22px;
+    /* Centred with the standalone translate property, not transform: Motion One
+       animates this element's transform and would overwrite the centring. */
+    translate: -50% 0;
+    border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(0, 0, 0, 0.72), transparent 72%);
+    filter: blur(9px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ── What earns each card ──
+   A zero-size anchor at the gold card's centre, which the script places. Each
+   label is then offset from it to sit under its own card in the row. */
+.sc-tiers {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 0;
+    height: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    pointer-events: none;
+    z-index: 3;
+}
+
+.sc-tier {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: var(--tw, 150px);
+    /* The standalone translate places the label; Motion animates transform for
+       the rise, and the two cannot overwrite each other. */
+    translate: calc(-50% + var(--tx, 0px)) var(--ty, 0px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15em;
+    text-align: center;
+    font-size: clamp(0.62rem, calc(var(--tw, 150px) * 0.062), 0.86rem);
+    line-height: 1.3;
+    opacity: 0;
+}
+
+.sc-tier-arrow {
+    width: 1.5em;
+    height: 2.2em;
+    margin-bottom: 0.2em;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.75;
+}
+
+.sc-tier-name {
+    font-family: var(--font-display);
+    font-size: 1.12em;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.sc-tier-rule {
+    color: var(--chalk-dim);
+    text-shadow: 0 1px 10px rgba(5, 11, 22, 0.9);
+}
+
+.sc-tier-bronze { color: #D9955A; }
+.sc-tier-silver { color: #CBD3DE; }
+.sc-tier-gold   { color: var(--ballers-accent); }
+.sc-tier-totw   { color: #E9CC74; }
+
+/* ── The six stats, blown up ──
+   Anchored like the tier labels, at the gold card's centre. The script flies
+   each one out from its spot on the card to its spot around it. */
+.sc-bigstats {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 0;
+    height: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    pointer-events: none;
+    z-index: 4;
+}
+
+.sc-bigstat {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: var(--bw, 210px);
+    translate: -50% -50%;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 0.45em;
+    align-items: baseline;
+    opacity: 0;
+}
+
+.sc-bigstat-value {
+    grid-row: span 2;
+    align-self: center;
+    font-family: var(--font-display);
+    font-size: 3.4rem;
+    font-weight: 500;
+    line-height: 0.9;
+    background: linear-gradient(180deg, #FFF2C2 0%, var(--ballers-accent) 55%, var(--foil-dark) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 4px 14px rgba(250, 204, 21, 0.25));
+}
+
+.sc-bigstat-name {
+    align-self: end;
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--chalk);
+}
+
+.sc-bigstat-meaning {
+    align-self: start;
+    font-size: 0.8rem;
+    line-height: 1.35;
+    color: var(--chalk-dim);
+}
+
+/* Narrow screens: no room either side, so the stats land in a grid over the
+   card, with the card darkened behind them. */
+.card-showcase.sc-stats-grid .sc-bigstat {
+    font-size: 0.82em;
+}
+
+.card-showcase.sc-stats-grid .sc-bigstat-value {
+    font-size: 2.3rem;
+}
+
+.card-showcase.sc-stats-grid .sc-bigstat-name {
+    font-size: 0.82rem;
+}
+
+.card-showcase.sc-stats-grid .sc-bigstat-meaning {
+    font-size: 0.7rem;
+}
+
+.sc-bigstats-backdrop {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 0;
+    height: 0;
+    translate: -50% -50%;
+    border-radius: 18px;
+    background: radial-gradient(closest-side, rgba(5, 11, 22, 0.95), rgba(5, 11, 22, 0.86));
+    opacity: 0;
+    pointer-events: none;
+    z-index: 3;
+}
+
+/* A bar under each big stat, filled to its share of the league's stat cap. */
+.sc-bigstat-bar {
+    grid-column: 1 / -1;
+    height: 3px;
+    margin-top: 0.55em;
+    border-radius: 2px;
+    background: rgba(232, 237, 245, 0.12);
+    overflow: hidden;
+}
+
+.sc-bigstat-fill {
+    display: block;
+    height: 100%;
+    width: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--foil-dark), var(--ballers-accent), #FFF2C2);
+    transform-origin: 0 50%;
+    transform: scaleX(0);
+}
+
+/* ── The glossy floor ──
+   A plane laid back in perspective under the cards: faint pitch lines running
+   away from you, a sheen where the light lands, fading out at every edge. The
+   script sets its top to the card's base. */
+.sc-floor {
+    position: absolute;
+    left: 50%;
+    top: var(--floor-top, 80%);
+    width: min(1100px, 170%);
+    height: 420px;
+    translate: -50% 0;
+    transform: rotateX(78deg);
+    transform-origin: 50% 0;
+    background:
+        radial-gradient(40% 30% at 50% 6%, rgba(250, 204, 21, 0.16), transparent 70%),
+        repeating-linear-gradient(90deg, rgba(232, 237, 245, 0.07) 0 1px, transparent 1px 90px),
+        repeating-linear-gradient(0deg, rgba(232, 237, 245, 0.05) 0 1px, transparent 1px 70px),
+        linear-gradient(180deg, rgba(20, 34, 60, 0.55), rgba(5, 11, 22, 0));
+    /* Faded at its near edge as well as its far ones, or the edge under the
+       card reads as a hard horizon line. */
+    -webkit-mask-image:
+        radial-gradient(50% 70% at 50% 0%, #000 30%, transparent 100%),
+        linear-gradient(to bottom, transparent, #000 14%);
+    -webkit-mask-composite: source-in;
+    mask-image:
+        radial-gradient(50% 70% at 50% 0%, #000 30%, transparent 100%),
+        linear-gradient(to bottom, transparent, #000 14%);
+    mask-composite: intersect;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ── The reveal ──
+   A burst of light from behind the card as it turns face up. */
+.sc-burst {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 120%;
+    max-width: 760px;
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    background:
+        radial-gradient(circle, rgba(255, 247, 214, 0.9) 0%, rgba(250, 204, 21, 0.45) 22%, transparent 60%),
+        repeating-conic-gradient(from 0deg, rgba(255, 247, 214, 0.22) 0deg 4deg, transparent 4deg 18deg);
+    -webkit-mask-image: radial-gradient(circle, #000 30%, transparent 70%);
+    mask-image: radial-gradient(circle, #000 30%, transparent 70%);
+    mix-blend-mode: screen;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ── Sparks ── */
+.sc-sparks {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.sc-spark {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 6px;
+    height: 6px;
+    margin: -3px 0 0 -3px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff, #FFE066 45%, rgba(250, 204, 21, 0) 70%);
+    box-shadow: 0 0 8px rgba(250, 204, 21, 0.8);
+    opacity: 0;
+}
+
+/* ── The upgrade chip ──
+   Rides along the tier row above the cards, counting the rating up. */
+.sc-chip {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    translate: -50% -50%;
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    padding: 6px 13px;
+    border-radius: 999px;
+    border: 1px solid rgba(250, 204, 21, 0.55);
+    background: rgba(5, 11, 22, 0.86);
+    box-shadow: 0 0 22px rgba(250, 204, 21, 0.25);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.sc-chip-label {
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--chalk-dim);
+}
+
+.sc-chip-value {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    color: var(--ballers-accent);
+    min-width: 2ch;
+    text-align: right;
+}
+
+/* ── Where you are in the story ── */
+.sc-acts {
+    position: relative;
+    z-index: 6;
+    display: none;
+    gap: 6px;
+    padding: 5px;
+    border-radius: 999px;
+    background: rgba(5, 11, 22, 0.6);
+    border: 1px solid rgba(232, 237, 245, 0.1);
+}
+
+.card-showcase.is-live .sc-acts {
+    display: flex;
+}
+
+.sc-act {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 12px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    font: inherit;
+    font-size: 0.78rem;
+    color: var(--chalk-dim);
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.sc-act:hover {
+    color: var(--chalk);
+}
+
+.sc-act:focus-visible {
+    outline: 2px solid var(--ballers-accent);
+    outline-offset: 2px;
+}
+
+.sc-act-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: rgba(232, 237, 245, 0.3);
+    transition: background 0.2s, box-shadow 0.2s;
+}
+
+.sc-act.is-current {
+    background: rgba(250, 204, 21, 0.12);
+    color: var(--chalk);
+}
+
+.sc-act.is-current .sc-act-dot {
+    background: var(--ballers-accent);
+    box-shadow: 0 0 8px rgba(250, 204, 21, 0.8);
+}
+
+.sc-play-hint {
+    display: none;
+    margin: -6px 0 0;
+    font-size: 0.74rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(232, 237, 245, 0.45);
+    transition: opacity 0.4s ease;
+}
+
+.card-showcase.is-live .sc-play-hint {
+    display: block;
+}
+
+/* Shown only while paused; and never on a touch screen, which plays on its
+   own while the section is in view. */
+.card-showcase.is-playing .sc-play-hint {
+    opacity: 0;
+}
+
+.card-showcase.is-touch .sc-play-hint {
+    display: none;
+}
+
+@media (max-width: 640px) {
+    .sc-act-name {
+        display: none;
+    }
+
+    .sc-act {
+        padding: 8px;
+    }
+}
+
+/* The lit edge as the card passes side-on. */
+.sc-edge {
+    position: absolute;
+    top: 2%;
+    left: 50%;
+    width: 3px;
+    height: 96%;
+    margin-left: -1.5px;
+    border-radius: 2px;
+    background: linear-gradient(to bottom,
+        transparent,
+        var(--specular) 18%,
+        #fff 50%,
+        var(--specular) 82%,
+        transparent);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateZ(0.5px);
+}
+
+/* ── Front ── */
+
+/* The main card takes the artwork and ink of its tier: the example card is
+   gold, the card of the week is whatever its rating makes it. */
+.card-showcase {
+    --card-art: url('/images/card-gold.png');
+    --ink: #5a3200;
+    --ink-strong: #6b4400;
+    --ink-soft: rgba(90, 50, 0, 0.6);
+    --ink-faint: rgba(90, 50, 0, 0.22);
+    --ink-glow: rgba(255, 246, 214, 0.65);
+    --edge-a: #6b4a08;
+    --edge-b: #b88a24;
+}
+
+.card-showcase.card-tier-silver {
+    --card-art: url('/images/silver-card.png');
+    --ink: #2b313b;
+    --ink-strong: #222833;
+    --ink-soft: rgba(34, 40, 51, 0.62);
+    --ink-faint: rgba(34, 40, 51, 0.22);
+    --ink-glow: rgba(255, 255, 255, 0.6);
+    --edge-a: #5d636c;
+    --edge-b: #a9b0ba;
+}
+
+.card-showcase.card-tier-bronze {
+    --card-art: url('/images/card-bronze.png');
+    --ink: #3d1f06;
+    --ink-strong: #341904;
+    --ink-soft: rgba(52, 25, 4, 0.62);
+    --ink-faint: rgba(52, 25, 4, 0.24);
+    --ink-glow: rgba(255, 226, 190, 0.55);
+    --edge-a: #5a2f10;
+    --edge-b: #a8642e;
+}
+
+.showcase-front {
+    font-family: 'Saira Semi Condensed', sans-serif;
+}
+
+.sc-inner {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background: var(--card-art) no-repeat;
+    background-size: 100% 100%;
+    container-type: inline-size;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Spectral wash. Deliberately faint — it should read as a property of the
+   surface, not as a rainbow laid on top of it. */
+/* Both surface layers are masked by the card artwork itself. The art is a
+   shield with transparent corners, so an unmasked layer paints a rectangle
+   hanging in the air around it. */
+.sc-foil,
+.sc-holo,
+.sc-glare,
+.sc-back-inner {
+    -webkit-mask-image: url('/images/card-gold.png');
+    mask-image: url('/images/card-gold.png');
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+}
+
+.sc-holo {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(115deg,
+        rgba(0, 255, 213, 0.5) 8%,
+        rgba(126, 0, 255, 0.4) 26%,
+        rgba(255, 0, 128, 0.35) 42%,
+        rgba(255, 213, 0, 0.4) 60%,
+        rgba(0, 204, 255, 0.45) 80%);
+    background-size: 260% 260%;
+    mix-blend-mode: color-dodge;
+    opacity: 0.1;
+    pointer-events: none;
+}
+
+/* The travelling highlight. Narrow and bright, so it reads as one hard light
+   source crossing a foil surface. */
+.sc-foil {
+    position: absolute;
+    /* Flush with the card, so the mask above lines up with the artwork. */
+    inset: 0;
+    background: linear-gradient(103deg,
+        transparent 38%,
+        rgba(255, 247, 214, 0.42) 46%,
+        rgba(255, 255, 255, 0.92) 50%,
+        rgba(255, 247, 214, 0.38) 54%,
+        transparent 62%);
+    background-size: 280% 100%;
+    background-position: 100% 0;
+    mix-blend-mode: screen;
+    pointer-events: none;
+}
+
+/* A soft pool of light under the pointer. The script moves it and fades it in;
+   left alone it is invisible. */
+.sc-glare {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at var(--gx, 50%) var(--gy, 35%),
+        rgba(255, 255, 255, 0.7),
+        rgba(255, 247, 214, 0.22) 24%,
+        transparent 52%);
+    mix-blend-mode: overlay;
+    opacity: var(--ga, 0);
+    pointer-events: none;
+}
+
+/* The back faces the other way, so left and right swap. */
+.sc-glare-back {
+    background: radial-gradient(circle at var(--gx-back, 50%) var(--gy, 35%),
+        rgba(255, 255, 255, 0.5),
+        rgba(250, 204, 21, 0.14) 24%,
+        transparent 52%);
+    mix-blend-mode: screen;
+}
+
+/* Ends on the seam in the artwork where the fan pattern gives way to the plain
+   band, so the photo sits on that line. */
+.sc-top {
+    flex: 0 0 62.5%;
+    position: relative;
+}
+
+/* Positions below are fractions of the whole card, since these now sit on
+   full-card layers rather than inside the photo zone. */
+.sc-master {
+    position: absolute;
+    top: 20.6%;
+    left: 20%;
+    z-index: 2;
+    text-align: center;
+    line-height: 1.08;
+    color: var(--ink-strong);
+}
+
+.sc-rating {
+    display: grid;
+    font-size: 8.4cqi;
+    font-weight: 700;
+    text-shadow: 0 1px 0 var(--ink-glow);
+}
+
+.sc-rating .sc-num {
+    grid-area: 1 / 1;
+}
+
+.sc-position {
+    display: block;
+    font-size: 4.3cqi;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+}
+
+/* Set to the right so the rating keeps the top-left corner to itself. */
+/* Its bottom edge sits on the seam in the artwork. The shadow is heavier than
+   a printed photo would need: it is what shows the gap between the raised
+   photo and the card surface. */
+.sc-photo {
+    position: absolute;
+    bottom: 37.5%;
+    right: 12.5%;
+    height: 43.75%;
+    width: auto;
+    display: block;
+    filter: drop-shadow(0 8px 10px rgba(60, 34, 0, 0.45));
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+.sc-bottom {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    /* The artwork is a shield and narrows towards the base, so the stats need
+       generous sides or the left column crosses the edge. */
+    padding: 2.5% 15% 0;
+    color: var(--ink);
+}
+
+.sc-name {
+    display: block;
+    font-size: 5.4cqi;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-align: center;
+    white-space: nowrap;
+    padding-bottom: 3.5%;
+    margin-bottom: 4.5%;
+    border-bottom: 1px solid var(--ink-faint);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sc-shirt {
+    font-weight: 500;
+    color: var(--ink-soft);
+    margin-right: 0.35em;
+}
+
+/* Columns sized to their contents and the pair centred as a block. Equal
+   halves left each column hugging the left of its half, which pulled the
+   whole set off centre. */
+.sc-attrs {
+    display: grid;
+    grid-template-columns: auto auto;
+    justify-content: center;
+    column-gap: 20%;
+    row-gap: 1%;
+}
+
+.sc-attr {
+    position: relative;
+    display: flex;
+    align-items: baseline;
+    gap: 0.4em;
+}
+
+.sc-attr-value {
+    display: grid;
+    font-size: 5cqi;
+    font-weight: 700;
+    line-height: 1;
+    min-width: 2.2ch;
+    text-align: right;
+}
+
+.sc-attr-value .sc-num {
+    grid-area: 1 / 1;
+}
+
+.sc-attr-label {
+    font-size: 3.3cqi;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+}
+
+/* Rises out of its own row — anything to the right lands in the next column. */
+.sc-pop {
+    position: absolute;
+    left: 0;
+    bottom: 100%;
+    white-space: nowrap;
+    font-size: 3.4cqi;
+    font-weight: 700;
+    color: #16761f;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* On the card of the week, the week's points rise under the rating instead. */
+.sc-pop-week {
+    left: 50%;
+    bottom: auto;
+    top: 100%;
+    translate: -50% 0;
+    margin-top: 0.3em;
+    font-size: 3.6cqi;
+}
+
+/* A real upload: a rectangle with whatever was behind the player, so it is
+   faded out at the sides and the bottom into the card rather than sitting
+   on it as a box. */
+.sc-photo-real {
+    position: absolute;
+    bottom: 37.5%;
+    right: 11%;
+    width: 56%;
+    height: 43.75%;
+    object-fit: cover;
+    object-position: 50% 20%;
+    display: block;
+    -webkit-mask-image:
+        linear-gradient(to right, transparent, #000 22%, #000 78%, transparent),
+        linear-gradient(to bottom, #000 62%, transparent);
+    -webkit-mask-composite: source-in;
+    mask-image:
+        linear-gradient(to right, transparent, #000 22%, #000 78%, transparent),
+        linear-gradient(to bottom, #000 62%, transparent);
+    mask-composite: intersect;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+.sc-silhouette {
+    position: absolute;
+    bottom: 37.5%;
+    right: 22%;
+    width: 36%;
+    height: 38%;
+    color: var(--ink-faint);
+}
+
+/* The white-out as the card is revealed, and again when it is upgraded. */
+.sc-flash {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 42%, #fff 0%, rgba(255, 247, 214, 0.75) 35%, rgba(255, 247, 214, 0) 75%);
+    mix-blend-mode: screen;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* The card mirrored in the glossy floor. Only the artwork, not the type on it:
+   at this strength the type would only read as noise. */
+.sc-reflect {
+    position: absolute;
+    inset: 0;
+    background: var(--card-art) no-repeat;
+    background-size: 100% 100%;
+    /* Up a little, so the mirrored tip of the shield meets the real one
+       rather than sitting a gap below it. */
+    transform: translateY(86%) scaleY(-1);
+    opacity: 0.14;
+    -webkit-mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent 28%);
+    mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent 28%);
+    backface-visibility: hidden;
+    pointer-events: none;
+}
+
+.sc-reflect-back {
+    background: linear-gradient(168deg, #1a3157 0%, #0b1930 56%, #060E1C 100%);
+    -webkit-mask: url('/images/card-gold.png') center / 100% 100% no-repeat,
+        linear-gradient(to top, #000, transparent 28%);
+    -webkit-mask-composite: source-in;
+    mask: url('/images/card-gold.png') center / 100% 100% no-repeat,
+        linear-gradient(to top, #000, transparent 28%);
+    mask-composite: intersect;
+}
+
+/* ── Back ── */
+
+.showcase-back {
+    transform: rotateY(180deg) translateZ(var(--half-thick));
+}
+
+/* Cut to the same shield as the front, so the outline does not change as the
+   card turns over. The gold here is only ever seen as the rim: the navy panel
+   below is the same shield a few percent smaller, laid over the top of it. */
+.sc-back-inner {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    container-type: inline-size;
+    display: flex;
+    flex-direction: column;
+    /* The shield sits inside its artwork with clear margins and rounded
+       shoulders, so the content has to stay well in from the box. */
+    padding: 27% 19% 21%;
+    background: linear-gradient(135deg, #FFE9A0 0%, #C8921A 30%, #FFF2C2 52%, #B07A10 74%, #F5D36A 100%);
+}
+
+.sc-back-inner::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(80% 50% at 50% 18%, rgba(250, 204, 21, 0.16), transparent 70%),
+        repeating-linear-gradient(118deg, rgba(255, 255, 255, 0.028) 0 1px, transparent 1px 7px),
+        linear-gradient(168deg, #1a3157 0%, #0b1930 56%, #060E1C 100%);
+    -webkit-mask: url('/images/card-gold.png') center / 96% 96.6% no-repeat;
+    mask: url('/images/card-gold.png') center / 96% 96.6% no-repeat;
+}
+
+.sc-back-inner > * {
+    position: relative;
+}
+
+.sc-back-inner > .sc-holo,
+.sc-back-inner > .sc-glare {
+    position: absolute;
+}
+
+.sc-holo-back {
+    opacity: 0.12;
+}
+
+.sc-back-head {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5cqi;
+    padding-bottom: 5cqi;
+    margin-bottom: 1cqi;
+    border-bottom: 1px solid rgba(250, 204, 21, 0.28);
+}
+
+.sc-back-name {
+    font-family: var(--font-display);
+    font-size: 10cqi;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    color: #fff;
+}
+
+.sc-back-season {
+    font-size: 5.8cqi;
+    color: rgba(232, 237, 245, 0.42);
+}
+
+.sc-tally {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5.5cqi;
+}
+
+.sc-tally li {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: baseline;
+    gap: 4cqi;
+}
+
+.sc-tally-value {
+    font-family: var(--font-display);
+    font-size: 14.5cqi;
+    font-weight: 500;
+    line-height: 1;
+    color: #fff;
+    min-width: 1.7ch;
+}
+
+.sc-tally-label {
+    font-size: 6.5cqi;
+    color: rgba(232, 237, 245, 0.62);
+    white-space: nowrap;
+}
+
+.sc-tally-points {
+    font-size: 6cqi;
+    font-weight: 600;
+    color: var(--ballers-accent);
+    white-space: nowrap;
+}
+
+.sc-back-foot {
+    padding-top: 5cqi;
+    border-top: 1px solid rgba(250, 204, 21, 0.28);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8cqi;
+    font-size: 5.8cqi;
+    color: rgba(232, 237, 245, 0.42);
+}
+
+.sc-back-total {
+    font-family: var(--font-display);
+    font-size: 7.8cqi;
+    font-weight: 500;
+    color: var(--ballers-accent);
+}
+
+/* ── Callouts ── */
+
+.sc-notes {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.sc-note {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 230px;
+}
+
+/* No bubble. A hairline rule under the label is enough to tie it to its
+   leader line, and keeps the card the only object with a surface. */
+.sc-note-text {
+    /* Shrink to the text so the rule underlines the label rather than running
+       on past it to the edge of the callout's box. */
+    width: fit-content;
+    max-width: 100%;
+    font-size: 0.84rem;
+    line-height: 1.5;
+    color: var(--chalk-dim);
+    padding-bottom: 7px;
+    border-bottom: 1px solid rgba(250, 204, 21, 0.4);
+    text-shadow: 0 1px 10px rgba(5, 11, 22, 0.9);
+}
+
+.sc-arrow {
+    width: 84px;
+    height: 42px;
+    flex-shrink: 0;
+    fill: none;
+    stroke: rgba(250, 204, 21, 0.6);
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* Label outboard, leader line inboard: the line crosses the dimmed card behind
+   to reach the gold one, and the words stay on the plain background. */
+.sc-note-rating,
+.sc-note-photo,
+.sc-note-name,
+.sc-note-attrs {
+    align-items: flex-start;
+    max-width: 350px;
+}
+
+/* Left of the card: the rating, then the name band below it. */
+.sc-note-rating,
+.sc-note-name {
+    right: calc(50% + 138px);
+    text-align: right;
+}
+
+.sc-note-rating { top: 14%; }
+.sc-note-name   { top: 57%; }
+
+/* Right of the card: the photo, then the stats below it. */
+.sc-note-photo,
+.sc-note-attrs {
+    left: calc(50% + 138px);
+    text-align: left;
+}
+
+.sc-note-photo { top: 24%; }
+.sc-note-attrs { bottom: 21%; }
+
+/* ── Call to action ── */
+
+.showcase-cta {
+    position: relative;
+    display: inline-block;
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-decoration: none;
+    color: #0A1322;
+    background: linear-gradient(180deg, #FFE066 0%, var(--ballers-accent) 48%, var(--foil-dark) 100%);
+    padding: 15px 34px;
+    border-radius: 4px;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.55),
+        0 10px 24px rgba(0, 0, 0, 0.42);
+    transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+}
+
+.showcase-cta:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.06);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.65),
+        0 14px 30px rgba(0, 0, 0, 0.5);
+}
+
+.showcase-cta:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 3px;
+}
+
+/* ============================================================
+   STATIC FALLBACK
+   Set by the script when Motion is missing or the visitor has
+   asked for reduced motion: both faces flat, side by side, still.
+   ============================================================ */
+
+.card-showcase.is-static .showcase-stage {
+    perspective: none;
+    padding-bottom: 20px;
+    flex-direction: column;
+}
+
+/* Nothing spreads out, so the tier labels become a plain row of facts. */
+.card-showcase.is-static .sc-tiers {
+    position: static;
+    width: auto;
+    height: auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 14px 26px;
+    margin-top: 24px;
+}
+
+.card-showcase.is-static .sc-tier {
+    position: static;
+    width: auto;
+    max-width: 150px;
+    translate: none;
+    opacity: 1;
+    font-size: 0.84rem;
+}
+
+.card-showcase.is-static .sc-tier-arrow {
+    display: none;
+}
+
+/* The big stats become a plain grid of facts as well. */
+.card-showcase.is-static .sc-bigstats {
+    position: static;
+    width: auto;
+    height: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 18px 28px;
+    max-width: 680px;
+    margin-top: 28px;
+}
+
+.card-showcase.is-static .sc-bigstat {
+    position: static;
+    width: auto;
+    translate: none;
+    opacity: 1;
+}
+
+.card-showcase.is-static .showcase-tilt {
+    transform: none;
+}
+
+.card-showcase.is-static .sc-shadow,
+.card-showcase.is-static .sc-edge,
+.card-showcase.is-static .sc-foil,
+.card-showcase.is-static .sc-glare,
+.card-showcase.is-static .sc-slice,
+.card-showcase.is-static .sc-bigstats-backdrop,
+.card-showcase.is-static .sc-floor,
+.card-showcase.is-static .sc-burst,
+.card-showcase.is-static .sc-sparks,
+.card-showcase.is-static .sc-chip,
+.card-showcase.is-static .sc-reflect,
+.card-showcase.is-static .sc-dust,
+.card-showcase.is-static .sc-fan {
+    display: none;
+}
+
+/* Laid flat, the big stats show their bars full. */
+.card-showcase.is-static .sc-bigstat-fill {
+    transform: scaleX(var(--share, 0.6));
+}
+
+.card-showcase.is-static .showcase-card {
+    display: flex;
+    gap: 26px;
+    width: auto;
+    aspect-ratio: auto;
+    transform-style: flat;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.card-showcase.is-static .showcase-face {
+    position: relative;
+    inset: auto;
+    backface-visibility: visible;
+    transform: none;
+    width: clamp(252px, 29vw, 300px);
+    aspect-ratio: 516 / 716;
+}
+
+.card-showcase.is-static .sc-notes {
+    position: static;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    margin-top: 28px;
+}
+
+.card-showcase.is-static .sc-note {
+    position: static;
+    transform: none;
+    translate: none;
+    opacity: 1;
+    max-width: 460px;
+    text-align: center;
+    flex-direction: column;
+    align-items: center;
+}
+
+.card-showcase.is-static .sc-arrow {
+    display: none;
+}
+
+.card-showcase.is-static .sc-pop,
+.card-showcase.is-static .sc-num-before {
+    display: none;
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 1060px) {
+    /* The side callouts would sit over the card at this width, so they drop
+       below it and their leader lines go with them. */
+    .sc-notes {
+        position: static;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 14px;
+        margin-top: 32px;
+    }
+
+    .sc-note {
+        position: static;
+        transform: none;
+        translate: none;
+        max-width: 440px;
+        text-align: center;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    /* No room beside the card, so the callouts share one slot under it and
+       the script shows them in turn. */
+    .card-showcase.is-live .sc-notes {
+        position: relative;
+        display: block;
+        width: 100%;
+        height: 3.2em;
+        margin-top: 4px;
+    }
+
+    .card-showcase.is-live .sc-notes .sc-note {
+        position: absolute;
+        inset: 0;
+        max-width: none;
+        justify-content: center;
+    }
+
+    .card-showcase.is-live .sc-note-text {
+        margin: 0 auto;
+    }
+
+    .sc-note-rating,
+    .sc-note-photo,
+    .sc-note-name,
+    .sc-note-attrs {
+        text-align: center;
+        align-items: center;
+        max-width: 440px;
+    }
+
+    .sc-notes .sc-arrow {
+        display: none;
+    }
+
+    .showcase-stage {
+        flex-direction: column;
+        padding-bottom: 20px;
+    }
+
+    .sc-shadow {
+        display: none;
+    }
+}
+
+@media (max-width: 640px) {
+    .showcase-frame {
+        padding: 84px 16px 96px;
+    }
+
+    .showcase-inner {
+        gap: 34px;
+    }
+}

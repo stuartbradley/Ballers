@@ -29,6 +29,7 @@
             <button type="button" @onclick='() => ScrollTo("sheet")'>Team Sheet</button>
             <button type="button" @onclick='() => ScrollTo("stats")'>Match Stats</button>
             <button type="button" @onclick='() => ScrollTo("penalties")'>Penalties</button>
+            <button type="button" @onclick='() => ScrollTo("cards")'>Player Cards</button>
             <button type="button" @onclick='() => ScrollTo("extras")'>Other Bits</button>
         </nav>
 
@@ -213,9 +214,72 @@
             </ol>
         </section>
 
+        <!-- Player cards -->
+        <section id="cards" class="g-section">
+            <h2>10 · Player Cards &amp; Points</h2>
+            <p>
+                Every player can have their own login and build their own card. Players sign
+                themselves up from the <strong>Create an account</strong> link on the login page,
+                pick your team, and claim their squad place. Nothing happens until you approve
+                them — the request appears at the top of <strong>My Squad</strong>.
+            </p>
+
+            <h3>What managers need to do</h3>
+            <ol class="g-steps">
+                <li>Open <strong>My Squad</strong>. Anyone waiting shows under <em>Player Sign-ups Waiting</em>.</li>
+                <li>Check the name and the squad place they're claiming, then hit <strong>Approve</strong> or <strong>Reject</strong>.</li>
+                <li>If they weren't on your squad list, approving adds them — set their shirt number afterwards.</li>
+            </ol>
+
+            <div class="g-callout">
+                <span class="g-callout-tag">Note</span>
+                Approving gives someone control of that card for good, so only approve people
+                you recognise.
+            </div>
+
+            <h3>How the card works</h3>
+            <p>
+                A new player gets <strong>80 points</strong> to spread across six attributes —
+                <em>Finishing</em>, <em>Tackling</em>, <em>Passing</em>, <em>Dribbling</em>,
+                <em>Pace</em> and <em>Strength</em>. Their <strong>overall rating</strong> is those
+                six added up and divided by six, and it's the big number on the front of the card.
+                Points go in permanently: there's no moving them later.
+            </p>
+
+            <h3>Earning more</h3>
+            <p>
+                Points are worked out automatically every Sunday from the stats that have been
+                submitted. Nothing is ever taken away — a quiet game just earns less.
+            </p>
+            <ul class="g-feature-grid">
+                <li>
+                    <h4>Playing &amp; winning</h4>
+                    <p>A point for featuring in a played fixture, and another for being on the winning side.</p>
+                </li>
+                <li>
+                    <h4>Goals &amp; assists</h4>
+                    <p>Three points a goal, two an assist. Own goals are recorded but cost nothing.</p>
+                </li>
+                <li>
+                    <h4>Clean sheets</h4>
+                    <p>Three points, for goalkeepers and defenders — the same players who already earn their card tier that way.</p>
+                </li>
+                <li>
+                    <h4>Man of the match</h4>
+                    <p>Five points for your team's nomination in the match stats.</p>
+                </li>
+            </ul>
+
+            <p>
+                Players see their balance and exactly how they earned it on their
+                <strong>My Card</strong> page. Admins can change any of these values from the
+                Admin page, so the numbers above are the starting point rather than the law.
+            </p>
+        </section>
+
         <!-- Extras -->
         <section id="extras" class="g-section">
-            <h2>10 · Other Bits Worth Knowing</h2>
+            <h2>11 · Other Bits Worth Knowing</h2>
             <ul class="g-feature-grid">
                 <li>
                     <h4>Referees</h4>

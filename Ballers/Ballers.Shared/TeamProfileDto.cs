@@ -1,3 +1,5 @@
+using Ballers.Shared;
+
 namespace Ballers.Models
 {
     public class TeamProfileDto
@@ -44,5 +46,15 @@ namespace Ballers.Models
         // from clean sheets rather than goals and assists. Always 0 for others.
         public int CleanSheets { get; set; }
         public string? ImageUrl { get; set; }
+
+        // Null for a player with no login yet, which is what tells the card to
+        // render the old way — shirt number and match stats — rather than showing
+        // an overall rating of zero for someone who has never allocated a point.
+        public PlayerAttributesDto? Attributes { get; set; }
+
+        // "gold" / "silver" / "bronze", worked out from the overall rating against
+        // the league's thresholds. Null alongside a null Attributes, leaving the
+        // card to fall back to its own goals-and-assists tier logic.
+        public string? Tier { get; set; }
     }
 }

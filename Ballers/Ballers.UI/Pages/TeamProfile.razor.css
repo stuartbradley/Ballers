@@ -1,333 +1,869 @@
-/* ================================================================
-   TEAM PROFILE — club identity card
-   ================================================================ */
+/* ============================================================
+   CLUB PAGE — stadium night, tinted by the club's home kit
+   (--kit, set on the page from HomeKitColour). A floodlit crest
+   and the season at a glance, the next game and recent form,
+   team leaders, then the squad as cards that turn over on hover
+   (or tap) to show their season.
+   ============================================================ */
 
-@keyframes fadeUp {
+@keyframes tpUp {
     from { opacity: 0; transform: translateY(16px); }
     to   { opacity: 1; transform: translateY(0); }
 }
 
 .team-profile-page {
-    min-height: calc(100vh - 71px);
-    background: #07101E;
-}
+    --kit: #1E3A8A;
 
-.profile-loading,
-.profile-404 {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 60vh;
-    gap: 20px;
-    color: rgba(255, 255, 255, 0.45);
-    font-size: 1rem;
-}
-
-.profile-404 h2 {
-    color: white;
-    font-family: var(--font-display);
-    font-size: 1.8rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-}
-
-.profile-404 a {
-    color: var(--ballers-accent);
-    text-decoration: none;
-    font-size: 0.85rem;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-}
-
-/* ================================================================
-   HERO BANNER
-   ================================================================ */
-
-.profile-hero {
-    background: #0B1628;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     position: relative;
+    isolation: isolate;
+    min-height: calc(100vh - 71px);
+    background: var(--night-900);
+    color: var(--chalk);
+}
+
+/* Floodlight from above, coloured by the club. */
+.team-profile-page::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 640px;
+    background:
+        radial-gradient(45% 55% at 50% 0%, rgba(250, 204, 21, 0.1), transparent 70%),
+        radial-gradient(80% 80% at 50% 0%, color-mix(in srgb, var(--kit) 45%, transparent), transparent 75%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+.tp-loading,
+.tp-404 {
+    display: grid;
+    place-items: center;
+    gap: 12px;
+    min-height: 60vh;
+    text-align: center;
+}
+
+.tp-404 a { color: var(--ballers-accent); }
+
+/* ── Hero ── */
+
+.tp-hero {
+    position: relative;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: clamp(28px, 5vw, 56px) 20px 0;
+    text-align: center;
+    animation: tpUp 0.5s ease both;
+}
+
+.tp-backlink {
+    position: absolute;
+    left: 20px;
+    top: 20px;
+    font-size: 0.85rem;
+    color: var(--chalk-dim);
+    text-decoration: none;
+}
+
+.tp-backlink:hover { color: var(--ballers-accent); }
+
+.tp-crest-wrap {
+    position: relative;
+    width: clamp(110px, 16vw, 150px);
+    aspect-ratio: 1;
+    margin: 0 auto 18px;
+}
+
+/* A soft ring of light behind the crest. */
+.tp-crest-wrap::before {
+    content: "";
+    position: absolute;
+    inset: -30%;
+    border-radius: 50%;
+    background: radial-gradient(circle, color-mix(in srgb, var(--kit) 55%, transparent), transparent 65%);
+    z-index: -1;
+}
+
+.tp-crest {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid rgba(255, 255, 255, 0.15);
+    box-shadow:
+        0 0 0 6px color-mix(in srgb, var(--kit) 40%, transparent),
+        0 0 40px rgba(250, 204, 21, 0.18),
+        0 18px 40px rgba(0, 0, 0, 0.55);
+}
+
+.tp-crest-placeholder {
+    display: grid;
+    place-items: center;
+    background: linear-gradient(135deg, var(--kit), var(--night-800));
+}
+
+.tp-crest-placeholder span {
+    font-family: var(--font-display);
+    font-size: 2.6rem;
+    color: var(--ballers-accent);
+}
+
+.tp-eyebrow {
+    display: block;
+    margin-bottom: 8px;
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ballers-accent);
+}
+
+.tp-hero h1 {
+    margin: 0;
+    color: var(--chalk);
+    font-family: var(--font-display);
+    font-size: clamp(2.2rem, 5.5vw, 3.6rem);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.tp-pills {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.tp-pill {
+    padding: 5px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: rgba(5, 11, 22, 0.55);
+    font-size: 0.84rem;
+    color: var(--chalk-dim);
+}
+
+/* The season at a glance. */
+.tp-strip {
+    display: grid;
+    grid-template-columns: repeat(8, auto);
+    justify-content: center;
+    gap: 0;
+    margin: 26px auto 0;
+    width: fit-content;
+    max-width: 100%;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: rgba(5, 11, 22, 0.6);
+    backdrop-filter: blur(8px);
     overflow: hidden;
 }
 
-/* Pitch grid texture */
-.profile-hero::before {
+.tp-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 12px 18px;
+    border-right: 1px solid var(--line);
+}
+
+.tp-stat:last-child { border-right: 0; }
+
+.tp-stat strong {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 500;
+    line-height: 1;
+}
+
+.tp-stat > span:last-child {
+    font-size: 0.66rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--chalk-faint);
+}
+
+.tp-stat-pos strong,
+.tp-stat-pts strong { color: var(--ballers-accent); }
+
+.tp-stat-rating.tier-gold   strong { color: #FACC15; text-shadow: 0 0 14px rgba(250, 204, 21, 0.45); }
+.tp-stat-rating.tier-silver strong { color: #E2E8F0; }
+.tp-stat-rating.tier-bronze strong { color: #E0975A; }
+
+.tp-form {
+    display: flex;
+    gap: 3px;
+    min-height: 1.5rem;
+    align-items: center;
+}
+
+.tp-dot {
+    display: inline-grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: #fff;
+    flex: 0 0 auto;
+}
+
+.tp-dot-w { background: #16A34A; }
+.tp-dot-d { background: #64748B; }
+.tp-dot-l { background: #DC2626; }
+
+.tp-none { color: var(--chalk-faint); }
+
+/* ── Body ── */
+
+.tp-body {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: clamp(28px, 4vw, 44px) 20px 90px;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(40px, 5vw, 56px);
+}
+
+.tp-section {
+    animation: tpUp 0.5s 0.1s ease both;
+}
+
+/* Colours set here: the site-wide h1–h3 rule would otherwise paint them blue. */
+.tp-h2 {
+    margin: 0 0 16px;
+    color: var(--chalk);
+    font-family: var(--font-display);
+    font-size: clamp(1.4rem, 3vw, 1.9rem);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.tp-h2::after {
+    content: "";
+    display: block;
+    width: 36px;
+    height: 3px;
+    margin-top: 10px;
+    border-radius: 2px;
+    background: var(--ballers-accent);
+}
+
+.tp-panel {
+    position: relative;
+    padding: 20px 22px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.01)), var(--night-card);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 18px 40px rgba(0, 0, 0, 0.3);
+}
+
+.tp-panel-label {
+    display: block;
+    margin-bottom: 10px;
+    font-family: var(--font-display);
+    font-size: 0.74rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ballers-accent);
+}
+
+.tp-muted {
+    margin: 0;
+    color: var(--chalk-faint);
+    font-size: 0.9rem;
+}
+
+.tp-link {
+    display: inline-block;
+    margin-top: 14px;
+    color: var(--ballers-accent);
+    font-weight: 600;
+    font-size: 0.88rem;
+    text-decoration: none;
+}
+
+.tp-link:hover { text-decoration: underline; }
+
+/* ── This season ── */
+
+.tp-season {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 18px;
+}
+
+.tp-next-vs {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.tp-ha {
+    padding: 3px 10px;
+    border-radius: 3px;
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--night-950);
+    background: var(--ballers-accent);
+}
+
+.tp-next-opp {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.tp-next-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    margin-top: 10px;
+    font-size: 0.88rem;
+    color: var(--chalk-dim);
+}
+
+.tp-results {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.tp-results li {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--line);
+}
+
+.tp-results li:last-child { border-bottom: 0; }
+
+.tp-res-opp {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--chalk);
+}
+
+.tp-res-score {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Team leaders ── */
+
+.tp-leaders {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+}
+
+.tp-leader {
+    display: flex;
+    flex-direction: column;
+}
+
+.tp-leader-value {
+    font-family: var(--font-display);
+    font-size: 2.6rem;
+    line-height: 1;
+    background: linear-gradient(180deg, #FFF2C2 0%, var(--ballers-accent) 55%, #C8921A 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.tp-leader-name {
+    margin-top: 8px;
+    font-weight: 600;
+    color: var(--chalk);
+}
+
+.tp-leader-sub {
+    font-size: 0.8rem;
+    color: var(--chalk-faint);
+}
+
+/* ── Squad ── */
+
+.tp-squad-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px 20px;
+    margin-bottom: 18px;
+}
+
+.tp-squad-head .tp-h2 { margin: 0; }
+
+.tp-tiers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    flex: 1;
+}
+
+.tp-tier-chip {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    font-family: var(--font-display);
+    font-size: 0.76rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--chalk-dim);
+}
+
+.tp-tier-chip.tier-gold   { background: linear-gradient(180deg, #FFE066, #C8921A); color: #1A1200; border-color: transparent; }
+.tp-tier-chip.tier-silver { background: linear-gradient(180deg, #F1F4F8, #9AA3AF); color: #1B2028; border-color: transparent; }
+.tp-tier-chip.tier-bronze { background: linear-gradient(180deg, #F0B27A, #A35A22); color: #241000; border-color: transparent; }
+
+.tp-sort {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: rgba(5, 11, 22, 0.55);
+}
+
+.tp-sort-btn {
+    padding: 7px 14px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--chalk-dim);
+    cursor: pointer;
+}
+
+.tp-sort-btn.is-active {
+    background: var(--ballers-accent);
+    color: var(--night-950);
+}
+
+.tp-sort-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+/* The top-rated player, large. */
+.tp-featured {
+    display: grid;
+    grid-template-columns: minmax(180px, 230px) 1fr;
+    align-items: center;
+    gap: 28px;
+    margin-bottom: 18px;
+    padding: 22px 26px;
+    border: 1px solid rgba(250, 204, 21, 0.3);
+    border-radius: var(--radius-lg);
+    background:
+        radial-gradient(60% 80% at 15% 50%, rgba(250, 204, 21, 0.14), transparent 70%),
+        var(--night-card);
+}
+
+.tp-featured-card ::deep .fut-player-card {
+    box-shadow: none;
+    filter: drop-shadow(0 16px 26px rgba(0, 0, 0, 0.6));
+}
+
+.tp-featured-text h3 {
+    margin: 0 0 8px;
+    color: var(--chalk);
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.tp-featured-text p {
+    margin: 0;
+    line-height: 1.7;
+    color: var(--chalk-dim);
+}
+
+.tp-featured-text strong { color: var(--chalk); }
+
+.tier-word.tier-gold   { color: #FACC15; }
+.tier-word.tier-silver { color: #E2E8F0; }
+.tier-word.tier-bronze { color: #E0975A; }
+
+.tp-hint {
+    margin: 0 0 10px;
+    font-size: 0.8rem;
+    color: var(--chalk-faint);
+}
+
+.tp-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 22px 0 12px;
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--chalk-dim);
+}
+
+.tp-group::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+}
+
+.tp-group span {
+    padding: 1px 8px;
+    border-radius: 999px;
+    font-family: var(--font-main);
+    font-size: 0.72rem;
+    letter-spacing: 0;
+    background: rgba(232, 237, 245, 0.08);
+}
+
+/* Wide enough that the names and stats on the cards read comfortably: their
+   text scales with the card. */
+.tp-squad-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 26px;
+}
+
+/* On this page the cards are for reading, so their writing is set larger than
+   the card component's own sizes. The layout inside stays the same. */
+/* The larger writing needs more of the card's height, so the gap above the
+   name closes up. The photo area keeps its full height. */
+.tp-front ::deep .fut-player-card.has-attributes .player-card-bottom {
+    padding-top: 3.5cqi !important;
+}
+
+.tp-front ::deep .player-name {
+    font-size: 7cqi !important;
+}
+
+.tp-front ::deep .fut-player-card.has-attributes .player-name {
+    padding-bottom: 1% !important;
+    margin-bottom: 1.5% !important;
+}
+
+.tp-front ::deep .player-attributes {
+    row-gap: 0 !important;
+}
+
+.tp-front ::deep .player-attribute-value {
+    font-size: 6cqi !important;
+}
+
+.tp-front ::deep .player-attribute-label {
+    font-size: 4.2cqi !important;
+    color: rgba(60, 35, 0, 0.8) !important;
+}
+
+.tp-front ::deep .player-feature-value {
+    font-size: 7.6cqi !important;
+}
+
+.tp-front ::deep .player-feature-title {
+    font-size: 4.4cqi !important;
+}
+
+/* ── The turning card ── */
+
+.tp-flip {
+    position: relative;
+    aspect-ratio: 516 / 716;
+    perspective: 1000px;
+    cursor: pointer;
+    outline: none;
+}
+
+.tp-flip-inner {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    transition: transform 0.65s cubic-bezier(0.34, 1.25, 0.64, 1);
+}
+
+.tp-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+.tp-front ::deep .fut-player-card {
+    box-shadow: none;
+    filter: drop-shadow(0 12px 20px rgba(0, 0, 0, 0.55));
+}
+
+.tp-front ::deep .fut-player-card:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+@media (hover: hover) {
+    .tp-flip:hover .tp-flip-inner,
+    .tp-flip:focus-visible .tp-flip-inner {
+        transform: rotateY(180deg);
+    }
+}
+
+@media (hover: none) {
+    .tp-flip.is-flipped .tp-flip-inner { transform: rotateY(180deg); }
+}
+
+.tp-flip:focus-visible {
+    outline: 2px solid var(--ballers-accent);
+    outline-offset: 5px;
+    border-radius: 12px;
+}
+
+/* The back: the card's shield in navy with a gold rim, and the season. */
+.tp-back {
+    transform: rotateY(180deg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 22% 16% 18%;
+    container-type: inline-size;
+    background: linear-gradient(135deg, #FFE9A0 0%, #C8921A 30%, #FFF2C2 52%, #B07A10 74%, #F5D36A 100%);
+    -webkit-mask: url('/images/card-gold.png') center / 100% 100% no-repeat;
+    mask: url('/images/card-gold.png') center / 100% 100% no-repeat;
+    text-align: center;
+}
+
+.tp-back::before {
     content: "";
     position: absolute;
     inset: 0;
     background:
-        repeating-linear-gradient(90deg, transparent 0px, transparent 79px, rgba(255,255,255,0.012) 79px, rgba(255,255,255,0.012) 80px),
-        repeating-linear-gradient(0deg,  transparent 0px, transparent 79px, rgba(255,255,255,0.012) 79px, rgba(255,255,255,0.012) 80px);
-    pointer-events: none;
+        radial-gradient(80% 45% at 50% 20%, rgba(250, 204, 21, 0.16), transparent 70%),
+        linear-gradient(168deg, #1a3157 0%, #0b1930 56%, #060E1C 100%);
+    -webkit-mask: url('/images/card-gold.png') center / 95% 96% no-repeat;
+    mask: url('/images/card-gold.png') center / 95% 96% no-repeat;
 }
 
-.profile-hero::after {
-    content: "";
-    position: absolute;
-    left: 0; top: 0; bottom: 0;
-    width: 4px;
-    background: linear-gradient(180deg, var(--ballers-accent) 0%, rgba(250,204,21,0.15) 100%);
+.tp-back > * { position: relative; }
+
+.tp-back-name {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--font-display);
+    font-size: 8.5cqi;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: #fff;
 }
 
-.profile-hero-inner {
-    position: relative;
-    z-index: 1;
-    max-width: 860px;
-    margin: 0 auto;
-    padding: 52px 32px;
+.tp-back-sub {
+    font-size: 5cqi;
+    color: rgba(232, 237, 245, 0.55);
+}
+
+.tp-back-ovr {
+    margin-top: 5cqi;
+    font-family: var(--font-display);
+    font-size: 14cqi;
+    line-height: 1;
+    color: var(--chalk);
+}
+
+.tp-back-ovr small {
+    display: block;
+    font-size: 4.5cqi;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.tp-back-ovr.tier-gold   { color: #FACC15; }
+.tp-back-ovr.tier-silver { color: #E2E8F0; }
+.tp-back-ovr.tier-bronze { color: #E0975A; }
+
+.tp-back-stats {
+    align-self: stretch;
+    margin: 6cqi 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2.5cqi;
+}
+
+.tp-back-stats div {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1px solid rgba(232, 237, 245, 0.1);
+    padding-bottom: 1.5cqi;
+}
+
+.tp-back-stats dt {
+    font-size: 6cqi;
+    color: rgba(232, 237, 245, 0.7);
+}
+
+.tp-back-stats dd {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 8cqi;
+    line-height: 1;
+    color: var(--ballers-accent);
+}
+
+.tp-back-foot {
+    margin-top: auto;
+    font-size: 4.2cqi;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(232, 237, 245, 0.4);
+}
+
+/* ── About, manager, kits, info ── */
+
+.tp-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+}
+
+.tp-bio { grid-column: 1 / -1; }
+
+.tp-bio p {
+    margin: 0;
+    line-height: 1.75;
+    color: var(--chalk-dim);
+}
+
+.tp-manager-row {
     display: flex;
     align-items: center;
-    gap: 40px;
-    animation: fadeUp 0.45s ease both;
+    gap: 16px;
 }
 
-/* ── Crest ── */
-
-.profile-crest-wrap {
-    flex-shrink: 0;
+.tp-manager-row > div {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
 }
 
-.profile-crest {
-    width: 110px;
-    height: 110px;
+.tp-manager-photo {
+    width: 72px;
+    height: 72px;
     border-radius: 50%;
     object-fit: cover;
-    border: 3px solid rgba(255, 255, 255, 0.12);
-    box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.18), 0 12px 40px rgba(0,0,0,0.6);
+    border: 2px solid rgba(250, 204, 21, 0.45);
+    box-shadow: 0 0 20px rgba(250, 204, 21, 0.15);
 }
 
-.profile-crest-placeholder {
-    width: 110px;
-    height: 110px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #1e3a8a 0%, #0B1628 100%);
-    border: 3px solid rgba(255,255,255,0.1);
-    box-shadow: 0 0 0 4px rgba(250,204,21,0.12), 0 12px 40px rgba(0,0,0,0.6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.profile-crest-placeholder span {
+.tp-manager-initials {
+    display: grid;
+    place-items: center;
+    background: linear-gradient(135deg, var(--kit), var(--night-800));
     font-family: var(--font-display);
-    font-size: 2rem;
-    font-weight: 700;
+    font-size: 1.4rem;
+    color: var(--ballers-accent);
+}
+
+.tp-manager-name {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
     letter-spacing: 0.04em;
-    color: var(--ballers-accent);
-}
-
-/* ── Hero text ── */
-
-.profile-eyebrow {
-    font-family: var(--font-display);
-    font-size: 0.6rem;
-    font-weight: 700;
-    letter-spacing: 0.3em;
     text-transform: uppercase;
-    color: var(--ballers-accent);
-    opacity: 0.7;
-    margin-bottom: 10px;
 }
 
-.profile-team-name {
-    font-family: var(--font-display);
-    font-size: clamp(1.8rem, 4vw, 2.8rem);
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: white;
-    line-height: 1.05;
-    margin: 0 0 16px;
+.tp-manager-wins {
+    font-size: 0.88rem;
+    color: var(--chalk-dim);
 }
 
-.profile-meta-pills {
+.tp-kit-row {
     display: flex;
-    flex-wrap: wrap;
+    gap: 28px;
+}
+
+.tp-kit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--chalk-dim);
+}
+
+.tp-jersey {
+    width: 72px;
+    height: 72px;
+    filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.5));
+    transition: transform 0.3s ease;
+}
+
+.tp-kit:hover .tp-jersey { transform: rotate(-6deg) scale(1.08); }
+
+.tp-info {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
     gap: 8px;
 }
 
-.meta-pill {
-    display: inline-block;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 100px;
-    padding: 4px 14px;
-    font-family: var(--font-display);
-    font-size: 0.68rem;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.55);
-}
-
-/* ================================================================
-   PROFILE BODY — cards
-   ================================================================ */
-
-.profile-body {
-    max-width: 860px;
-    margin: 0 auto;
-    padding: 32px 32px 64px;
+.tp-info div {
     display: flex;
-    flex-direction: column;
-    gap: 20px;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
 }
 
-.profile-card {
-    background: #111D33;
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 12px;
-    padding: 28px 32px;
-    animation: fadeUp 0.4s ease both;
+.tp-info div:last-child { border-bottom: 0; }
+
+.tp-info dt { color: var(--chalk-faint); font-size: 0.88rem; }
+.tp-info dd { margin: 0; color: var(--chalk); font-weight: 600; }
+.tp-info a { color: var(--ballers-accent); text-decoration: none; }
+
+/* ── Phones ── */
+
+@media (max-width: 860px) {
+    .tp-strip { grid-template-columns: repeat(4, auto); }
+    .tp-stat:nth-child(4) { border-right: 0; }
+    .tp-stat:nth-child(-n+4) { border-bottom: 1px solid var(--line); }
+    .tp-season,
+    .tp-info-grid { grid-template-columns: 1fr; }
+    .tp-leaders { grid-template-columns: 1fr; }
+    .tp-featured { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+    .tp-featured-card { width: 200px; }
 }
 
-.profile-card h3 {
-    font-family: var(--font-display);
-    font-size: 0.62rem;
-    font-weight: 700;
-    letter-spacing: 0.24em;
-    text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.3);
-    margin-bottom: 18px;
-    padding-bottom: 14px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+@media (max-width: 520px) {
+    .tp-backlink { position: static; display: inline-block; margin-bottom: 14px; }
+    .tp-stat { padding: 10px 12px; }
+    .tp-stat strong { font-size: 1.25rem; }
+    /* One card per row, as large as the screen allows. */
+    .tp-squad-grid { grid-template-columns: minmax(0, 320px); justify-content: center; gap: 18px; }
 }
 
-/* ── Bio card ── */
-
-.bio-card { border-left: 3px solid var(--ballers-accent); }
-
-.bio-text {
-    font-size: 0.95rem;
-    color: rgba(255, 255, 255, 0.62);
-    line-height: 1.85;
-    margin: 0;
-    white-space: pre-wrap;
-}
-
-/* ── Info grid ── */
-
-.contact-card { border-left: 3px solid #60a5fa; }
-
-.info-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-}
-
-.info-row {
-    display: flex;
-    align-items: baseline;
-    gap: 16px;
-    padding: 12px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-}
-
-.info-row:last-child { border-bottom: none; }
-
-.info-label {
-    font-family: var(--font-display);
-    font-size: 0.65rem;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.3);
-    min-width: 80px;
-    flex-shrink: 0;
-}
-
-.info-value {
-    font-size: 0.92rem;
-    font-weight: 600;
-    color: white;
-}
-
-.info-phone {
-    color: var(--ballers-accent);
-    text-decoration: none;
-    transition: opacity 0.15s;
-}
-
-.info-phone:hover { opacity: 0.8; }
-
-.no-info {
-    font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.22);
-    font-style: italic;
-    margin: 0;
-}
-
-/* ================================================================
-   SQUAD — FIFA-style player cards
-   ================================================================ */
-
-.squad-card { border-left: 3px solid var(--ballers-accent); }
-
-/* ── Kit card ── */
-.kit-card { border-left: 3px solid var(--ballers-accent); }
-
-.kit-grid {
-    display: flex;
-    gap: 36px;
-    flex-wrap: wrap;
-}
-
-.kit-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-}
-
-.kit-jersey {
-    width: 90px;
-    height: 90px;
-    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4));
-}
-
-.kit-label {
-    font-family: var(--font-display);
-    font-size: 0.62rem;
-    font-weight: 700;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.5);
-}
-
-/* ── Manager card ── */
-.manager-card-section { border-left: 3px solid var(--ballers-accent); }
-
-.manager-card-wrap {
-    width: 200px;
-    max-width: 100%;
-}
-
-.player-cards-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 20px;
-}
-
-/* ================================================================
-   RESPONSIVE
-   ================================================================ */
-
-@media (max-width: 768px) {
-    .profile-hero-inner {
-        flex-direction: column;
-        align-items: flex-start;
-        padding: 36px 20px;
-        gap: 24px;
-    }
-
-    .profile-body { padding: 20px 16px 48px; gap: 14px; }
-    .profile-card { padding: 20px 20px; }
-
-    .profile-crest,
-    .profile-crest-placeholder { width: 80px; height: 80px; }
-    .profile-crest-placeholder span { font-size: 1.5rem; }
-
-    .player-cards-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+@media (prefers-reduced-motion: reduce) {
+    .tp-hero,
+    .tp-section { animation: none; }
+    .tp-flip-inner { transition-duration: 0.01ms; }
 }

@@ -1,0 +1,407 @@
+@using Ballers.Services
+@using Ballers.Shared
+@using Ballers.UI.Infrastructure
+@inject ManagerService ManagerSvc
+@inject PlayerAccountService AccountSvc
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+@* A manager's dashboard, "Gaffer's HQ": the jobs to do this week, the next
+   game, how the season's going, recent results and anyone waiting to join.
+   Comic-book styling, deliberately playful; everything it links to is the
+   real page for the job. *@
+<div class="hq">
+    <ManagerNav Current="hq" />
+
+    @if (loading)
+    {
+        <div class="hq-loading"><LoadingSpinner /></div>
+    }
+    else if (hq == null)
+    {
+        <div class="hq-wrap">
+            <div class="hq-panel hq-oops">
+                <span class="hq-big-emoji" aria-hidden="true">🙈</span>
+                <h2>Couldn't load your HQ</h2>
+                <p>Try again in a moment. The pages below still work.</p>
+                @QuickLinks(null)
+            </div>
+        </div>
+    }
+    else
+    {
+        var h = hq;
+        var todo = h.Todos.Where(t => !t.Done).ToList();
+
+        <div class="hq-wrap">
+
+            <!-- ── Banner ── -->
+            <header class="hq-banner" style="@KitStyle(h.HomeKitColour)">
+                <div class="hq-crest">
+                    @if (!string.IsNullOrEmpty(h.ProfileImageUrl))
+                    {
+                        <img src="@MediaUrls.Absolute(Http, h.ProfileImageUrl)" alt="@h.TeamName crest" />
+                    }
+                    else
+                    {
+                        <span>@Initials(h.TeamName)</span>
+                    }
+                </div>
+                <div class="hq-banner-text">
+                    <span class="hq-sticker">Gaffer's HQ</span>
+                    <h1>Alright, <span>@h.TeamName</span> gaffer!</h1>
+                    <p>
+                        @if (h.SeasonNumber is int season)
+                        {
+                            @($"Season {season}")
+                            @if (h.Standing?.Position is int pos)
+                            {
+                                <text> · you're <strong>@Ordinal(pos)</strong> of @h.TeamsInLeague</text>
+                            }
+                        }
+                        else
+                        {
+                            <text>No season running yet.</text>
+                        }
+                    </p>
+                </div>
+                @if (h.Standing is { Form.Count: > 0 } st)
+                {
+                    <div class="hq-form" aria-label="@($"Form, oldest first: {string.Join(", ", st.Form)}")">
+                        <span class="hq-form-label">Form</span>
+                        @foreach (var r in st.Form)
+                        {
+                            <span class="hq-form-dot is-@r.ToLower()">@r</span>
+                        }
+                    </div>
+                }
+            </header>
+
+            @if (h.FixturesLocked)
+            {
+                <p class="hq-note">🔒 The admins have locked fixtures for now, so stats and squads can't be changed.</p>
+            }
+
+            <!-- ── Speech bubble ── -->
+            <div class="hq-bubble @(todo.Any() ? "" : "is-clear")" role="status">
+                @BubbleText(h, todo)
+            </div>
+
+            <div class="hq-grid">
+
+                <!-- ── To-do list ── -->
+                <section class="hq-panel hq-todo" aria-labelledby="hq-todo-title">
+                    <h2 id="hq-todo-title"><span aria-hidden="true">✅</span> To-do</h2>
+                    @if (!h.Todos.Any())
+                    {
+                        <p class="hq-empty">Nothing to do yet. Jobs for your next game turn up here two weeks before it.</p>
+                    }
+                    else
+                    {
+                        <ul class="hq-checklist">
+                            @foreach (var t in h.Todos.OrderBy(t => t.Done).ThenByDescending(t => t.Urgent))
+                            {
+                                <li class="@(t.Done ? "is-done" : "") @(t.Urgent && !t.Done ? "is-urgent" : "")">
+                                    <a href="@t.Link" @onclick="() => OnTodoClick(t)" @onclick:preventDefault="@(t.Link == "#signups")">
+                                        <span class="hq-box" aria-hidden="true">@(t.Done ? "✔" : "")</span>
+                                        <span class="hq-todo-text">
+                                            <span class="hq-todo-title">@t.Title</span>
+                                            <span class="hq-todo-detail">@t.Detail</span>
+                                        </span>
+                                        @if (t.Urgent && !t.Done)
+                                        {
+                                            <span class="hq-urgent">Urgent!</span>
+                                        }
+                                        else if (!t.Done)
+                                        {
+                                            <span class="hq-go" aria-hidden="true">→</span>
+                                        }
+                                        <span class="visually-hidden">@(t.Done ? "(done)" : "")</span>
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </section>
+
+                <!-- ── Next match ── -->
+                <section class="hq-panel hq-next" aria-labelledby="hq-next-title">
+                    <h2 id="hq-next-title"><span aria-hidden="true">⚽</span> Next match</h2>
+                    @if (h.NextMatch is not { } m)
+                    {
+                        <div class="hq-empty">
+                            <span class="hq-big-emoji" aria-hidden="true">🏖️</span>
+                            <p>@(h.SeasonNumber == null
+                                ? "No season yet. The admins are drawing up the fixtures; get your squad ready in the meantime."
+                                : "No more games this season. Put your feet up!")</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="hq-vs">
+                            <div class="hq-vs-team">
+                                <span class="hq-vs-crest">
+                                    @if (!string.IsNullOrEmpty(h.ProfileImageUrl))
+                                    {
+                                        <img src="@MediaUrls.Absolute(Http, h.ProfileImageUrl)" alt="" />
+                                    }
+                                    else
+                                    {
+                                        @Initials(h.TeamName)
+                                    }
+                                </span>
+                                <span>@h.TeamName</span>
+                            </div>
+                            <span class="hq-burst" aria-label="versus">VS</span>
+                            <div class="hq-vs-team">
+                                <span class="hq-vs-crest">
+                                    @if (!string.IsNullOrEmpty(m.OpponentImageUrl))
+                                    {
+                                        <img src="@MediaUrls.Absolute(Http, m.OpponentImageUrl)" alt="" />
+                                    }
+                                    else
+                                    {
+                                        @Initials(m.Opponent)
+                                    }
+                                </span>
+                                <span>@m.Opponent</span>
+                            </div>
+                        </div>
+
+                        <p class="hq-countdown">@Countdown(m)</p>
+
+                        <dl class="hq-facts">
+                            <div><dt>📅 When</dt><dd>@(m.Kickoff is { } k ? k.ToLocalTime().ToString("ddd d MMM, HH:mm") : $"Week of {m.WindowStart:d MMM}, time TBC")</dd></div>
+                            <div><dt>📍 Where</dt><dd>@(string.IsNullOrWhiteSpace(m.Location) ? "TBC" : $"{m.Location}{(string.IsNullOrWhiteSpace(m.Postcode) ? "" : $", {m.Postcode}")}") <small>(@(m.IsHome ? "home" : "away"))</small></dd></div>
+                            <div><dt>🟨 Ref</dt><dd>@(m.RefereeName ?? "Not assigned yet")</dd></div>
+                            <div><dt>👕 Squad</dt><dd>@m.SquadCount picked@(m.CaptainName != null ? $" · ©{m.CaptainName}" : "")</dd></div>
+                        </dl>
+
+                        <div class="hq-actions">
+                            <a class="hq-btn is-yellow" href="/fixture/@m.FixtureId?tab=squad">Pick squad</a>
+                            <a class="hq-btn" href="/team-sheet/@m.FixtureId">Team sheet</a>
+                            <a class="hq-btn" href="/fixture/@m.FixtureId">Match page</a>
+                        </div>
+                    }
+                </section>
+
+                <!-- ── Season snapshot ── -->
+                <section class="hq-panel hq-snap" aria-labelledby="hq-snap-title">
+                    <h2 id="hq-snap-title"><span aria-hidden="true">📊</span> Your season</h2>
+                    @if (h.Standing is not { Played: > 0 } s)
+                    {
+                        <p class="hq-empty">No games played yet. The numbers show up after your first result.</p>
+                    }
+                    else
+                    {
+                        <div class="hq-tiles">
+                            <div class="hq-tile is-yellow"><strong>@(s.Position is int p ? Ordinal(p) : "–")</strong><span>in the league</span></div>
+                            <div class="hq-tile"><strong>@s.Points</strong><span>points</span></div>
+                            <div class="hq-tile is-green"><strong>@s.Won</strong><span>won</span></div>
+                            <div class="hq-tile"><strong>@s.Drawn</strong><span>drawn</span></div>
+                            <div class="hq-tile is-red"><strong>@s.Lost</strong><span>lost</span></div>
+                            <div class="hq-tile"><strong>@(s.GoalDifference > 0 ? $"+{s.GoalDifference}" : s.GoalDifference.ToString())</strong><span>goal diff</span></div>
+                        </div>
+                    }
+                    <ul class="hq-stars">
+                        <li><span aria-hidden="true">🥅</span> Top scorer: <strong>@(h.TopScorerName ?? "nobody yet")</strong>@(h.TopScorerName != null ? $" ({h.TopScorerGoals})" : "")</li>
+                        <li><span aria-hidden="true">🎯</span> Top assister: <strong>@(h.TopAssisterName ?? "nobody yet")</strong>@(h.TopAssisterName != null ? $" ({h.TopAssisterAssists})" : "")</li>
+                        @if (h.Standing is { SquadOverall: int ovr } sq)
+                        {
+                            <li><span aria-hidden="true">🃏</span> Squad rating: <strong>@ovr</strong> <span class="hq-tier is-@sq.SquadTier">@sq.SquadTier</span> · @sq.CardCount of @sq.SquadSize on cards</li>
+                        }
+                    </ul>
+                    <a class="hq-link" href="/team/@h.TeamId">See your club page →</a>
+                </section>
+
+                <!-- ── Recent results ── -->
+                <section class="hq-panel hq-results" aria-labelledby="hq-results-title">
+                    <h2 id="hq-results-title"><span aria-hidden="true">📰</span> Recent results</h2>
+                    @if (!h.RecentResults.Any())
+                    {
+                        <p class="hq-empty">No results yet. They'll pile up here.</p>
+                    }
+                    else
+                    {
+                        <ul class="hq-res-list">
+                            @foreach (var r in h.RecentResults)
+                            {
+                                var res = !r.IsPlayed ? "?" : r.TeamScore > r.OpponentScore ? "W" : r.TeamScore == r.OpponentScore ? "D" : "L";
+                                <li>
+                                    <span class="hq-res-badge is-@(res == "?" ? "wait" : res.ToLower())">@res</span>
+                                    <span class="hq-res-text">
+                                        <span class="hq-res-title">
+                                            @((r.IsHome ? "v " : "at ") + r.Opponent)
+                                            @if (r.IsPlayed)
+                                            {
+                                                <strong>@r.TeamScore–@r.OpponentScore</strong>
+                                            }
+                                        </span>
+                                        <span class="hq-res-sub">
+                                            @r.When.ToLocalTime().ToString("ddd d MMM")
+                                            @if (!r.IsPlayed)
+                                            {
+                                                @(!r.OurStatsIn ? " · waiting for your stats" : !r.TheirStatsIn ? $" · waiting for {r.Opponent}" : "")
+                                            }
+                                        </span>
+                                    </span>
+                                    @if (!r.OurStatsIn)
+                                    {
+                                        <a class="hq-btn is-small is-red" href="/fixture/@r.FixtureId?tab=stats">Add stats</a>
+                                    }
+                                    else
+                                    {
+                                        <a class="hq-btn is-small" href="/fixture/@r.FixtureId">View</a>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                    }
+                </section>
+            </div>
+
+            <!-- ── Sign-ups ── -->
+            @if (signups.Any())
+            {
+                <section class="hq-panel hq-signups" id="signups" aria-labelledby="hq-signups-title">
+                    <h2 id="hq-signups-title"><span aria-hidden="true">🙋</span> Want to join (@signups.Count)</h2>
+                    <p class="hq-sub">Approve and they get a login and their player card. Decline if you don't know them.</p>
+                    <ul class="hq-signup-list">
+                        @foreach (var r in signups)
+                        {
+                            <li>
+                                <span class="hq-signup-who">
+                                    <strong>@r.RequestedName</strong>
+                                    <span>
+                                        @(r.PlayerName != null ? $"Says they're {r.PlayerName} in your squad" : "New to your squad")
+                                        · @r.Email · @r.CreatedAt.ToLocalTime().ToString("d MMM")
+                                    </span>
+                                </span>
+                                <span class="hq-signup-actions">
+                                    <button type="button" class="hq-btn is-small is-green" disabled="@busy.Contains(r.Id)" @onclick="() => Resolve(r, true)">👍 Approve</button>
+                                    <button type="button" class="hq-btn is-small" disabled="@busy.Contains(r.Id)" @onclick="() => Resolve(r, false)">Decline</button>
+                                </span>
+                            </li>
+                        }
+                    </ul>
+                    @if (signupMessage != null)
+                    {
+                        <p class="hq-note @(signupIsError ? "is-error" : "")">@signupMessage</p>
+                    }
+                </section>
+            }
+            else if (signupMessage != null)
+            {
+                <p class="hq-note @(signupIsError ? "is-error" : "")" id="signups">@signupMessage</p>
+            }
+
+            <!-- ── Everything else ── -->
+            <section class="hq-panel" aria-labelledby="hq-links-title">
+                <h2 id="hq-links-title"><span aria-hidden="true">🧰</span> Your toolbox</h2>
+                @QuickLinks(h)
+            </section>
+        </div>
+    }
+</div>
+
+@code {
+    private ManagerDashboardDto? hq;
+    private bool loading = true;
+    private List<PlayerAccountRequestDto> signups = new();
+    private readonly HashSet<int> busy = new();
+    private string? signupMessage;
+    private bool signupIsError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var hqTask = ManagerSvc.GetDashboard();
+        var signupTask = AccountSvc.GetRequests();
+        await Task.WhenAll(hqTask, signupTask);
+        hq = hqTask.Result;
+        signups = signupTask.Result.Where(r => r.Status == PlayerAccountRequestStatusDto.Pending).ToList();
+        loading = false;
+    }
+
+    private RenderFragment QuickLinks(ManagerDashboardDto? h) => @<div class="hq-links">
+        <a class="hq-link-card" href="/manager-fixtures"><span aria-hidden="true">⚽</span><strong>Fixtures</strong><small>Every game, squads and stats</small></a>
+        <a class="hq-link-card" href="/my-squad"><span aria-hidden="true">👕</span><strong>My squad</strong><small>Add, edit and remove players</small></a>
+        <a class="hq-link-card" href="/my-team"><span aria-hidden="true">🛡️</span><strong>My club</strong><small>Crest, kits, bio and contacts</small></a>
+        @if (h != null)
+        {
+            <a class="hq-link-card" href="/team/@h.TeamId"><span aria-hidden="true">🏟️</span><strong>Club page</strong><small>What everyone else sees</small></a>
+        }
+        <a class="hq-link-card" href="/referees"><span aria-hidden="true">🟨</span><strong>Referees</strong><small>Who's reffing and how to reach them</small></a>
+        <a class="hq-link-card" href="/guide"><span aria-hidden="true">❓</span><strong>How-to guide</strong><small>Step by step, with pictures</small></a>
+        <a class="hq-link-card" href="/change-password"><span aria-hidden="true">🔑</span><strong>Password</strong><small>Change your login password</small></a>
+    </div>;
+
+    // The sign-ups to-do scrolls to the list on this page instead of leaving it.
+    private async Task OnTodoClick(ManagerTodoDto t)
+    {
+        if (t.Link != "#signups") return;
+        try { await JS.InvokeVoidAsync("scrollToId", "signups"); } catch (JSException) { }
+    }
+
+    private async Task Resolve(PlayerAccountRequestDto r, bool approve)
+    {
+        busy.Add(r.Id);
+        signupMessage = null;
+        try
+        {
+            if (approve) await AccountSvc.Approve(r.Id); else await AccountSvc.Reject(r.Id);
+            signups.Remove(r);
+            signupIsError = false;
+            signupMessage = approve ? $"🎉 {r.RequestedName} is in! Their card's ready." : $"{r.RequestedName} declined.";
+
+            // The to-do list counts these; refresh it.
+            hq = await ManagerSvc.GetDashboard() ?? hq;
+        }
+        catch (Exception ex)
+        {
+            signupIsError = true;
+            signupMessage = ex.Message;
+        }
+        finally
+        {
+            busy.Remove(r.Id);
+        }
+    }
+
+    private static string BubbleText(ManagerDashboardDto h, List<ManagerTodoDto> todo)
+    {
+        var urgent = todo.Count(t => t.Urgent);
+        if (urgent > 0)
+            return $"📣 {urgent} urgent job{(urgent == 1 ? "" : "s")}, gaffer! Sort {(urgent == 1 ? "it" : "them")} first.";
+        if (todo.Count > 0)
+            return $"📋 {todo.Count} thing{(todo.Count == 1 ? "" : "s")} on your list{(h.NextMatch != null ? $" before {h.NextMatch.Opponent}" : "")}.";
+        return "🙌 All sorted, gaffer! Nothing on your list right now.";
+    }
+
+    private static string Countdown(ManagerMatchDto m)
+    {
+        var when = m.Kickoff ?? m.WindowStart;
+        var days = (when.ToLocalTime().Date - DateTime.Now.Date).Days;
+        return days switch
+        {
+            <= 0 when m.Kickoff != null => "⏰ It's matchday!",
+            <= 0 => "⏰ This week!",
+            1 => "⏰ Tomorrow!",
+            < 7 => $"⏰ {days} days to go",
+            _ => $"⏰ {days} days to go. Plenty of time."
+        };
+    }
+
+    private static string Ordinal(int n) => n + ((n % 100) is 11 or 12 or 13 ? "th" : (n % 10) switch { 1 => "st", 2 => "nd", 3 => "rd", _ => "th" });
+
+    private static string Initials(string name)
+    {
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length >= 2 ? $"{parts[0][0]}{parts[1][0]}".ToUpper() : name.Length >= 2 ? name[..2].ToUpper() : name.ToUpper();
+    }
+
+    // The club's home kit tints the banner. Plain hex only.
+    private static string? KitStyle(string? colour)
+        => colour != null && System.Text.RegularExpressions.Regex.IsMatch(colour, "^#[0-9a-fA-F]{3,8}$")
+            ? $"--kit:{colour}"
+            : null;
+}
