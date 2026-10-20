@@ -1,6 +1,5 @@
 using Ballers.Models;
-using Microsoft.AspNetCore.Components.WebAssembly.Http;
-using System.Net.Http.Json;
+using Ballers.UI.Infrastructure;
 
 namespace Ballers.Services
 {
@@ -10,70 +9,42 @@ namespace Ballers.Services
 
         public TeamService(HttpClient http) => _http = http;
 
-        public async Task<List<TeamProfileDto>> GetAllTeams()
-        {
-            var response = await _http.GetAsync("api/teams");
-            if (!response.IsSuccessStatusCode) return new List<TeamProfileDto>();
-            return await response.Content.ReadFromJsonAsync<List<TeamProfileDto>>() ?? new List<TeamProfileDto>();
-        }
+        public Task<List<TeamProfileDto>> GetAllTeams() => _http.GetListOrEmpty<TeamProfileDto>("api/teams");
 
         /// <summary>
         /// Every club with its record, form and squad rating. Empty if it could
         /// not be fetched, so the pages can carry on without it.
         /// </summary>
-        public async Task<List<Ballers.Shared.TeamOverviewDto>> GetOverview()
-        {
-            try
-            {
-                var response = await _http.GetAsync("api/teams/overview");
-                if (!response.IsSuccessStatusCode) return new();
-                return await response.Content.ReadFromJsonAsync<List<Ballers.Shared.TeamOverviewDto>>() ?? new();
-            }
-            catch (HttpRequestException) { return new(); }
-            catch (System.Text.Json.JsonException) { return new(); }
-        }
+        public Task<List<Ballers.Shared.TeamOverviewDto>> GetOverview() =>
+            _http.GetListOrEmpty<Ballers.Shared.TeamOverviewDto>("api/teams/overview");
 
-        public async Task<TeamProfileDto?> GetProfile(int teamId)
-        {
-            var response = await _http.GetAsync($"api/teams/{teamId}/profile");
-            if (!response.IsSuccessStatusCode) return null;
-            return await response.Content.ReadFromJsonAsync<TeamProfileDto>();
-        }
+        public Task<TeamProfileDto?> GetProfile(int teamId) =>
+            _http.GetOrDefault<TeamProfileDto>($"api/teams/{teamId}/profile");
 
-        public async Task<List<PlayerCardDto>> GetSquad(int teamId)
-        {
-            var response = await _http.GetAsync($"api/teams/{teamId}/squad");
-            if (!response.IsSuccessStatusCode) return new List<PlayerCardDto>();
-            return await response.Content.ReadFromJsonAsync<List<PlayerCardDto>>() ?? new List<PlayerCardDto>();
-        }
+        public Task<List<PlayerCardDto>> GetSquad(int teamId) =>
+            _http.GetListOrEmpty<PlayerCardDto>($"api/teams/{teamId}/squad");
 
-        public async Task<TeamProfileDto?> UpdateProfile(int teamId, UpdateTeamProfileRequest request)
-        {
-            var response = await _http.PutAsJsonAsync($"api/teams/{teamId}/profile", request);
-            if (!response.IsSuccessStatusCode) return null;
-            return await response.Content.ReadFromJsonAsync<TeamProfileDto>();
-        }
+        public async Task<TeamProfileDto> UpdateProfile(int teamId, UpdateTeamProfileRequest request) =>
+            await _http.PutOk<TeamProfileDto>($"api/teams/{teamId}/profile", request, "Failed to save. Please try again.")
+            ?? throw new ApiException("The profile was saved but could not be read back.", 200);
 
-        public async Task<string?> UploadImage(int teamId, Stream imageStream, string fileName, string contentType)
+        // Returns the new badge URL. Throws with the API's reason, which says
+        // when an image was turned down by the content check.
+        public async Task<string> UploadImage(int teamId, Stream imageStream, string fileName, string contentType)
         {
             using var content = new MultipartFormDataContent();
             using var fileContent = new StreamContent(imageStream);
             fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
             content.Add(fileContent, "image", fileName);
 
-            var response = await _http.PostAsync($"api/teams/{teamId}/profile/image", content);
-            if (!response.IsSuccessStatusCode) return null;
-
-            var result = await response.Content.ReadFromJsonAsync<UploadImageResult>();
-            return result?.Url;
+            var result = await _http.PostOk<UploadImageResult>($"api/teams/{teamId}/profile/image", content, "Upload failed.");
+            return result?.Url ?? throw new ApiException("Upload failed.", 200);
         }
 
         // Manager photo is stored as a base64 data URL in the DB (same as player photos).
-        public async Task<bool> UploadManagerImage(int teamId, string imageBase64)
-        {
-            var response = await _http.PutAsJsonAsync($"api/teams/{teamId}/manager/image", new { imageBase64 });
-            return response.IsSuccessStatusCode;
-        }
+        public Task UploadManagerImage(int teamId, string imageBase64) =>
+            _http.PutOk($"api/teams/{teamId}/manager/image",
+                new UploadManagerImageRequest { ImageBase64 = imageBase64 }, "Couldn't save the manager photo.");
 
         private class UploadImageResult
         {

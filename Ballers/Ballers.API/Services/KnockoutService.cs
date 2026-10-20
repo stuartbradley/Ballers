@@ -1,3 +1,4 @@
+using Ballers.API.Authorization;
 using Ballers.API.Data;
 using Ballers.API.Models;
 using Ballers.Shared;
@@ -11,6 +12,7 @@ namespace Ballers.API.Services
         Task<KnockoutBracketDto> GetBracketAsync(int seasonId);
         Task SubmitResultAsync(int knockoutFixtureId, int homeScore, int awayScore);
         Task TryFinalizeFromStatsAsync(int linkedFixtureId);
+        Task<FixtureSides?> GetSidesAsync(int knockoutFixtureId);
     }
 
     public class KnockoutService : IKnockoutService
@@ -18,6 +20,13 @@ namespace Ballers.API.Services
         private readonly ApplicationDbContext _db;
 
         public KnockoutService(ApplicationDbContext db) => _db = db;
+
+        // A side not yet decided (a final waiting on its semis) is 0, which no team matches.
+        public async Task<FixtureSides?> GetSidesAsync(int knockoutFixtureId)
+            => await _db.KnockoutFixtures
+                .Where(k => k.Id == knockoutFixtureId)
+                .Select(k => new FixtureSides(k.HomeTeamId ?? 0, k.AwayTeamId ?? 0))
+                .FirstOrDefaultAsync();
 
         public async Task GenerateAsync(int seasonId)
         {
@@ -75,7 +84,7 @@ namespace Ballers.API.Services
             if (season == null || !season.IsKnockoutGenerated)
                 return new KnockoutBracketDto { Generated = false, SeasonId = seasonId };
 
-            var fixtures = await _db.KnockoutFixtures
+            var fixtures = await _db.KnockoutFixtures.AsNoTracking()
                 .Include(k => k.HomeTeam)
                 .Include(k => k.AwayTeam)
                 .Where(k => k.SeasonId == seasonId)

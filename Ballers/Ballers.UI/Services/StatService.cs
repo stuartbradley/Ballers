@@ -1,5 +1,6 @@
-﻿using Ballers.Models;
-using System.Net.Http.Json;
+using Ballers.Models;
+using Ballers.Shared;
+using Ballers.UI.Infrastructure;
 
 namespace Ballers.Services
 {
@@ -12,49 +13,28 @@ namespace Ballers.Services
             _http = http;
         }
 
-        public async Task<StatsSummaryDto> GetSummary()
-        {
-            return await _http.GetFromJsonAsync<StatsSummaryDto>("api/stats/summary") ?? new();
-        }
+        public async Task<StatsSummaryDto> GetSummary() =>
+            await _http.GetOrDefault<StatsSummaryDto>("api/stats/summary") ?? new();
 
-        public async Task<List<PlayerGoalsDto>> GetTopGoalScorers()
-        {
-            return await _http.GetFromJsonAsync<List<PlayerGoalsDto>>("api/stats/top-scorers") ?? new();
-        }
+        public Task<List<PlayerGoalsDto>> GetTopGoalScorers() =>
+            _http.GetListOrEmpty<PlayerGoalsDto>("api/stats/top-scorers");
 
-        public async Task<List<PlayerAssistDto>> GetTopAssists()
-        {
-            return await _http.GetFromJsonAsync<List<PlayerAssistDto>>("api/stats/top-assists") ?? new();
-        }
+        public Task<List<PlayerAssistDto>> GetTopAssists() =>
+            _http.GetListOrEmpty<PlayerAssistDto>("api/stats/top-assists");
 
-        public async Task<List<PlayerMotmDto>> GetTopMotm()
-        {
-            return await _http.GetFromJsonAsync<List<PlayerMotmDto>>("api/stats/top-motm") ?? new();
-        }
+        public Task<List<PlayerMotmDto>> GetTopMotm() =>
+            _http.GetListOrEmpty<PlayerMotmDto>("api/stats/top-motm");
 
-        public async Task<List<PlayerLeaderboardDto>> GetLeaderboard(int? seasonId = null)
-        {
-            var url = seasonId.HasValue
+        public Task<List<PlayerLeaderboardDto>> GetLeaderboard(int? seasonId = null) =>
+            _http.GetListOrEmpty<PlayerLeaderboardDto>(seasonId.HasValue
                 ? $"api/stats/leaderboard?seasonId={seasonId}"
-                : "api/stats/leaderboard";
-            return await _http.GetFromJsonAsync<List<PlayerLeaderboardDto>>(url) ?? new();
-        }
+                : "api/stats/leaderboard");
 
         // Empty on failure, so the page can hide the team tab and the totals
         // rather than show zeros.
-        public async Task<List<TeamStatsDto>> GetTeamStats(int? seasonId = null)
-        {
-            var url = seasonId.HasValue
+        public Task<List<TeamStatsDto>> GetTeamStats(int? seasonId = null) =>
+            _http.GetListOrEmpty<TeamStatsDto>(seasonId.HasValue
                 ? $"api/stats/teams?seasonId={seasonId}"
-                : "api/stats/teams";
-            try
-            {
-                return await _http.GetFromJsonAsync<List<TeamStatsDto>>(url) ?? new();
-            }
-            catch (HttpRequestException)
-            {
-                return new();
-            }
-        }
+                : "api/stats/teams");
     }
 }

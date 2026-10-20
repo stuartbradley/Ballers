@@ -1,4 +1,5 @@
-﻿using Ballers.API.Models;
+﻿using Ballers.API.Events;
+using Ballers.API.Models;
 using Ballers.Shared;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -7,9 +8,33 @@ namespace Ballers.API.Data
 {
     public class ApplicationDbContext:IdentityDbContext<ApplicationUser>
     {
-        public ApplicationDbContext(DbContextOptions dbContextOptions) : base(dbContextOptions)
+        private readonly IDomainEventDispatcher? _events;
+
+        // The dispatcher is optional so tests can build a context without one;
+        // events raised there are then simply dropped on save.
+        public ApplicationDbContext(DbContextOptions dbContextOptions, IDomainEventDispatcher? events = null)
+            : base(dbContextOptions)
         {
-            
+            _events = events;
+        }
+
+        /// <summary>
+        /// Saves, then hands any events the saved entities raised to their
+        /// handlers. They are taken before the save so a handler that saves in
+        /// turn does not see them again.
+        /// </summary>
+        public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+        {
+            var raised = ChangeTracker.Entries<IHasDomainEvents>()
+                .SelectMany(e => e.Entity.TakeDomainEvents())
+                .ToList();
+
+            var saved = await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+
+            if (_events != null && raised.Count > 0)
+                await _events.PublishAsync(raised, cancellationToken);
+
+            return saved;
         }
 
         public DbSet<Team> Teams  => Set<Team>();

@@ -1,12 +1,20 @@
-﻿namespace Ballers.Services
+namespace Ballers.Services
 {
     using System.Net.Http.Json;
     using Ballers.Models;
+    using Ballers.Shared;
+    using Ballers.UI.Infrastructure;
     using Microsoft.AspNetCore.Components.Forms;
-    using Microsoft.AspNetCore.Components.WebAssembly.Http;
 
     public class AdminService
     {
+        private readonly HttpClient _http;
+
+        public AdminService(HttpClient http)
+        {
+            _http = http;
+        }
+
         private class ImportOk { public int created { get; set; } }
         private class ImportErr { public List<string> errors { get; set; } = new(); }
 
@@ -21,10 +29,7 @@
                 { new StringContent(makeActive.ToString()), "makeActive" },
             };
 
-            var request = new HttpRequestMessage(HttpMethod.Post, "api/admin/import-fixtures") { Content = content };
-            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
-
-            var response = await _http.SendAsync(request);
+            var response = await _http.PostAsync("api/admin/import-fixtures", content);
             if (response.IsSuccessStatusCode)
             {
                 var ok = await response.Content.ReadFromJsonAsync<ImportOk>();
@@ -42,98 +47,23 @@
             return (0, new() { string.IsNullOrWhiteSpace(body) ? "Import failed." : body.Trim('"') });
         }
 
-        private readonly HttpClient _http;
+        public Task CreateTeam(string name, string email, string password) =>
+            _http.PostOk("api/admin/create-team",
+                new CreateTeamRequest { TeamName = name, Email = email, Password = password }, "Couldn't create the team.");
 
-        public AdminService(HttpClient http)
-        {
-            _http = http;
-        }
+        public Task CreateReferee(string email, string password) =>
+            _http.PostOk("api/admin/create-referee",
+                new CreateRefereeRequest { Email = email, Password = password }, "Couldn't create the referee account.");
 
-        public async Task CreateTeam(string name, string email, string password)
-        {
-            var request = new HttpRequestMessage(
-                HttpMethod.Post,
-                "api/admin/create-team");
+        public Task CreateAdmin(string email, string password) =>
+            _http.PostOk("api/admin/create-admin",
+                new CreateAdminRequest { Email = email, Password = password }, "Couldn't create the admin account.");
 
-            request.SetBrowserRequestCredentials(
-                BrowserRequestCredentials.Include);
+        public Task<PointsSettingsDto?> GetPointsSettings() =>
+            _http.GetOrDefault<PointsSettingsDto>("api/admin/points-settings");
 
-            request.Content = JsonContent.Create(new
-            {
-                teamName = name,
-                email,
-                password
-            });
-
-            var response = await _http.SendAsync(request);
-            response.EnsureSuccessStatusCode();
-        }
-
-        public async Task CreateReferee(string email, string password)
-        {
-            var request = new HttpRequestMessage(
-                HttpMethod.Post,
-                "api/admin/create-referee");
-
-            request.SetBrowserRequestCredentials(
-                BrowserRequestCredentials.Include);
-
-            request.Content = JsonContent.Create(new
-            {
-                email,
-                password
-            });
-
-            var response = await _http.SendAsync(request);
-            if (!response.IsSuccessStatusCode)
-            {
-                var body = await response.Content.ReadAsStringAsync();
-                var msg = body.Trim('"');
-                throw new Exception(string.IsNullOrWhiteSpace(msg) ? $"Error {(int)response.StatusCode}" : msg);
-            }
-        }
-
-        public async Task CreateAdmin(string email, string password)
-        {
-            var request = new HttpRequestMessage(
-                HttpMethod.Post,
-                "api/admin/create-admin");
-
-            request.SetBrowserRequestCredentials(
-                BrowserRequestCredentials.Include);
-
-            request.Content = JsonContent.Create(new
-            {
-                email,
-                password
-            });
-
-            var response = await _http.SendAsync(request);
-            if (!response.IsSuccessStatusCode)
-            {
-                var body = await response.Content.ReadAsStringAsync();
-                var msg = body.Trim('"');
-                throw new Exception(string.IsNullOrWhiteSpace(msg) ? $"Error {(int)response.StatusCode}" : msg);
-            }
-        }
-
-        public async Task<Ballers.Shared.PointsSettingsDto?> GetPointsSettings()
-        {
-            var response = await _http.GetAsync("api/admin/points-settings");
-            if (!response.IsSuccessStatusCode) return null;
-            return await response.Content.ReadFromJsonAsync<Ballers.Shared.PointsSettingsDto>();
-        }
-
-        public async Task UpdatePointsSettings(Ballers.Shared.PointsSettingsDto settings)
-        {
-            var response = await _http.PutAsJsonAsync("api/admin/points-settings", settings);
-            if (!response.IsSuccessStatusCode)
-            {
-                var body = await response.Content.ReadAsStringAsync();
-                var msg = body.Trim('"');
-                throw new Exception(string.IsNullOrWhiteSpace(msg) ? $"Error {(int)response.StatusCode}" : msg);
-            }
-        }
+        public Task UpdatePointsSettings(PointsSettingsDto settings) =>
+            _http.PutOk("api/admin/points-settings", settings, "Couldn't save the points settings.");
 
         private class PointsRunResponse
         {
@@ -148,106 +78,35 @@
         /// </summary>
         public async Task<(int Fixtures, int Players, int Points)> RunPlayerPoints()
         {
-            var response = await _http.PostAsync("api/admin/run-player-points", null);
-            if (!response.IsSuccessStatusCode)
-            {
-                var body = await response.Content.ReadAsStringAsync();
-                var msg = body.Trim('"');
-                throw new Exception(string.IsNullOrWhiteSpace(msg) ? $"Error {(int)response.StatusCode}" : msg);
-            }
-
-            var result = await response.Content.ReadFromJsonAsync<PointsRunResponse>();
+            var result = await _http.PostOk<PointsRunResponse>("api/admin/run-player-points", null, "Couldn't run the points payout.");
             return (result?.FixturesCredited ?? 0, result?.PlayersCredited ?? 0, result?.PointsAwarded ?? 0);
         }
 
-        public async Task GenerateFixtures(List<int> teamIds, DateTime startDate)
-        {
-            var request = new HttpRequestMessage(
-                HttpMethod.Post,
-                "api/admin/generate-fixtures");
+        public Task GenerateFixtures(List<int> teamIds, DateTime startDate) =>
+            _http.PostOk("api/admin/generate-fixtures",
+                new GenerateFixturesRequest { TeamIds = teamIds, StartDate = startDate }, "Couldn't generate the fixtures.");
 
-            request.SetBrowserRequestCredentials(
-                BrowserRequestCredentials.Include);
+        public Task<AdminOverviewDto?> GetOverview() =>
+            _http.GetOrDefault<AdminOverviewDto>("api/admin/overview");
 
-            request.Content = JsonContent.Create(new
-            {
-                teamIds,
-                startDate
-            });
+        public Task<List<AdminAccountDto>?> GetAccounts() =>
+            _http.GetOrDefault<List<AdminAccountDto>>("api/admin/accounts");
 
-            var response = await _http.SendAsync(request);
+        public Task ResetAccountPassword(string id, string newPassword) =>
+            _http.PostOk($"api/admin/accounts/{Uri.EscapeDataString(id)}/reset-password",
+                new AdminResetPasswordRequest { NewPassword = newPassword }, "Couldn't reset the password.");
 
-            if (!response.IsSuccessStatusCode)
-            {
-                var body = await response.Content.ReadAsStringAsync();
-                var msg = body.Trim('"');
-                throw new Exception(string.IsNullOrWhiteSpace(msg) ? $"Error {(int)response.StatusCode}" : msg);
-            }
-        }
+        public Task DeleteAccount(string id) =>
+            _http.DeleteOk($"api/admin/accounts/{Uri.EscapeDataString(id)}", "Couldn't delete the account.");
 
-        public async Task<Ballers.Shared.AdminOverviewDto?> GetOverview()
-        {
-            try { return await _http.GetFromJsonAsync<Ballers.Shared.AdminOverviewDto>("api/admin/overview"); }
-            catch (HttpRequestException) { return null; }
-        }
+        public Task<List<TeamDto>> GetTeams() => _http.GetListOrEmpty<TeamDto>("api/teams");
 
-        public async Task<List<Ballers.Shared.AdminAccountDto>?> GetAccounts()
-        {
-            try { return await _http.GetFromJsonAsync<List<Ballers.Shared.AdminAccountDto>>("api/admin/accounts"); }
-            catch (HttpRequestException) { return null; }
-        }
+        public Task<List<SeasonDto>> GetSeasons() => _http.GetListOrEmpty<SeasonDto>("api/seasons");
 
-        public async Task ResetAccountPassword(string id, string newPassword)
-        {
-            var response = await _http.PostAsJsonAsync($"api/admin/accounts/{Uri.EscapeDataString(id)}/reset-password",
-                new Ballers.Shared.AdminResetPasswordRequest { NewPassword = newPassword });
-            if (!response.IsSuccessStatusCode)
-                throw new Exception(await ReadError(response));
-        }
+        public Task ActivateSeason(int id) =>
+            _http.PostOk($"api/admin/seasons/{id}/activate", null, "Couldn't activate the season.");
 
-        public async Task DeleteAccount(string id)
-        {
-            var response = await _http.DeleteAsync($"api/admin/accounts/{Uri.EscapeDataString(id)}");
-            if (!response.IsSuccessStatusCode)
-                throw new Exception(await ReadError(response));
-        }
-
-        // The API sends a plain message for these errors; fall back to the
-        // status when it doesn't.
-        private static async Task<string> ReadError(HttpResponseMessage response)
-        {
-            var text = (await response.Content.ReadAsStringAsync()).Trim().Trim('"');
-            return string.IsNullOrWhiteSpace(text) || text.StartsWith("{") ? $"Request failed ({(int)response.StatusCode})." : text;
-        }
-
-        public async Task<List<TeamDto>> GetTeams()
-            => await _http.GetFromJsonAsync<List<TeamDto>>("api/teams") ?? new();
-
-        public async Task<List<SeasonDto>> GetSeasons()
-            => await _http.GetFromJsonAsync<List<SeasonDto>>("api/seasons") ?? new();
-
-        public async Task ActivateSeason(int id)
-        {
-            var request = new HttpRequestMessage(HttpMethod.Post, $"api/admin/seasons/{id}/activate");
-            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
-            var response = await _http.SendAsync(request);
-            if (!response.IsSuccessStatusCode)
-            {
-                var body = await response.Content.ReadAsStringAsync();
-                throw new Exception(body.Trim('"'));
-            }
-        }
-
-        public async Task DeleteSeason(int id)
-        {
-            var request = new HttpRequestMessage(HttpMethod.Delete, $"api/admin/seasons/{id}");
-            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
-            var response = await _http.SendAsync(request);
-            if (!response.IsSuccessStatusCode)
-            {
-                var body = await response.Content.ReadAsStringAsync();
-                throw new Exception(body.Trim('"'));
-            }
-        }
+        public Task DeleteSeason(int id) =>
+            _http.DeleteOk($"api/admin/seasons/{id}", "Couldn't delete the season.");
     }
 }

@@ -3,7 +3,12 @@ using System.Text.Json;
 
 namespace Ballers.API.Services
 {
-    public class ImageModerationService
+    public interface IImageModerationService
+    {
+        Task<bool> IsExplicitAsync(byte[] imageBytes, string mediaType);
+    }
+
+    public class ImageModerationService : IImageModerationService
     {
         private readonly IHttpClientFactory _httpFactory;
         private readonly string? _apiKey;

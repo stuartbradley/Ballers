@@ -1,8 +1,7 @@
 @page "/stats"
 @using Ballers.Models
 @using Ballers.Services
-@inject StatService StatService
-@inject SeasonService SeasonService
+@inherits ViewModelComponent<StatsViewModel>
 @inject HttpClient Http
 @inject IJSRuntime JS
 
@@ -13,14 +12,10 @@
    to show their card. *@
 <div class="stats-page" id="stats-page">
 
-    <header class="st-hero">
-        <span class="st-eyebrow">Ballers League</span>
-        <h1>Stats</h1>
-        <p class="st-sub">Who's scoring, who's creating and who's keeping them out.</p>
-    </header>
+    <PageHero Eyebrow="Ballers League" Title="Stats" Subtitle="Who's scoring, who's creating and who's keeping them out." />
 
     <div class="st-body">
-        @if (isLoading)
+        @if (Vm.IsLoading)
         {
             <div class="st-loading"><LoadingSpinner /></div>
         }
@@ -28,22 +23,22 @@
         {
             <div class="st-controls">
                 <div class="st-tabs" role="tablist" aria-label="Show stats for">
-                    <button type="button" role="tab" class="st-tab @(tab == "players" ? "is-active" : "")"
-                            aria-selected="@(tab == "players" ? "true" : "false")"
-                            @onclick='() => tab = "players"'>Players</button>
-                    @if (teamStats.Any())
+                    <button type="button" role="tab" class="st-tab @(Vm.Tab == "players" ? "is-active" : "")"
+                            aria-selected="@(Vm.Tab == "players" ? "true" : "false")"
+                            @onclick='() => Vm.Tab = "players"'>Players</button>
+                    @if (Vm.TeamStats.Any())
                     {
-                        <button type="button" role="tab" class="st-tab @(tab == "teams" ? "is-active" : "")"
-                                aria-selected="@(tab == "teams" ? "true" : "false")"
-                                @onclick='() => tab = "teams"'>Teams</button>
+                        <button type="button" role="tab" class="st-tab @(Vm.Tab == "teams" ? "is-active" : "")"
+                                aria-selected="@(Vm.Tab == "teams" ? "true" : "false")"
+                                @onclick='() => Vm.Tab = "teams"'>Teams</button>
                     }
                 </div>
 
                 <label class="st-season">
                     <span class="st-label">Season</span>
-                    <select @bind="selectedSeasonId" @bind:after="LoadSeason">
+                    <select @bind="Vm.SelectedSeasonId" @bind:after="Vm.LoadSeason">
                         <option value="0">All seasons</option>
-                        @foreach (var s in seasons)
+                        @foreach (var s in Vm.Seasons)
                         {
                             <option value="@s.Id">Season @s.SeasonNumber</option>
                         }
@@ -53,23 +48,23 @@
 
             @* Keyed by season so the numbers are rebuilt, and count up again,
                when the season changes. *@
-            @if (gamesPlayed > 0)
+            @if (Vm.GamesPlayed > 0)
             {
-                <div class="st-totals" @key="selectedSeasonId">
-                    <div class="st-total"><strong data-count="@gamesPlayed">@gamesPlayed</strong><span>Games played</span></div>
-                    <div class="st-total"><strong data-count="@totalGoals">@totalGoals</strong><span>Goals</span></div>
-                    <div class="st-total"><strong>@GoalsPerGame</strong><span>Goals per game</span></div>
-                    <div class="st-total"><strong data-count="@totalCleanSheets">@totalCleanSheets</strong><span>Clean sheets</span></div>
-                    <div class="st-total st-total-yellow"><strong data-count="@totalYellows">@totalYellows</strong><span>Yellow cards</span></div>
-                    <div class="st-total st-total-red"><strong data-count="@totalReds">@totalReds</strong><span>Red cards</span></div>
+                <div class="st-totals" @key="Vm.SelectedSeasonId">
+                    <div class="st-total"><strong data-count="@Vm.GamesPlayed">@Vm.GamesPlayed</strong><span>Games played</span></div>
+                    <div class="st-total"><strong data-count="@Vm.TotalGoals">@Vm.TotalGoals</strong><span>Goals</span></div>
+                    <div class="st-total"><strong>@Vm.GoalsPerGame</strong><span>Goals per game</span></div>
+                    <div class="st-total"><strong data-count="@Vm.TotalCleanSheets">@Vm.TotalCleanSheets</strong><span>Clean sheets</span></div>
+                    <div class="st-total st-total-yellow"><strong data-count="@Vm.TotalYellows">@Vm.TotalYellows</strong><span>Yellow cards</span></div>
+                    <div class="st-total st-total-red"><strong data-count="@Vm.TotalReds">@Vm.TotalReds</strong><span>Red cards</span></div>
                 </div>
             }
 
-            @if (tab == "teams" && teamStats.Any())
+            @if (Vm.Tab == "teams" && Vm.TeamStats.Any())
             {
                 @TeamsView
             }
-            else if (!allPlayers.Any())
+            else if (!Vm.AllPlayers.Any())
             {
                 <div class="st-empty">
                     <p class="st-empty-title">No stats yet</p>
@@ -85,150 +80,32 @@
 </div>
 
 @code {
-    private bool isLoading = true;
-    private List<SeasonDto> seasons = new();
-    private int selectedSeasonId;
-    private List<PlayerLeaderboardDto> allPlayers = new();
-    private List<TeamStatsDto> teamStats = new();
-    private string tab = "players";
+    // The page's state and logic are in StatsViewModel; the view fragments and
+    // the browser calls (scrolling, the count-up) stay here.
 
-    private string selectedPos = "All";
-    private string nameSearch = "";
-    private string sortCol = "goals";
-    private bool sortAsc;
-    private int? expandedId;
-
-    private string teamSortCol = "gf";
-    private bool teamSortAsc;
-
-    // Season totals. Each game appears twice in the team list, once per side.
-    private int gamesPlayed, totalGoals, totalCleanSheets, totalYellows, totalReds;
-    private string GoalsPerGame => gamesPlayed == 0 ? "–" : ((double)totalGoals / gamesPlayed).ToString("0.0");
-
-    private bool countPending;
-
-    protected override async Task OnInitializedAsync()
-    {
-        seasons = await SeasonService.GetSeasons();
-        var current = await SeasonService.GetCurrentSeason();
-        selectedSeasonId = current?.Id ?? 0;
-        await LoadSeason();
-        isLoading = false;
-    }
-
-    async Task LoadSeason()
-    {
-        int? sid = selectedSeasonId > 0 ? selectedSeasonId : null;
-        var playersTask = StatService.GetLeaderboard(sid);
-        var teamsTask = StatService.GetTeamStats(sid);
-        await Task.WhenAll(playersTask, teamsTask);
-
-        allPlayers = playersTask.Result;
-        teamStats = teamsTask.Result;
-        expandedId = null;
-        if (!teamStats.Any()) tab = "players";
-
-        gamesPlayed = teamStats.Sum(t => t.Played) / 2;
-        totalGoals = teamStats.Sum(t => t.GoalsFor);
-        totalCleanSheets = teamStats.Sum(t => t.CleanSheets);
-        totalYellows = teamStats.Sum(t => t.YellowCards);
-        totalReds = teamStats.Sum(t => t.RedCards);
-        countPending = true;
-    }
+    protected override Task OnInitializedAsync() => Vm.InitializeAsync();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (isLoading || !countPending) return;
-        countPending = false;
+        if (Vm.IsLoading || !Vm.RevealPending) return;
+        Vm.RevealPending = false;
         try { await JS.InvokeVoidAsync("homeReveal.scan", "stats-page"); }
         catch (JSException) { /* decoration only */ }
     }
 
-    // ── Players ──
-
-    private IEnumerable<PlayerLeaderboardDto> Filtered =>
-        allPlayers.Where(p =>
-            (selectedPos == "All" || p.Position == selectedPos) &&
-            (string.IsNullOrEmpty(nameSearch) || p.Name.Contains(nameSearch, StringComparison.OrdinalIgnoreCase)));
-
-    private static double PerGame(int value, int apps) => apps == 0 ? 0 : (double)value / apps;
-
-    private IEnumerable<PlayerLeaderboardDto> Sorted
-    {
-        get
-        {
-            Func<PlayerLeaderboardDto, object> key = sortCol switch
-            {
-                "name" => p => p.Name,
-                "team" => p => p.Team,
-                "ovr" => p => p.Attributes?.Overall ?? -1,
-                "apps" => p => p.Appearances,
-                "assists" => p => p.Assists,
-                "gpg" => p => PerGame(p.Goals, p.Appearances),
-                "cs" => p => EarnsCleanSheets(p.Position) ? p.CleanSheets : -1,
-                "motm" => p => p.Motm,
-                "yellow" => p => p.YellowCards,
-                "red" => p => p.RedCards,
-                _ => p => p.Goals
-            };
-            var ordered = sortAsc ? Filtered.OrderBy(key) : Filtered.OrderByDescending(key);
-            // Ties go to whoever has more goals, then more assists.
-            return ordered.ThenByDescending(p => p.Goals).ThenByDescending(p => p.Assists).ThenBy(p => p.Name);
-        }
-    }
-
-    void SortBy(string col)
-    {
-        if (sortCol == col) sortAsc = !sortAsc;
-        else { sortCol = col; sortAsc = col is "name" or "team"; }
-    }
-
-    string SortClass(string col) =>
-        sortCol == col ? (sortAsc ? "sorted asc" : "sorted desc") : "sortable";
-
-    string? AriaSort(string col) =>
-        sortCol == col ? (sortAsc ? "ascending" : "descending") : null;
-
-    void Toggle(int playerId) => expandedId = expandedId == playerId ? null : playerId;
-
     void OnRowKey(KeyboardEventArgs e, int playerId)
     {
-        if (e.Key is "Enter" or " ") Toggle(playerId);
+        if (e.Key is "Enter" or " ") Vm.Toggle(playerId);
     }
 
-    // Only goalkeepers and defenders are credited with clean sheets; everyone
-    // else shows a dash rather than a misleading zero.
-    static bool EarnsCleanSheets(string? position) =>
-        string.Equals(position, "GK", StringComparison.OrdinalIgnoreCase) ||
-        string.Equals(position, "DEF", StringComparison.OrdinalIgnoreCase);
-
-    private record Leader(string Title, string Unit, List<(PlayerLeaderboardDto Player, int Value)> Top);
-
-    // The top three in each category, across every position. A category with
-    // nobody on the board yet is left out.
-    private IEnumerable<Leader> Leaders
+    // Opens the player's row, then scrolls to it once it's drawn.
+    async Task ShowPlayer(int playerId)
     {
-        get
-        {
-            Leader Top(string title, string unit, Func<PlayerLeaderboardDto, int> value,
-                       Func<PlayerLeaderboardDto, bool>? who = null) => new(title, unit,
-                allPlayers.Where(p => who == null || who(p))
-                    .Select(p => (Player: p, Value: value(p)))
-                    .Where(x => x.Value > 0)
-                    .OrderByDescending(x => x.Value)
-                    .ThenBy(x => x.Player.Appearances)
-                    .ThenBy(x => x.Player.Name)
-                    .Take(3)
-                    .ToList());
-
-            return new[]
-            {
-                Top("Top scorer", "goals", p => p.Goals),
-                Top("Most assists", "assists", p => p.Assists),
-                Top("Most clean sheets", "clean sheets", p => p.CleanSheets, p => EarnsCleanSheets(p.Position)),
-                Top("Most MOTMs", "MOTMs", p => p.Motm)
-            }.Where(l => l.Top.Count > 0);
-        }
+        Vm.ShowPlayer(playerId);
+        StateHasChanged();
+        await Task.Yield();
+        try { await JS.InvokeVoidAsync("scrollToId", $"player-{playerId}"); }
+        catch (JSException) { /* the row is open either way */ }
     }
 
     // A tiny card in the player's tier with their rating on it; a plain
@@ -238,10 +115,10 @@
         : @<span class="st-mini st-mini-none" title="No card yet"><span>#@p.Number</span></span>;
 
     RenderFragment PlayersView => @<text>
-        @if (Leaders.Any())
+        @if (Vm.Leaders.Any())
         {
             <section class="st-leaders" aria-label="League leaders">
-                @foreach (var l in Leaders)
+                @foreach (var l in Vm.Leaders)
                 {
                     var (first, firstValue) = l.Top[0];
                     <article class="st-leader">
@@ -275,13 +152,13 @@
             <div class="st-chips" role="group" aria-label="Position">
                 @foreach (var pos in new[] { "All", "GK", "DEF", "MID", "FWD" })
                 {
-                    <button type="button" class="st-chip @(selectedPos == pos ? "is-active" : "")"
-                            aria-pressed="@(selectedPos == pos ? "true" : "false")"
-                            @onclick="() => selectedPos = pos">@pos</button>
+                    <button type="button" class="st-chip @(Vm.SelectedPos == pos ? "is-active" : "")"
+                            aria-pressed="@(Vm.SelectedPos == pos ? "true" : "false")"
+                            @onclick="() => Vm.SelectedPos = pos">@pos</button>
                 }
             </div>
             <input class="st-search" type="search" placeholder="Search player…" aria-label="Search player"
-                   @bind="nameSearch" @bind:event="oninput" />
+                   @bind="Vm.NameSearch" @bind:event="oninput" />
         </div>
 
         <div class="st-table-wrap">
@@ -289,33 +166,33 @@
                 <thead>
                     <tr>
                         <th class="c-rank">#</th>
-                        <th class="c-player @SortClass("name")" aria-sort="@AriaSort("name")" @onclick='() => SortBy("name")'>Player</th>
-                        <th class="c-team @SortClass("team")" aria-sort="@AriaSort("team")" @onclick='() => SortBy("team")'>Team</th>
-                        <th class="c-num c-apps @SortClass("apps")" aria-sort="@AriaSort("apps")" @onclick='() => SortBy("apps")' title="Appearances">Apps</th>
-                        <th class="c-num c-goals @SortClass("goals")" aria-sort="@AriaSort("goals")" @onclick='() => SortBy("goals")' title="Goals">G</th>
-                        <th class="c-num c-assists @SortClass("assists")" aria-sort="@AriaSort("assists")" @onclick='() => SortBy("assists")' title="Assists">A</th>
-                        <th class="c-num c-gpg @SortClass("gpg")" aria-sort="@AriaSort("gpg")" @onclick='() => SortBy("gpg")' title="Goals per game">G/Gm</th>
-                        <th class="c-num c-cs @SortClass("cs")" aria-sort="@AriaSort("cs")" @onclick='() => SortBy("cs")' title="Clean sheets">CS</th>
-                        <th class="c-num c-motm @SortClass("motm")" aria-sort="@AriaSort("motm")" @onclick='() => SortBy("motm")' title="Man of the Match">MOTM</th>
-                        <th class="c-num c-card @SortClass("yellow")" aria-sort="@AriaSort("yellow")" @onclick='() => SortBy("yellow")' title="Yellow cards"><span class="st-card-icon is-yellow"></span></th>
-                        <th class="c-num c-card @SortClass("red")" aria-sort="@AriaSort("red")" @onclick='() => SortBy("red")' title="Red cards"><span class="st-card-icon is-red"></span></th>
+                        <th class="c-player @Vm.SortClass("name")" aria-sort="@Vm.AriaSort("name")" @onclick='() => Vm.SortBy("name")'>Player</th>
+                        <th class="c-team @Vm.SortClass("team")" aria-sort="@Vm.AriaSort("team")" @onclick='() => Vm.SortBy("team")'>Team</th>
+                        <th class="c-num c-apps @Vm.SortClass("apps")" aria-sort="@Vm.AriaSort("apps")" @onclick='() => Vm.SortBy("apps")' title="Appearances">Apps</th>
+                        <th class="c-num c-goals @Vm.SortClass("goals")" aria-sort="@Vm.AriaSort("goals")" @onclick='() => Vm.SortBy("goals")' title="Goals">G</th>
+                        <th class="c-num c-assists @Vm.SortClass("assists")" aria-sort="@Vm.AriaSort("assists")" @onclick='() => Vm.SortBy("assists")' title="Assists">A</th>
+                        <th class="c-num c-gpg @Vm.SortClass("gpg")" aria-sort="@Vm.AriaSort("gpg")" @onclick='() => Vm.SortBy("gpg")' title="Goals per game">G/Gm</th>
+                        <th class="c-num c-cs @Vm.SortClass("cs")" aria-sort="@Vm.AriaSort("cs")" @onclick='() => Vm.SortBy("cs")' title="Clean sheets">CS</th>
+                        <th class="c-num c-motm @Vm.SortClass("motm")" aria-sort="@Vm.AriaSort("motm")" @onclick='() => Vm.SortBy("motm")' title="Man of the Match">MOTM</th>
+                        <th class="c-num c-card @Vm.SortClass("yellow")" aria-sort="@Vm.AriaSort("yellow")" @onclick='() => Vm.SortBy("yellow")' title="Yellow cards"><span class="st-card-icon is-yellow"></span></th>
+                        <th class="c-num c-card @Vm.SortClass("red")" aria-sort="@Vm.AriaSort("red")" @onclick='() => Vm.SortBy("red")' title="Red cards"><span class="st-card-icon is-red"></span></th>
                     </tr>
                 </thead>
                 <tbody>
-                    @if (!Filtered.Any())
+                    @if (!Vm.Filtered.Any())
                     {
                         <tr><td colspan="11" class="st-empty-row">No players match.</td></tr>
                     }
                     else
                     {
                         var rank = 1;
-                        @foreach (var p in Sorted)
+                        @foreach (var p in Vm.Sorted)
                         {
-                            var open = expandedId == p.PlayerId;
+                            var open = Vm.ExpandedId == p.PlayerId;
                             var r = rank++;
                             <tr class="st-row @(r <= 3 ? $"is-top{r}" : "") @(open ? "is-open" : "")" id="player-@p.PlayerId"
                                 tabindex="0" aria-expanded="@(open ? "true" : "false")"
-                                @onclick="() => Toggle(p.PlayerId)" @onkeydown="e => OnRowKey(e, p.PlayerId)">
+                                @onclick="() => Vm.Toggle(p.PlayerId)" @onkeydown="e => OnRowKey(e, p.PlayerId)">
                                 <td class="c-rank"><span class="st-rank">@r</span></td>
                                 <td class="c-player">
                                     <span class="st-player">
@@ -331,8 +208,8 @@
                                 <td class="c-num c-apps">@p.Appearances</td>
                                 <td class="c-num c-goals">@p.Goals</td>
                                 <td class="c-num c-assists">@p.Assists</td>
-                                <td class="c-num c-gpg">@(p.Appearances == 0 ? "–" : PerGame(p.Goals, p.Appearances).ToString("0.00"))</td>
-                                <td class="c-num c-cs">@(EarnsCleanSheets(p.Position) ? p.CleanSheets.ToString() : "–")</td>
+                                <td class="c-num c-gpg">@(p.Appearances == 0 ? "–" : StatsViewModel.PerGame(p.Goals, p.Appearances).ToString("0.00"))</td>
+                                <td class="c-num c-cs">@(StatsViewModel.EarnsCleanSheets(p.Position) ? p.CleanSheets.ToString() : "–")</td>
                                 <td class="c-num c-motm">@(p.Motm > 0 ? p.Motm.ToString() : "–")</td>
                                 <td class="c-num c-card">@(p.YellowCards > 0 ? p.YellowCards.ToString() : "–")</td>
                                 <td class="c-num c-card @(p.RedCards > 0 ? "is-red" : "")">@(p.RedCards > 0 ? p.RedCards.ToString() : "–")</td>
@@ -368,9 +245,9 @@
                 <div><dt>Goals</dt><dd>@p.Goals</dd></div>
                 <div><dt>Assists</dt><dd>@p.Assists</dd></div>
                 <div><dt>Goal involvements</dt><dd>@(p.Goals + p.Assists)</dd></div>
-                <div><dt>Goals per game</dt><dd>@PerGame(p.Goals, p.Appearances).ToString("0.00")</dd></div>
-                <div><dt>Involvements per game</dt><dd>@PerGame(p.Goals + p.Assists, p.Appearances).ToString("0.00")</dd></div>
-                @if (EarnsCleanSheets(p.Position))
+                <div><dt>Goals per game</dt><dd>@StatsViewModel.PerGame(p.Goals, p.Appearances).ToString("0.00")</dd></div>
+                <div><dt>Involvements per game</dt><dd>@StatsViewModel.PerGame(p.Goals + p.Assists, p.Appearances).ToString("0.00")</dd></div>
+                @if (StatsViewModel.EarnsCleanSheets(p.Position))
                 {
                     <div><dt>Clean sheets</dt><dd>@p.CleanSheets</dd></div>
                 }
@@ -388,103 +265,15 @@
         </div>
     </div>;
 
-    // A leader's card opens their row in the table, clearing any filter that
-    // would hide it.
-    async Task ShowPlayer(int playerId)
-    {
-        selectedPos = "All";
-        nameSearch = "";
-        expandedId = playerId;
-        StateHasChanged();
-        await Task.Yield();
-        try { await JS.InvokeVoidAsync("scrollToId", $"player-{playerId}"); }
-        catch (JSException) { /* the row is open either way */ }
-    }
-
-    // ── Teams ──
-
-    private IEnumerable<TeamStatsDto> SortedTeams
-    {
-        get
-        {
-            Func<TeamStatsDto, object> key = teamSortCol switch
-            {
-                "name" => t => t.Name,
-                "p" => t => t.Played,
-                "w" => t => t.Won,
-                "d" => t => t.Drawn,
-                "l" => t => t.Lost,
-                "ga" => t => t.GoalsAgainst,
-                "gd" => t => t.GoalsFor - t.GoalsAgainst,
-                "cs" => t => t.CleanSheets,
-                "yellow" => t => t.YellowCards,
-                "red" => t => t.RedCards,
-                _ => t => t.GoalsFor
-            };
-            var ordered = teamSortAsc ? teamStats.OrderBy(key) : teamStats.OrderByDescending(key);
-            return ordered.ThenBy(t => t.Name);
-        }
-    }
-
-    void SortTeamsBy(string col)
-    {
-        if (teamSortCol == col) teamSortAsc = !teamSortAsc;
-        // Fewer is better for these, so they start lowest first.
-        else { teamSortCol = col; teamSortAsc = col is "name" or "ga" or "l" or "yellow" or "red"; }
-    }
-
-    string TeamSortClass(string col) =>
-        teamSortCol == col ? (teamSortAsc ? "sorted asc" : "sorted desc") : "sortable";
-
-    string? TeamAriaSort(string col) =>
-        teamSortCol == col ? (teamSortAsc ? "ascending" : "descending") : null;
-
-    private record Highlight(string Title, TeamStatsDto Team, string Value);
-
-    // Best attack, best defence and best discipline, among teams that have
-    // played. A red counts as three yellows.
-    private IEnumerable<Highlight> TeamHighlights
-    {
-        get
-        {
-            var played = teamStats.Where(t => t.Played > 0).ToList();
-            if (!played.Any()) yield break;
-
-            var attack = played.OrderByDescending(t => (double)t.GoalsFor / t.Played).ThenBy(t => t.Name).First();
-            yield return new("Best attack", attack, $"{(double)attack.GoalsFor / attack.Played:0.0} goals a game");
-
-            var defence = played.OrderBy(t => (double)t.GoalsAgainst / t.Played).ThenBy(t => t.Name).First();
-            yield return new("Best defence", defence, $"{(double)defence.GoalsAgainst / defence.Played:0.0} conceded a game");
-
-            var fair = played.OrderBy(t => (double)(t.YellowCards + 3 * t.RedCards) / t.Played).ThenBy(t => t.Name).First();
-            yield return new("Fair play", fair, $"{fair.YellowCards} yellow, {fair.RedCards} red");
-        }
-    }
-
-    // The club's home kit colour, as a plain hex only, so nothing else can be
-    // injected into the style attribute.
-    private static string? KitStyle(string? colour)
-        => colour != null && System.Text.RegularExpressions.Regex.IsMatch(colour, "^#[0-9a-fA-F]{3,8}$")
-            ? $"--kit:{colour}"
-            : null;
-
-    static string Initials(string name)
-    {
-        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        return parts.Length >= 2
-            ? $"{parts[0][0]}{parts[1][0]}".ToUpper()
-            : name.Length >= 2 ? name[..2].ToUpper() : name.ToUpper();
-    }
-
     RenderFragment Crest(TeamStatsDto t) => !string.IsNullOrEmpty(t.ProfileImageUrl)
         ? @<img class="st-crest" src="@(Http.BaseAddress!.ToString().TrimEnd('/') + t.ProfileImageUrl)" alt="" />
-        : @<span class="st-crest st-crest-none">@Initials(t.Name)</span>;
+        : @<span class="st-crest st-crest-none">@Format.TeamInitials(t.Name)</span>;
 
     RenderFragment TeamsView => @<text>
         <section class="st-highlights" aria-label="Team highlights">
-            @foreach (var h in TeamHighlights)
+            @foreach (var h in Vm.TeamHighlights)
             {
-                <a class="st-highlight" href="/team/@h.Team.TeamId" style="@KitStyle(h.Team.HomeKitColour)">
+                <a class="st-highlight" href="/team/@h.Team.TeamId" style="@Format.KitStyle(h.Team.HomeKitColour)">
                     <span class="st-leader-title">@h.Title</span>
                     <span class="st-highlight-team">@Crest(h.Team)<span>@h.Team.Name</span></span>
                     <span class="st-highlight-value">@h.Value</span>
@@ -497,26 +286,26 @@
                 <thead>
                     <tr>
                         <th class="c-rank">#</th>
-                        <th class="c-player @TeamSortClass("name")" aria-sort="@TeamAriaSort("name")" @onclick='() => SortTeamsBy("name")'>Team</th>
-                        <th class="c-num t-p @TeamSortClass("p")" aria-sort="@TeamAriaSort("p")" @onclick='() => SortTeamsBy("p")' title="Played">P</th>
-                        <th class="c-num t-w @TeamSortClass("w")" aria-sort="@TeamAriaSort("w")" @onclick='() => SortTeamsBy("w")' title="Won">W</th>
-                        <th class="c-num t-d @TeamSortClass("d")" aria-sort="@TeamAriaSort("d")" @onclick='() => SortTeamsBy("d")' title="Drawn">D</th>
-                        <th class="c-num t-l @TeamSortClass("l")" aria-sort="@TeamAriaSort("l")" @onclick='() => SortTeamsBy("l")' title="Lost">L</th>
-                        <th class="c-num c-goals @TeamSortClass("gf")" aria-sort="@TeamAriaSort("gf")" @onclick='() => SortTeamsBy("gf")' title="Goals for">GF</th>
-                        <th class="c-num t-ga @TeamSortClass("ga")" aria-sort="@TeamAriaSort("ga")" @onclick='() => SortTeamsBy("ga")' title="Goals against">GA</th>
-                        <th class="c-num t-gd @TeamSortClass("gd")" aria-sort="@TeamAriaSort("gd")" @onclick='() => SortTeamsBy("gd")' title="Goal difference">GD</th>
-                        <th class="c-num c-cs @TeamSortClass("cs")" aria-sort="@TeamAriaSort("cs")" @onclick='() => SortTeamsBy("cs")' title="Clean sheets">CS</th>
-                        <th class="c-num c-card @TeamSortClass("yellow")" aria-sort="@TeamAriaSort("yellow")" @onclick='() => SortTeamsBy("yellow")' title="Yellow cards"><span class="st-card-icon is-yellow"></span></th>
-                        <th class="c-num c-card @TeamSortClass("red")" aria-sort="@TeamAriaSort("red")" @onclick='() => SortTeamsBy("red")' title="Red cards"><span class="st-card-icon is-red"></span></th>
+                        <th class="c-player @Vm.TeamSortClass("name")" aria-sort="@Vm.TeamAriaSort("name")" @onclick='() => Vm.SortTeamsBy("name")'>Team</th>
+                        <th class="c-num t-p @Vm.TeamSortClass("p")" aria-sort="@Vm.TeamAriaSort("p")" @onclick='() => Vm.SortTeamsBy("p")' title="Played">P</th>
+                        <th class="c-num t-w @Vm.TeamSortClass("w")" aria-sort="@Vm.TeamAriaSort("w")" @onclick='() => Vm.SortTeamsBy("w")' title="Won">W</th>
+                        <th class="c-num t-d @Vm.TeamSortClass("d")" aria-sort="@Vm.TeamAriaSort("d")" @onclick='() => Vm.SortTeamsBy("d")' title="Drawn">D</th>
+                        <th class="c-num t-l @Vm.TeamSortClass("l")" aria-sort="@Vm.TeamAriaSort("l")" @onclick='() => Vm.SortTeamsBy("l")' title="Lost">L</th>
+                        <th class="c-num c-goals @Vm.TeamSortClass("gf")" aria-sort="@Vm.TeamAriaSort("gf")" @onclick='() => Vm.SortTeamsBy("gf")' title="Goals for">GF</th>
+                        <th class="c-num t-ga @Vm.TeamSortClass("ga")" aria-sort="@Vm.TeamAriaSort("ga")" @onclick='() => Vm.SortTeamsBy("ga")' title="Goals against">GA</th>
+                        <th class="c-num t-gd @Vm.TeamSortClass("gd")" aria-sort="@Vm.TeamAriaSort("gd")" @onclick='() => Vm.SortTeamsBy("gd")' title="Goal difference">GD</th>
+                        <th class="c-num c-cs @Vm.TeamSortClass("cs")" aria-sort="@Vm.TeamAriaSort("cs")" @onclick='() => Vm.SortTeamsBy("cs")' title="Clean sheets">CS</th>
+                        <th class="c-num c-card @Vm.TeamSortClass("yellow")" aria-sort="@Vm.TeamAriaSort("yellow")" @onclick='() => Vm.SortTeamsBy("yellow")' title="Yellow cards"><span class="st-card-icon is-yellow"></span></th>
+                        <th class="c-num c-card @Vm.TeamSortClass("red")" aria-sort="@Vm.TeamAriaSort("red")" @onclick='() => Vm.SortTeamsBy("red")' title="Red cards"><span class="st-card-icon is-red"></span></th>
                     </tr>
                 </thead>
                 <tbody>
                     @{ var rank = 1; }
-                    @foreach (var t in SortedTeams)
+                    @foreach (var t in Vm.SortedTeams)
                     {
                         var r = rank++;
                         var gd = t.GoalsFor - t.GoalsAgainst;
-                        <tr class="st-row @(r <= 3 ? $"is-top{r}" : "")" style="@KitStyle(t.HomeKitColour)">
+                        <tr class="st-row @(r <= 3 ? $"is-top{r}" : "")" style="@Format.KitStyle(t.HomeKitColour)">
                             <td class="c-rank"><span class="st-rank">@r</span></td>
                             <td class="c-player">
                                 <a class="st-team-link" href="/team/@t.TeamId">@Crest(t)<span>@t.Name</span></a>

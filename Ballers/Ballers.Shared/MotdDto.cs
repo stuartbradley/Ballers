@@ -9,7 +9,9 @@ namespace Ballers.Models
         public DateTime? Date { get; set; }
         public string? Location { get; set; }
         public string? Postcode { get; set; }
-        public string CoverImageBase64 { get; set; } = "";
+
+        // A link to the cover (relative to the API), or null when there isn't one.
+        public string? CoverImageUrl { get; set; }
         public string Caption => $"{HomeTeam} vs {AwayTeam}";
     }
 

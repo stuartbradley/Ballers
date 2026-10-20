@@ -1,11 +1,8 @@
-using Ballers.API.Data;
-using Ballers.API.Models;
+using Ballers.API.Authorization;
 using Ballers.API.Services;
 using Ballers.Shared;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Ballers.API.Controllers
 {
@@ -14,14 +11,12 @@ namespace Ballers.API.Controllers
     public class KnockoutController : ControllerBase
     {
         private readonly IKnockoutService _knockout;
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly ApplicationDbContext _db;
+        private readonly IAuthorizationService _authorization;
 
-        public KnockoutController(IKnockoutService knockout, UserManager<ApplicationUser> userManager, ApplicationDbContext db)
+        public KnockoutController(IKnockoutService knockout, IAuthorizationService authorization)
         {
             _knockout = knockout;
-            _userManager = userManager;
-            _db = db;
+            _authorization = authorization;
         }
 
         [AllowAnonymous]
@@ -33,16 +28,11 @@ namespace Ballers.API.Controllers
         [HttpPost("{id}/result")]
         public async Task<IActionResult> SubmitResult(int id, [FromBody] SubmitKnockoutResultRequest request)
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return Unauthorized();
+            var sides = await _knockout.GetSidesAsync(id);
+            if (sides == null) return NotFound();
 
-            if (!user.IsAdmin)
-            {
-                var fixture = await _db.KnockoutFixtures.FindAsync(id);
-                if (fixture == null) return NotFound();
-                if (user.TeamId == null || (fixture.HomeTeamId != user.TeamId && fixture.AwayTeamId != user.TeamId))
-                    return Forbid();
-            }
+            if (!(await _authorization.AuthorizeAsync(User, sides, FixtureAccessRequirement.AdminOrEitherTeam)).Succeeded)
+                return Forbid();
 
             try
             {

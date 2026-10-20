@@ -1,3 +1,4 @@
+@inject HttpClient Http
 <div class="fut-player-card @Position?.ToLower() card-@CardTier @(HasAttributes ? "has-attributes" : "")">
     <div class="player-card-top">
         <div class="player-master-info">
@@ -10,7 +11,8 @@
         <div class="player-picture">
             @if (!string.IsNullOrEmpty(ImageUrl))
             {
-                <img src="@ImageUrl" alt="@Name" draggable="false" />
+                @* A link to the API's photo, or a data URL just cropped on this page. *@
+                <img src="@MediaUrls.Absolute(Http, ImageUrl)" alt="@Name" draggable="false" loading="lazy" />
             }
             else
             {

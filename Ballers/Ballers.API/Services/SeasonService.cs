@@ -23,11 +23,11 @@ namespace Ballers.API.Services
         public async Task<Season?> GetCurrentAsync()
         {
             // Prefer an explicitly activated season; fall back to date range
-            var active = await _db.Seasons.FirstOrDefaultAsync(s => s.IsActive);
+            var active = await _db.Seasons.AsNoTracking().FirstOrDefaultAsync(s => s.IsActive);
             if (active != null) return active;
 
             var today = DateTime.UtcNow;
-            return await _db.Seasons
+            return await _db.Seasons.AsNoTracking()
                 .FirstOrDefaultAsync(s => s.StartDate <= today && s.EndDate >= today);
         }
 

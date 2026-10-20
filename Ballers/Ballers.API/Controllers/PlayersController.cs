@@ -1,5 +1,6 @@
+using Ballers.API.Authorization;
 using Ballers.API.Models;
-using Ballers.API.Models.Requests;
+using Ballers.Models;
 using Ballers.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -39,7 +40,7 @@ namespace Ballers.API.Controllers
 
             // League-wide lock: once the registration deadline passes, managers can no
             // longer add players. Admins bypass so they can still manage squads.
-            if (!user.IsAdmin)
+            if (!User.IsSiteAdmin())
             {
                 var settings = await _leagueSettings.GetAsync();
                 if (settings.PlayersLocked)
@@ -50,7 +51,7 @@ namespace Ballers.API.Controllers
             return Ok();
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = Policies.SiteAdmin)]
         [HttpPost("team/{teamId}")]
         public async Task<IActionResult> AddPlayerForTeam(int teamId, CreatePlayerRequest request)
         {
@@ -66,7 +67,7 @@ namespace Ballers.API.Controllers
 
             try
             {
-                var found = await _players.DeactivatePlayerAsync(id, user.TeamId, user.IsAdmin);
+                var found = await _players.DeactivatePlayerAsync(id, user.TeamId, User.IsSiteAdmin());
                 return found ? Ok() : NotFound();
             }
             catch (UnauthorizedAccessException) { return Forbid(); }
@@ -80,7 +81,7 @@ namespace Ballers.API.Controllers
 
             try
             {
-                var found = await _players.UpdatePlayerAsync(id, user.TeamId, user.IsAdmin, request);
+                var found = await _players.UpdatePlayerAsync(id, user.TeamId, User.IsSiteAdmin(), request);
                 return found ? Ok() : NotFound();
             }
             catch (UnauthorizedAccessException) { return Forbid(); }
@@ -94,7 +95,7 @@ namespace Ballers.API.Controllers
 
             try
             {
-                await _players.UploadPlayerImageAsync(id, user.TeamId, user.IsAdmin, request.ImageBase64);
+                await _players.UploadPlayerImageAsync(id, user.TeamId, User.IsSiteAdmin(), request.ImageBase64);
                 return Ok();
             }
             catch (KeyNotFoundException) { return NotFound(); }

@@ -1,6 +1,6 @@
 using Ballers.API.Data;
 using Ballers.API.Models;
-using Ballers.API.Models.Requests;
+using Ballers.Models;
 using Ballers.API.Services;
 using Ballers.Tests.Helpers;
 

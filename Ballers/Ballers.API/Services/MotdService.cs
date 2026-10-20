@@ -23,22 +23,34 @@ namespace Ballers.API.Services
 
         public async Task<List<MotdListItemDto>> GetListAsync()
         {
-            return await _db.MatchOfTheDayPosts
-                .Include(p => p.Fixture).ThenInclude(f => f!.HomeTeam)
-                .Include(p => p.Fixture).ThenInclude(f => f!.AwayTeam)
+            // The list links to each cover rather than carrying it, so it stays
+            // small however many posts there are.
+            var rows = await _db.MatchOfTheDayPosts
+                .AsNoTracking()
                 .OrderByDescending(p => p.Fixture!.Kickoff ?? p.CreatedAt)
                 .ThenByDescending(p => p.CreatedAt)
-                .Select(p => new MotdListItemDto
+                .Select(p => new
                 {
-                    Id = p.Id,
+                    p.Id,
                     HomeTeam = p.Fixture!.HomeTeam!.Name,
                     AwayTeam = p.Fixture.AwayTeam!.Name,
                     Date = p.Fixture.Kickoff,
-                    Location = p.Fixture.Location,
-                    Postcode = p.Fixture.Postcode,
-                    CoverImageBase64 = p.CoverImageBase64
+                    p.Fixture.Location,
+                    p.Fixture.Postcode,
+                    CoverLength = p.CoverImageBase64.Length
                 })
                 .ToListAsync();
+
+            return rows.Select(p => new MotdListItemDto
+            {
+                Id = p.Id,
+                HomeTeam = p.HomeTeam,
+                AwayTeam = p.AwayTeam,
+                Date = p.Date,
+                Location = p.Location,
+                Postcode = p.Postcode,
+                CoverImageUrl = StoredImages.MotdCoverUrl(p.Id, p.CoverLength)
+            }).ToList();
         }
 
         public async Task<MotdDetailDto?> GetByIdAsync(int id)

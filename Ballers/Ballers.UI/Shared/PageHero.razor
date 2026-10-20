@@ -1,0 +1,16 @@
+@* The heading at the top of the public stadium-night pages: a small gold
+   eyebrow, the title with its glowing underline, and a line of intro. *@
+<header class="page-hero">
+    <span class="page-hero-eyebrow">@Eyebrow</span>
+    <h1>@Title</h1>
+    @if (!string.IsNullOrEmpty(Subtitle))
+    {
+        <p class="page-hero-sub">@Subtitle</p>
+    }
+</header>
+
+@code {
+    [Parameter] public string Eyebrow { get; set; } = "Ballers League";
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+    [Parameter] public string? Subtitle { get; set; }
+}

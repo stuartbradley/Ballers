@@ -5,9 +5,8 @@
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Forms
-@inject TeamService TeamService
 @inject HttpClient Http
-@inject AuthenticationStateProvider AuthProvider
+@inherits ViewModelComponent<MyTeamViewModel>
 
 <PageTitle>My Team</PageTitle>
 
@@ -16,11 +15,11 @@
     <AuthorizeView Roles="Manager"><ManagerNav Current="team" /></AuthorizeView>
 
 
-    @if (isLoading)
+    @if (Vm.IsLoading)
     {
         <div class="my-team-loading"><LoadingSpinner /></div>
     }
-    else if (teamId == null)
+    else if (Vm.TeamId == null)
     {
         <div class="my-team-error">
             <h2>No team assigned</h2>
@@ -32,7 +31,7 @@
         <div class="my-team-hero">
             <div class="my-team-hero-inner">
                 <p class="my-team-eyebrow">Team Settings</p>
-                <h1 class="my-team-title">@(form.Name.Length > 0 ? form.Name : "My Team")</h1>
+                <h1 class="my-team-title">@(Vm.Form.Name.Length > 0 ? Vm.Form.Name : "My Team")</h1>
             </div>
         </div>
 
@@ -43,30 +42,30 @@
                 <h3>Club Crest / Photo</h3>
                 <div class="image-section">
                     <div class="current-image-wrap">
-                        @if (!string.IsNullOrEmpty(currentImageUrl))
+                        @if (!string.IsNullOrEmpty(Vm.CurrentImageUrl))
                         {
                             <img class="current-image"
-                                 src="@(Http.BaseAddress!.ToString().TrimEnd('/') + currentImageUrl)"
+                                 src="@(Http.BaseAddress!.ToString().TrimEnd('/') + Vm.CurrentImageUrl)"
                                  alt="Club image" />
                         }
                         else
                         {
                             <div class="image-placeholder">
-                                <span>@Initials(form.Name)</span>
+                                <span>@Format.TeamInitials(Vm.Form.Name)</span>
                             </div>
                         }
                     </div>
                     <div class="image-upload-area">
                         <p class="upload-hint">JPEG, PNG or WebP · Max 5 MB<br />Images are checked for inappropriate content before saving.</p>
                         <InputFile OnChange="OnImageSelected" accept="image/jpeg,image/png,image/webp" class="file-input" id="imageInput" />
-                        <label for="imageInput" class="upload-btn @(isUploadingImage ? "uploading" : "")">
-                            @(isUploadingImage ? "Uploading…" : "Choose image")
+                        <label for="imageInput" class="upload-btn @(Vm.IsUploadingImage ? "uploading" : "")">
+                            @(Vm.IsUploadingImage ? "Uploading…" : "Choose image")
                         </label>
-                        @if (!string.IsNullOrEmpty(imageError))
+                        @if (!string.IsNullOrEmpty(Vm.ImageError))
                         {
-                            <p class="field-error">@imageError</p>
+                            <p class="field-error">@Vm.ImageError</p>
                         }
-                        @if (imageSuccess)
+                        @if (Vm.ImageSuccess)
                         {
                             <p class="field-success">Image updated.</p>
                         }
@@ -81,22 +80,22 @@
 
                     <div class="field-group">
                         <label>Team Name</label>
-                        <input type="text" @bind="form.Name" @bind:event="oninput" placeholder="e.g. Riverside FC" maxlength="80" />
+                        <input type="text" @bind="Vm.Form.Name" @bind:event="oninput" placeholder="e.g. Riverside FC" maxlength="80" />
                     </div>
 
                     <div class="field-group">
                         <label>Manager Name</label>
-                        <input type="text" @bind="form.ManagerName" placeholder="e.g. John Smith" maxlength="80" />
+                        <input type="text" @bind="Vm.Form.ManagerName" placeholder="e.g. John Smith" maxlength="80" />
                     </div>
 
                     <div class="field-row">
                         <div class="field-group">
                             <label>Year Founded</label>
-                            <input type="number" @bind="form.YearFormed" placeholder="e.g. 2018" min="1800" max="2100" />
+                            <input type="number" @bind="Vm.Form.YearFormed" placeholder="e.g. 2018" min="1800" max="2100" />
                         </div>
                         <div class="field-group">
                             <label>Contact Number</label>
-                            <input type="tel" @bind="form.PhoneNumber" placeholder="e.g. 07700 900000" maxlength="20" />
+                            <input type="tel" @bind="Vm.Form.PhoneNumber" placeholder="e.g. 07700 900000" maxlength="20" />
                         </div>
                     </div>
 
@@ -104,22 +103,22 @@
                         <div class="field-group">
                             <label>Home Kit Colour</label>
                             <div class="kit-colour-input">
-                                <input type="color" @bind="form.HomeKitColour" />
-                                <span class="kit-colour-hex">@(form.HomeKitColour ?? "—")</span>
-                                @if (!string.IsNullOrEmpty(form.HomeKitColour))
+                                <input type="color" @bind="Vm.Form.HomeKitColour" />
+                                <span class="kit-colour-hex">@(Vm.Form.HomeKitColour ?? "—")</span>
+                                @if (!string.IsNullOrEmpty(Vm.Form.HomeKitColour))
                                 {
-                                    <button type="button" class="kit-colour-clear" @onclick="() => form.HomeKitColour = null" title="Clear home kit colour">✕</button>
+                                    <button type="button" class="kit-colour-clear" @onclick="() => Vm.Form.HomeKitColour = null" title="Clear home kit colour">✕</button>
                                 }
                             </div>
                         </div>
                         <div class="field-group">
                             <label>Away Kit Colour</label>
                             <div class="kit-colour-input">
-                                <input type="color" @bind="form.AwayKitColour" />
-                                <span class="kit-colour-hex">@(form.AwayKitColour ?? "—")</span>
-                                @if (!string.IsNullOrEmpty(form.AwayKitColour))
+                                <input type="color" @bind="Vm.Form.AwayKitColour" />
+                                <span class="kit-colour-hex">@(Vm.Form.AwayKitColour ?? "—")</span>
+                                @if (!string.IsNullOrEmpty(Vm.Form.AwayKitColour))
                                 {
-                                    <button type="button" class="kit-colour-clear" @onclick="() => form.AwayKitColour = null" title="Clear away kit colour">✕</button>
+                                    <button type="button" class="kit-colour-clear" @onclick="() => Vm.Form.AwayKitColour = null" title="Clear away kit colour">✕</button>
                                 }
                             </div>
                         </div>
@@ -127,21 +126,21 @@
 
                     <div class="field-group">
                         <label>About the Club</label>
-                        <textarea @bind="form.Bio" placeholder="Tell people about your team — how you formed, your ambitions, who can join…" rows="5" maxlength="1000"></textarea>
-                        <span class="char-count">@((form.Bio?.Length ?? 0)) / 1000</span>
+                        <textarea @bind="Vm.Form.Bio" placeholder="Tell people about your team — how you formed, your ambitions, who can join…" rows="5" maxlength="1000"></textarea>
+                        <span class="char-count">@((Vm.Form.Bio?.Length ?? 0)) / 1000</span>
                     </div>
 
-                    @if (!string.IsNullOrEmpty(saveError))
+                    @if (!string.IsNullOrEmpty(Vm.SaveError))
                     {
-                        <p class="field-error">@saveError</p>
+                        <p class="field-error">@Vm.SaveError</p>
                     }
-                    @if (saveSuccess)
+                    @if (Vm.SaveSuccess)
                     {
                         <p class="field-success">Profile saved.</p>
                     }
 
-                    <button class="save-btn @(isSaving ? "saving" : "")" @onclick="Save" disabled="@isSaving">
-                        @(isSaving ? "Saving…" : "Save Profile")
+                    <button class="save-btn @(Vm.IsSaving ? "saving" : "")" @onclick="Vm.Save" disabled="@Vm.IsSaving">
+                        @(Vm.IsSaving ? "Saving…" : "Vm.Save Profile")
                     </button>
                 </div>
             </div>
@@ -152,23 +151,23 @@
                 <p class="upload-hint">Shown on the manager card on your team page. The card upgrades bronze → silver (3 wins) → gold (6 wins) automatically. Leave the manager name blank to hide the card entirely.</p>
                 <div class="image-section">
                     <div class="current-image-wrap">
-                        @if (!string.IsNullOrEmpty(managerImageBase64))
+                        @if (!string.IsNullOrEmpty(Vm.ManagerImageBase64))
                         {
-                            <img class="current-image" src="@managerImageBase64" alt="Manager photo" />
+                            <img class="current-image" src="@Vm.ManagerImageBase64" alt="Manager photo" />
                         }
                         else
                         {
                             <div class="image-placeholder">
-                                <span>@Initials(form.ManagerName ?? "")</span>
+                                <span>@Format.TeamInitials(Vm.Form.ManagerName ?? "")</span>
                             </div>
                         }
                     </div>
                     <div class="image-upload-area">
                         <p class="upload-hint">Crop, position and remove the background — same as player photos.</p>
-                        <button type="button" class="upload-btn" @onclick="() => showManagerCrop = true">
-                            @(string.IsNullOrEmpty(managerImageBase64) ? "Choose image" : "Change photo")
+                        <button type="button" class="upload-btn" @onclick="() => Vm.ShowManagerCrop = true">
+                            @(string.IsNullOrEmpty(Vm.ManagerImageBase64) ? "Choose image" : "Change photo")
                         </button>
-                        @if (managerImageSuccess)
+                        @if (Vm.ManagerImageSuccess)
                         {
                             <p class="field-success">Manager photo updated.</p>
                         }
@@ -178,129 +177,21 @@
 
         </div>
 
-        <ImageCropModal IsVisible="showManagerCrop"
-                        Name="@(form.ManagerName ?? "Manager")"
-                        Number="managerWins"
+        <ImageCropModal IsVisible="Vm.ShowManagerCrop"
+                        Name="@(Vm.Form.ManagerName ?? "Manager")"
+                        Number="Vm.ManagerWins"
                         Position="MGR"
-                        SaveOverride="SaveManagerImage"
-                        OnClose="@(() => showManagerCrop = false)"
-                        OnSaved="@(() => { managerImageSuccess = true; showManagerCrop = false; })" />
+                        SaveOverride="Vm.SaveManagerImage"
+                        OnClose="@(() => Vm.ShowManagerCrop = false)"
+                        OnSaved="@(() => { Vm.ManagerImageSuccess = true; Vm.ShowManagerCrop = false; })" />
     }
 
 </div>
 
 @code {
-    private UpdateTeamProfileRequest form = new();
-    private int? teamId;
-    private string? currentImageUrl;
-    private bool isLoading = true;
-    private bool isSaving = false;
-    private bool isUploadingImage = false;
-    private string? saveError;
-    private string? imageError;
-    private bool saveSuccess = false;
-    private bool imageSuccess = false;
-    private string? managerImageBase64;
-    private int managerWins = 0;
-    private bool showManagerCrop = false;
-    private bool managerImageSuccess = false;
+    // The profile and its uploads are in MyTeamViewModel.
 
-    protected override async Task OnInitializedAsync()
-    {
-        var authState = await AuthProvider.GetAuthenticationStateAsync();
-        var teamIdClaim = authState.User.FindFirst("TeamId")?.Value;
-        if (int.TryParse(teamIdClaim, out var tid))
-            teamId = tid;
+    protected override Task OnInitializedAsync() => Vm.InitializeAsync();
 
-        if (teamId.HasValue)
-        {
-            var profile = await TeamService.GetProfile(teamId.Value);
-            if (profile != null)
-            {
-                form.Name = profile.Name;
-                form.ManagerName = profile.ManagerName;
-                form.YearFormed = profile.YearFormed;
-                form.PhoneNumber = profile.PhoneNumber;
-                form.Bio = profile.Bio;
-                form.HomeKitColour = profile.HomeKitColour;
-                form.AwayKitColour = profile.AwayKitColour;
-                currentImageUrl = profile.ProfileImageUrl;
-                managerImageBase64 = profile.ManagerImageBase64;
-                managerWins = profile.Wins;
-            }
-        }
-
-        isLoading = false;
-    }
-
-    async Task Save()
-    {
-        saveError = null;
-        saveSuccess = false;
-
-        if (string.IsNullOrWhiteSpace(form.Name))
-        {
-            saveError = "Team name is required.";
-            return;
-        }
-
-        isSaving = true;
-        var result = await TeamService.UpdateProfile(teamId!.Value, form);
-        isSaving = false;
-
-        if (result == null)
-            saveError = "Failed to save. Please try again.";
-        else
-            saveSuccess = true;
-    }
-
-    async Task OnImageSelected(InputFileChangeEventArgs e)
-    {
-        imageError = null;
-        imageSuccess = false;
-
-        var file = e.File;
-        if (file.Size > 5 * 1024 * 1024)
-        {
-            imageError = "Image must be under 5 MB.";
-            return;
-        }
-
-        var allowed = new[] { "image/jpeg", "image/png", "image/webp" };
-        if (!allowed.Contains(file.ContentType))
-        {
-            imageError = "Only JPEG, PNG, and WebP are accepted.";
-            return;
-        }
-
-        isUploadingImage = true;
-        await using var stream = file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
-        var url = await TeamService.UploadImage(teamId!.Value, stream, file.Name, file.ContentType);
-        isUploadingImage = false;
-
-        if (url == null)
-            imageError = "Upload failed. The image may have been flagged for inappropriate content.";
-        else
-        {
-            currentImageUrl = url;
-            imageSuccess = true;
-        }
-    }
-
-    // Called by ImageCropModal with the processed base64 (cropped + background removed).
-    async Task<bool> SaveManagerImage(string base64)
-    {
-        managerImageSuccess = false;
-        var ok = await TeamService.UploadManagerImage(teamId!.Value, base64);
-        if (ok) managerImageBase64 = base64;
-        return ok;
-    }
-
-    static string Initials(string name)
-    {
-        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        return parts.Length >= 2
-            ? $"{parts[0][0]}{parts[1][0]}".ToUpper()
-            : name.Length >= 2 ? name[..2].ToUpper() : name.ToUpper();
-    }
+    private Task OnImageSelected(InputFileChangeEventArgs e) => Vm.UploadCrest(e.File);
 }

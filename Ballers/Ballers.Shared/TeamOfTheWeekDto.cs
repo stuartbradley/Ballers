@@ -54,7 +54,8 @@ namespace Ballers.Shared
         int Assists,
         int? GoalsConceded,
         int? CleanSheets,
-        string? ProfileImageBase64,
+        // A link to the player's photo (relative to the API), or null.
+        string? ImageUrl,
         int SeasonGoals = 0,
         int SeasonAssists = 0,
         int SeasonCleanSheets = 0,

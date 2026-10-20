@@ -1,3 +1,4 @@
+using Ballers.API.Authorization;
 using Ballers.API.Services;
 using Ballers.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -7,7 +8,7 @@ namespace Ballers.API.Controllers
 {
     [ApiController]
     [Route("api/fairplay")]
-    [Authorize(Roles = "Admin,Referee")]
+    [Authorize(Policy = Policies.Official)]
     public class FairplayController : ControllerBase
     {
         private readonly IFairplayService _fairplay;
@@ -34,11 +35,8 @@ namespace Ballers.API.Controllers
             var fixture = await _fixtures.GetByIdAsync(fixtureId);
             if (fixture == null) return NotFound();
 
-            if (!User.IsInRole("Admin") && await _leagueSettings.AreFixturesLockedAsync())
-                return Conflict("Fixtures are locked by the admin — editing is disabled.");
-
-            if (fixture.IsEditLocked)
-                return Conflict("This fixture is locked — more than 2 weeks have passed since it was played.");
+            if (!User.IsSiteAdmin() && await _leagueSettings.AreFixturesLockedAsync())
+                return Conflict(FixturesController.FixturesLockedMessage);
 
             try
             {

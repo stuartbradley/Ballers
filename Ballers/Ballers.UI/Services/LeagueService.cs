@@ -1,5 +1,5 @@
-﻿using Ballers.Models;
-using System.Net.Http.Json;
+using Ballers.Models;
+using Ballers.UI.Infrastructure;
 
 namespace Ballers.Services
 {
@@ -12,9 +12,7 @@ namespace Ballers.Services
             _httpClient = httpClient;
         }
 
-        public async Task<List<LeagueTableRowDto>> GetTable(int seasonId)
-        {
-            return await _httpClient.GetFromJsonAsync<List<LeagueTableRowDto>>($"api/fixtures/table/{seasonId}") ?? new();
-        }
+        public Task<List<LeagueTableRowDto>> GetTable(int seasonId) =>
+            _httpClient.GetListOrEmpty<LeagueTableRowDto>($"api/fixtures/table/{seasonId}");
     }
 }

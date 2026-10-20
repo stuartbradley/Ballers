@@ -6,12 +6,6 @@
    ============================================================ */
 
 .fx {
-    --ink: #050b16;
-    --panel: #14223d;
-    --panel-2: #1b2c4d;
-    --pop-yellow: #facc15;
-    --pop-green: #4ade80;
-    --pop-red: #f87171;
     position: relative;
     min-height: calc(100vh - 71px);
     padding-bottom: 90px;
@@ -40,17 +34,10 @@
 
 /* ── Panels ── */
 
-.fx-panel {
-    padding: 20px;
-    border: 3px solid var(--ink);
-    border-radius: 18px;
-    background: var(--panel);
-    box-shadow: 6px 6px 0 var(--ink);
-}
 
-.fx-panel + .fx-panel { margin-top: 20px; }
+.c-panel + .c-panel { margin-top: 20px; }
 
-.fx-panel h2 {
+.c-panel h2 {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -58,8 +45,8 @@
     font-size: 1.8rem;
 }
 
-.fx-panel.is-slim { padding: 16px; }
-.fx-panel.is-slim h2 { font-size: 1.4rem; }
+.c-panel.is-slim { padding: 16px; }
+.c-panel.is-slim h2 { font-size: 1.4rem; }
 
 .fx-panel-head {
     display: flex;
@@ -288,34 +275,9 @@
 
 .fx-toggle { display: flex; flex-wrap: wrap; gap: 6px; }
 
-.fx-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 8px 16px;
-    border: 3px solid var(--ink);
-    border-radius: 12px;
-    background: #fff;
-    box-shadow: 4px 4px 0 var(--ink);
-    font-family: 'Bangers', var(--font-display);
-    font-size: 1.2rem;
-    letter-spacing: 0.06em;
-    color: var(--ink);
-    text-decoration: none;
-    white-space: nowrap;
-    cursor: pointer;
-    transition: translate 0.15s, box-shadow 0.15s;
-}
 
-.fx-btn:hover:not(:disabled) { translate: -2px -2px; box-shadow: 6px 6px 0 var(--ink); }
-.fx-btn:active:not(:disabled) { translate: 2px 2px; box-shadow: 1px 1px 0 var(--ink); }
-.fx-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.fx-btn.is-yellow { background: var(--pop-yellow); }
-.fx-btn.is-green { background: var(--pop-green); }
-.fx-btn.is-small { padding: 4px 10px; font-size: 1rem; box-shadow: 3px 3px 0 var(--ink); }
 
-.fx-btn:focus-visible,
+.c-btn:focus-visible,
 .fx-chip:focus-visible,
 .fx-step:focus-visible,
 .fx-pick-main:focus-visible,
@@ -1069,7 +1031,6 @@
 
     .fx-form { grid-template-columns: 1fr; }
     .fx-facts { grid-template-columns: 1fr; }
-    .fx-panel { padding: 16px 14px; }
 
     .fx-flags { margin-left: 0; }
 
@@ -1093,12 +1054,12 @@
         backdrop-filter: blur(6px);
     }
 
-    .fx-actionbar .fx-btn { flex: 1; }
+    .fx-actionbar .c-btn { flex: 1; }
     .fx-actionbar-info { width: 100%; font-size: 0.9rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
     .fx-burst, .toast { animation: none; }
-    .fx-btn, .fx-step, .fx-pick { transition: none; }
+    .c-btn, .fx-step, .fx-pick { transition: none; }
     .fx-step.is-current { rotate: none; }
 }

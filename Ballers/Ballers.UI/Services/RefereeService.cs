@@ -1,4 +1,5 @@
 using Ballers.Models;
+using Ballers.UI.Infrastructure;
 using System.Net.Http.Json;
 
 namespace Ballers.Services
@@ -9,37 +10,21 @@ namespace Ballers.Services
 
         public RefereeService(HttpClient http) => _http = http;
 
-        public async Task<List<RefereeDto>> GetAll()
-        {
-            var response = await _http.GetAsync("api/referees");
-            if (!response.IsSuccessStatusCode) return new();
-            return await response.Content.ReadFromJsonAsync<List<RefereeDto>>() ?? new();
-        }
+        public Task<List<RefereeDto>> GetAll() => _http.GetListOrEmpty<RefereeDto>("api/referees");
 
-        public async Task<RefereeDto?> Create(SaveRefereeRequest request)
-        {
-            var response = await _http.PostAsJsonAsync("api/referees", request);
-            if (!response.IsSuccessStatusCode) return null;
-            return await response.Content.ReadFromJsonAsync<RefereeDto>();
-        }
+        public async Task<RefereeDto> Create(SaveRefereeRequest request) =>
+            await _http.PostOk<RefereeDto>("api/referees", request, "Failed to add referee. Please try again.")
+            ?? throw new ApiException("The referee was added but could not be read back.", 200);
 
-        public async Task<RefereeDto?> Update(int id, SaveRefereeRequest request)
-        {
-            var response = await _http.PutAsJsonAsync($"api/referees/{id}", request);
-            if (!response.IsSuccessStatusCode) return null;
-            return await response.Content.ReadFromJsonAsync<RefereeDto>();
-        }
+        public async Task<RefereeDto> Update(int id, SaveRefereeRequest request) =>
+            await _http.PutOk<RefereeDto>($"api/referees/{id}", request, "Failed to update. Please try again.")
+            ?? throw new ApiException("The referee was saved but could not be read back.", 200);
 
-        public async Task<bool> Delete(int id)
-        {
-            var response = await _http.DeleteAsync($"api/referees/{id}");
-            return response.IsSuccessStatusCode;
-        }
+        public Task Delete(int id) =>
+            _http.DeleteOk($"api/referees/{id}", "Couldn't delete that referee.");
 
-        public async Task<bool> AssignToFixture(int fixtureId, int? refereeId)
-        {
-            var response = await _http.PutAsJsonAsync($"api/fixtures/{fixtureId}/referee", new { refereeId });
-            return response.IsSuccessStatusCode;
-        }
+        public Task AssignToFixture(int fixtureId, int? refereeId) =>
+            _http.PutOk($"api/fixtures/{fixtureId}/referee",
+                new AssignRefereeRequest { RefereeId = refereeId }, "Couldn't assign the referee.");
     }
 }

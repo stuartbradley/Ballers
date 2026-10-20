@@ -163,7 +163,8 @@ namespace Ballers.API.Services
                     TeamId = s.Player.TeamId,
                     TeamName = s.Player.Team!.Name,
                     Position = s.Player.Position,
-                    ProfileImageBase64 = s.Player.ProfileImageBase64,
+                    // The photo's length, not the photo: the card links to it.
+                    PhotoLength = s.Player.ProfileImageBase64 != null ? s.Player.ProfileImageBase64.Length : (int?)null,
                     s.Goals,
                     s.Assists,
                     s.FixtureId,
@@ -239,7 +240,7 @@ namespace Ballers.API.Services
                         s.PlayerId, s.Name, s.TeamId, s.TeamName, s.Position,
                         s.Position == "GK", s.Goals, s.Assists,
                         conceded, conceded == null ? null : (conceded == 0 ? 1 : 0),
-                        s.ProfileImageBase64,
+                        StoredImages.PlayerUrl(s.PlayerId, s.PhotoLength),
                         totals.Goals, totals.Assists, totals.CleanSheets,
                         hasCard ? card.Attributes : null,
                         hasCard ? card.Tier : null)

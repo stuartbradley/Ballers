@@ -1,250 +1,116 @@
-﻿using Ballers.Models;
-using Microsoft.AspNetCore.Components.WebAssembly.Http;
+using Ballers.Models;
+using Ballers.Shared;
+using Ballers.UI.Infrastructure;
 using System.Net.Http.Json;
 
 namespace Ballers.Services
 {
     public class FixtureService
     {
-        private HttpClient _httpClient;
+        private readonly HttpClient _httpClient;
 
         public FixtureService(HttpClient httpClient)
         {
             _httpClient = httpClient;
         }
 
-        public async Task<List<FixtureDto>> GetFixtures()
+        // Every season unless one is named.
+        public async Task<List<FixtureListItemDto>> GetFixtures(int? seasonId = null)
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, "api/fixtures");
-            var response = await _httpClient.SendAsync(request);
-            response.EnsureSuccessStatusCode();
-
-            return await response.Content
-                .ReadFromJsonAsync<List<FixtureDto>>() ?? [];
+            var response = await _httpClient.GetAsync(
+                seasonId.HasValue ? $"api/fixtures?seasonId={seasonId}" : "api/fixtures");
+            return await response.ReadOk<List<FixtureListItemDto>>("Couldn't load the fixtures.") ?? [];
         }
 
-        public async Task<FixtureWeekDto?> GetCurrentWeek()
-        {
-            var response = await _httpClient.GetAsync("api/fixtures/current-week");
-            if (!response.IsSuccessStatusCode) return null;
-            return await response.Content.ReadFromJsonAsync<FixtureWeekDto>();
-        }
+        public Task<FixtureWeekDto?> GetCurrentWeek() =>
+            _httpClient.GetOrDefault<FixtureWeekDto>("api/fixtures/current-week");
 
-        public async Task<List<FixtureWeekDto>> GetFixtureWeeks(int? seasonId = null)
-        {
-            var url = seasonId.HasValue ? $"api/fixtures/weeks?seasonId={seasonId}" : "api/fixtures/weeks";
-            var response = await _httpClient.GetAsync(url);
-            if (!response.IsSuccessStatusCode) return [];
-            return await response.Content.ReadFromJsonAsync<List<FixtureWeekDto>>() ?? [];
-        }
+        public Task<List<FixtureWeekDto>> GetFixtureWeeks(int? seasonId = null) =>
+            _httpClient.GetListOrEmpty<FixtureWeekDto>(
+                seasonId.HasValue ? $"api/fixtures/weeks?seasonId={seasonId}" : "api/fixtures/weeks");
 
-        public async Task<FixtureDetailsDto?> GetFixture(int id)
-        {
-            var request = new HttpRequestMessage(
-                HttpMethod.Get,
-                $"api/fixtures/{id}");
-           
-            var response = await _httpClient.SendAsync(request);
+        public Task<FixtureDetailsDto?> GetFixture(int id) =>
+            _httpClient.GetOrDefault<FixtureDetailsDto>($"api/fixtures/{id}");
 
-            if (!response.IsSuccessStatusCode)
-                return null;
-
-            return await response.Content
-                .ReadFromJsonAsync<FixtureDetailsDto>();
-        }
         // teamId is only honoured for admins and referees, who use it to pick the
         // home or away side; a manager's team always comes from their account.
-        public async Task SaveSquad(
-                        int fixtureId,
-                        List<int> playerIds,
-                        int? teamId = null)
+        public async Task SaveSquad(int fixtureId, List<int> playerIds, int? teamId = null)
         {
-            var request = new HttpRequestMessage(
-                HttpMethod.Post,
-                $"api/fixtures/{fixtureId}/squad");
-
-            request.Content = JsonContent.Create(new
-            {
-                playerIds,
-                teamId
-            });
-
-            var response = await _httpClient.SendAsync(request);
-
-            if (!response.IsSuccessStatusCode)
-                throw new Exception("Unable to save squad.");
-        }
-
-        public async Task<List<FixtureDto>> GetNextFixtures()
-        {
-            var request = new HttpRequestMessage(
-                HttpMethod.Get,
-                "api/fixtures/next-fixtures");
-
-            request.SetBrowserRequestCredentials(
-                BrowserRequestCredentials.Include);
-
-            var response = await _httpClient.SendAsync(request);
-
-            if (!response.IsSuccessStatusCode)
-                return new List<FixtureDto>();
-
-            return await response.Content
-                .ReadFromJsonAsync<List<FixtureDto>>() ?? new();
+            await _httpClient.PostOk($"api/fixtures/{fixtureId}/squad",
+                new UpdateFixtureSquadRequest { PlayerIds = playerIds, TeamId = teamId }, "Unable to save squad.");
         }
 
         public async Task UpdateFixtureSchedule(int fixtureId, string? location, string? postcode, DateTime? kickoffTime)
         {
-            var request = new HttpRequestMessage(HttpMethod.Put, $"api/fixtures/{fixtureId}/schedule");
-
-            request.Content = JsonContent.Create(new
-            {
-                location,
-                postcode,
-                kickoffTime,
-            });
-
-            var response = await _httpClient.SendAsync(request);
-
-            if (!response.IsSuccessStatusCode)
-                throw new Exception("unable to update fixture");
+            await _httpClient.PutOk($"api/fixtures/{fixtureId}/schedule",
+                new UpdateFixtureScheduleRequest { Location = location, Postcode = postcode, KickOffTime = kickoffTime },
+                "Unable to update the fixture.");
         }
 
         // Hands hosting to the other team. Throws with the API's reason when it
         // can't be done (kicked off, stats in, locked…).
         public async Task SwapHomeAway(int fixtureId)
         {
-            var response = await _httpClient.PostAsync($"api/fixtures/{fixtureId}/swap-home-away", null);
-            if (response.IsSuccessStatusCode) return;
-
-            var reason = (await response.Content.ReadAsStringAsync()).Trim().Trim('"');
-            throw new Exception(string.IsNullOrWhiteSpace(reason) || reason.StartsWith("{")
-                ? "Couldn't swap home and away."
-                : reason);
+            await _httpClient.PostOk($"api/fixtures/{fixtureId}/swap-home-away", null, "Couldn't swap home and away.");
         }
 
-        public async Task SubmitStats(
-                        int fixtureId,
-                        List<FixturePlayerStatInput> stats,
-                        int? teamId = null)
+        public async Task SubmitStats(int fixtureId, List<FixturePlayerStatInput> stats, int? teamId = null)
         {
-            var request = new HttpRequestMessage(
-                HttpMethod.Post,
-                $"api/fixtures/{fixtureId}/stats");
-
-            request.Content = JsonContent.Create(new
+            var request = new SubmitFixtureStatsRequest
             {
-                PlayerStats = stats,
-                teamId
-            });
-            var response = await _httpClient.SendAsync(request);
-
-            if (!response.IsSuccessStatusCode)
-                throw new Exception("Unable to submit stats.");
+                TeamId = teamId,
+                PlayerStats = stats.Select(s => new PlayerStatDto
+                {
+                    PlayerId = s.PlayerId,
+                    Goals = s.Goals,
+                    OwnGoals = s.OwnGoals,
+                    Assists = s.Assists,
+                    IsManOfTheMatch = s.IsManOfTheMatch,
+                    HadYellowCard = s.HadYellowCard,
+                    HadRedCard = s.HadRedCard
+                }).ToList()
+            };
+            await _httpClient.PostOk($"api/fixtures/{fixtureId}/stats", request, "Unable to submit stats.");
         }
 
+        public Task<List<PlayerStatDto>> GetFixtureStats(int fixtureId) =>
+            _httpClient.GetListOrEmpty<PlayerStatDto>($"api/fixtures/{fixtureId}/stats");
 
-        public async Task<List<PlayerStatsDto>> GetFixtureStats(int fixtureId)
-        {
-            var request = new HttpRequestMessage(
-                HttpMethod.Get,
-                $"api/fixtures/{fixtureId}/stats");
+        public Task<List<PlayerDto>> GetFixturePlayers(int fixtureId, int? teamId = null) =>
+            _httpClient.GetListOrEmpty<PlayerDto>(teamId.HasValue
+                ? $"api/fixtures/{fixtureId}/players?teamId={teamId}"
+                : $"api/fixtures/{fixtureId}/players");
 
-            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
-
-            var response = await _httpClient.SendAsync(request);
-
-            if (!response.IsSuccessStatusCode)
-                return new List<PlayerStatsDto>();
-
-            return await response.Content.ReadFromJsonAsync<List<PlayerStatsDto>>() ?? new();
-        }
-        public async Task<List<PlayerDto>> GetFixturePlayers(int fixtureId, int? teamId = null)
-        {
-            var request = new HttpRequestMessage(
-                HttpMethod.Get,
-                teamId.HasValue
-                    ? $"api/fixtures/{fixtureId}/players?teamId={teamId}"
-                    : $"api/fixtures/{fixtureId}/players");
-
-            request.SetBrowserRequestCredentials(
-                BrowserRequestCredentials.Include);
-
-            var response = await _httpClient.SendAsync(request);
-
-            if (!response.IsSuccessStatusCode)
-                return new List<PlayerDto>();
-
-            return await response.Content.ReadFromJsonAsync<List<PlayerDto>>() ?? new();
-        }
-        public async Task<List<HeadToHeadResultDto>> GetHeadToHead(int fixtureId)
-        {
-            var response = await _httpClient.GetAsync($"api/fixtures/{fixtureId}/head-to-head");
-            if (!response.IsSuccessStatusCode) return new();
-            return await response.Content.ReadFromJsonAsync<List<HeadToHeadResultDto>>() ?? new();
-        }
+        public Task<List<HeadToHeadResultDto>> GetHeadToHead(int fixtureId) =>
+            _httpClient.GetListOrEmpty<HeadToHeadResultDto>($"api/fixtures/{fixtureId}/head-to-head");
 
         public async Task SaveCaptaincy(int fixtureId, int? captainId, int? viceId, int? teamId = null)
         {
-            await _httpClient.PutAsJsonAsync($"api/fixtures/{fixtureId}/captaincy", new
-            {
-                captainPlayerId = captainId,
-                viceCaptainPlayerId = viceId,
-                teamId
-            });
+            await _httpClient.PutOk($"api/fixtures/{fixtureId}/captaincy",
+                new SaveCaptaincyRequest { CaptainPlayerId = captainId, ViceCaptainPlayerId = viceId, TeamId = teamId },
+                "Unable to save the captains.");
         }
 
-        public async Task<List<OpponentPlayerStatDto>> GetOpponentStats(int fixtureId, int? teamId = null)
-        {
-            var url = teamId.HasValue
+        public Task<List<OpponentPlayerStatDto>> GetOpponentStats(int fixtureId, int? teamId = null) =>
+            _httpClient.GetListOrEmpty<OpponentPlayerStatDto>(teamId.HasValue
                 ? $"api/fixtures/{fixtureId}/opponent-stats?teamId={teamId}"
-                : $"api/fixtures/{fixtureId}/opponent-stats";
-            var response = await _httpClient.GetAsync(url);
-            if (!response.IsSuccessStatusCode) return new();
-            return await response.Content.ReadFromJsonAsync<List<OpponentPlayerStatDto>>() ?? new();
-        }
+                : $"api/fixtures/{fixtureId}/opponent-stats");
 
         // ── True man of the match (admin only) ─────────────────────────────
         // The API forbids these to anyone who is not a site admin, including
         // referees, so a non-admin simply gets nothing back rather than an error.
 
-        public async Task<TrueMotmDto?> GetTrueMotm(int fixtureId)
-        {
-            var response = await _httpClient.GetAsync($"api/fixtures/{fixtureId}/true-motm");
-            if (!response.IsSuccessStatusCode) return null;
-            return await response.Content.ReadFromJsonAsync<TrueMotmDto>();
-        }
+        public Task<TrueMotmDto?> GetTrueMotm(int fixtureId) =>
+            _httpClient.GetOrDefault<TrueMotmDto>($"api/fixtures/{fixtureId}/true-motm");
 
-        public async Task<bool> SaveTrueMotm(int fixtureId, int? playerId)
-        {
-            var response = await _httpClient.PutAsJsonAsync(
-                $"api/fixtures/{fixtureId}/true-motm", new { playerId });
-            return response.IsSuccessStatusCode;
-        }
+        public Task SaveTrueMotm(int fixtureId, int? playerId) =>
+            _httpClient.PutOk($"api/fixtures/{fixtureId}/true-motm",
+                new SetTrueMotmRequest { PlayerId = playerId }, "Couldn't save the true man of the match.");
 
-        public async Task<List<TrueMotmRowDto>> GetTrueMotmLog()
-        {
-            var response = await _httpClient.GetAsync("api/fixtures/true-motm");
-            if (!response.IsSuccessStatusCode) return new List<TrueMotmRowDto>();
-            return await response.Content.ReadFromJsonAsync<List<TrueMotmRowDto>>() ?? new();
-        }
+        public Task<List<TrueMotmRowDto>> GetTrueMotmLog() =>
+            _httpClient.GetListOrEmpty<TrueMotmRowDto>("api/fixtures/true-motm");
 
-        public async Task<List<FixtureSquadPlayerDto>> GetFixtureSquad(int fixtureId)
-        {
-            var request = new HttpRequestMessage(
-                HttpMethod.Get,
-                $"api/fixtures/{fixtureId}/squad");
-
-            request.SetBrowserRequestCredentials(
-                BrowserRequestCredentials.Include);
-
-            var response = await _httpClient.SendAsync(request);
-
-            if (!response.IsSuccessStatusCode)
-                return new List<FixtureSquadPlayerDto>();
-
-            return await response.Content.ReadFromJsonAsync<List<FixtureSquadPlayerDto>>() ?? new();
-        }
-
+        public Task<List<FixtureSquadPlayerDto>> GetFixtureSquad(int fixtureId) =>
+            _httpClient.GetListOrEmpty<FixtureSquadPlayerDto>($"api/fixtures/{fixtureId}/squad");
     }
 }

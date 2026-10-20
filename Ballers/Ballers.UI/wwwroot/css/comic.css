@@ -1,0 +1,66 @@
+/* ============================================================
+   COMIC — the look of a manager's pages (HQ, fixtures, fixture):
+   ink outlines, hard offset shadows, Bangers lettering. The
+   colours and the shared pieces live here; each page's own
+   stylesheet only adds what's particular to it.
+   Put class="comic" on the page's root element.
+   ============================================================ */
+
+.comic {
+    --ink: #050b16;
+    --panel: #14223d;
+    --panel-2: #1b2c4d;
+    --pop-yellow: #facc15;
+    --pop-green: #4ade80;
+    --pop-red: #f87171;
+    --pop-blue: #60a5fa;
+}
+
+/* ── Panels ── */
+
+.comic .c-panel {
+    position: relative;
+    padding: 20px;
+    border: 3px solid var(--ink);
+    border-radius: 18px;
+    background: var(--panel);
+    box-shadow: 6px 6px 0 var(--ink);
+}
+
+/* ── Buttons ── */
+
+.comic .c-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border: 3px solid var(--ink);
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 4px 4px 0 var(--ink);
+    font-family: 'Bangers', var(--font-display);
+    font-size: 1.15rem;
+    letter-spacing: 0.06em;
+    color: var(--ink);
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: translate 0.15s, box-shadow 0.15s;
+}
+
+.comic .c-btn:hover:not(:disabled) { translate: -2px -2px; box-shadow: 6px 6px 0 var(--ink); }
+.comic .c-btn:active:not(:disabled) { translate: 2px 2px; box-shadow: 1px 1px 0 var(--ink); }
+.comic .c-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.comic .c-btn.is-yellow { background: var(--pop-yellow); }
+.comic .c-btn.is-green { background: var(--pop-green); }
+.comic .c-btn.is-red { background: var(--pop-red); }
+.comic .c-btn.is-small { padding: 4px 12px; font-size: 1rem; box-shadow: 3px 3px 0 var(--ink); }
+.comic .c-btn.is-big { padding: 10px 22px; font-size: 1.45rem; }
+
+.comic .c-btn:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+    .comic .c-btn { transition: none; }
+}

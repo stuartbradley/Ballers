@@ -5,12 +5,6 @@
    ============================================================ */
 
 .mf {
-    --ink: #050b16;
-    --panel: #14223d;
-    --panel-2: #1b2c4d;
-    --pop-yellow: #facc15;
-    --pop-green: #4ade80;
-    --pop-red: #f87171;
     min-height: calc(100vh - 71px);
     padding-bottom: 80px;
     background:
@@ -127,13 +121,6 @@
 
 /* ── Panels / empty ── */
 
-.mf-panel {
-    padding: 20px;
-    border: 3px solid var(--ink);
-    border-radius: 18px;
-    background: var(--panel);
-    box-shadow: 6px 6px 0 var(--ink);
-}
 
 .mf-empty { text-align: center; }
 .mf-empty h2 { font-size: 1.8rem; margin-bottom: 6px; }
@@ -426,32 +413,9 @@
 
 /* ── Buttons ── */
 
-.mf-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 6px 14px;
-    border: 3px solid var(--ink);
-    border-radius: 12px;
-    background: #fff;
-    box-shadow: 4px 4px 0 var(--ink);
-    font-family: 'Bangers', var(--font-display);
-    font-size: 1.15rem;
-    letter-spacing: 0.06em;
-    color: var(--ink);
-    text-decoration: none;
-    white-space: nowrap;
-    transition: translate 0.15s, box-shadow 0.15s;
-}
 
-.mf-btn:hover { translate: -2px -2px; box-shadow: 6px 6px 0 var(--ink); }
-.mf-btn:active { translate: 2px 2px; box-shadow: 1px 1px 0 var(--ink); }
-.mf-btn.is-yellow { background: var(--pop-yellow); }
-.mf-btn.is-red { background: var(--pop-red); }
-.mf-btn.is-small { padding: 3px 10px; font-size: 1rem; box-shadow: 3px 3px 0 var(--ink); }
-.mf-btn.is-big { padding: 10px 22px; font-size: 1.45rem; }
 
-.mf-btn:focus-visible,
+.c-btn:focus-visible,
 .mf-chip:focus-visible,
 .mf-season select:focus-visible,
 .mf-facts a:focus-visible {
@@ -472,10 +436,9 @@
     .mf-next-teams { grid-template-columns: 1fr auto 1fr; gap: 8px; }
     .mf-next-teams .mf-crest { display: none; }
     .mf-burst { width: 54px; height: 54px; font-size: 1.25rem; }
-    .mf-next-foot .mf-btn { flex: 1; }
+    .mf-next-foot .c-btn { flex: 1; }
     .mf-grid { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .mf-btn { transition: none; }
 }

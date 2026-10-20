@@ -4,46 +4,43 @@
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
 @attribute [Authorize(Roles = "Manager,Admin")]
+@inherits ViewModelComponent<MySquadViewModel>
 
-@inject PlayerService PlayerService
-@inject LeagueSettingsService LeagueSettingsSvc
-@inject PlayerAccountService AccountService
-@inject AuthenticationStateProvider AuthProvider
 
-@if (_editPlayer != null)
+@if (Vm.EditPlayer != null)
 {
-    <div class="edit-player-overlay" @onclick="CloseEditModal">
+    <div class="edit-player-overlay" @onclick="Vm.CloseEditModal">
         <div class="edit-player-modal" @onclick:stopPropagation>
             <h3>Edit Player</h3>
             <div class="position-toggle">
-                <button type="button" class="pos-btn @(_editPosition == "GK"  ? "active GK"  : "")" @onclick='() => _editPosition = "GK"'>GK</button>
-                <button type="button" class="pos-btn @(_editPosition == "DEF" ? "active DEF" : "")" @onclick='() => _editPosition = "DEF"'>DEF</button>
-                <button type="button" class="pos-btn @(_editPosition == "MID" ? "active MID" : "")" @onclick='() => _editPosition = "MID"'>MID</button>
-                <button type="button" class="pos-btn @(_editPosition == "FWD" ? "active FWD" : "")" @onclick='() => _editPosition = "FWD"'>FWD</button>
+                <button type="button" class="pos-btn @(Vm.EditPosition == "GK"  ? "active GK"  : "")" @onclick='() => Vm.EditPosition = "GK"'>GK</button>
+                <button type="button" class="pos-btn @(Vm.EditPosition == "DEF" ? "active DEF" : "")" @onclick='() => Vm.EditPosition = "DEF"'>DEF</button>
+                <button type="button" class="pos-btn @(Vm.EditPosition == "MID" ? "active MID" : "")" @onclick='() => Vm.EditPosition = "MID"'>MID</button>
+                <button type="button" class="pos-btn @(Vm.EditPosition == "FWD" ? "active FWD" : "")" @onclick='() => Vm.EditPosition = "FWD"'>FWD</button>
             </div>
             <div class="add-player-row">
-                <input class="form-input name-input" placeholder="Player name" @bind="_editName" autocomplete="off" />
-                <input class="form-input number-input" type="number" placeholder="No." min="1" @bind="_editNumber" />
+                <input class="form-input name-input" placeholder="Player name" @bind="Vm.EditName" autocomplete="off" />
+                <input class="form-input number-input" type="number" placeholder="No." min="1" @bind="Vm.EditNumber" />
             </div>
-            @if (!string.IsNullOrEmpty(_editError))
+            @if (!string.IsNullOrEmpty(Vm.EditError))
             {
-                <div class="form-error">@_editError</div>
+                <div class="form-error">@Vm.EditError</div>
             }
             <div class="edit-modal-actions">
-                <button class="add-btn" @onclick="SaveEdit">Save</button>
-                <button class="remove-btn" @onclick="CloseEditModal">Cancel</button>
+                <button class="add-btn" @onclick="Vm.SaveEdit">Save</button>
+                <button class="remove-btn" @onclick="Vm.CloseEditModal">Cancel</button>
             </div>
         </div>
     </div>
 }
 
-<ImageCropModal IsVisible="_showCropModal"
-                PlayerId="_cropPlayer?.Id ?? 0"
-                Name="@(_cropPlayer?.Name ?? "")"
-                Number="@(_cropPlayer?.Number ?? 0)"
-                Position="@(_cropPlayer?.Position ?? "MID")"
-                OnClose="@(() => _showCropModal = false)"
-                OnSaved="OnPhotoSaved" />
+<ImageCropModal IsVisible="Vm.ShowCropModal"
+                PlayerId="Vm.CropPlayer?.Id ?? 0"
+                Name="@(Vm.CropPlayer?.Name ?? "")"
+                Number="@(Vm.CropPlayer?.Number ?? 0)"
+                Position="@(Vm.CropPlayer?.Position ?? "MID")"
+                OnClose="@(() => Vm.ShowCropModal = false)"
+                OnSaved="Vm.OnPhotoSaved" />
 
 <PageTitle>My Squad</PageTitle>
 
@@ -61,7 +58,7 @@
 
     <div class="squad-body">
 
-        @if (noTeamAssigned)
+        @if (Vm.NoTeamAssigned)
         {
             <div class="empty-state">
                 <p>Your account doesn't have a team assigned. Squad management is only available to team managers.</p>
@@ -70,20 +67,20 @@
         else
         {
 
-        @if (accountRequests.Count > 0)
+        @if (Vm.AccountRequests.Count > 0)
         {
             <!-- Players waiting to be let in. Until approved their account can do
                  nothing, so this is the only thing standing between them and a card. -->
             <div class="form-card">
-                <p class="form-card-label">Player Sign-ups Waiting (@accountRequests.Count)</p>
+                <p class="form-card-label">Player Sign-ups Waiting (@Vm.AccountRequests.Count)</p>
 
-                @if (!string.IsNullOrEmpty(requestError))
+                @if (!string.IsNullOrEmpty(Vm.RequestError))
                 {
-                    <div class="form-error">@requestError</div>
+                    <div class="form-error">@Vm.RequestError</div>
                 }
 
                 <div class="account-requests">
-                    @foreach (var request in accountRequests)
+                    @foreach (var request in Vm.AccountRequests)
                     {
                         <div class="account-request">
                             <div class="account-request-who">
@@ -102,11 +99,11 @@
                             </div>
                             <div class="account-request-actions">
                                 <button type="button" class="add-btn"
-                                        disabled="@(resolvingRequestId == request.Id)"
-                                        @onclick="() => ApproveRequest(request.Id)">Approve</button>
+                                        disabled="@(Vm.ResolvingRequestId == request.Id)"
+                                        @onclick="() => Vm.ApproveRequest(request.Id)">Approve</button>
                                 <button type="button" class="remove-btn"
-                                        disabled="@(resolvingRequestId == request.Id)"
-                                        @onclick="() => RejectRequest(request.Id)">Reject</button>
+                                        disabled="@(Vm.ResolvingRequestId == request.Id)"
+                                        @onclick="() => Vm.RejectRequest(request.Id)">Reject</button>
                             </div>
                         </div>
                     }
@@ -114,7 +111,7 @@
             </div>
         }
 
-        @if (playersLocked && !isAdmin)
+        @if (Vm.PlayersLocked && !Vm.IsAdmin)
         {
             <!-- Registration locked by admin -->
             <div class="form-card">
@@ -127,31 +124,31 @@
         <!-- Add Player Form -->
         <div class="form-card">
             <p class="form-card-label">Add Player</p>
-            <form @onsubmit="AddPlayer" @onsubmit:preventDefault>
+            <form @onsubmit="Vm.AddPlayer" @onsubmit:preventDefault>
 
                 <div class="position-toggle">
-                    <button type="button" class="pos-btn @(newPosition == "GK"  ? "active GK"  : "")" @onclick='() => newPosition = "GK"'>GK</button>
-                    <button type="button" class="pos-btn @(newPosition == "DEF" ? "active DEF" : "")" @onclick='() => newPosition = "DEF"'>DEF</button>
-                    <button type="button" class="pos-btn @(newPosition == "MID" ? "active MID" : "")" @onclick='() => newPosition = "MID"'>MID</button>
-                    <button type="button" class="pos-btn @(newPosition == "FWD" ? "active FWD" : "")" @onclick='() => newPosition = "FWD"'>FWD</button>
+                    <button type="button" class="pos-btn @(Vm.NewPosition == "GK"  ? "active GK"  : "")" @onclick='() => Vm.NewPosition = "GK"'>GK</button>
+                    <button type="button" class="pos-btn @(Vm.NewPosition == "DEF" ? "active DEF" : "")" @onclick='() => Vm.NewPosition = "DEF"'>DEF</button>
+                    <button type="button" class="pos-btn @(Vm.NewPosition == "MID" ? "active MID" : "")" @onclick='() => Vm.NewPosition = "MID"'>MID</button>
+                    <button type="button" class="pos-btn @(Vm.NewPosition == "FWD" ? "active FWD" : "")" @onclick='() => Vm.NewPosition = "FWD"'>FWD</button>
                 </div>
 
                 <div class="add-player-row">
                     <input class="form-input name-input"
                            placeholder="Player name"
-                           @bind="newName"
+                           @bind="Vm.NewName"
                            autocomplete="off" />
                     <input class="form-input number-input"
                            type="number"
                            placeholder="No."
                            min="1"
-                           @bind="newNumber" />
+                           @bind="Vm.NewNumber" />
                     <button class="add-btn" type="submit">Add Player</button>
                 </div>
 
-                @if (!string.IsNullOrEmpty(formError))
+                @if (!string.IsNullOrEmpty(Vm.FormError))
                 {
-                    <div class="form-error">@formError</div>
+                    <div class="form-error">@Vm.FormError</div>
                 }
 
             </form>
@@ -161,33 +158,33 @@
         <!-- Summary Strip -->
         <div class="squad-summary">
             <div class="summary-item total">
-                <span class="summary-value">@players.Count</span>
+                <span class="summary-value">@Vm.Players.Count</span>
                 <span class="summary-label">Total</span>
             </div>
             <div class="summary-item GK">
-                <span class="summary-value">@players.Count(p => p.Position == "GK")</span>
+                <span class="summary-value">@Vm.Players.Count(p => p.Position == "GK")</span>
                 <span class="summary-label">GK</span>
             </div>
             <div class="summary-item DEF">
-                <span class="summary-value">@players.Count(p => p.Position == "DEF")</span>
+                <span class="summary-value">@Vm.Players.Count(p => p.Position == "DEF")</span>
                 <span class="summary-label">DEF</span>
             </div>
             <div class="summary-item MID">
-                <span class="summary-value">@players.Count(p => p.Position == "MID")</span>
+                <span class="summary-value">@Vm.Players.Count(p => p.Position == "MID")</span>
                 <span class="summary-label">MID</span>
             </div>
             <div class="summary-item FWD">
-                <span class="summary-value">@players.Count(p => p.Position == "FWD")</span>
+                <span class="summary-value">@Vm.Players.Count(p => p.Position == "FWD")</span>
                 <span class="summary-label">FWD</span>
             </div>
         </div>
 
         <!-- Player List -->
-        @if (isLoading)
+        @if (Vm.IsLoading)
         {
             <LoadingSpinner />
         }
-        else if (players.Count == 0)
+        else if (Vm.Players.Count == 0)
         {
             <div class="empty-state">
                 <p>No players yet. Use the form above to build your squad.</p>
@@ -195,7 +192,7 @@
         }
         else
         {
-            @foreach (var group in GroupedPlayers)
+            @foreach (var group in Vm.GroupedPlayers)
             {
                 <div class="position-group">
                     <div class="group-header">
@@ -209,9 +206,9 @@
                                             Number="@p.Number"
                                             Position="@p.Position"
                                             ImageUrl="@p.ImageUrl"
-                                            OnRemove="@(() => RemovePlayer(p.Id))"
-                                            OnEditPhoto="@(() => OpenCropModal(p))"
-                                            OnEdit="@(() => OpenEditModal(p))" />
+                                            OnRemove="@(() => Vm.RemovePlayer(p.Id))"
+                                            OnEditPhoto="@(() => Vm.OpenCropModal(p))"
+                                            OnEdit="@(() => Vm.OpenEditModal(p))" />
                         }
                     </div>
                 </div>
@@ -225,196 +222,7 @@
 </div>
 
 @code {
+    // The squad and its actions are in MySquadViewModel.
 
-    private static readonly string[] PositionOrder = ["GK", "DEF", "MID", "FWD"];
-
-    private List<PlayerDto> players = new();
-    private bool isLoading = true;
-    private bool noTeamAssigned = false;
-    private bool playersLocked = false;
-    private bool isAdmin = false;
-    private string newName = "";
-    private int newNumber;
-    private string newPosition = "MID";
-    private string formError = "";
-
-    private bool _showCropModal;
-    private PlayerDto? _cropPlayer;
-
-    private List<Ballers.Shared.PlayerAccountRequestDto> accountRequests = new();
-    private int? resolvingRequestId;
-    private string requestError = "";
-
-    private PlayerDto? _editPlayer;
-    private string _editName = "";
-    private int _editNumber;
-    private string _editPosition = "MID";
-    private string _editError = "";
-
-    private IEnumerable<IGrouping<string, PlayerDto>> GroupedPlayers =>
-        players.GroupBy(p => p.Position)
-               .OrderBy(g => Array.IndexOf(PositionOrder, g.Key) is int i && i >= 0 ? i : 99);
-
-    protected override async Task OnInitializedAsync()
-    {
-        var authState = await AuthProvider.GetAuthenticationStateAsync();
-        isAdmin = authState.User.IsInRole("Admin");
-
-        try
-        {
-            playersLocked = (await LeagueSettingsSvc.Get()).PlayersLocked;
-        }
-        catch { /* non-fatal: default to unlocked */ }
-
-        await LoadPlayers();
-        await LoadAccountRequests();
-    }
-
-    async Task LoadAccountRequests()
-    {
-        try
-        {
-            accountRequests = await AccountService.GetRequests();
-        }
-        catch
-        {
-            // A manager with no team, or an endpoint that refused: the panel just
-            // stays hidden rather than breaking the squad page.
-            accountRequests = new();
-        }
-    }
-
-    async Task ApproveRequest(int requestId) => await ResolveRequest(requestId, approve: true);
-
-    async Task RejectRequest(int requestId) => await ResolveRequest(requestId, approve: false);
-
-    async Task ResolveRequest(int requestId, bool approve)
-    {
-        resolvingRequestId = requestId;
-        requestError = "";
-
-        try
-        {
-            if (approve)
-            {
-                await AccountService.Approve(requestId);
-                // Approving can create a squad row, so the list is reloaded too.
-                await LoadPlayers();
-            }
-            else
-            {
-                await AccountService.Reject(requestId);
-            }
-
-            await LoadAccountRequests();
-        }
-        catch (Exception ex)
-        {
-            requestError = ex.Message;
-        }
-        finally
-        {
-            resolvingRequestId = null;
-        }
-    }
-
-    async Task LoadPlayers()
-    {
-        try
-        {
-            players = await PlayerService.GetMyPlayers();
-        }
-        catch
-        {
-            noTeamAssigned = true;
-        }
-        isLoading = false;
-    }
-
-    async Task AddPlayer()
-    {
-        formError = "";
-        if (string.IsNullOrWhiteSpace(newName))
-        {
-            formError = "Please enter a player name.";
-            return;
-        }
-        if (newNumber <= 0)
-        {
-            formError = "Please enter a valid squad number.";
-            return;
-        }
-
-        try
-        {
-            await PlayerService.AddPlayer(newName, newNumber, newPosition);
-            newName = "";
-            newNumber = 0;
-            newPosition = "MID";
-            await LoadPlayers();
-        }
-        catch
-        {
-            formError = "Failed to add player. Please try again.";
-        }
-    }
-
-    async Task RemovePlayer(int id)
-    {
-        formError = "";
-        try
-        {
-            await PlayerService.RemovePlayer(id);
-            await LoadPlayers();
-        }
-        catch
-        {
-            formError = "Failed to remove player. Please try again.";
-        }
-    }
-
-    void OpenCropModal(PlayerDto player)
-    {
-        _cropPlayer = player;
-        _showCropModal = true;
-    }
-
-    void OpenEditModal(PlayerDto player)
-    {
-        _editPlayer = player;
-        _editName = player.Name;
-        _editNumber = player.Number;
-        _editPosition = player.Position;
-        _editError = "";
-    }
-
-    void CloseEditModal()
-    {
-        _editPlayer = null;
-        _editError = "";
-    }
-
-    async Task SaveEdit()
-    {
-        _editError = "";
-        if (string.IsNullOrWhiteSpace(_editName)) { _editError = "Name is required."; return; }
-        if (_editNumber <= 0) { _editError = "Valid squad number required."; return; }
-
-        try
-        {
-            await PlayerService.UpdatePlayer(_editPlayer!.Id, _editName, _editNumber, _editPosition);
-            _editPlayer = null;
-            await LoadPlayers();
-        }
-        catch
-        {
-            _editError = "Failed to save. Please try again.";
-        }
-    }
-
-    async Task OnPhotoSaved()
-    {
-        _showCropModal = false;
-        await LoadPlayers();
-    }
+    protected override Task OnInitializedAsync() => Vm.InitializeAsync();
 }

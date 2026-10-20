@@ -1,5 +1,6 @@
+using Ballers.API.Authorization;
 using Ballers.API.Models;
-using Ballers.API.Models.Requests;
+using Ballers.Models;
 using Ballers.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -15,16 +16,25 @@ namespace Ballers.API.Controllers
         private readonly IPenaltyService _penalty;
         private readonly IFixtureService _fixtures;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IAuthorizationService _authorization;
 
         public PenaltyController(
             IPenaltyService penalty,
             IFixtureService fixtures,
-            UserManager<ApplicationUser> userManager)
+            UserManager<ApplicationUser> userManager,
+            IAuthorizationService authorization)
         {
             _penalty = penalty;
             _fixtures = fixtures;
             _userManager = userManager;
+            _authorization = authorization;
         }
+
+        // Shootouts are for the site admin and the two teams; referees are left out.
+        private async Task<bool> MayActOnAsync(FixtureDetailsDto fixture)
+            => (await _authorization.AuthorizeAsync(
+                User, new FixtureSides(fixture.HomeTeamId, fixture.AwayTeamId),
+                FixtureAccessRequirement.AdminOrEitherTeam)).Succeeded;
 
         [AllowAnonymous]
         [HttpGet("table/{seasonId:int}")]
@@ -34,19 +44,14 @@ namespace Ballers.API.Controllers
         [HttpGet("{fixtureId:int}")]
         public async Task<IActionResult> GetShootout(int fixtureId)
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return Unauthorized();
-
             var fixture = await _fixtures.GetByIdAsync(fixtureId);
             if (fixture == null) return NotFound();
-
-            if (!user.IsAdmin && user.TeamId != fixture.HomeTeamId && user.TeamId != fixture.AwayTeamId)
-                return Forbid();
+            if (!await MayActOnAsync(fixture)) return Forbid();
 
             var result = await _penalty.GetShootoutAsync(fixtureId);
             if (result == null) return NotFound();
 
-            return Ok(new { homeKicks = result.Value.HomeKicks, awayKicks = result.Value.AwayKicks });
+            return Ok(new PenaltyShootoutDto { HomeKicks = result.Value.HomeKicks, AwayKicks = result.Value.AwayKicks });
         }
 
         [HttpPost("{fixtureId:int}/kicks")]
@@ -60,16 +65,12 @@ namespace Ballers.API.Controllers
 
             var fixture = await _fixtures.GetByIdAsync(fixtureId);
             if (fixture == null) return NotFound();
+            if (!await MayActOnAsync(fixture)) return Forbid();
 
-            bool isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
-            bool isHome = user.TeamId == fixture.HomeTeamId;
-            bool isAway = user.TeamId == fixture.AwayTeamId;
-
-            if (!isAdmin && !isHome && !isAway) return Forbid();
-
-            int resolvedTeamId = isAdmin
+            // An admin names the side; a manager always kicks for their own.
+            int resolvedTeamId = User.IsSiteAdmin()
                 ? (teamId ?? fixture.HomeTeamId)
-                : (isHome ? fixture.HomeTeamId : fixture.AwayTeamId);
+                : (user.TeamId == fixture.HomeTeamId ? fixture.HomeTeamId : fixture.AwayTeamId);
 
             try
             {

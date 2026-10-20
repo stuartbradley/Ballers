@@ -1,4 +1,5 @@
 @using Ballers.Shared
+@inject HttpClient Http
 
 @* A Team of the Week card that turns over. The front is the player's card: their
    rating and six stats if they have signed up, or the week's numbers if not.
@@ -25,9 +26,9 @@
                         <div class="totw-position-label"><span>@PositionLabel</span></div>
                     </div>
                     <div class="totw-picture">
-                        @if (!string.IsNullOrWhiteSpace(Player.ProfileImageBase64))
+                        @if (!string.IsNullOrWhiteSpace(Player.ImageUrl))
                         {
-                            <img src="@Player.ProfileImageBase64" alt="@Player.Name" draggable="false" />
+                            <img src="@MediaUrls.Absolute(Http, Player.ImageUrl)" alt="@Player.Name" draggable="false" loading="lazy" />
                         }
                         else
                         {

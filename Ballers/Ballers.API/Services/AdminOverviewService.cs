@@ -59,6 +59,7 @@ namespace Ballers.API.Services
 
                 AddProgress(dto, fixtures, now);
                 AddFixtureAttention(dto, fixtures, now);
+                await AddReviewAttentionAsync(dto, season.Id, fixtures);
             }
 
             if (dto.PendingSignups > 0)
@@ -166,6 +167,35 @@ namespace Ballers.API.Services
                     Detail = "No referee assigned",
                     Link = $"/fixture/{f.Id}",
                     When = f.Kickoff ?? f.WindowStart
+                });
+            }
+        }
+
+        // Games with stats in that aren't finished with; see FixtureCompleteness.
+        private async Task AddReviewAttentionAsync(AdminOverviewDto dto, int seasonId, List<FixtureRow> fixtures)
+        {
+            var completeness = (await FixtureCompleteness
+                    .Query(_db, _db.Fixtures.AsNoTracking().Where(f => f.SeasonId == seasonId))
+                    .ToListAsync())
+                .Where(c => !c.IsComplete)
+                .ToDictionary(c => c.FixtureId);
+
+            foreach (var f in fixtures.Where(f => completeness.ContainsKey(f.Id)).OrderBy(f => f.DueBy))
+            {
+                var c = completeness[f.Id];
+                var missing = new List<string>();
+                if (c.HomeNeedsMotm) missing.Add($"{f.Home} man of the match");
+                if (c.AwayNeedsMotm) missing.Add($"{f.Away} man of the match");
+                if (c.NeedsFairplay) missing.Add("fairplay ratings");
+                if (c.NeedsTrueMotm) missing.Add("true man of the match");
+
+                dto.Attention.Add(new AdminAttentionDto
+                {
+                    Kind = "review",
+                    Title = f.Name,
+                    Detail = $"Missing {string.Join(", ", missing)}",
+                    Link = $"/fixture/{f.Id}",
+                    When = f.DueBy
                 });
             }
         }

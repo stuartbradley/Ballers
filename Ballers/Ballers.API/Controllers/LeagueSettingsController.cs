@@ -1,3 +1,4 @@
+using Ballers.API.Authorization;
 using Ballers.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,7 +21,7 @@ namespace Ballers.API.Controllers
         [HttpGet]
         public async Task<IActionResult> Get() => Ok(await _settings.GetAsync());
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = Policies.SiteAdmin)]
         [HttpPut("players-locked")]
         public async Task<IActionResult> SetPlayersLocked([FromBody] bool locked)
         {
@@ -28,7 +29,7 @@ namespace Ballers.API.Controllers
             return Ok();
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = Policies.SiteAdmin)]
         [HttpPut("fixtures-locked")]
         public async Task<IActionResult> SetFixturesLocked([FromBody] bool locked)
         {
@@ -36,7 +37,7 @@ namespace Ballers.API.Controllers
             return Ok();
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = Policies.SiteAdmin)]
         [HttpPut("fixtures-hidden")]
         public async Task<IActionResult> SetFixturesHidden([FromBody] bool hidden)
         {

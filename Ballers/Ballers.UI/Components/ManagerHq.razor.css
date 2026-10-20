@@ -6,13 +6,6 @@
    ============================================================ */
 
 .hq {
-    --ink: #050b16;
-    --panel: #14223d;
-    --panel-2: #1b2c4d;
-    --pop-yellow: #facc15;
-    --pop-green: #4ade80;
-    --pop-red: #f87171;
-    --pop-blue: #60a5fa;
     position: relative;
     isolation: isolate;
     min-height: calc(100vh - 71px);
@@ -55,16 +48,8 @@
 
 /* ── Panels: thick ink outline + hard shadow ── */
 
-.hq-panel {
-    position: relative;
-    padding: 20px;
-    border: 3px solid var(--ink);
-    border-radius: 18px;
-    background: var(--panel);
-    box-shadow: 6px 6px 0 var(--ink);
-}
 
-.hq-panel h2 {
+.c-panel h2 {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -449,35 +434,10 @@
 
 /* ── Buttons ── */
 
-.hq-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 8px 16px;
-    border: 3px solid var(--ink);
-    border-radius: 12px;
-    background: #fff;
-    box-shadow: 4px 4px 0 var(--ink);
-    font-family: 'Bangers', var(--font-display);
-    font-size: 1.15rem;
-    letter-spacing: 0.06em;
-    color: var(--ink);
-    text-decoration: none;
-    cursor: pointer;
-    transition: translate 0.15s, box-shadow 0.15s;
-}
 
-.hq-btn:hover:not(:disabled) { translate: -2px -2px; box-shadow: 6px 6px 0 var(--ink); }
-.hq-btn:active:not(:disabled) { translate: 2px 2px; box-shadow: 1px 1px 0 var(--ink); }
-.hq-btn:disabled { opacity: 0.5; cursor: progress; }
 
-.hq-btn.is-yellow { background: var(--pop-yellow); }
-.hq-btn.is-green { background: var(--pop-green); }
-.hq-btn.is-red { background: var(--pop-red); }
-.hq-btn.is-small { padding: 4px 12px; font-size: 1rem; box-shadow: 3px 3px 0 var(--ink); }
 
-.hq-btn:focus-visible,
+.c-btn:focus-visible,
 .hq-checklist a:focus-visible,
 .hq-link-card:focus-visible,
 .hq-link:focus-visible {
@@ -714,7 +674,6 @@
     .hq-banner { padding: 18px; gap: 14px; }
     .hq-crest { width: 64px; height: 64px; font-size: 1.5rem; }
     .hq-bubble { max-width: calc(100% - 16px); margin-left: 10px; }
-    .hq-panel { padding: 16px; }
     .hq-facts { grid-template-columns: 1fr; }
     .hq-burst { width: 60px; height: 60px; font-size: 1.35rem; }
     .hq-vs-crest { width: 52px; height: 52px; }
@@ -728,6 +687,6 @@
     .hq-urgent,
     .hq-burst { animation: none; }
     .hq-checklist a,
-    .hq-btn,
+    .c-btn,
     .hq-link-card { transition: none; }
 }

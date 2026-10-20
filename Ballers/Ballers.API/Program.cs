@@ -1,4 +1,6 @@
+using Ballers.API.Authorization;
 using Ballers.API.Data;
+using Ballers.API.Events;
 using Ballers.API.Models;
 using Ballers.API.Services;
 using Microsoft.AspNetCore.Identity;
@@ -72,7 +74,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 builder.Services.AddHttpClient("Anthropic");
-builder.Services.AddSingleton<ImageModerationService>();
+builder.Services.AddSingleton<IImageModerationService, ImageModerationService>();
 builder.Services.AddScoped<IFairplayService, FairplayService>();
 builder.Services.AddScoped<IPenaltyService, PenaltyService>();
 builder.Services.AddScoped<IStatsService, StatsService>();
@@ -98,6 +100,11 @@ builder.Services.AddHostedService<Ballers.API.BackgroundServices.NotificationBac
 builder.Services.AddScoped<IPlayerCardService, PlayerCardService>();
 builder.Services.AddScoped<IPlayerPointsService, PlayerPointsService>();
 builder.Services.AddScoped<IPlayerAccountService, PlayerAccountService>();
+builder.Services.AddScoped<IGalleryService, GalleryService>();
+builder.Services.AddScoped<IPhotographerService, PhotographerService>();
+builder.Services.AddScoped<IRefereeService, RefereeService>();
+builder.Services.AddScoped<ITeamProfileService, TeamProfileService>();
+builder.Services.AddDomainEvents();
 builder.Services.AddHostedService<Ballers.API.BackgroundServices.PlayerPointsBackgroundService>();
 
 // Player sign-up is the only endpoint on the site that writes without a login,
@@ -126,7 +133,7 @@ builder.Services.AddRateLimiter(options =>
 });
 
 builder.Services.AddAuthentication();
-builder.Services.AddAuthorization();
+builder.Services.AddBallersAuthorization();
 builder.Services.AddControllers()
     .AddJsonOptions(o =>
         o.JsonSerializerOptions.ReferenceHandler =

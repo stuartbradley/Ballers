@@ -1,5 +1,5 @@
 using Ballers.Shared;
-using System.Net.Http.Json;
+using Ballers.UI.Infrastructure;
 
 namespace Ballers.Services
 {
@@ -10,18 +10,7 @@ namespace Ballers.Services
 
         // Null when it can't be loaded, so the page can say so rather than
         // show an empty dashboard.
-        public async Task<ManagerDashboardDto?> GetDashboard()
-        {
-            try
-            {
-                var response = await _http.GetAsync("api/manager/dashboard");
-                if (!response.IsSuccessStatusCode) return null;
-                return await response.Content.ReadFromJsonAsync<ManagerDashboardDto>();
-            }
-            catch (HttpRequestException)
-            {
-                return null;
-            }
-        }
+        public Task<ManagerDashboardDto?> GetDashboard() =>
+            _http.GetOrDefault<ManagerDashboardDto>("api/manager/dashboard");
     }
 }

@@ -1,4 +1,5 @@
 using Ballers.Models;
+using Ballers.UI.Infrastructure;
 using System.Net.Http.Json;
 
 namespace Ballers.Services
@@ -12,29 +13,14 @@ namespace Ballers.Services
             _httpClient = httpClient;
         }
 
-        public async Task<PenaltyShootoutDto?> GetShootout(int fixtureId)
-        {
-            var response = await _httpClient.SendAsync(
-                new HttpRequestMessage(HttpMethod.Get, $"api/penalty/{fixtureId}"));
+        public Task<PenaltyShootoutDto?> GetShootout(int fixtureId) =>
+            _httpClient.GetOrDefault<PenaltyShootoutDto>($"api/penalty/{fixtureId}");
 
-            if (!response.IsSuccessStatusCode) return null;
+        public Task SubmitKicks(int fixtureId, List<PenaltyKickEntry> kicks) =>
+            _httpClient.PostOk($"api/penalty/{fixtureId}/kicks",
+                new SubmitPenaltyKicksRequest { Kicks = kicks }, "Failed to submit penalty kicks.");
 
-            return await response.Content.ReadFromJsonAsync<PenaltyShootoutDto>();
-        }
-
-        public async Task SubmitKicks(int fixtureId, List<PenaltyKickInput> kicks)
-        {
-            var request = new HttpRequestMessage(HttpMethod.Post, $"api/penalty/{fixtureId}/kicks");
-            request.Content = JsonContent.Create(new { kicks });
-            var response = await _httpClient.SendAsync(request);
-            if (!response.IsSuccessStatusCode)
-                throw new Exception("Failed to submit penalty kicks.");
-        }
-
-        public async Task<List<PenaltyTableRowDto>> GetTable(int seasonId)
-        {
-            return await _httpClient.GetFromJsonAsync<List<PenaltyTableRowDto>>(
-                $"api/penalty/table/{seasonId}") ?? new();
-        }
+        public Task<List<PenaltyTableRowDto>> GetTable(int seasonId) =>
+            _httpClient.GetListOrEmpty<PenaltyTableRowDto>($"api/penalty/table/{seasonId}");
     }
 }

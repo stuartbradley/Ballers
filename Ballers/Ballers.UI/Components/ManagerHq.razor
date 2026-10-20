@@ -1,26 +1,25 @@
 @using Ballers.Services
 @using Ballers.Shared
 @using Ballers.UI.Infrastructure
-@inject ManagerService ManagerSvc
-@inject PlayerAccountService AccountSvc
 @inject HttpClient Http
 @inject IJSRuntime JS
+@inherits ViewModelComponent<ManagerHqViewModel>
 
 @* A manager's dashboard, "Gaffer's HQ": the jobs to do this week, the next
    game, how the season's going, recent results and anyone waiting to join.
    Comic-book styling, deliberately playful; everything it links to is the
    real page for the job. *@
-<div class="hq">
-    <ManagerNav Current="hq" />
+<div class="hq comic">
+    <ManagerNav Current="Vm.Hq" />
 
-    @if (loading)
+    @if (Vm.Loading)
     {
         <div class="hq-loading"><LoadingSpinner /></div>
     }
-    else if (hq == null)
+    else if (Vm.Hq == null)
     {
         <div class="hq-wrap">
-            <div class="hq-panel hq-oops">
+            <div class="c-panel hq-oops">
                 <span class="hq-big-emoji" aria-hidden="true">🙈</span>
                 <h2>Couldn't load your HQ</h2>
                 <p>Try again in a moment. The pages below still work.</p>
@@ -30,13 +29,13 @@
     }
     else
     {
-        var h = hq;
+        var h = Vm.Hq;
         var todo = h.Todos.Where(t => !t.Done).ToList();
 
         <div class="hq-wrap">
 
             <!-- ── Banner ── -->
-            <header class="hq-banner" style="@KitStyle(h.HomeKitColour)">
+            <header class="hq-banner" style="@Format.KitStyle(h.HomeKitColour)">
                 <div class="hq-crest">
                     @if (!string.IsNullOrEmpty(h.ProfileImageUrl))
                     {
@@ -44,7 +43,7 @@
                     }
                     else
                     {
-                        <span>@Initials(h.TeamName)</span>
+                        <span>@Format.TeamInitials(h.TeamName)</span>
                     }
                 </div>
                 <div class="hq-banner-text">
@@ -56,7 +55,7 @@
                             @($"Season {season}")
                             @if (h.Standing?.Position is int pos)
                             {
-                                <text> · you're <strong>@Ordinal(pos)</strong> of @h.TeamsInLeague</text>
+                                <text> · you're <strong>@Format.Ordinal(pos)</strong> of @h.TeamsInLeague</text>
                             }
                         }
                         else
@@ -84,13 +83,13 @@
 
             <!-- ── Speech bubble ── -->
             <div class="hq-bubble @(todo.Any() ? "" : "is-clear")" role="status">
-                @BubbleText(h, todo)
+                @ManagerHqViewModel.BubbleText(h, todo)
             </div>
 
             <div class="hq-grid">
 
                 <!-- ── To-do list ── -->
-                <section class="hq-panel hq-todo" aria-labelledby="hq-todo-title">
+                <section class="c-panel hq-todo" aria-labelledby="hq-todo-title">
                     <h2 id="hq-todo-title"><span aria-hidden="true">✅</span> To-do</h2>
                     @if (!h.Todos.Any())
                     {
@@ -125,7 +124,7 @@
                 </section>
 
                 <!-- ── Next match ── -->
-                <section class="hq-panel hq-next" aria-labelledby="hq-next-title">
+                <section class="c-panel hq-next" aria-labelledby="hq-next-title">
                     <h2 id="hq-next-title"><span aria-hidden="true">⚽</span> Next match</h2>
                     @if (h.NextMatch is not { } m)
                     {
@@ -147,7 +146,7 @@
                                     }
                                     else
                                     {
-                                        @Initials(h.TeamName)
+                                        @Format.TeamInitials(h.TeamName)
                                     }
                                 </span>
                                 <span>@h.TeamName</span>
@@ -161,14 +160,14 @@
                                     }
                                     else
                                     {
-                                        @Initials(m.Opponent)
+                                        @Format.TeamInitials(m.Opponent)
                                     }
                                 </span>
                                 <span>@m.Opponent</span>
                             </div>
                         </div>
 
-                        <p class="hq-countdown">@Countdown(m)</p>
+                        <p class="hq-countdown">@ManagerHqViewModel.Countdown(m)</p>
 
                         <dl class="hq-facts">
                             <div><dt>📅 When</dt><dd>@(m.Kickoff is { } k ? k.ToLocalTime().ToString("ddd d MMM, HH:mm") : $"Week of {m.WindowStart:d MMM}, time TBC")</dd></div>
@@ -178,15 +177,15 @@
                         </dl>
 
                         <div class="hq-actions">
-                            <a class="hq-btn is-yellow" href="/fixture/@m.FixtureId?tab=squad">Pick squad</a>
-                            <a class="hq-btn" href="/team-sheet/@m.FixtureId">Team sheet</a>
-                            <a class="hq-btn" href="/fixture/@m.FixtureId">Match page</a>
+                            <a class="c-btn is-yellow" href="/fixture/@m.FixtureId?tab=squad">Pick squad</a>
+                            <a class="c-btn" href="/team-sheet/@m.FixtureId">Team sheet</a>
+                            <a class="c-btn" href="/fixture/@m.FixtureId">Match page</a>
                         </div>
                     }
                 </section>
 
                 <!-- ── Season snapshot ── -->
-                <section class="hq-panel hq-snap" aria-labelledby="hq-snap-title">
+                <section class="c-panel hq-snap" aria-labelledby="hq-snap-title">
                     <h2 id="hq-snap-title"><span aria-hidden="true">📊</span> Your season</h2>
                     @if (h.Standing is not { Played: > 0 } s)
                     {
@@ -195,7 +194,7 @@
                     else
                     {
                         <div class="hq-tiles">
-                            <div class="hq-tile is-yellow"><strong>@(s.Position is int p ? Ordinal(p) : "–")</strong><span>in the league</span></div>
+                            <div class="hq-tile is-yellow"><strong>@(s.Position is int p ? Format.Ordinal(p) : "–")</strong><span>in the league</span></div>
                             <div class="hq-tile"><strong>@s.Points</strong><span>points</span></div>
                             <div class="hq-tile is-green"><strong>@s.Won</strong><span>won</span></div>
                             <div class="hq-tile"><strong>@s.Drawn</strong><span>drawn</span></div>
@@ -215,7 +214,7 @@
                 </section>
 
                 <!-- ── Recent results ── -->
-                <section class="hq-panel hq-results" aria-labelledby="hq-results-title">
+                <section class="c-panel hq-results" aria-labelledby="hq-results-title">
                     <h2 id="hq-results-title"><span aria-hidden="true">📰</span> Recent results</h2>
                     @if (!h.RecentResults.Any())
                     {
@@ -247,11 +246,11 @@
                                     </span>
                                     @if (!r.OurStatsIn)
                                     {
-                                        <a class="hq-btn is-small is-red" href="/fixture/@r.FixtureId?tab=stats">Add stats</a>
+                                        <a class="c-btn is-small is-red" href="/fixture/@r.FixtureId?tab=stats">Add stats</a>
                                     }
                                     else
                                     {
-                                        <a class="hq-btn is-small" href="/fixture/@r.FixtureId">View</a>
+                                        <a class="c-btn is-small" href="/fixture/@r.FixtureId">View</a>
                                     }
                                 </li>
                             }
@@ -261,13 +260,13 @@
             </div>
 
             <!-- ── Sign-ups ── -->
-            @if (signups.Any())
+            @if (Vm.Signups.Any())
             {
-                <section class="hq-panel hq-signups" id="signups" aria-labelledby="hq-signups-title">
-                    <h2 id="hq-signups-title"><span aria-hidden="true">🙋</span> Want to join (@signups.Count)</h2>
+                <section class="c-panel hq-signups" id="signups" aria-labelledby="hq-signups-title">
+                    <h2 id="hq-signups-title"><span aria-hidden="true">🙋</span> Want to join (@Vm.Signups.Count)</h2>
                     <p class="hq-sub">Approve and they get a login and their player card. Decline if you don't know them.</p>
                     <ul class="hq-signup-list">
-                        @foreach (var r in signups)
+                        @foreach (var r in Vm.Signups)
                         {
                             <li>
                                 <span class="hq-signup-who">
@@ -278,25 +277,25 @@
                                     </span>
                                 </span>
                                 <span class="hq-signup-actions">
-                                    <button type="button" class="hq-btn is-small is-green" disabled="@busy.Contains(r.Id)" @onclick="() => Resolve(r, true)">👍 Approve</button>
-                                    <button type="button" class="hq-btn is-small" disabled="@busy.Contains(r.Id)" @onclick="() => Resolve(r, false)">Decline</button>
+                                    <button type="button" class="c-btn is-small is-green" disabled="@Vm.Busy.Contains(r.Id)" @onclick="() => Vm.Resolve(r, true)">👍 Approve</button>
+                                    <button type="button" class="c-btn is-small" disabled="@Vm.Busy.Contains(r.Id)" @onclick="() => Vm.Resolve(r, false)">Decline</button>
                                 </span>
                             </li>
                         }
                     </ul>
-                    @if (signupMessage != null)
+                    @if (Vm.SignupMessage != null)
                     {
-                        <p class="hq-note @(signupIsError ? "is-error" : "")">@signupMessage</p>
+                        <p class="hq-note @(Vm.SignupIsError ? "is-error" : "")">@Vm.SignupMessage</p>
                     }
                 </section>
             }
-            else if (signupMessage != null)
+            else if (Vm.SignupMessage != null)
             {
-                <p class="hq-note @(signupIsError ? "is-error" : "")" id="signups">@signupMessage</p>
+                <p class="hq-note @(Vm.SignupIsError ? "is-error" : "")" id="signups">@Vm.SignupMessage</p>
             }
 
             <!-- ── Everything else ── -->
-            <section class="hq-panel" aria-labelledby="hq-links-title">
+            <section class="c-panel" aria-labelledby="hq-links-title">
                 <h2 id="hq-links-title"><span aria-hidden="true">🧰</span> Your toolbox</h2>
                 @QuickLinks(h)
             </section>
@@ -305,22 +304,9 @@
 </div>
 
 @code {
-    private ManagerDashboardDto? hq;
-    private bool loading = true;
-    private List<PlayerAccountRequestDto> signups = new();
-    private readonly HashSet<int> busy = new();
-    private string? signupMessage;
-    private bool signupIsError;
+    // The HQ's data and the sign-up actions are in ManagerHqViewModel.
 
-    protected override async Task OnInitializedAsync()
-    {
-        var hqTask = ManagerSvc.GetDashboard();
-        var signupTask = AccountSvc.GetRequests();
-        await Task.WhenAll(hqTask, signupTask);
-        hq = hqTask.Result;
-        signups = signupTask.Result.Where(r => r.Status == PlayerAccountRequestStatusDto.Pending).ToList();
-        loading = false;
-    }
+    protected override Task OnInitializedAsync() => Vm.InitializeAsync();
 
     private RenderFragment QuickLinks(ManagerDashboardDto? h) => @<div class="hq-links">
         <a class="hq-link-card" href="/manager-fixtures"><span aria-hidden="true">⚽</span><strong>Fixtures</strong><small>Every game, squads and stats</small></a>
@@ -342,66 +328,4 @@
         try { await JS.InvokeVoidAsync("scrollToId", "signups"); } catch (JSException) { }
     }
 
-    private async Task Resolve(PlayerAccountRequestDto r, bool approve)
-    {
-        busy.Add(r.Id);
-        signupMessage = null;
-        try
-        {
-            if (approve) await AccountSvc.Approve(r.Id); else await AccountSvc.Reject(r.Id);
-            signups.Remove(r);
-            signupIsError = false;
-            signupMessage = approve ? $"🎉 {r.RequestedName} is in! Their card's ready." : $"{r.RequestedName} declined.";
-
-            // The to-do list counts these; refresh it.
-            hq = await ManagerSvc.GetDashboard() ?? hq;
-        }
-        catch (Exception ex)
-        {
-            signupIsError = true;
-            signupMessage = ex.Message;
-        }
-        finally
-        {
-            busy.Remove(r.Id);
-        }
-    }
-
-    private static string BubbleText(ManagerDashboardDto h, List<ManagerTodoDto> todo)
-    {
-        var urgent = todo.Count(t => t.Urgent);
-        if (urgent > 0)
-            return $"📣 {urgent} urgent job{(urgent == 1 ? "" : "s")}, gaffer! Sort {(urgent == 1 ? "it" : "them")} first.";
-        if (todo.Count > 0)
-            return $"📋 {todo.Count} thing{(todo.Count == 1 ? "" : "s")} on your list{(h.NextMatch != null ? $" before {h.NextMatch.Opponent}" : "")}.";
-        return "🙌 All sorted, gaffer! Nothing on your list right now.";
-    }
-
-    private static string Countdown(ManagerMatchDto m)
-    {
-        var when = m.Kickoff ?? m.WindowStart;
-        var days = (when.ToLocalTime().Date - DateTime.Now.Date).Days;
-        return days switch
-        {
-            <= 0 when m.Kickoff != null => "⏰ It's matchday!",
-            <= 0 => "⏰ This week!",
-            1 => "⏰ Tomorrow!",
-            < 7 => $"⏰ {days} days to go",
-            _ => $"⏰ {days} days to go. Plenty of time."
-        };
-    }
-
-    private static string Ordinal(int n) => n + ((n % 100) is 11 or 12 or 13 ? "th" : (n % 10) switch { 1 => "st", 2 => "nd", 3 => "rd", _ => "th" });
-
-    private static string Initials(string name)
-    {
-        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        return parts.Length >= 2 ? $"{parts[0][0]}{parts[1][0]}".ToUpper() : name.Length >= 2 ? name[..2].ToUpper() : name.ToUpper();
-    }
-
-    // The club's home kit tints the banner. Plain hex only.
-    private static string? KitStyle(string? colour)
-        => colour != null && System.Text.RegularExpressions.Regex.IsMatch(colour, "^#[0-9a-fA-F]{3,8}$")
-            ? $"--kit:{colour}"
-            : null;
 }

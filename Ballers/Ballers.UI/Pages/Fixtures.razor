@@ -2,10 +2,8 @@
 @using Ballers.Components
 @using Ballers.Models
 @using Ballers.Services
-@inject FixtureService FixtureService
-@inject SeasonService SeasonService
-@inject GalleryService GalleryService
 @inject IJSRuntime JS
+@inherits ViewModelComponent<FixturesViewModel>
 
 <PageTitle>Fixtures</PageTitle>
 
@@ -16,15 +14,15 @@
 
     <!-- ── HEADER ── -->
     <header class="fx-hero">
-        <span class="fx-eyebrow">@(SelectedSeason is { } season ? $"Season {season.SeasonNumber}" : "Ballers League")</span>
+        <span class="fx-eyebrow">@(Vm.SelectedSeason is { } season ? $"Season {season.SeasonNumber}" : "Ballers League")</span>
         <h1>Fixtures</h1>
-        @if (!isLoading && allWeeks.Any())
+        @if (!Vm.IsLoading && Vm.AllWeeks.Any())
         {
             <p class="fx-sub">
-                @PlayedCount of @TotalCount games played
-                @if (CurrentWeek != null)
+                @Vm.PlayedCount of @Vm.TotalCount games played
+                @if (Vm.CurrentWeek != null)
                 {
-                    <span>· Match week @CurrentWeek.WeekNumber is up next</span>
+                    <span>· Match week @Vm.CurrentWeek.WeekNumber is up next</span>
                 }
             </p>
         }
@@ -34,24 +32,24 @@
     <div class="fx-toolbar">
         <div class="fx-toolbar-inner">
             <div class="fx-tabs" role="tablist" aria-label="Fixtures or results">
-                <button type="button" role="tab" class="fx-tab @(tab == Tab.Upcoming ? "is-active" : "")"
-                        aria-selected="@(tab == Tab.Upcoming ? "true" : "false")"
-                        @onclick="() => SetTab(Tab.Upcoming)">
-                    Upcoming <span class="fx-count">@UpcomingCount</span>
+                <button type="button" role="tab" class="fx-tab @(Vm.SelectedTab == FixturesViewModel.Tab.Upcoming ? "is-active" : "")"
+                        aria-selected="@(Vm.SelectedTab == FixturesViewModel.Tab.Upcoming ? "true" : "false")"
+                        @onclick="() => Vm.SetTab(FixturesViewModel.Tab.Upcoming)">
+                    Upcoming <span class="fx-count">@Vm.UpcomingCount</span>
                 </button>
-                <button type="button" role="tab" class="fx-tab @(tab == Tab.Results ? "is-active" : "")"
-                        aria-selected="@(tab == Tab.Results ? "true" : "false")"
-                        @onclick="() => SetTab(Tab.Results)">
-                    Results <span class="fx-count">@PlayedCount</span>
+                <button type="button" role="tab" class="fx-tab @(Vm.SelectedTab == FixturesViewModel.Tab.Results ? "is-active" : "")"
+                        aria-selected="@(Vm.SelectedTab == FixturesViewModel.Tab.Results ? "true" : "false")"
+                        @onclick="() => Vm.SetTab(FixturesViewModel.Tab.Results)">
+                    Results <span class="fx-count">@Vm.PlayedCount</span>
                 </button>
             </div>
 
             <div class="fx-filters">
                 <label class="fx-select">
                     <span class="visually-hidden">Team</span>
-                    <select @bind="teamFilter">
+                    <select @bind="Vm.TeamFilter">
                         <option value="">All teams</option>
-                        @foreach (var team in Teams)
+                        @foreach (var team in Vm.Teams)
                         {
                             <option value="@team">@team</option>
                         }
@@ -59,8 +57,8 @@
                 </label>
                 <label class="fx-select">
                     <span class="visually-hidden">Season</span>
-                    <select value="@selectedSeasonId" @onchange="OnSeasonChanged">
-                        @foreach (var s in seasons)
+                    <select value="@Vm.SelectedSeasonId" @onchange="OnSeasonChanged">
+                        @foreach (var s in Vm.Seasons)
                         {
                             <option value="@s.Id">Season @s.SeasonNumber</option>
                         }
@@ -70,12 +68,12 @@
         </div>
 
         @* One chip per week in the list below. *@
-        @if (!isLoading && VisibleWeeks.Any())
+        @if (!Vm.IsLoading && Vm.VisibleWeeks.Any())
         {
             <nav class="fx-weeks" aria-label="Jump to a week">
-                @foreach (var week in VisibleWeeks)
+                @foreach (var week in Vm.VisibleWeeks)
                 {
-                    var isCurrent = week.WeekNumber == CurrentWeek?.WeekNumber;
+                    var isCurrent = week.WeekNumber == Vm.CurrentWeek?.WeekNumber;
                     <button type="button"
                             class="fx-week-chip @(isCurrent ? "is-current" : "")"
                             aria-current="@(isCurrent ? "true" : null)"
@@ -90,36 +88,36 @@
 
     <!-- ── THE LIST ── -->
     <div class="fx-body">
-        @if (isLoading)
+        @if (Vm.IsLoading)
         {
             <LoadingSpinner />
         }
-        else if (!allWeeks.Any())
+        else if (!Vm.AllWeeks.Any())
         {
             <div class="fx-empty">No fixtures scheduled yet.</div>
         }
-        else if (!VisibleWeeks.Any())
+        else if (!Vm.VisibleWeeks.Any())
         {
             <div class="fx-empty">
-                @(tab == Tab.Upcoming ? "No games left to play" : "No results yet")@(string.IsNullOrEmpty(teamFilter) ? "." : $" for {teamFilter}.")
+                @(Vm.SelectedTab == FixturesViewModel.Tab.Upcoming ? "No games left to play" : "No results yet")@(string.IsNullOrEmpty(Vm.TeamFilter) ? "." : $" for {Vm.TeamFilter}.")
             </div>
         }
-        else if (tab == Tab.Upcoming)
+        else if (Vm.SelectedTab == FixturesViewModel.Tab.Upcoming)
         {
-            @foreach (var week in VisibleWeeks)
+            @foreach (var week in Vm.VisibleWeeks)
             {
-                <section class="fx-week @(week.WeekNumber == CurrentWeek?.WeekNumber ? "is-current" : "")" id="week-@week.WeekNumber">
-                    @if (week.WeekNumber == CurrentWeek?.WeekNumber)
+                <section class="fx-week @(week.WeekNumber == Vm.CurrentWeek?.WeekNumber ? "is-current" : "")" id="week-@week.WeekNumber">
+                    @if (week.WeekNumber == Vm.CurrentWeek?.WeekNumber)
                     {
                         <span class="fx-now">This week</span>
                     }
-                    <FixtureWeekCard Week="week" GalleriesByFixture="galleriesByFixture" />
+                    <FixtureWeekCard Week="week" GalleriesByFixture="Vm.GalleriesByFixture" />
                 </section>
             }
         }
         else
         {
-            @foreach (var week in VisibleWeeks)
+            @foreach (var week in Vm.VisibleWeeks)
             {
                 <section class="fx-week fx-results-week" id="week-@week.WeekNumber">
                     <div class="fx-week-head">
@@ -151,13 +149,13 @@
                                             <div class="fx-scorers-col fx-home">
                                                 @foreach (var sc in m.HomeScorers)
                                                 {
-                                                    <span class="@(sc.IsOwnGoal ? "is-og" : "")">@Scorer(sc)</span>
+                                                    <span class="@(sc.IsOwnGoal ? "is-og" : "")">@FixturesViewModel.Scorer(sc)</span>
                                                 }
                                             </div>
                                             <div class="fx-scorers-col fx-away">
                                                 @foreach (var sc in m.AwayScorers)
                                                 {
-                                                    <span class="@(sc.IsOwnGoal ? "is-og" : "")">@Scorer(sc)</span>
+                                                    <span class="@(sc.IsOwnGoal ? "is-og" : "")">@FixturesViewModel.Scorer(sc)</span>
                                                 }
                                             </div>
                                         </div>
@@ -171,7 +169,7 @@
                                         {
                                             <span>@m.Location</span>
                                         }
-                                        @if (galleriesByFixture.TryGetValue(m.Id, out var galleryId))
+                                        @if (Vm.GalleriesByFixture.TryGetValue(m.Id, out var galleryId))
                                         {
                                             <a href="/gallery/@galleryId">Match photos →</a>
                                         }
@@ -188,85 +186,14 @@
 </div>
 
 @code {
-    private enum Tab { Upcoming, Results }
+    // The schedule and its filters are in FixturesViewModel; scrolling stays here.
 
-    private List<FixtureWeekDto> allWeeks = new();
-    private List<SeasonDto> seasons = new();
-    private int selectedSeasonId;
-    private bool isLoading = true;
-    private Tab tab = Tab.Upcoming;
-    private string teamFilter = "";
-
-    // Set when the list changes, so the page can bring the current week into
-    // view once it has rendered.
-    private bool scrollToCurrent;
-
-    // One lookup for the whole schedule, rather than asking per fixture.
-    private Dictionary<int, int> galleriesByFixture = new();
-
-    private SeasonDto? SelectedSeason => seasons.FirstOrDefault(s => s.Id == selectedSeasonId);
-
-    private int TotalCount => allWeeks.Sum(w => w.Matches.Count);
-    private int PlayedCount => allWeeks.Sum(w => w.Matches.Count(m => m.IsPlayed && MatchesTeam(m)));
-    private int UpcomingCount => allWeeks.Sum(w => w.Matches.Count(m => !m.IsPlayed && MatchesTeam(m)));
-
-    // The first week with a game still to play.
-    private FixtureWeekDto? CurrentWeek => allWeeks
-        .OrderBy(w => w.WeekNumber)
-        .FirstOrDefault(w => w.Matches.Any(m => !m.IsPlayed));
-
-    private IEnumerable<string> Teams => allWeeks
-        .SelectMany(w => w.Matches.SelectMany(m => new[] { m.Home, m.Away }).Concat(w.Byes))
-        .Where(t => !string.IsNullOrWhiteSpace(t))
-        .Distinct()
-        .OrderBy(t => t);
-
-    private bool MatchesTeam(FixtureMatchDto m)
-        => string.IsNullOrEmpty(teamFilter) || m.Home == teamFilter || m.Away == teamFilter;
-
-    // Each week cut down to what the tab and the team filter ask for. Weeks left
-    // with nothing in them drop out. Upcoming runs forward from now; results
-    // run back from the latest.
-    private List<FixtureWeekDto> VisibleWeeks
-    {
-        get
-        {
-            var upcoming = tab == Tab.Upcoming;
-            var weeks = allWeeks
-                .Select(w => new FixtureWeekDto
-                {
-                    WeekNumber = w.WeekNumber,
-                    DateRange = w.DateRange,
-                    Matches = w.Matches.Where(m => m.IsPlayed != upcoming && MatchesTeam(m)).ToList(),
-                    // A bye only matters in a week still to be played, and only for
-                    // the chosen team when there is one.
-                    Byes = upcoming && w.Matches.Any(m => !m.IsPlayed)
-                        ? w.Byes.Where(b => string.IsNullOrEmpty(teamFilter) || b == teamFilter).ToList()
-                        : new List<string>()
-                })
-                .Where(w => w.Matches.Any() || w.Byes.Any());
-
-            return (upcoming
-                    ? weeks.OrderBy(w => w.WeekNumber)
-                    : weeks.OrderByDescending(w => w.WeekNumber))
-                .ToList();
-        }
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        seasons = await SeasonService.GetSeasons();
-        var current = seasons.FirstOrDefault(s => s.IsActive) ?? seasons.LastOrDefault();
-        selectedSeasonId = current?.Id ?? 0;
-
-        await LoadGalleriesAsync();
-        await LoadFixtures();
-    }
+    protected override Task OnInitializedAsync() => Vm.InitializeAsync();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!scrollToCurrent || isLoading) return;
-        scrollToCurrent = false;
+        if (!Vm.ScrollToCurrent || Vm.IsLoading) return;
+        Vm.ScrollToCurrent = false;
 
         // Bring the strip's current chip into view, so a long season opens on
         // this week rather than week one.
@@ -274,50 +201,11 @@
         catch (JSException) { /* cosmetic */ }
     }
 
-    private async Task LoadGalleriesAsync()
-    {
-        var galleries = await GalleryService.GetGalleries();
-
-        // A gallery with no photos in it yet has nothing to show, so it doesn't
-        // earn a link from the schedule.
-        galleriesByFixture = galleries
-            .Where(g => g.PhotoCount > 0)
-            .GroupBy(g => g.FixtureId)
-            .ToDictionary(g => g.Key, g => g.First().Id);
-    }
-
     private async Task OnSeasonChanged(ChangeEventArgs e)
     {
-        if (int.TryParse(e.Value?.ToString(), out var id))
-        {
-            selectedSeasonId = id;
-            teamFilter = "";
-            await LoadFixtures();
-        }
-    }
-
-    private async Task LoadFixtures()
-    {
-        isLoading = true;
-        allWeeks = selectedSeasonId > 0
-            ? await FixtureService.GetFixtureWeeks(selectedSeasonId)
-            : new();
-
-        // A finished season opens on its results; one in progress on what's next.
-        tab = allWeeks.Any(w => w.Matches.Any(m => !m.IsPlayed)) ? Tab.Upcoming : Tab.Results;
-        isLoading = false;
-        scrollToCurrent = true;
-    }
-
-    private void SetTab(Tab next)
-    {
-        tab = next;
-        scrollToCurrent = true;
+        if (int.TryParse(e.Value?.ToString(), out var id)) await Vm.SelectSeason(id);
     }
 
     private async Task JumpTo(int weekNumber)
         => await JS.InvokeVoidAsync("scrollToId", $"week-{weekNumber}");
-
-    private static string Scorer(GoalScorerDto s)
-        => $"{s.Name}{(s.Goals > 1 ? $" ×{s.Goals}" : "")}{(s.IsOwnGoal ? " (og)" : "")}";
 }

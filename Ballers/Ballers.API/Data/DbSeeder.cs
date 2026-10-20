@@ -1,4 +1,5 @@
-﻿using Ballers.API.Models;
+﻿using Ballers.API.Authorization;
+using Ballers.API.Models;
 using Ballers.Shared;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
@@ -18,7 +19,7 @@ namespace Ballers.API.Data
             await SeedNotificationSettings(db);
             await SeedLeagueSettings(db);
 
-            string[] roles = ["Admin", "Manager", "Referee", "Player"];
+            string[] roles = AppRoles.All;
 
             foreach (var role in roles)
                 if (!await roleManager.RoleExistsAsync(role))

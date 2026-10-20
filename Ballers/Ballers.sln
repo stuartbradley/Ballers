@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballers.Tests", "Ballers.Te
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballers.E2E", "Ballers.E2E\Ballers.E2E.csproj", "{3136F13D-49CB-438F-9FE0-3D2C3CF07CEF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ballers.UI.Tests", "Ballers.UI.Tests\Ballers.UI.Tests.csproj", "{C2331F6E-F935-43D2-88FF-D7F78048DA71}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -83,6 +85,18 @@ Global
 		{3136F13D-49CB-438F-9FE0-3D2C3CF07CEF}.Release|x64.Build.0 = Release|Any CPU
 		{3136F13D-49CB-438F-9FE0-3D2C3CF07CEF}.Release|x86.ActiveCfg = Release|Any CPU
 		{3136F13D-49CB-438F-9FE0-3D2C3CF07CEF}.Release|x86.Build.0 = Release|Any CPU
+		{C2331F6E-F935-43D2-88FF-D7F78048DA71}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2331F6E-F935-43D2-88FF-D7F78048DA71}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2331F6E-F935-43D2-88FF-D7F78048DA71}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C2331F6E-F935-43D2-88FF-D7F78048DA71}.Debug|x64.Build.0 = Debug|Any CPU
+		{C2331F6E-F935-43D2-88FF-D7F78048DA71}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C2331F6E-F935-43D2-88FF-D7F78048DA71}.Debug|x86.Build.0 = Debug|Any CPU
+		{C2331F6E-F935-43D2-88FF-D7F78048DA71}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2331F6E-F935-43D2-88FF-D7F78048DA71}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C2331F6E-F935-43D2-88FF-D7F78048DA71}.Release|x64.ActiveCfg = Release|Any CPU
+		{C2331F6E-F935-43D2-88FF-D7F78048DA71}.Release|x64.Build.0 = Release|Any CPU
+		{C2331F6E-F935-43D2-88FF-D7F78048DA71}.Release|x86.ActiveCfg = Release|Any CPU
+		{C2331F6E-F935-43D2-88FF-D7F78048DA71}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

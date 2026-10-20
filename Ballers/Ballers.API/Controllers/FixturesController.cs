@@ -1,5 +1,5 @@
+using Ballers.API.Authorization;
 using Ballers.API.Models;
-using Ballers.API.Models.Requests;
 using Ballers.API.Services;
 using Ballers.Models;
 using Ballers.Shared;
@@ -14,22 +14,48 @@ namespace Ballers.API.Controllers
     [Authorize]
     public class FixturesController : ControllerBase
     {
+        internal const string FixturesLockedMessage = "Fixtures are locked by the admin — editing is disabled.";
+
         private readonly IFixtureService _fixtures;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly INotificationService _notifications;
+        private readonly IAuthorizationService _authorization;
         private readonly ILeagueSettingsService _leagueSettings;
 
-        public FixturesController(IFixtureService fixtures, UserManager<ApplicationUser> userManager, INotificationService notifications, ILeagueSettingsService leagueSettings)
+        public FixturesController(IFixtureService fixtures, UserManager<ApplicationUser> userManager, IAuthorizationService authorization, ILeagueSettingsService leagueSettings)
         {
             _fixtures = fixtures;
             _userManager = userManager;
-            _notifications = notifications;
+            _authorization = authorization;
             _leagueSettings = leagueSettings;
         }
 
-        // Global admin "shut down editing" switch — only a true admin bypasses it.
-        private async Task<bool> FixturesLockedFor(ApplicationUser user)
-            => !user.IsAdmin && await _leagueSettings.AreFixturesLockedAsync();
+        // The caller and the fixture they're acting on, once they've been let in.
+        private sealed record FixtureCall(ApplicationUser User, FixtureDetailsDto Fixture, bool IsOfficial);
+
+        /// <summary>
+        /// Loads the caller and the fixture and checks the caller may act on it
+        /// (see FixtureAccessRequirement). An edit is also refused while the
+        /// admin's global lock is on, which only a true admin bypasses. Returns
+        /// the response to send when refused.
+        /// </summary>
+        private async Task<(FixtureCall? Call, IActionResult? Refusal)> AuthorizeAsync(
+            int fixtureId, FixtureAccessRequirement allowed, bool edit = false)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return (null, Unauthorized());
+
+            var fixture = await _fixtures.GetByIdAsync(fixtureId);
+            if (fixture == null) return (null, NotFound());
+
+            var sides = new FixtureSides(fixture.HomeTeamId, fixture.AwayTeamId);
+            if (!(await _authorization.AuthorizeAsync(User, sides, allowed)).Succeeded)
+                return (null, Forbid());
+
+            if (edit && !User.IsSiteAdmin() && await _leagueSettings.AreFixturesLockedAsync())
+                return (null, Conflict(FixturesLockedMessage));
+
+            return (new FixtureCall(user, fixture, User.IsOfficial()), null);
+        }
 
         /// <summary>
         /// Which team a write applies to. Admins and referees have no team of
@@ -37,14 +63,13 @@ namespace Ballers.API.Controllers
         /// team; a manager always acts for their own team, whatever they send.
         /// Returns null when an admin names a team that is not in this fixture.
         /// </summary>
-        private static int? ResolveActingTeamId(
-            bool isAdmin, ApplicationUser user, FixtureDetail fixture, int? requestedTeamId)
+        private static int? ResolveActingTeamId(FixtureCall call, int? requestedTeamId)
         {
-            if (!isAdmin) return user.TeamId;
+            if (!call.IsOfficial) return call.User.TeamId;
 
-            if (requestedTeamId is null) return fixture.HomeTeamId;
+            if (requestedTeamId is null) return call.Fixture.HomeTeamId;
 
-            return requestedTeamId == fixture.HomeTeamId || requestedTeamId == fixture.AwayTeamId
+            return requestedTeamId == call.Fixture.HomeTeamId || requestedTeamId == call.Fixture.AwayTeamId
                 ? requestedTeamId
                 : null;
         }
@@ -52,57 +77,31 @@ namespace Ballers.API.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetFixture(int id)
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return Unauthorized();
-
-            var fixture = await _fixtures.GetByIdAsync(id);
-            if (fixture == null) return NotFound();
-
-            if (!user.IsAdmin && !user.IsReferee && user.TeamId != fixture.HomeTeamId && user.TeamId != fixture.AwayTeamId)
-                return Forbid();
-
-            return Ok(fixture);
+            var (call, refusal) = await AuthorizeAsync(id, FixtureAccessRequirement.OfficialsOrEitherTeam);
+            return refusal ?? Ok(call!.Fixture);
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetFixtures()
+        public async Task<IActionResult> GetFixtures([FromQuery] int? seasonId = null)
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Unauthorized();
-            return Ok(await _fixtures.GetForUserAsync(user.IsAdmin || user.IsReferee, user.TeamId));
+            return Ok(await _fixtures.GetForUserAsync(User.IsOfficial(), user.TeamId, seasonId));
         }
 
         [HttpPost("{fixtureId}/stats")]
         public async Task<IActionResult> SubmitStats(int fixtureId, SubmitFixtureStatsRequest request)
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return Unauthorized();
+            var (call, refusal) = await AuthorizeAsync(fixtureId, FixtureAccessRequirement.OfficialsOrEitherTeam, edit: true);
+            if (refusal != null) return refusal;
 
-            var fixture = await _fixtures.GetByIdAsync(fixtureId);
-            if (fixture == null) return NotFound();
-
-            bool isAdmin = user.IsAdmin || user.IsReferee;
-            if (!isAdmin && user.TeamId != fixture.HomeTeamId && user.TeamId != fixture.AwayTeamId)
-                return Forbid();
-
-            if (await FixturesLockedFor(user))
-                return Conflict("Fixtures are locked by the admin — editing is disabled.");
-
-            if (fixture.IsEditLocked)
-                return Conflict("This fixture is locked — more than 2 weeks have passed since it was played.");
-
-            var actingTeamId = ResolveActingTeamId(isAdmin, user, fixture, request.TeamId);
+            var actingTeamId = ResolveActingTeamId(call!, request.TeamId);
             if (actingTeamId is null) return BadRequest("That team is not in this fixture.");
 
+            // Both teams are told through FixtureStatsSubmitted.
             try
             {
                 await _fixtures.SubmitStatsAsync(fixtureId, request.PlayerStats, actingTeamId);
-
-                var msg = $"Stats submitted for {fixture.HomeTeam} vs {fixture.AwayTeam}.";
-                var link = $"/fixture/{fixtureId}";
-                await _notifications.CreateForTeamAsync(fixture.HomeTeamId, NotificationType.ResultSubmitted, msg, link, fixtureId);
-                await _notifications.CreateForTeamAsync(fixture.AwayTeamId, NotificationType.ResultSubmitted, msg, link, fixtureId);
-
                 return Ok();
             }
             catch (KeyNotFoundException) { return NotFound(); }
@@ -113,59 +112,24 @@ namespace Ballers.API.Controllers
         public async Task<IActionResult> GetTable(int seasonId)
             => Ok(await _fixtures.GetTableAsync(seasonId));
 
-        [Authorize]
         [HttpPut("{fixtureId}/referee")]
         public async Task<IActionResult> AssignReferee(int fixtureId, [FromBody] AssignRefereeRequest request)
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return Unauthorized();
-
-            var fixture = await _fixtures.GetByIdAsync(fixtureId);
-            if (fixture == null) return NotFound();
-
-            // Admins/referees, or the HOME team's manager, may edit the schedule/referee.
-            if (!user.IsAdmin && !user.IsReferee && user.TeamId != fixture.HomeTeamId)
-                return Forbid();
-
-            if (await FixturesLockedFor(user))
-                return Conflict("Fixtures are locked by the admin — editing is disabled.");
-
-            if (fixture.IsEditLocked)
-                return Conflict("This fixture is locked — more than 2 weeks have passed since it was played.");
+            var (_, refusal) = await AuthorizeAsync(fixtureId, FixtureAccessRequirement.OfficialsOrHomeTeam, edit: true);
+            if (refusal != null) return refusal;
 
             await _fixtures.AssignRefereeAsync(fixtureId, request.RefereeId);
             return Ok();
         }
 
-        [Authorize]
         [HttpPut("{fixtureId}/schedule")]
         public async Task<IActionResult> UpdateSchedule(int fixtureId, UpdateFixtureScheduleRequest request)
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return Unauthorized();
+            var (_, refusal) = await AuthorizeAsync(fixtureId, FixtureAccessRequirement.OfficialsOrHomeTeam, edit: true);
+            if (refusal != null) return refusal;
 
-            var fixture = await _fixtures.GetByIdAsync(fixtureId);
-            if (fixture == null) return NotFound();
-
-            // Admins/referees, or the HOME team's manager, may edit the schedule/referee.
-            if (!user.IsAdmin && !user.IsReferee && user.TeamId != fixture.HomeTeamId)
-                return Forbid();
-
-            if (await FixturesLockedFor(user))
-                return Conflict("Fixtures are locked by the admin — editing is disabled.");
-
-            if (fixture.IsEditLocked)
-                return Conflict("This fixture is locked — more than 2 weeks have passed since it was played.");
-
+            // The away side is told through FixtureRescheduled.
             await _fixtures.UpdateScheduleAsync(fixtureId, request.Location, request.Postcode, request.KickOffTime);
-
-            var kickoffDisplay = request.KickOffTime?.ToString("dd MMM HH:mm") ?? "TBD";
-            await _notifications.CreateForTeamAsync(
-                fixture.AwayTeamId,
-                NotificationType.FixtureUpdated,
-                $"Fixture vs {fixture.HomeTeam} has been updated — {kickoffDisplay} at {(string.IsNullOrWhiteSpace(request.Location) ? "TBD" : request.Location)}.",
-                $"/fixture/{fixtureId}");
-
             return Ok();
         }
 
@@ -177,57 +141,21 @@ namespace Ballers.API.Controllers
         [HttpPost("{fixtureId}/swap-home-away")]
         public async Task<IActionResult> SwapHomeAway(int fixtureId)
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return Unauthorized();
+            var (_, refusal) = await AuthorizeAsync(fixtureId, FixtureAccessRequirement.AdminOrHomeTeam, edit: true);
+            if (refusal != null) return refusal;
 
-            var fixture = await _fixtures.GetByIdAsync(fixtureId);
-            if (fixture == null) return NotFound();
-
-            if (!user.IsAdmin && user.TeamId != fixture.HomeTeamId)
-                return Forbid();
-
-            if (await FixturesLockedFor(user))
-                return Conflict("Fixtures are locked by the admin — editing is disabled.");
-
-            var problem = await _fixtures.SwapHomeAwayAsync(fixtureId, DateTime.UtcNow);
-            if (problem != null) return Conflict(problem);
-
-            // Old names: fixture was loaded before the swap.
-            var swapped = $"{fixture.HomeTeam} v {fixture.AwayTeam} is now {fixture.AwayTeam} v {fixture.HomeTeam}.";
-            await _notifications.CreateForTeamAsync(
-                fixture.AwayTeamId,
-                NotificationType.FixtureUpdated,
-                $"{swapped} You're at home now, so the time, venue and referee are yours to sort.",
-                $"/fixture/{fixtureId}?tab=setup",
-                fixtureId);
-
-            // The old home side made the change themselves unless an admin did.
-            if (user.IsAdmin)
-                await _notifications.CreateForTeamAsync(
-                    fixture.HomeTeamId,
-                    NotificationType.FixtureUpdated,
-                    $"{swapped} An admin swapped it; you're away now.",
-                    $"/fixture/{fixtureId}",
-                    fixtureId);
-
-            return Ok();
+            // Both sides are told through FixtureSidesSwapped.
+            var problem = await _fixtures.SwapHomeAwayAsync(fixtureId, DateTime.UtcNow, byAdmin: User.IsSiteAdmin());
+            return problem == null ? Ok() : Conflict(problem);
         }
 
         [HttpGet("{fixtureId}/players")]
         public async Task<IActionResult> GetFixturePlayers(int fixtureId, [FromQuery] int? teamId = null)
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return Unauthorized();
+            var (call, refusal) = await AuthorizeAsync(fixtureId, FixtureAccessRequirement.OfficialsOrEitherTeam);
+            if (refusal != null) return refusal;
 
-            bool isAdmin = user.IsAdmin || user.IsReferee;
-
-            var fixture = await _fixtures.GetByIdAsync(fixtureId);
-            if (fixture == null) return NotFound();
-
-            if (!isAdmin && user.TeamId != fixture.HomeTeamId && user.TeamId != fixture.AwayTeamId)
-                return Forbid();
-
-            var players = await _fixtures.GetPlayersAsync(fixtureId, isAdmin, user.TeamId, teamId);
+            var players = await _fixtures.GetPlayersAsync(fixtureId, call!.IsOfficial, call.User.TeamId, teamId);
             return players == null ? NotFound() : Ok(players);
         }
 
@@ -238,26 +166,13 @@ namespace Ballers.API.Controllers
         [HttpPost("{fixtureId}/squad")]
         public async Task<IActionResult> UpdateSquad(int fixtureId, UpdateFixtureSquadRequest request)
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return Unauthorized();
-
-            var fixture = await _fixtures.GetByIdAsync(fixtureId);
-            if (fixture == null) return NotFound();
-
-            bool isAdmin = user.IsAdmin || user.IsReferee;
-            if (!isAdmin && user.TeamId != fixture.HomeTeamId && user.TeamId != fixture.AwayTeamId)
-                return Forbid();
-
-            if (await FixturesLockedFor(user))
-                return Conflict("Fixtures are locked by the admin — editing is disabled.");
-
-            if (fixture.IsEditLocked)
-                return Conflict("This fixture is locked — more than 2 weeks have passed since it was played.");
+            var (call, refusal) = await AuthorizeAsync(fixtureId, FixtureAccessRequirement.OfficialsOrEitherTeam, edit: true);
+            if (refusal != null) return refusal;
 
             // Never null for an admin: UpdateSquadAsync treats a null team as
             // "replace every player in this fixture", which would wipe the other
             // team's squad when an admin saved one side.
-            var actingTeamId = ResolveActingTeamId(isAdmin, user, fixture, request.TeamId);
+            var actingTeamId = ResolveActingTeamId(call!, request.TeamId);
             if (actingTeamId is null) return BadRequest("That team is not in this fixture.");
 
             await _fixtures.UpdateSquadAsync(fixtureId, request.PlayerIds, actingTeamId);
@@ -271,37 +186,28 @@ namespace Ballers.API.Controllers
         // and it is never returned on the ordinary fixture endpoints, so it
         // cannot leak to players through the fixture page.
 
+        [Authorize(Policy = Policies.SiteAdmin)]
         [HttpGet("{fixtureId}/true-motm")]
         public async Task<IActionResult> GetTrueMotm(int fixtureId)
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return Unauthorized();
-            if (!user.IsAdmin) return Forbid();
-
             var detail = await _fixtures.GetTrueMotmAsync(fixtureId);
             return detail == null ? NotFound() : Ok(detail);
         }
 
+        [Authorize(Policy = Policies.SiteAdmin)]
         [HttpPut("{fixtureId}/true-motm")]
         public async Task<IActionResult> SetTrueMotm(int fixtureId, SetTrueMotmRequest request)
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return Unauthorized();
-            if (!user.IsAdmin) return Forbid();
-
             var saved = await _fixtures.SetTrueMotmAsync(fixtureId, request.PlayerId);
             return saved
                 ? Ok()
                 : BadRequest("That player is not a man of the match for this fixture.");
         }
 
+        [Authorize(Policy = Policies.SiteAdmin)]
         [HttpGet("true-motm")]
         public async Task<IActionResult> GetTrueMotmLog()
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return Unauthorized();
-            if (!user.IsAdmin) return Forbid();
-
             return Ok(await _fixtures.GetTrueMotmLogAsync());
         }
 
@@ -327,8 +233,7 @@ namespace Ballers.API.Controllers
         private async Task<bool> PublicFixturesHidden()
         {
             if (!await _leagueSettings.AreFixturesHiddenAsync()) return false;
-            var user = await _userManager.GetUserAsync(User);
-            return !(user?.IsAdmin ?? false) && !(user?.IsReferee ?? false);
+            return !User.IsOfficial();
         }
 
         [HttpGet("{fixtureId}/stats")]
@@ -338,21 +243,13 @@ namespace Ballers.API.Controllers
         [HttpGet("{fixtureId}/opponent-stats")]
         public async Task<IActionResult> GetOpponentStats(int fixtureId, [FromQuery] int? teamId = null)
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return Unauthorized();
+            var (call, refusal) = await AuthorizeAsync(fixtureId, FixtureAccessRequirement.OfficialsOrEitherTeam);
+            if (refusal != null) return refusal;
+            var fixture = call!.Fixture;
 
-            var fixture = await _fixtures.GetByIdAsync(fixtureId);
-            if (fixture == null) return NotFound();
-
-            bool isAdmin = user.IsAdmin || user.IsReferee;
-            if (!isAdmin && user.TeamId != fixture.HomeTeamId && user.TeamId != fixture.AwayTeamId)
-                return Forbid();
-
-            if (!isAdmin && user.TeamId == null) return Forbid();
-
-            int opponentTeamId = (isAdmin && teamId.HasValue)
+            int opponentTeamId = (call.IsOfficial && teamId.HasValue)
                 ? teamId.Value
-                : (user.TeamId == fixture.HomeTeamId ? fixture.AwayTeamId : fixture.HomeTeamId);
+                : (call.User.TeamId == fixture.HomeTeamId ? fixture.AwayTeamId : fixture.HomeTeamId);
 
             return Ok(await _fixtures.GetOpponentStatsAsync(fixtureId, opponentTeamId));
         }
@@ -368,22 +265,10 @@ namespace Ballers.API.Controllers
         [HttpPut("{fixtureId}/captaincy")]
         public async Task<IActionResult> SaveCaptaincy(int fixtureId, [FromBody] SaveCaptaincyRequest request)
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return Unauthorized();
+            var (call, refusal) = await AuthorizeAsync(fixtureId, FixtureAccessRequirement.OfficialsOrEitherTeam, edit: true);
+            if (refusal != null) return refusal;
 
-            var fixture = await _fixtures.GetByIdAsync(fixtureId);
-            if (fixture == null) return NotFound();
-
-            bool isAdmin = user.IsAdmin || user.IsReferee;
-            if (!isAdmin && user.TeamId != fixture.HomeTeamId && user.TeamId != fixture.AwayTeamId)
-                return Forbid();
-
-            if (!isAdmin && user.TeamId == null) return Forbid();
-
-            if (await FixturesLockedFor(user))
-                return Conflict("Fixtures are locked by the admin — editing is disabled.");
-
-            var actingTeamId = ResolveActingTeamId(isAdmin, user, fixture, request.TeamId);
+            var actingTeamId = ResolveActingTeamId(call!, request.TeamId);
             if (actingTeamId is null) return BadRequest("That team is not in this fixture.");
 
             await _fixtures.SaveCaptaincyAsync(

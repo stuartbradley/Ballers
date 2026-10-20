@@ -1,18 +1,20 @@
+using Ballers.Models;
 using Ballers.API.Data;
 using Ballers.API.Models;
+using Ballers.Shared;
 using Microsoft.EntityFrameworkCore;
 
 namespace Ballers.API.Services
 {
     public interface IStatsService
     {
-        Task<List<PlayerGoalsStat>> GetTopScorersAsync();
-        Task<List<PlayerAssistsStat>> GetTopAssistsAsync();
-        Task<List<PlayerMotmStat>> GetTopMotmAsync();
-        Task<(List<PlayerGoalsStat> Scorers, List<PlayerAssistsStat> Assists, List<PlayerMotmStat> Motm)> GetTopStatsSummaryAsync();
+        Task<List<PlayerGoalsDto>> GetTopScorersAsync();
+        Task<List<PlayerAssistDto>> GetTopAssistsAsync();
+        Task<List<PlayerMotmDto>> GetTopMotmAsync();
+        Task<(List<PlayerGoalsDto> Scorers, List<PlayerAssistDto> Assists, List<PlayerMotmDto> Motm)> GetTopStatsSummaryAsync();
         Task<WinLossDrawResult> GetWinLossAsync(int teamId);
-        Task<List<PlayerLeaderboardEntry>> GetLeaderboardAsync(int? seasonId);
-        Task<List<TeamStatsEntry>> GetTeamStatsAsync(int? seasonId);
+        Task<List<PlayerLeaderboardDto>> GetLeaderboardAsync(int? seasonId);
+        Task<List<TeamStatsDto>> GetTeamStatsAsync(int? seasonId);
     }
 
     public class StatsService : IStatsService
@@ -32,65 +34,65 @@ namespace Ballers.API.Services
                 .ToListAsync();
         }
 
-        public async Task<(List<PlayerGoalsStat> Scorers, List<PlayerAssistsStat> Assists, List<PlayerMotmStat> Motm)> GetTopStatsSummaryAsync()
+        public async Task<(List<PlayerGoalsDto> Scorers, List<PlayerAssistDto> Assists, List<PlayerMotmDto> Motm)> GetTopStatsSummaryAsync()
         {
             var stats = await GetCurrentSeasonStatsAsync();
             var grouped = stats.GroupBy(x => new { x.PlayerId, x.Player!.Name }).ToList();
 
             var scorers = grouped
-                .Select(g => new PlayerGoalsStat(g.Key.PlayerId, g.Key.Name, g.Sum(x => x.Goals)))
+                .Select(g => new PlayerGoalsDto { PlayerId = g.Key.PlayerId, Name = g.Key.Name, Goals = g.Sum(x => x.Goals) })
                 .Where(x => x.Goals > 0).OrderByDescending(x => x.Goals).Take(5).ToList();
 
             var assists = grouped
-                .Select(g => new PlayerAssistsStat(g.Key.PlayerId, g.Key.Name, g.Sum(x => x.Assists)))
+                .Select(g => new PlayerAssistDto { PlayerId = g.Key.PlayerId, Name = g.Key.Name, Assists = g.Sum(x => x.Assists) })
                 .Where(x => x.Assists > 0).OrderByDescending(x => x.Assists).Take(5).ToList();
 
             var motm = grouped
-                .Select(g => new PlayerMotmStat(g.Key.PlayerId, g.Key.Name, g.Count(x => x.ManOfTheMatch)))
+                .Select(g => new PlayerMotmDto { PlayerId = g.Key.PlayerId, Name = g.Key.Name, Motm = g.Count(x => x.ManOfTheMatch) })
                 .Where(x => x.Motm > 0).OrderByDescending(x => x.Motm).Take(5).ToList();
 
             return (scorers, assists, motm);
         }
 
-        public async Task<List<PlayerGoalsStat>> GetTopScorersAsync()
+        public async Task<List<PlayerGoalsDto>> GetTopScorersAsync()
         {
             var stats = await GetCurrentSeasonStatsAsync();
             return stats
                 .GroupBy(x => new { x.PlayerId, x.Player!.Name })
-                .Select(g => new PlayerGoalsStat(g.Key.PlayerId, g.Key.Name, g.Sum(x => x.Goals)))
+                .Select(g => new PlayerGoalsDto { PlayerId = g.Key.PlayerId, Name = g.Key.Name, Goals = g.Sum(x => x.Goals) })
                 .Where(x => x.Goals > 0)
                 .OrderByDescending(x => x.Goals)
                 .Take(5)
                 .ToList();
         }
 
-        public async Task<List<PlayerAssistsStat>> GetTopAssistsAsync()
+        public async Task<List<PlayerAssistDto>> GetTopAssistsAsync()
         {
             var stats = await GetCurrentSeasonStatsAsync();
             return stats
                 .GroupBy(x => new { x.PlayerId, x.Player!.Name })
-                .Select(g => new PlayerAssistsStat(g.Key.PlayerId, g.Key.Name, g.Sum(x => x.Assists)))
+                .Select(g => new PlayerAssistDto { PlayerId = g.Key.PlayerId, Name = g.Key.Name, Assists = g.Sum(x => x.Assists) })
                 .Where(x => x.Assists > 0)
                 .OrderByDescending(x => x.Assists)
                 .Take(5)
                 .ToList();
         }
 
-        public async Task<List<PlayerMotmStat>> GetTopMotmAsync()
+        public async Task<List<PlayerMotmDto>> GetTopMotmAsync()
         {
             var stats = await GetCurrentSeasonStatsAsync();
             return stats
                 .GroupBy(x => new { x.PlayerId, x.Player!.Name })
-                .Select(g => new PlayerMotmStat(g.Key.PlayerId, g.Key.Name, g.Count(x => x.ManOfTheMatch)))
+                .Select(g => new PlayerMotmDto { PlayerId = g.Key.PlayerId, Name = g.Key.Name, Motm = g.Count(x => x.ManOfTheMatch) })
                 .Where(x => x.Motm > 0)
                 .OrderByDescending(x => x.Motm)
                 .Take(5)
                 .ToList();
         }
 
-        public async Task<List<PlayerLeaderboardEntry>> GetLeaderboardAsync(int? seasonId)
+        public async Task<List<PlayerLeaderboardDto>> GetLeaderboardAsync(int? seasonId)
         {
-            var query = _db.FixturePlayerStats
+            var query = _db.FixturePlayerStats.AsNoTracking()
                 .Include(s => s.Player).ThenInclude(p => p!.Team)
                 .Include(s => s.Fixture)
                 .Where(s => s.Fixture!.IsPlayed);
@@ -140,18 +142,18 @@ namespace Ballers.API.Services
                             settings.SilverOverallThreshold, settings.GoldOverallThreshold);
                     }
 
-                    return new PlayerLeaderboardEntry(
-                        player.Id,
-                        player.Name,
-                        player.Team?.Name ?? "",
-                        player.Position,
-                        g.Count(),
-                        g.Sum(s => s.Goals),
-                        g.Sum(s => s.Assists),
-                        cleanSheets,
-                        g.Count(s => s.YellowCards),
-                        g.Count(s => s.RedCard))
+                    return new PlayerLeaderboardDto
                     {
+                        PlayerId = player.Id,
+                        Name = player.Name,
+                        Team = player.Team?.Name ?? "",
+                        Position = player.Position,
+                        Appearances = g.Count(),
+                        Goals = g.Sum(s => s.Goals),
+                        Assists = g.Sum(s => s.Assists),
+                        CleanSheets = cleanSheets,
+                        YellowCards = g.Count(s => s.YellowCards),
+                        RedCards = g.Count(s => s.RedCard),
                         TeamId = player.TeamId,
                         Number = player.Number,
                         Motm = g.Count(s => s.ManOfTheMatch),
@@ -166,7 +168,7 @@ namespace Ballers.API.Services
                 .ToList();
         }
 
-        public async Task<List<TeamStatsEntry>> GetTeamStatsAsync(int? seasonId)
+        public async Task<List<TeamStatsDto>> GetTeamStatsAsync(int? seasonId)
         {
             var fixtures = _db.Fixtures.AsNoTracking().Where(f => f.IsPlayed);
             if (seasonId.HasValue)
@@ -193,17 +195,22 @@ namespace Ballers.API.Services
                     .ToList();
                 var teamCards = cards.Where(c => c.TeamId == team.Id).ToList();
 
-                return new TeamStatsEntry(
-                    team.Id, team.Name, team.ProfileImageUrl, team.HomeKitColour,
-                    games.Count,
-                    games.Count(g => g.For > g.Against),
-                    games.Count(g => g.For == g.Against),
-                    games.Count(g => g.For < g.Against),
-                    games.Sum(g => g.For),
-                    games.Sum(g => g.Against),
-                    games.Count(g => g.Against == 0),
-                    teamCards.Count(c => c.YellowCards),
-                    teamCards.Count(c => c.RedCard));
+                return new TeamStatsDto
+                {
+                    TeamId = team.Id,
+                    Name = team.Name,
+                    ProfileImageUrl = team.ProfileImageUrl,
+                    HomeKitColour = team.HomeKitColour,
+                    Played = games.Count,
+                    Won = games.Count(g => g.For > g.Against),
+                    Drawn = games.Count(g => g.For == g.Against),
+                    Lost = games.Count(g => g.For < g.Against),
+                    GoalsFor = games.Sum(g => g.For),
+                    GoalsAgainst = games.Sum(g => g.Against),
+                    CleanSheets = games.Count(g => g.Against == 0),
+                    YellowCards = teamCards.Count(c => c.YellowCards),
+                    RedCards = teamCards.Count(c => c.RedCard)
+                };
             }).ToList();
         }
 
@@ -211,7 +218,7 @@ namespace Ballers.API.Services
         {
             var today = DateTime.UtcNow;
 
-            var fixtures = await _db.Fixtures
+            var fixtures = await _db.Fixtures.AsNoTracking()
                 .Where(f =>
                     f.IsPlayed &&
                     f.Season!.StartDate <= today &&

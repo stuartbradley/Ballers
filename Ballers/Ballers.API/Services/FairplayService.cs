@@ -23,7 +23,7 @@ namespace Ballers.API.Services
             var fixture = await _db.Fixtures.FindAsync(fixtureId);
             if (fixture == null) return null;
 
-            var ratings = await _db.FairplayRatings
+            var ratings = await _db.FairplayRatings.AsNoTracking()
                 .Where(r => r.FixtureId == fixtureId)
                 .ToListAsync();
 
@@ -49,7 +49,7 @@ namespace Ballers.API.Services
 
         public async Task<List<FairplayTableRowDto>> GetTableAsync(int seasonId)
         {
-            var ratings = await _db.FairplayRatings
+            var ratings = await _db.FairplayRatings.AsNoTracking()
                 .Include(r => r.Fixture)
                 .Include(r => r.Team)
                 .Where(r => r.Fixture!.SeasonId == seasonId)

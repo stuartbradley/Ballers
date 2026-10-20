@@ -1,6 +1,5 @@
-﻿using Ballers.Models;
-using Microsoft.AspNetCore.Components.WebAssembly.Http;
-using System.Net.Http.Json;
+using Ballers.Models;
+using Ballers.UI.Infrastructure;
 
 namespace Ballers.Services
 {
@@ -13,60 +12,31 @@ namespace Ballers.Services
             _httpClient = httpClient;
         }
 
+        // Throws rather than coming back empty: an empty squad would invite the
+        // manager to add everyone again.
         public async Task<List<PlayerDto>> GetMyPlayers()
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, "api/players/my-team");
-            var response = await _httpClient.SendAsync(request);
-            response.EnsureSuccessStatusCode();
-
-            return await response.Content.ReadFromJsonAsync<List<PlayerDto>>() ?? new();
+            var response = await _httpClient.GetAsync("api/players/my-team");
+            return await response.ReadOk<List<PlayerDto>>("Couldn't load your squad.") ?? new();
         }
 
-        public async Task AddPlayer(string name, int number, string position)
-        {
-            var request = new HttpRequestMessage(
-                HttpMethod.Post,
-                "api/players");
+        public Task AddPlayer(string name, int number, string position) =>
+            _httpClient.PostOk("api/players",
+                new CreatePlayerRequest { Name = name, Number = number, Position = position }, "Couldn't add the player.");
 
-            request.Content = JsonContent.Create(new
-            {
-                name,
-                number, 
-                position
-            });
+        public Task AddPlayerForTeam(int teamId, string name, int number, string position) =>
+            _httpClient.PostOk($"api/players/team/{teamId}",
+                new CreatePlayerRequest { Name = name, Number = number, Position = position }, "Couldn't add the player.");
 
-            var response = await _httpClient.SendAsync(request);
-            response.EnsureSuccessStatusCode();
-        }
+        public Task RemovePlayer(int id) =>
+            _httpClient.DeleteOk($"api/players/{id}", "Couldn't remove the player.");
 
-        public async Task AddPlayerForTeam(int teamId, string name, int number, string position)
-        {
-            var request = new HttpRequestMessage(HttpMethod.Post, $"api/players/team/{teamId}");
-            request.Content = JsonContent.Create(new { name, number, position });
-            var response = await _httpClient.SendAsync(request);
-            response.EnsureSuccessStatusCode();
-        }
+        public Task UpdatePlayer(int id, string name, int number, string position) =>
+            _httpClient.PutOk($"api/players/{id}",
+                new UpdatePlayerRequest { Name = name, Number = number, Position = position }, "Couldn't save the player.");
 
-        public async Task RemovePlayer(int id)
-        {
-            var request = new HttpRequestMessage(
-                HttpMethod.Delete,
-                $"api/players/{id}");
-
-            var response = await _httpClient.SendAsync(request);
-            response.EnsureSuccessStatusCode();
-        }
-
-        public async Task UpdatePlayer(int id, string name, int number, string position)
-        {
-            var response = await _httpClient.PutAsJsonAsync($"api/players/{id}", new { name, number, position });
-            response.EnsureSuccessStatusCode();
-        }
-
-        public async Task UploadPlayerImage(int id, string imageBase64)
-        {
-            var response = await _httpClient.PutAsJsonAsync($"api/players/{id}/image", new { imageBase64 });
-            response.EnsureSuccessStatusCode();
-        }
+        public Task UploadPlayerImage(int id, string imageBase64) =>
+            _httpClient.PutOk($"api/players/{id}/image",
+                new UploadPlayerImageRequest { ImageBase64 = imageBase64 }, "Couldn't save the photo.");
     }
 }

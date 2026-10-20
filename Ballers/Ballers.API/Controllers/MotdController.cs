@@ -1,3 +1,4 @@
+using Ballers.API.Authorization;
 using Ballers.API.Services;
 using Ballers.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -26,11 +27,11 @@ namespace Ballers.API.Controllers
         }
 
         [HttpGet("fixture-options")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = Policies.SiteAdmin)]
         public async Task<IActionResult> GetFixtureOptions() => Ok(await _motd.GetFixtureOptionsAsync());
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = Policies.SiteAdmin)]
         public async Task<IActionResult> Create([FromBody] SaveMotdRequest request)
         {
             if (request.FixtureId <= 0) return BadRequest("A match must be selected.");
@@ -41,7 +42,7 @@ namespace Ballers.API.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = Policies.SiteAdmin)]
         public async Task<IActionResult> Update(int id, [FromBody] SaveMotdRequest request)
         {
             if (request.FixtureId <= 0) return BadRequest("A match must be selected.");
@@ -51,7 +52,7 @@ namespace Ballers.API.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = Policies.SiteAdmin)]
         public async Task<IActionResult> Delete(int id)
             => await _motd.DeleteAsync(id) ? Ok() : NotFound();
     }

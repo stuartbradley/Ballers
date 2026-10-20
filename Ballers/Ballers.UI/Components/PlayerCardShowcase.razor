@@ -7,6 +7,7 @@
 @implements IAsyncDisposable
 @inject IJSRuntime JS
 @inject PlayerCardService Cards
+@inject HttpClient Http
 
 <section class="card-showcase card-tier-@CardTier" id="@_rootId"
          data-silver="@_thresholds?.SilverOverallThreshold"
@@ -149,7 +150,7 @@
                                         @* An ordinary rectangular upload, not a
                                            cut-out, so its edges are faded into
                                            the card instead of showing a box. *@
-                                        <img class="sc-photo-real" src="@_featured.ImageUrl" alt="" draggable="false" />
+                                        <img class="sc-photo-real" src="@MediaUrls.Absolute(Http, _featured.ImageUrl)" alt="" draggable="false" />
                                     }
                                     else
                                     {

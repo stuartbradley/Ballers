@@ -1,5 +1,5 @@
 using Ballers.Shared;
-using System.Net.Http.Json;
+using Ballers.UI.Infrastructure;
 
 namespace Ballers.Services
 {
@@ -8,37 +8,20 @@ namespace Ballers.Services
         private readonly HttpClient _http;
         public TotwService(HttpClient http) => _http = http;
 
-        public async Task<TeamOfTheWeekDto?> GetCurrent()
-        {
-            var resp = await _http.GetAsync("api/totw/current");
-            if (!resp.IsSuccessStatusCode) return null;
-            return await resp.Content.ReadFromJsonAsync<TeamOfTheWeekDto>();
-        }
+        public Task<TeamOfTheWeekDto?> GetCurrent() =>
+            _http.GetOrDefault<TeamOfTheWeekDto>("api/totw/current");
 
-        public async Task<List<TeamOfTheWeekDto>> GetHistory()
-            => await _http.GetFromJsonAsync<List<TeamOfTheWeekDto>>("api/totw/history") ?? new();
+        public Task<List<TeamOfTheWeekDto>> GetHistory() =>
+            _http.GetListOrEmpty<TeamOfTheWeekDto>("api/totw/history");
 
-        public async Task<List<TotwWeekRefDto>> GetWeeks()
-            => await _http.GetFromJsonAsync<List<TotwWeekRefDto>>("api/totw/weeks") ?? new();
+        public Task<List<TotwWeekRefDto>> GetWeeks() =>
+            _http.GetListOrEmpty<TotwWeekRefDto>("api/totw/weeks");
 
         // Empty on failure: the table is an extra, not worth an error.
-        public async Task<List<TotwAppearanceDto>> GetAppearances()
-        {
-            try
-            {
-                return await _http.GetFromJsonAsync<List<TotwAppearanceDto>>("api/totw/appearances") ?? new();
-            }
-            catch (HttpRequestException)
-            {
-                return new();
-            }
-        }
+        public Task<List<TotwAppearanceDto>> GetAppearances() =>
+            _http.GetListOrEmpty<TotwAppearanceDto>("api/totw/appearances");
 
-        public async Task<TeamOfTheWeekDto?> GetWeek(int matchNumber)
-        {
-            var resp = await _http.GetAsync($"api/totw/{matchNumber}");
-            if (!resp.IsSuccessStatusCode) return null;
-            return await resp.Content.ReadFromJsonAsync<TeamOfTheWeekDto>();
-        }
+        public Task<TeamOfTheWeekDto?> GetWeek(int matchNumber) =>
+            _http.GetOrDefault<TeamOfTheWeekDto>($"api/totw/{matchNumber}");
     }
 }

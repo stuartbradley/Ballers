@@ -1,3 +1,4 @@
+using Ballers.API.Authorization;
 using Ballers.API.Models;
 using Ballers.API.Services;
 using Ballers.Shared;
@@ -65,7 +66,7 @@ namespace Ballers.API.Controllers
         }
 
         [HttpGet("me")]
-        [Authorize(Roles = "Player")]
+        [Authorize(Policy = Policies.Player)]
         public async Task<IActionResult> GetMine()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -80,7 +81,7 @@ namespace Ballers.API.Controllers
         }
 
         [HttpGet("me/awards")]
-        [Authorize(Roles = "Player")]
+        [Authorize(Policy = Policies.Player)]
         public async Task<IActionResult> GetMyAwards()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -95,7 +96,7 @@ namespace Ballers.API.Controllers
         }
 
         [HttpPost("me/allocate")]
-        [Authorize(Roles = "Player")]
+        [Authorize(Policy = Policies.Player)]
         public async Task<IActionResult> Allocate([FromBody] AllocatePointsRequest request)
         {
             var user = await _userManager.GetUserAsync(User);

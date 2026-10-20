@@ -4,10 +4,8 @@
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
 @attribute [Authorize]
+@inherits ViewModelComponent<ManagerFixturesViewModel>
 
-@inject FixtureService FixtureService
-@inject LeagueSettingsService LeagueSettingsSvc
-@inject AuthenticationStateProvider AuthProvider
 
 <PageTitle>Fixtures</PageTitle>
 
@@ -15,36 +13,36 @@
    anything that needs sorting, then what's coming up and what's been played.
    Each card says how far along that game is and offers the one job that's
    due. Admins and referees see every game, from the home side's view. *@
-<div class="mf">
+<div class="mf comic">
     <AuthorizeView Roles="Manager"><ManagerNav Current="fixtures" /></AuthorizeView>
 
     <div class="mf-wrap">
         <header class="mf-head">
-            <span class="mf-sticker">@(isStaff ? "All fixtures" : "Your fixtures")</span>
-            <h1>@(isStaff ? "Every game" : "Fixtures")</h1>
+            <span class="mf-sticker">@(Vm.IsStaff ? "All fixtures" : "Your fixtures")</span>
+            <h1>@(Vm.IsStaff ? "Every game" : "Fixtures")</h1>
 
-            @if (fixtures != null && fixtures.Any())
+            @if (Vm.Fixtures != null && (Vm.Fixtures.Any() || Vm.Seasons.Count > 1))
             {
                 <div class="mf-filters">
-                    @if (seasons.Count > 1)
+                    @if (Vm.Seasons.Count > 1)
                     {
                         <label class="mf-season">
                             <span>Season</span>
-                            <select @bind="seasonId">
-                                @foreach (var s in seasons)
+                            <select @bind="Vm.SeasonId" @bind:after="Vm.LoadSeason">
+                                @foreach (var s in Vm.Seasons)
                                 {
                                     <option value="@s.Id">Season @s.Number@(s.Active ? " (now)" : "")</option>
                                 }
                             </select>
                         </label>
                     }
-                    @if (!isStaff)
+                    @if (!Vm.IsStaff)
                     {
                         <div class="mf-chips" role="group" aria-label="Home or away">
                             @foreach (var v in new[] { "All", "Home", "Away" })
                             {
-                                <button type="button" class="mf-chip @(venue == v ? "is-active" : "")"
-                                        aria-pressed="@(venue == v ? "true" : "false")" @onclick="() => venue = v">@v</button>
+                                <button type="button" class="mf-chip @(Vm.Venue == v ? "is-active" : "")"
+                                        aria-pressed="@(Vm.Venue == v ? "true" : "false")" @onclick="() => Vm.Venue = v">@v</button>
                             }
                         </div>
                     }
@@ -52,49 +50,49 @@
             }
         </header>
 
-        @if (lockedForMe)
+        @if (Vm.LockedForMe)
         {
             <p class="mf-note">🔒 The admins have locked fixtures for now. You can look, but not change anything.</p>
         }
 
-        @if (fixtures == null)
+        @if (Vm.Fixtures == null)
         {
             <div class="mf-loading"><LoadingSpinner /></div>
         }
-        else if (!fixtures.Any())
+        else if (!Vm.Fixtures.Any())
         {
-            <div class="mf-panel mf-empty">
+            <div class="c-panel mf-empty">
                 <span class="mf-big-emoji" aria-hidden="true">📭</span>
                 <h2>No fixtures yet</h2>
                 <p>Once the admins draw up the season, your games appear here. Meanwhile, get your squad ready!</p>
-                <a class="mf-btn is-yellow" href="/my-squad">Go to my squad</a>
+                <a class="c-btn is-yellow" href="/my-squad">Go to my squad</a>
             </div>
         }
         else
         {
-            var list = Visible.ToList();
-            var next = list.Where(IsUpcoming).OrderBy(SortKey).FirstOrDefault();
-            var sorting = list.Where(NeedsSorting).OrderBy(SortKey).ToList();
-            var upcoming = list.Where(f => IsUpcoming(f) && f != next).OrderBy(SortKey).ToList();
-            var played = list.Where(f => !IsUpcoming(f) && !NeedsSorting(f)).OrderByDescending(SortKey).ToList();
+            var list = Vm.Visible.ToList();
+            var next = list.Where(Vm.IsUpcoming).OrderBy(ManagerFixturesViewModel.SortKey).FirstOrDefault();
+            var sorting = list.Where(Vm.NeedsSorting).OrderBy(ManagerFixturesViewModel.SortKey).ToList();
+            var upcoming = list.Where(f => Vm.IsUpcoming(f) && f != next).OrderBy(ManagerFixturesViewModel.SortKey).ToList();
+            var played = list.Where(f => !Vm.IsUpcoming(f) && !Vm.NeedsSorting(f)).OrderByDescending(ManagerFixturesViewModel.SortKey).ToList();
 
             @if (next != null)
             {
-                var a = ActionFor(next);
+                var a = Vm.ActionFor(next);
                 <section class="mf-next" aria-labelledby="mf-next-title">
                     <span class="mf-next-tag" id="mf-next-title">Next up</span>
                     <div class="mf-next-teams">
-                        <span class="mf-crest @(Ours(next, true) ? "is-us" : "")">@Initials(next.HomeTeam)</span>
+                        <span class="mf-crest @(Vm.Ours(next, true) ? "is-us" : "")">@Format.TeamInitials(next.HomeTeam)</span>
                         <span class="mf-next-name is-home">@next.HomeTeam</span>
                         <span class="mf-burst" aria-label="versus">VS</span>
                         <span class="mf-next-name is-away">@next.AwayTeam</span>
-                        <span class="mf-crest @(Ours(next, false) ? "is-us" : "")">@Initials(next.AwayTeam)</span>
+                        <span class="mf-crest @(Vm.Ours(next, false) ? "is-us" : "")">@Format.TeamInitials(next.AwayTeam)</span>
                     </div>
-                    <p class="mf-next-when">@When(next) · @Countdown(next)</p>
+                    <p class="mf-next-when">@ManagerFixturesViewModel.When(next) · @ManagerFixturesViewModel.Countdown(next)</p>
                     @Progress(next)
                     <div class="mf-next-foot">
                         @Facts(next)
-                        <a class="mf-btn is-big @a.Tone" href="@a.Link">@a.Label →</a>
+                        <a class="c-btn is-big @a.Tone" href="@a.Link">@a.Label →</a>
                     </div>
                 </section>
             }
@@ -143,154 +141,80 @@
 </div>
 
 @code {
-    // A squad counts as picked at this many, as on the fixture page.
-    private const int SquadMinimum = 11;
+    // The fixtures and the rules for what each one needs are in
+    // ManagerFixturesViewModel; the card fragments are drawn here.
 
-    private List<FixtureDto>? fixtures;
-    private bool lockedForMe;
-    private bool isStaff;
-    private int seasonId;
-    private string venue = "All";
-
-    private record SeasonOption(int Id, int Number, bool Active);
-    private List<SeasonOption> seasons = new();
-
-    protected override async Task OnInitializedAsync()
-    {
-        var authState = await AuthProvider.GetAuthenticationStateAsync();
-        var isAdmin = authState.User.IsInRole("Admin");
-        isStaff = isAdmin || authState.User.IsInRole("Referee");
-
-        var fixturesTask = FixtureService.GetFixtures();
-        var settingsTask = LeagueSettingsSvc.Get();
-        await Task.WhenAll(fixturesTask, settingsTask);
-
-        fixtures = fixturesTask.Result;
-        lockedForMe = settingsTask.Result.FixturesLocked && !isAdmin;
-
-        // The live season by default, else the latest.
-        seasons = fixtures
-            .GroupBy(f => f.SeasonId)
-            .Select(g => new SeasonOption(g.Key, g.First().SeasonNumber, g.First().SeasonIsActive))
-            .OrderByDescending(s => s.Number)
-            .ToList();
-        seasonId = seasons.FirstOrDefault(s => s.Active)?.Id ?? seasons.FirstOrDefault()?.Id ?? 0;
-    }
-
-    private IEnumerable<FixtureDto> Visible => (fixtures ?? new())
-        .Where(f => f.SeasonId == seasonId)
-        .Where(f => venue == "All" || (venue == "Home") == f.IsHomeTeamManager);
-
-    // ── What state is a game in? ──
-
-    private static DateTime DueBy(FixtureDto f) => f.KickOff ?? f.WindowEnd;
-    private static DateTime SortKey(FixtureDto f) => f.KickOff ?? f.WindowStart;
-    private static bool Past(FixtureDto f) => DueBy(f) < DateTime.Now;
-
-    private bool IsUpcoming(FixtureDto f) => !f.IsPlayed && !Past(f);
-
-    // Gone and done with, but the manager still owes stats (or pens, once it's played).
-    private bool NeedsSorting(FixtureDto f) =>
-        !isStaff && !lockedForMe &&
-        ((Past(f) && !f.IsPlayed && !f.ManagerStatsSubmitted) || (f.IsPlayed && !f.ManagerPensSubmitted));
-
-    // Which side the badge highlights: the manager's own.
-    private bool Ours(FixtureDto f, bool home) => !isStaff && f.IsHomeTeamManager == home;
-
-    private static bool SetupDone(FixtureDto f) =>
-        f.KickOff != null && !string.IsNullOrWhiteSpace(f.Location) && !string.IsNullOrWhiteSpace(f.RefereeName);
-
-    private record NextAction(string Label, string Link, string Tone);
-
-    // The one job that's due for this game, or just a look.
-    private NextAction ActionFor(FixtureDto f)
-    {
-        var page = $"/fixture/{f.Id}";
-        if (isStaff || lockedForMe) return new("View", page, "");
-
-        var squadOk = f.ManagerSquadCount >= SquadMinimum;
-        if (Past(f) && !f.IsPlayed && !f.ManagerStatsSubmitted)
-            return squadOk ? new("Send stats", $"{page}?tab=stats", "is-red") : new("Pick squad", $"{page}?tab=squad", "is-red");
-        if (f.IsPlayed && !f.ManagerPensSubmitted)
-            return new("Send pens", $"{page}?tab=pens", "is-red");
-        if (!Past(f) && !f.IsPlayed)
-        {
-            if (f.IsHomeTeamManager && !f.IsKnockout && !SetupDone(f)) return new("Set up", $"{page}?tab=setup", "is-yellow");
-            if (!squadOk) return new("Pick squad", $"{page}?tab=squad", "is-yellow");
-            if (!f.ManagerCaptainSet) return new("Name captain", $"{page}?tab=squad", "is-yellow");
-        }
-        return new("View", page, "");
-    }
+    protected override Task OnInitializedAsync() => Vm.InitializeAsync();
 
     // ── Bits of a card ──
 
-    private RenderFragment Card(FixtureDto f)
+    private RenderFragment Card(FixtureListItemDto f)
     {
-        var a = ActionFor(f);
-        var isHome = isStaff || f.IsHomeTeamManager;
-        var opponent = isStaff ? $"{f.HomeTeam} v {f.AwayTeam}" : $"{(f.IsHomeTeamManager ? "v" : "at")} {(f.IsHomeTeamManager ? f.AwayTeam : f.HomeTeam)}";
+        var a = Vm.ActionFor(f);
+        var isHome = Vm.IsStaff || f.IsHomeTeamManager;
+        var opponent = Vm.IsStaff ? $"{f.HomeTeam} v {f.AwayTeam}" : $"{(f.IsHomeTeamManager ? "v" : "at")} {(f.IsHomeTeamManager ? f.AwayTeam : f.HomeTeam)}";
         var (us, them) = isHome ? (f.HomeScore, f.AwayScore) : (f.AwayScore, f.HomeScore);
         var res = !f.IsPlayed ? null : us > them ? "W" : us == them ? "D" : "L";
         return @<article class="mf-card @(a.Tone == "is-red" ? "is-urgent" : "")">
             <div class="mf-card-top">
                 <span class="mf-week">@(f.IsKnockout ? $"{f.KnockoutTournament} {f.KnockoutRound}" : $"MW{f.Week}")</span>
-                @if (!isStaff)
+                @if (!Vm.IsStaff)
                 {
                     <span class="mf-ha @(f.IsHomeTeamManager ? "is-home" : "")">@(f.IsHomeTeamManager ? "Home" : "Away")</span>
                 }
                 @if (res != null)
                 {
-                    <span class="mf-res is-@(isStaff ? "d" : res.ToLower())">@(isStaff ? "FT" : res)</span>
+                    <span class="mf-res is-@(Vm.IsStaff ? "d" : res.ToLower())">@(Vm.IsStaff ? "FT" : res)</span>
                 }
             </div>
             <h3 class="mf-card-title">
                 @opponent
                 @if (f.IsPlayed)
                 {
-                    <strong>@(isStaff ? $"{f.HomeScore}–{f.AwayScore}" : $"{us}–{them}")</strong>
+                    <strong>@(Vm.IsStaff ? $"{f.HomeScore}–{f.AwayScore}" : $"{us}–{them}")</strong>
                 }
             </h3>
-            <p class="mf-card-when">@When(f)</p>
-            @if (!f.IsPlayed && Past(f) && f.ManagerStatsSubmitted && !isStaff)
+            <p class="mf-card-when">@ManagerFixturesViewModel.When(f)</p>
+            @if (!f.IsPlayed && ManagerFixturesViewModel.Past(f) && f.ManagerStatsSubmitted && !Vm.IsStaff)
             {
                 <p class="mf-wait">⏳ Waiting for @(f.IsHomeTeamManager ? f.AwayTeam : f.HomeTeam)'s stats</p>
             }
             @Progress(f)
             @Facts(f)
             <div class="mf-card-foot">
-                <a class="mf-btn is-small" href="/team-sheet/@f.Id">Team sheet</a>
-                <a class="mf-btn @a.Tone" href="@a.Link">@a.Label →</a>
+                <a class="c-btn is-small" href="/team-sheet/@f.Id">Team sheet</a>
+                <a class="c-btn @a.Tone" href="@a.Link">@a.Label →</a>
             </div>
         </article>;
     }
 
     // Setup / Squad / Result / Pens, as on the fixture page.
-    private RenderFragment Progress(FixtureDto f)
+    private RenderFragment Progress(FixtureListItemDto f)
     {
         var squad = f.ManagerSquadCount;
-        var resultDone = isStaff ? f.IsPlayed : f.ManagerStatsSubmitted;
+        var resultDone = Vm.IsStaff ? f.IsPlayed : f.ManagerStatsSubmitted;
         return @<ul class="mf-progress" aria-label="Progress">
-            <li class="@(SetupDone(f) ? "is-done" : "")">@(SetupDone(f) ? "✔" : "○") Setup</li>
-            @if (!isStaff)
+            <li class="@(ManagerFixturesViewModel.SetupDone(f) ? "is-done" : "")">@(ManagerFixturesViewModel.SetupDone(f) ? "✔" : "○") Setup</li>
+            @if (!Vm.IsStaff)
             {
-                <li class="@(squad >= SquadMinimum ? "is-done" : squad > 0 ? "is-part" : "")">
-                    @(squad >= SquadMinimum ? "✔" : "○") Squad @(squad >= SquadMinimum ? "" : $"{squad}/{SquadMinimum}")
+                <li class="@(squad >= ManagerFixturesViewModel.SquadMinimum ? "is-done" : squad > 0 ? "is-part" : "")">
+                    @(squad >= ManagerFixturesViewModel.SquadMinimum ? "✔" : "○") Squad @(squad >= ManagerFixturesViewModel.SquadMinimum ? "" : $"{squad}/{ManagerFixturesViewModel.SquadMinimum}")
                 </li>
             }
             <li class="@(resultDone ? "is-done" : "")">@(resultDone ? "✔" : "○") Result</li>
-            @if (!isStaff)
+            @if (!Vm.IsStaff)
             {
                 <li class="@(f.ManagerPensSubmitted ? "is-done" : "")">@(f.ManagerPensSubmitted ? "✔" : "○") Pens</li>
             }
         </ul>;
     }
 
-    private RenderFragment Facts(FixtureDto f) => @<dl class="mf-facts">
+    private RenderFragment Facts(FixtureListItemDto f) => @<dl class="mf-facts">
         <div>
             <dt>📍</dt>
             <dd>
                 @(string.IsNullOrWhiteSpace(f.Location) ? "Venue TBC" : f.Location)
-                @if (MapUrl(f) is { } map)
+                @if (ManagerFixturesViewModel.MapUrl(f) is { } map)
                 {
                     <a href="@map" target="_blank" rel="noopener noreferrer" aria-label="@($"Open {f.Location} in maps")">map ↗</a>
                 }
@@ -299,25 +223,4 @@
         <div><dt>🟨</dt><dd>@(f.RefereeName ?? "No ref yet")</dd></div>
     </dl>;
 
-    private static string When(FixtureDto f) =>
-        f.KickOff is { } k ? k.ToString("ddd d MMM, HH:mm") : $"Week of {f.WindowStart:d MMM}, time TBC";
-
-    private static string Countdown(FixtureDto f)
-    {
-        var days = (SortKey(f).Date - DateTime.Today).Days;
-        if (days <= 0) return "this week";
-        return days == 1 ? "tomorrow" : $"{days} days to go";
-    }
-
-    private static string? MapUrl(FixtureDto f)
-    {
-        var q = string.Join(", ", new[] { f.Location, f.Postcode }.Where(s => !string.IsNullOrWhiteSpace(s)));
-        return q.Length == 0 ? null : $"https://www.google.com/maps/search/?api=1&query={Uri.EscapeDataString(q)}";
-    }
-
-    private static string Initials(string name)
-    {
-        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        return parts.Length >= 2 ? $"{parts[0][0]}{parts[1][0]}".ToUpper() : name.Length >= 2 ? name[..2].ToUpper() : name.ToUpper();
-    }
 }

@@ -1,6 +1,6 @@
 using Ballers.API.Data;
 using Ballers.API.Models;
-using Ballers.API.Models.Requests;
+using Ballers.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Ballers.API.Services
@@ -8,7 +8,7 @@ namespace Ballers.API.Services
     public interface IPlayerService
     {
         Task<List<PlayerSummary>> GetTeamPlayersAsync(int teamId);
-        Task<List<PlayerDetail>> GetTeamPlayerDetailsAsync(int teamId);
+        Task<List<PlayerDto>> GetTeamPlayerDetailsAsync(int teamId);
         Task AddPlayerAsync(int teamId, CreatePlayerRequest request);
         Task<bool> DeactivatePlayerAsync(int playerId, int? requestingTeamId, bool isAdmin);
         Task UploadPlayerImageAsync(int playerId, int? requestingTeamId, bool isAdmin, string imageBase64);
@@ -23,20 +23,29 @@ namespace Ballers.API.Services
 
         public async Task<List<PlayerSummary>> GetTeamPlayersAsync(int teamId)
         {
-            return await _db.Players
+            return await _db.Players.AsNoTracking()
                 .Where(p => p.TeamId == teamId && p.IsActive)
                 .OrderBy(p => p.Number)
                 .Select(p => new PlayerSummary(p.Id, p.Name))
                 .ToListAsync();
         }
 
-        public async Task<List<PlayerDetail>> GetTeamPlayerDetailsAsync(int teamId)
+        public async Task<List<PlayerDto>> GetTeamPlayerDetailsAsync(int teamId)
         {
-            return await _db.Players
+            // The photo's length, not the photo: the list links to it instead.
+            var rows = await _db.Players.AsNoTracking()
                 .Where(p => p.TeamId == teamId && p.IsActive)
                 .OrderBy(p => p.Number)
-                .Select(p => new PlayerDetail(p.Id, p.Name, p.Number, p.Position, p.TeamId, p.ProfileImageBase64))
+                .Select(p => new
+                {
+                    p.Id, p.Name, p.Number, p.Position, p.TeamId,
+                    PhotoLength = p.ProfileImageBase64 != null ? p.ProfileImageBase64.Length : (int?)null
+                })
                 .ToListAsync();
+
+            return rows
+                .Select(p => new PlayerDto { Id = p.Id, Name = p.Name, Number = p.Number, Position = p.Position, TeamId = p.TeamId, ImageUrl = StoredImages.PlayerUrl(p.Id, p.PhotoLength) })
+                .ToList();
         }
 
         public async Task AddPlayerAsync(int teamId, CreatePlayerRequest request)

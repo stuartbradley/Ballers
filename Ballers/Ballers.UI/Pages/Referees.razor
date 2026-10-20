@@ -4,8 +4,7 @@
 @using Ballers.Services
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
-@inject RefereeService RefereeService
-@inject AuthenticationStateProvider AuthProvider
+@inherits ViewModelComponent<RefereesViewModel>
 
 <PageTitle>Referees</PageTitle>
 
@@ -24,7 +23,7 @@
 
     <div class="referees-body">
 
-        @if (isLoading)
+        @if (Vm.IsLoading)
         {
             <div class="referees-loading"><LoadingSpinner /></div>
         }
@@ -32,64 +31,64 @@
         {
             <!-- ADD / EDIT FORM -->
             <div class="ref-form-card">
-                <h3>@(editingId.HasValue ? "Edit Referee" : "Add Referee")</h3>
+                <h3>@(Vm.EditingId.HasValue ? "Edit Referee" : "Add Referee")</h3>
                 <div class="ref-form">
                     <div class="ref-field-row">
                         <div class="ref-field">
                             <label>Name <span class="required">*</span></label>
-                            <input type="text" @bind="form.Name" placeholder="e.g. Mark Hughes" maxlength="80" />
+                            <input type="text" @bind="Vm.Form.Name" placeholder="e.g. Mark Hughes" maxlength="80" />
                         </div>
                         <div class="ref-field">
                             <label>Phone</label>
-                            <input type="tel" @bind="form.PhoneNumber" placeholder="e.g. 07700 900123" maxlength="20" />
+                            <input type="tel" @bind="Vm.Form.PhoneNumber" placeholder="e.g. 07700 900123" maxlength="20" />
                         </div>
                     </div>
                     <div class="ref-field-row">
                         <div class="ref-field">
                             <label>Email</label>
-                            <input type="email" @bind="form.Email" placeholder="e.g. ref@example.com" maxlength="100" />
+                            <input type="email" @bind="Vm.Form.Email" placeholder="e.g. ref@example.com" maxlength="100" />
                         </div>
                         <div class="ref-field">
                             <label>Notes</label>
-                            <input type="text" @bind="form.Notes" placeholder="Any extra info…" maxlength="200" />
+                            <input type="text" @bind="Vm.Form.Notes" placeholder="Any extra info…" maxlength="200" />
                         </div>
                     </div>
 
-                    @if (!string.IsNullOrEmpty(formError))
+                    @if (!string.IsNullOrEmpty(Vm.FormError))
                     {
-                        <p class="ref-error">@formError</p>
+                        <p class="ref-error">@Vm.FormError</p>
                     }
 
                     <div class="ref-form-actions">
-                        <button class="primary-btn @(isSaving ? "saving" : "")" @onclick="Save" disabled="@isSaving">
-                            @(isSaving ? "Saving…" : editingId.HasValue ? "Update" : "Add Referee")
+                        <button class="primary-btn @(Vm.IsSaving ? "saving" : "")" @onclick="Vm.Save" disabled="@Vm.IsSaving">
+                            @(Vm.IsSaving ? "Saving…" : Vm.EditingId.HasValue ? "Update" : "Add Referee")
                         </button>
-                        @if (editingId.HasValue)
+                        @if (Vm.EditingId.HasValue)
                         {
-                            <button class="cancel-btn" @onclick="CancelEdit">Cancel</button>
+                            <button class="cancel-btn" @onclick="Vm.CancelEdit">Cancel</button>
                         }
                     </div>
                 </div>
             </div>
 
             <!-- REFEREE LIST -->
-            @if (!referees.Any())
+            @if (!Vm.Referees.Any())
             {
                 <div class="referees-empty">No referees added yet.</div>
             }
             else
             {
                 <div class="ref-list">
-                    @foreach (var referee in referees)
+                    @foreach (var referee in Vm.Referees)
                     {
-                        <div class="ref-card @(editingId == referee.Id ? "editing" : "")">
+                        <div class="ref-card @(Vm.EditingId == referee.Id ? "editing" : "")">
                             <div class="ref-card-header">
                                 <div class="ref-card-name">@referee.Name</div>
                                 <div class="ref-card-actions">
-                                    <button class="ref-edit-btn" @onclick="() => StartEdit(referee)">Edit</button>
-                                    @if (isAdmin)
+                                    <button class="ref-edit-btn" @onclick="() => Vm.StartEdit(referee)">Edit</button>
+                                    @if (Vm.IsAdmin)
                                     {
-                                        <button class="ref-delete-btn" @onclick="() => Delete(referee.Id)">Delete</button>
+                                        <button class="ref-delete-btn" @onclick="() => Vm.Delete(referee.Id)">Delete</button>
                                     }
                                 </div>
                             </div>
@@ -155,89 +154,7 @@
 </div>
 
 @code {
-    private List<RefereeDto> referees = new();
-    private SaveRefereeRequest form = new();
-    private int? editingId;
-    private bool isLoading = true;
-    private bool isSaving = false;
-    private bool isAdmin = false;
-    private string? formError;
+    // The referees and their actions are in RefereesViewModel.
 
-    protected override async Task OnInitializedAsync()
-    {
-        var auth = await AuthProvider.GetAuthenticationStateAsync();
-        isAdmin = auth.User.IsInRole("Admin");
-        referees = await RefereeService.GetAll();
-        isLoading = false;
-    }
-
-    void StartEdit(RefereeDto referee)
-    {
-        editingId = referee.Id;
-        form = new SaveRefereeRequest
-        {
-            Name        = referee.Name,
-            PhoneNumber = referee.PhoneNumber,
-            Email       = referee.Email,
-            Notes       = referee.Notes
-        };
-        formError = null;
-    }
-
-    void CancelEdit()
-    {
-        editingId = null;
-        form = new SaveRefereeRequest();
-        formError = null;
-    }
-
-    async Task Save()
-    {
-        formError = null;
-
-        if (string.IsNullOrWhiteSpace(form.Name))
-        {
-            formError = "Name is required.";
-            return;
-        }
-
-        isSaving = true;
-
-        if (editingId.HasValue)
-        {
-            var updated = await RefereeService.Update(editingId.Value, form);
-            if (updated != null)
-            {
-                var idx = referees.FindIndex(r => r.Id == editingId.Value);
-                if (idx >= 0) referees[idx] = updated;
-                CancelEdit();
-            }
-            else
-            {
-                formError = "Failed to update. Please try again.";
-            }
-        }
-        else
-        {
-            var created = await RefereeService.Create(form);
-            if (created != null)
-            {
-                referees.Add(created);
-                referees = referees.OrderBy(r => r.Name).ToList();
-                form = new SaveRefereeRequest();
-            }
-            else
-            {
-                formError = "Failed to add referee. Please try again.";
-            }
-        }
-
-        isSaving = false;
-    }
-
-    async Task Delete(int id)
-    {
-        await RefereeService.Delete(id);
-        referees.RemoveAll(r => r.Id == id);
-    }
+    protected override Task OnInitializedAsync() => Vm.InitializeAsync();
 }

@@ -5,8 +5,8 @@
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Forms
 @attribute [Authorize(Roles = "Admin")]
+@inherits ViewModelComponent<AdminAccountsViewModel>
 
-@inject AdminService AdminService
 
 <PageTitle>Admin · Accounts</PageTitle>
 
@@ -14,74 +14,74 @@
    password, or remove one. Removing a login never removes a team or player. *@
 <AdminShell Section="accounts" Title="Accounts" Subtitle="Every login: managers, referees, admins and players.">
     <Actions>
-        <button type="button" class="adm-btn is-primary" @onclick="() => showCreate = !showCreate">
-            @(showCreate ? "Close" : "+ New account")
+        <button type="button" class="adm-btn is-primary" @onclick="() => Vm.ShowCreate = !Vm.ShowCreate">
+            @(Vm.ShowCreate ? "Close" : "+ New account")
         </button>
     </Actions>
     <ChildContent>
 
-        @if (showCreate)
+        @if (Vm.ShowCreate)
         {
             <section class="adm-card" aria-labelledby="create-title">
                 <div class="adm-card-head"><h2 id="create-title">New account</h2></div>
 
                 <div class="adm-choices">
-                    @foreach (var (type, label, help) in AccountTypes)
+                    @foreach (var (type, label, help) in AdminAccountsViewModel.AccountTypes)
                     {
-                        <button type="button" class="adm-choice @(model.AccountType == type ? "is-active" : "")" @onclick="() => SetType(type)">
+                        <button type="button" class="adm-choice @(Vm.Model.AccountType == type ? "is-active" : "")" @onclick="() => Vm.SetType(type)">
                             <strong>@label</strong>
                             @help
                         </button>
                     }
                 </div>
 
-                <EditForm EditContext="editContext" OnValidSubmit="Create">
+                <EditForm EditContext="Vm.EditContext" OnValidSubmit="Vm.Create">
                     <DataAnnotationsValidator />
                     <div class="adm-field-row">
-                        @if (model.IsTeam)
+                        @if (Vm.Model.IsTeam)
                         {
                             <label class="adm-field">
                                 <span>Team name</span>
-                                <InputText @bind-Value="model.TeamName" />
-                                <ValidationMessage For="() => model.TeamName" />
+                                <InputText @bind-Value="Vm.Model.TeamName" />
+                                <ValidationMessage For="() => Vm.Model.TeamName" />
                             </label>
                         }
                         <label class="adm-field">
-                            <span>@(model.IsTeam ? "Manager's email" : "Email")</span>
-                            <InputText type="email" @bind-Value="model.Email" autocomplete="off" />
-                            <ValidationMessage For="() => model.Email" />
+                            <span>@(Vm.Model.IsTeam ? "Manager's email" : "Email")</span>
+                            <InputText type="email" @bind-Value="Vm.Model.Email" autocomplete="off" />
+                            <ValidationMessage For="() => Vm.Model.Email" />
                         </label>
                         <label class="adm-field">
                             <span>Starting password</span>
-                            <InputText type="text" @bind-Value="model.Password" autocomplete="new-password" />
-                            <ValidationMessage For="() => model.Password" />
+                            <InputText type="text" @bind-Value="Vm.Model.Password" autocomplete="new-password" />
+                            <ValidationMessage For="() => Vm.Model.Password" />
                         </label>
                     </div>
                     <p class="adm-help" style="margin:-4px 0 14px">
                         Upper and lower case, a number and a symbol. Send it to them; they can change it from Change Password.
                     </p>
-                    @if (model.IsAdmin)
+                    @if (Vm.Model.IsAdmin)
                     {
                         <div class="adm-msg is-info" style="margin:0 0 14px">
                             Admins can do everything here, including removing other accounts and deleting seasons. Only for people you trust.
                         </div>
                     }
-                    <button type="submit" class="adm-btn is-primary" disabled="@creating">
-                        @(creating ? "Creating…" : $"Create {TypeLabel(model.AccountType).ToLower()}")
+                    <button type="submit" class="adm-btn is-primary" disabled="@Vm.Creating">
+                        @(Vm.Creating ? "Creating…" : $"Vm.Create {AdminAccountsViewModel.TypeLabel(Vm.Model.AccountType).ToLower()}")
                     </button>
                 </EditForm>
 
-                @if (createMessage != null)
+                @if (Vm.CreateMessage != null)
                 {
-                    <div class="adm-msg @(createIsError ? "is-error" : "is-ok")">@createMessage</div>
+                    <div class="adm-msg @(Vm.CreateIsError ? "is-error" : "is-ok")">@Vm.CreateMessage</div>
                 }
             </section>
         }
 
         <section class="adm-card" aria-label="All accounts">
-            @if (accounts == null)
+            @if (Vm.Accounts == null)
             {
-                @if (loading)
+                @if (Vm.Loading)
                 {
                     <LoadingSpinner />
                 }
@@ -94,23 +94,23 @@
             {
                 <div class="adm-toolbar">
                     <div class="adm-chips" role="group" aria-label="Filter by role">
-                        @foreach (var r in RoleFilters)
+                        @foreach (var r in AdminAccountsViewModel.RoleFilters)
                         {
-                            var count = r == "All" ? accounts.Count : accounts.Count(a => a.Role == r);
+                            var count = r == "All" ? Vm.Accounts.Count : Vm.Accounts.Count(a => a.Role == r);
                             @if (r == "All" || count > 0)
                             {
-                                <button type="button" class="adm-chip @(role == r ? "is-active" : "")"
-                                        aria-pressed="@(role == r ? "true" : "false")" @onclick="() => role = r">
-                                    @RoleLabel(r)<small>@count</small>
+                                <button type="button" class="adm-chip @(Vm.Role == r ? "is-active" : "")"
+                                        aria-pressed="@(Vm.Role == r ? "true" : "false")" @onclick="() => Vm.Role = r">
+                                    @AdminAccountsViewModel.RoleLabel(r)<small>@count</small>
                                 </button>
                             }
                         }
                     </div>
                     <input class="adm-input" type="search" placeholder="Search email, team or player…" aria-label="Search accounts"
-                           @bind="search" @bind:event="oninput" />
+                           @bind="Vm.Search" @bind:event="oninput" />
                 </div>
 
-                @if (!Filtered.Any())
+                @if (!Vm.Filtered.Any())
                 {
                     <p class="adm-empty">No accounts match.</p>
                 }
@@ -127,7 +127,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var a in Filtered)
+                                @foreach (var a in Vm.Filtered)
                                 {
                                     <tr>
                                         <td class="adm-strong">
@@ -135,7 +135,7 @@
                                             @if (a.IsYou) { <span class="adm-badge">You</span> }
                                             @if (a.LockedOut) { <span class="adm-badge is-red">Locked out</span> }
                                         </td>
-                                        <td><span class="adm-badge @RoleTone(a.Role)">@RoleLabel(a.Role)</span></td>
+                                        <td><span class="adm-badge @AdminAccountsViewModel.RoleTone(a.Role)">@AdminAccountsViewModel.RoleLabel(a.Role)</span></td>
                                         <td>
                                             @if (a.PlayerName != null)
                                             {
@@ -147,7 +147,7 @@
                                             }
                                         </td>
                                         <td class="adm-actions">
-                                            <button type="button" class="adm-btn is-small" @onclick="() => StartReset(a)">Reset password</button>
+                                            <button type="button" class="adm-btn is-small" @onclick="() => Vm.StartReset(a)">Reset password</button>
                                             @if (!a.IsYou)
                                             {
                                                 <button type="button" class="adm-btn is-small is-danger" @onclick="() => Remove(a)">Remove</button>
@@ -160,32 +160,32 @@
                     </div>
                 }
 
-                @if (listMessage != null)
+                @if (Vm.ListMessage != null)
                 {
-                    <div class="adm-msg @(listIsError ? "is-error" : "is-ok")">@listMessage</div>
+                    <div class="adm-msg @(Vm.ListIsError ? "is-error" : "is-ok")">@Vm.ListMessage</div>
                 }
             }
         </section>
 
-        @if (resetting != null)
+        @if (Vm.Resetting != null)
         {
-            <div class="adm-dialog-back" @onclick="() => resetting = null">
+            <div class="adm-dialog-back" @onclick="() => Vm.Resetting = null">
                 <div class="adm-dialog" role="dialog" aria-modal="true" aria-labelledby="reset-title" @onclick:stopPropagation>
                     <h2 id="reset-title">Reset password</h2>
-                    <p>Set a new password for <strong>@resetting.Email</strong>. Their old one stops working straight away, and a lockout is cleared.</p>
+                    <p>Set a new password for <strong>@Vm.Resetting.Email</strong>. Their old one stops working straight away, and a lockout is cleared.</p>
                     <label class="adm-field">
                         <span>New password</span>
-                        <input class="adm-input" type="text" @bind="newPassword" @bind:event="oninput" autocomplete="new-password" />
+                        <input class="adm-input" type="text" @bind="Vm.NewPassword" @bind:event="oninput" autocomplete="new-password" />
                     </label>
                     <p class="adm-help" style="margin-top:-6px">At least 6 characters, with upper and lower case, a number and a symbol.</p>
-                    @if (resetError != null)
+                    @if (Vm.ResetError != null)
                     {
-                        <div class="adm-msg is-error" style="margin:0 0 12px">@resetError</div>
+                        <div class="adm-msg is-error" style="margin:0 0 12px">@Vm.ResetError</div>
                     }
                     <div class="adm-dialog-foot">
-                        <button type="button" class="adm-btn" @onclick="() => resetting = null">Cancel</button>
-                        <button type="button" class="adm-btn is-primary" disabled="@(newPassword.Length < 6 || savingReset)" @onclick="SaveReset">
-                            @(savingReset ? "Saving…" : "Set password")
+                        <button type="button" class="adm-btn" @onclick="() => Vm.Resetting = null">Cancel</button>
+                        <button type="button" class="adm-btn is-primary" disabled="@(Vm.NewPassword.Length < 6 || Vm.SavingReset)" @onclick="Vm.SaveReset">
+                            @(Vm.SavingReset ? "Saving…" : "Set password")
                         </button>
                     </div>
                 </div>
@@ -197,172 +197,19 @@
 </AdminShell>
 
 @code {
-    private static readonly string[] RoleFilters = { "All", "Admin", "Manager", "Referee", "Player", "Pending" };
-
-    private static readonly (AccountType Type, string Label, string Help)[] AccountTypes =
-    {
-        (AccountType.Team, "Team", "A new club and its manager's login."),
-        (AccountType.Referee, "Referee", "Sees every fixture and can record results."),
-        (AccountType.Admin, "Admin", "Runs the league: everything on these pages."),
-    };
+    // The accounts and their actions are in AdminAccountsViewModel; the page
+    // confirms a removal before it goes ahead.
 
     [Parameter, SupplyParameterFromQuery(Name = "role")] public string? RoleQuery { get; set; }
 
-    private List<AdminAccountDto>? accounts;
-    private bool loading = true;
-    private string role = "All";
-    private string search = "";
-    private string? listMessage;
-    private bool listIsError;
     private AdminConfirm confirm = default!;
 
-    private bool showCreate;
-    private CreateTeamViewModel model = new();
-    private EditContext editContext = default!;
-    private bool creating;
-    private string? createMessage;
-    private bool createIsError;
-
-    private AdminAccountDto? resetting;
-    private string newPassword = "";
-    private string? resetError;
-    private bool savingReset;
-
-    private IEnumerable<AdminAccountDto> Filtered => (accounts ?? new())
-        .Where(a => role == "All" || a.Role == role)
-        .Where(a => string.IsNullOrWhiteSpace(search)
-            || a.Email.Contains(search, StringComparison.OrdinalIgnoreCase)
-            || (a.TeamName?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false)
-            || (a.PlayerName?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false));
-
-    protected override async Task OnInitializedAsync()
-    {
-        editContext = new EditContext(model);
-
-        // The overview links here with ?role=Pending.
-        if (RoleQuery != null && RoleFilters.Contains(RoleQuery)) role = RoleQuery;
-
-        await Load();
-    }
-
-    private async Task Load()
-    {
-        loading = true;
-        accounts = await AdminService.GetAccounts();
-        loading = false;
-    }
-
-    private void SetType(AccountType type)
-    {
-        model.AccountType = type;
-        if (!model.IsTeam) model.TeamName = "";
-        editContext.NotifyValidationStateChanged();
-    }
-
-    private async Task Create()
-    {
-        creating = true;
-        createMessage = null;
-        try
-        {
-            switch (model.AccountType)
-            {
-                case AccountType.Referee: await AdminService.CreateReferee(model.Email, model.Password); break;
-                case AccountType.Admin: await AdminService.CreateAdmin(model.Email, model.Password); break;
-                default: await AdminService.CreateTeam(model.TeamName, model.Email, model.Password); break;
-            }
-            createIsError = false;
-            createMessage = model.IsTeam
-                ? $"{model.TeamName} created, with {model.Email} as manager."
-                : $"{TypeLabel(model.AccountType)} account created for {model.Email}.";
-
-            var type = model.AccountType;
-            model = new CreateTeamViewModel { AccountType = type };
-            editContext = new EditContext(model);
-            await Load();
-        }
-        catch (Exception ex)
-        {
-            createIsError = true;
-            createMessage = ex.Message;
-        }
-        finally
-        {
-            creating = false;
-        }
-    }
-
-    private void StartReset(AdminAccountDto a)
-    {
-        resetting = a;
-        newPassword = "";
-        resetError = null;
-    }
-
-    private async Task SaveReset()
-    {
-        if (resetting == null) return;
-        savingReset = true;
-        resetError = null;
-        try
-        {
-            await AdminService.ResetAccountPassword(resetting.Id, newPassword);
-            listIsError = false;
-            listMessage = $"Password reset for {resetting.Email}.";
-            resetting = null;
-            await Load();
-        }
-        catch (Exception ex)
-        {
-            resetError = ex.Message;
-        }
-        finally
-        {
-            savingReset = false;
-        }
-    }
+    protected override Task OnInitializedAsync() => Vm.InitializeAsync(RoleQuery);
 
     private async Task Remove(AdminAccountDto a)
     {
-        var what = a.Role switch
-        {
-            "Manager" => $"{a.TeamName ?? "Their team"} keeps its squad and results, but has no manager login until you create one.",
-            "Player" => $"{a.PlayerName ?? "They"} stay in the squad and keep their card; they just can't log in.",
-            "Pending" => "Their sign-up request goes with it.",
-            _ => "They won't be able to log in."
-        };
-        var ok = await confirm.Ask($"Remove {a.Email}?", $"This deletes the login. {what}", "Remove", danger: true);
-        if (!ok) return;
-
-        try
-        {
-            await AdminService.DeleteAccount(a.Id);
-            listIsError = false;
-            listMessage = $"{a.Email} removed.";
-            await Load();
-        }
-        catch (Exception ex)
-        {
-            listIsError = true;
-            listMessage = ex.Message;
-        }
+        var ok = await confirm.Ask($"Remove {a.Email}?",
+            $"This deletes the login. {AdminAccountsViewModel.RemovalConsequence(a)}", "Remove", danger: true);
+        if (ok) await Vm.RemoveAccount(a);
     }
-
-    private static string TypeLabel(AccountType t) => t switch
-    {
-        AccountType.Referee => "Referee",
-        AccountType.Admin => "Admin",
-        _ => "Team"
-    };
-
-    private static string RoleLabel(string r) => r == "Pending" ? "Awaiting approval" : r;
-
-    private static string RoleTone(string r) => r switch
-    {
-        "Admin" => "is-red",
-        "Manager" => "is-amber",
-        "Referee" => "is-blue",
-        "Player" => "is-green",
-        _ => "is-violet"
-    };
 }

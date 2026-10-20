@@ -6,6 +6,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
+using ChangePasswordRequest = Ballers.Models.ChangePasswordRequest;
+using ForgotPasswordRequest = Ballers.Models.ForgotPasswordRequest;
+using ResetPasswordRequest = Ballers.Models.ResetPasswordRequest;
 
 namespace Ballers.API.Controllers
 {
@@ -95,7 +98,7 @@ namespace Ballers.API.Controllers
         }
 
         [HttpPost("reset-password")]
-        public async Task<IActionResult> ResetPassword(ResetPasswordApiRequest request)
+        public async Task<IActionResult> ResetPassword(ResetPasswordRequest request)
         {
             var user = await _userManager.FindByEmailAsync(request.Email);
             if (user == null) return BadRequest(new[] { "Invalid request." });
@@ -127,6 +130,3 @@ namespace Ballers.API.Controllers
     }
 }
 
-public record ChangePasswordRequest(string CurrentPassword, string NewPassword);
-public record ForgotPasswordRequest(string Email);
-public record ResetPasswordApiRequest(string Email, string Token, string NewPassword);

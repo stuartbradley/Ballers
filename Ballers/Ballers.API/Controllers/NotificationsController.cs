@@ -1,3 +1,4 @@
+using Ballers.API.Authorization;
 using Ballers.API.Services;
 using Ballers.Shared;
 using Microsoft.AspNetCore.Authorization;
@@ -47,12 +48,12 @@ public class NotificationsController : ControllerBase
         return Ok();
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = Policies.SiteAdmin)]
     [HttpGet("settings")]
     public async Task<IActionResult> GetSettings()
         => Ok(await _notifications.GetSettingsAsync());
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = Policies.SiteAdmin)]
     [HttpPut("settings/{type}")]
     public async Task<IActionResult> UpdateSetting(NotificationType type, [FromBody] bool isEnabled)
     {

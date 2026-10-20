@@ -4,75 +4,74 @@
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Forms
 @attribute [Authorize(Roles = "Admin")]
+@inherits ViewModelComponent<AdminSeasonViewModel>
 
-@inject AdminService AdminService
-@inject KnockoutService KnockoutSvc
 
 <PageTitle>Admin · Season &amp; fixtures</PageTitle>
 
 <AdminShell Section="season" Title="Season & fixtures" Subtitle="Every season, which one is live, and setting up the next.">
     <Actions>
-        @if (!wizardOpen)
+        @if (!Vm.WizardOpen)
         {
-            <button type="button" class="adm-btn is-primary" @onclick="OpenWizard">+ New season</button>
+            <button type="button" class="adm-btn is-primary" @onclick="Vm.OpenWizard">+ New season</button>
         }
     </Actions>
     <ChildContent>
 
-        @if (wizardOpen)
+        @if (Vm.WizardOpen)
         {
             <section class="adm-card" aria-labelledby="wizard-title">
                 <div class="adm-card-head">
                     <h2 id="wizard-title">New season</h2>
-                    <button type="button" class="adm-btn is-small" @onclick="CloseWizard">Cancel</button>
+                    <button type="button" class="adm-btn is-small" @onclick="Vm.CloseWizard">Cancel</button>
                 </div>
 
                 <ol class="adm-steps">
-                    @foreach (var (label, i) in StepLabels.Select((l, i) => (l, i)))
+                    @foreach (var (label, i) in AdminSeasonViewModel.StepLabels.Select((l, i) => (l, i)))
                     {
-                        <li class="@(i < step ? "is-done" : i == step ? "is-current" : "")">@label</li>
+                        <li class="@(i < Vm.Step ? "is-done" : i == Vm.Step ? "is-current" : "")">@label</li>
                     }
                 </ol>
 
-                @switch (step)
+                @switch (Vm.Step)
                 {
                     case 0:
                         <div class="adm-choices">
-                            <button type="button" class="adm-choice @(method == "generate" ? "is-active" : "")" @onclick='() => method = "generate"'>
+                            <button type="button" class="adm-choice @(Vm.Method == "generate" ? "is-active" : "")" @onclick='() => Vm.Method = "generate"'>
                                 <strong>Generate</strong>
                                 Pick the teams and a start date; the fixtures are drawn up for you, home and away.
                             </button>
-                            <button type="button" class="adm-choice @(method == "import" ? "is-active" : "")" @onclick='() => method = "import"'>
+                            <button type="button" class="adm-choice @(Vm.Method == "import" ? "is-active" : "")" @onclick='() => Vm.Method = "import"'>
                                 <strong>Import a CSV</strong>
                                 Upload a fixture list you've drawn up yourself, with dates, venues and referees.
                             </button>
                         </div>
                         break;
 
-                    case 1 when method == "generate":
+                    case 1 when Vm.Method == "generate":
                         <label class="adm-field" style="max-width:260px">
                             <span>First match week starts</span>
-                            <InputDate @bind-Value="genStart" />
+                            <InputDate @bind-Value="Vm.GenStart" />
                         </label>
 
                         <div class="adm-toolbar" style="margin-bottom:8px">
-                            <span class="adm-label">Teams (@genTeams.Count of @teams.Count)</span>
+                            <span class="adm-label">Teams (@Vm.GenTeams.Count of @Vm.Teams.Count)</span>
                             <div class="adm-chips">
-                                <button type="button" class="adm-chip" @onclick="() => genTeams = teams.Select(t => t.Id).ToHashSet()">Select all</button>
-                                <button type="button" class="adm-chip" @onclick="() => genTeams.Clear()">Clear</button>
+                                <button type="button" class="adm-chip" @onclick="Vm.SelectAllTeams">Select all</button>
+                                <button type="button" class="adm-chip" @onclick="() => Vm.GenTeams.Clear()">Clear</button>
                             </div>
                         </div>
                         <div class="adm-check-grid">
-                            @foreach (var t in teams.OrderBy(t => t.Name))
+                            @foreach (var t in Vm.Teams.OrderBy(t => t.Name))
                             {
                                 <label class="adm-check">
-                                    <input type="checkbox" checked="@genTeams.Contains(t.Id)"
-                                           @onchange="e => ToggleTeam(t.Id, (bool)e.Value!)" />
+                                    <input type="checkbox" checked="@Vm.GenTeams.Contains(t.Id)"
+                                           @onchange="e => Vm.ToggleTeam(t.Id, (bool)e.Value!)" />
                                     @t.Name
                                 </label>
                             }
                         </div>
-                        @if (genTeams.Count >= 3 && genTeams.Count % 2 != 0)
+                        @if (Vm.GenTeams.Count >= 3 && Vm.GenTeams.Count % 2 != 0)
                         {
                             <div class="adm-msg is-info">An odd number of teams: one team sits out each round.</div>
                         }
@@ -87,73 +86,73 @@
                         <div class="adm-field-row">
                             <label class="adm-field">
                                 <span>Season number</span>
-                                <input type="number" min="1" @bind="importNumber" />
+                                <input type="number" min="1" @bind="Vm.ImportNumber" />
                             </label>
                             <label class="adm-field">
                                 <span>Season starts</span>
-                                <InputDate @bind-Value="importStart" />
+                                <InputDate @bind-Value="Vm.ImportStart" />
                             </label>
                         </div>
                         <label class="adm-check" style="max-width:320px;margin-bottom:14px">
-                            <input type="checkbox" checked="@importActive" @onchange="e => importActive = (bool)e.Value!" />
+                            <input type="checkbox" checked="@Vm.ImportActive" @onchange="e => Vm.ImportActive = (bool)e.Value!" />
                             Make it the active season straight away
                         </label>
                         <div class="adm-field">
                             <span>Fixture file</span>
                             <InputFile id="csvInput" OnChange="OnFile" accept=".csv" style="display:none" />
-                            <label for="csvInput" class="adm-btn" style="align-self:flex-start">@(importFile?.Name ?? "Choose CSV file…")</label>
+                            <label for="csvInput" class="adm-btn" style="align-self:flex-start">@(Vm.ImportFile?.Name ?? "Choose CSV file…")</label>
                         </div>
-                        @if (importPreview != null)
+                        @if (Vm.ImportPreview != null)
                         {
-                            <span class="adm-help">@importRows fixture row(s) found. First lines:</span>
-                            <pre class="adm-pre">@importPreview</pre>
+                            <span class="adm-help">@Vm.ImportRows fixture row(s) found. First lines:</span>
+                            <pre class="adm-pre">@Vm.ImportPreview</pre>
                         }
                         break;
 
                     default:
                         <dl class="adm-review">
-                            @if (method == "generate")
+                            @if (Vm.Method == "generate")
                             {
-                                var n = genTeams.Count;
+                                var n = Vm.GenTeams.Count;
                                 var rounds = (n % 2 == 0 ? n - 1 : n) * 2;
                                 <dt>Method</dt><dd>Generate, home and away</dd>
-                                <dt>Season</dt><dd>Season @NextSeasonNumber (not active until you activate it)</dd>
-                                <dt>Teams</dt><dd>@n: @string.Join(", ", teams.Where(t => genTeams.Contains(t.Id)).OrderBy(t => t.Name).Select(t => t.Name))</dd>
+                                <dt>Season</dt><dd>Season @Vm.NextSeasonNumber (not active until you activate it)</dd>
+                                <dt>Teams</dt><dd>@n: @string.Join(", ", Vm.Teams.Where(t => Vm.GenTeams.Contains(t.Id)).OrderBy(t => t.Name).Select(t => t.Name))</dd>
                                 <dt>Rounds</dt><dd>@rounds, one every two weeks</dd>
-                                <dt>Runs</dt><dd>@genStart.ToString("d MMM yyyy") – @genStart.AddDays(rounds * 14).ToString("d MMM yyyy")</dd>
+                                <dt>Runs</dt><dd>@Vm.GenStart.ToString("d MMM yyyy") – @Vm.GenStart.AddDays(rounds * 14).ToString("d MMM yyyy")</dd>
                             }
                             else
                             {
                                 <dt>Method</dt><dd>Import a CSV</dd>
-                                <dt>Season</dt><dd>Season @importNumber@(importActive ? ", made active" : "")</dd>
-                                <dt>Starts</dt><dd>@importStart.ToString("d MMM yyyy")</dd>
-                                <dt>File</dt><dd>@importFile?.Name (@importRows rows)</dd>
+                                <dt>Season</dt><dd>Season @Vm.ImportNumber@(Vm.ImportActive ? ", made active" : "")</dd>
+                                <dt>Starts</dt><dd>@Vm.ImportStart.ToString("d MMM yyyy")</dd>
+                                <dt>File</dt><dd>@Vm.ImportFile?.Name (@Vm.ImportRows rows)</dd>
                             }
                         </dl>
                         break;
                 }
 
-                @if (wizardMessage != null)
+                @if (Vm.WizardMessage != null)
                 {
-                    <div class="adm-msg @(wizardIsError ? "is-error" : "is-ok")">
-                        @wizardMessage
-                        @if (importErrors.Any())
+                    <div class="adm-msg @(Vm.WizardIsError ? "is-error" : "is-ok")">
+                        @Vm.WizardMessage
+                        @if (Vm.ImportErrors.Any())
                         {
-                            <ul>@foreach (var e in importErrors) { <li>@e</li> }</ul>
+                            <ul>@foreach (var e in Vm.ImportErrors) { <li>@e</li> }</ul>
                         }
                     </div>
                 }
 
                 <div class="adm-wizard-foot">
-                    <button type="button" class="adm-btn" disabled="@(step == 0 || creating)" @onclick="() => step--">‹ Back</button>
-                    @if (step < 2)
+                    <button type="button" class="adm-btn" disabled="@(Vm.Step == 0 || Vm.Creating)" @onclick="() => Vm.Step--">‹ Back</button>
+                    @if (Vm.Step < 2)
                     {
-                        <button type="button" class="adm-btn is-primary" disabled="@(!CanContinue)" @onclick="() => step++">Next ›</button>
+                        <button type="button" class="adm-btn is-primary" disabled="@(!Vm.CanContinue)" @onclick="() => Vm.Step++">Next ›</button>
                     }
                     else
                     {
-                        <button type="button" class="adm-btn is-primary" disabled="@creating" @onclick="Create">
-                            @(creating ? "Creating…" : "Create season")
+                        <button type="button" class="adm-btn is-primary" disabled="@Vm.Creating" @onclick="Vm.Create">
+                            @(Vm.Creating ? "Creating…" : "Vm.Create season")
                         </button>
                     }
                 </div>
@@ -165,18 +164,18 @@
                 <h2 id="seasons-title">Seasons</h2>
             </div>
 
-            @if (loading)
+            @if (Vm.Loading)
             {
                 <LoadingSpinner />
             }
-            else if (!seasons.Any())
+            else if (!Vm.Seasons.Any())
             {
                 <p class="adm-empty">No seasons yet. Start one with <strong>New season</strong>.</p>
             }
             else
             {
                 <div class="adm-rows">
-                    @foreach (var s in seasons.OrderByDescending(x => x.SeasonNumber))
+                    @foreach (var s in Vm.Seasons.OrderByDescending(x => x.SeasonNumber))
                     {
                         <div class="adm-row">
                             <span class="adm-dot @(s.IsActive ? "is-green" : "")">
@@ -209,13 +208,13 @@
                 </div>
             }
 
-            @if (seasonMessage != null)
+            @if (Vm.SeasonMessage != null)
             {
-                <div class="adm-msg @(seasonIsError ? "is-error" : "is-ok")">@seasonMessage</div>
+                <div class="adm-msg @(Vm.SeasonIsError ? "is-error" : "is-ok")">@Vm.SeasonMessage</div>
             }
         </section>
 
-        @if (seasons.Any())
+        @if (Vm.Seasons.Any())
         {
             <section class="adm-card adm-danger" aria-labelledby="danger-title">
                 <div class="adm-card-head">
@@ -225,14 +224,14 @@
                     </div>
                 </div>
                 <div class="adm-toolbar" style="margin:0;justify-content:flex-start">
-                    <select class="adm-input" style="max-width:200px" @bind="deleteId">
+                    <select class="adm-input" style="max-width:200px" @bind="Vm.DeleteId">
                         <option value="0">Choose a season…</option>
-                        @foreach (var s in seasons.OrderByDescending(x => x.SeasonNumber))
+                        @foreach (var s in Vm.Seasons.OrderByDescending(x => x.SeasonNumber))
                         {
                             <option value="@s.Id">Season @s.SeasonNumber@(s.IsActive ? " (active)" : "")</option>
                         }
                     </select>
-                    <button type="button" class="adm-btn is-danger" disabled="@(deleteId == 0)" @onclick="Delete">Delete season</button>
+                    <button type="button" class="adm-btn is-danger" disabled="@(Vm.DeleteId == 0)" @onclick="Delete">Delete season</button>
                 </div>
             </section>
         }
@@ -242,156 +241,24 @@
 </AdminShell>
 
 @code {
-    private static readonly string[] StepLabels = { "Method", "Details", "Review" };
+    // The wizard and season actions are in AdminSeasonViewModel; the page asks
+    // for confirmation before each season action.
 
-    private List<SeasonDto> seasons = new();
-    private List<TeamDto> teams = new();
-    private bool loading = true;
-    private string? seasonMessage;
-    private bool seasonIsError;
-    private int deleteId;
     private AdminConfirm confirm = default!;
 
-    // Wizard
-    private bool wizardOpen;
-    private int step;
-    private string method = "generate";
-    private HashSet<int> genTeams = new();
-    private DateTime genStart = DateTime.Today;
-    private int importNumber = 1;
-    private DateTime importStart = DateTime.Today;
-    private bool importActive;
-    private IBrowserFile? importFile;
-    private string? importPreview;
-    private int importRows;
-    private bool creating;
-    private string? wizardMessage;
-    private bool wizardIsError;
-    private List<string> importErrors = new();
+    protected override Task OnInitializedAsync() => Vm.InitializeAsync();
 
-    private int NextSeasonNumber => seasons.Any() ? seasons.Max(s => s.SeasonNumber) + 1 : 1;
-
-    private bool CanContinue => step switch
-    {
-        0 => true,
-        1 when method == "generate" => genTeams.Count >= 2,
-        1 => importFile != null && importNumber >= 1,
-        _ => false
-    };
-
-    protected override async Task OnInitializedAsync()
-    {
-        var seasonsTask = AdminService.GetSeasons();
-        var teamsTask = AdminService.GetTeams();
-        await Task.WhenAll(seasonsTask, teamsTask);
-        seasons = seasonsTask.Result;
-        teams = teamsTask.Result;
-        loading = false;
-    }
-
-    private void OpenWizard()
-    {
-        wizardOpen = true;
-        step = 0;
-        method = "generate";
-        genTeams = teams.Select(t => t.Id).ToHashSet();
-        genStart = DateTime.Today;
-        importNumber = NextSeasonNumber;
-        importStart = DateTime.Today;
-        importActive = false;
-        importFile = null;
-        importPreview = null;
-        wizardMessage = null;
-        importErrors.Clear();
-    }
-
-    private void CloseWizard() => wizardOpen = false;
-
-    private void ToggleTeam(int id, bool on)
-    {
-        if (on) genTeams.Add(id); else genTeams.Remove(id);
-    }
-
-    // Reads the file once to show what's in it before anything is created.
-    private async Task OnFile(InputFileChangeEventArgs e)
-    {
-        importFile = e.File;
-        importPreview = null;
-        importRows = 0;
-        try
-        {
-            using var reader = new StreamReader(e.File.OpenReadStream(5 * 1024 * 1024));
-            var lines = (await reader.ReadToEndAsync())
-                .Split('\n')
-                .Select(l => l.TrimEnd('\r'))
-                .Where(l => !string.IsNullOrWhiteSpace(l))
-                .ToList();
-            importRows = Math.Max(0, lines.Count - 1);
-            importPreview = string.Join("\n", lines.Take(6));
-        }
-        catch (Exception ex)
-        {
-            importPreview = $"Couldn't read the file: {ex.Message}";
-        }
-    }
-
-    private async Task Create()
-    {
-        creating = true;
-        wizardMessage = null;
-        importErrors.Clear();
-        try
-        {
-            if (method == "generate")
-            {
-                await AdminService.GenerateFixtures(genTeams.ToList(), genStart);
-                wizardMessage = $"Season {NextSeasonNumber} created. Make it active when you're ready.";
-            }
-            else
-            {
-                // The file was read for the preview; Blazor lets it be read again.
-                var (created, errors) = await AdminService.ImportFixtures(importFile!, importNumber, importStart, importActive);
-                if (errors.Any())
-                {
-                    wizardIsError = true;
-                    wizardMessage = "The import didn't go through. Fix these rows and try again:";
-                    importErrors = errors;
-                    return;
-                }
-                wizardMessage = $"Imported {created} fixtures into Season {importNumber}.";
-            }
-            wizardIsError = false;
-            seasons = await AdminService.GetSeasons();
-            wizardOpen = false;
-            seasonIsError = false;
-            seasonMessage = wizardMessage;
-        }
-        catch (Exception ex)
-        {
-            wizardIsError = true;
-            wizardMessage = ex.Message;
-        }
-        finally
-        {
-            creating = false;
-        }
-    }
+    private Task OnFile(InputFileChangeEventArgs e) => Vm.SelectImportFile(e.File);
 
     private async Task Activate(SeasonDto s)
     {
-        var active = seasons.FirstOrDefault(x => x.IsActive);
+        var active = Vm.ActiveSeason;
         var ok = await confirm.Ask($"Make Season {s.SeasonNumber} active?",
             active != null
                 ? $"Season {active.SeasonNumber} stops being the live season. The public pages, table and stats switch to Season {s.SeasonNumber}."
                 : $"The public pages, table and stats will show Season {s.SeasonNumber}.",
             "Make active");
-        if (!ok) return;
-
-        await Run(async () =>
-        {
-            await AdminService.ActivateSeason(s.Id);
-            return $"Season {s.SeasonNumber} is now active.";
-        });
+        if (ok) await Vm.ActivateSeason(s);
     }
 
     private async Task DrawKnockout(SeasonDto s)
@@ -399,46 +266,16 @@
         var ok = await confirm.Ask($"Draw the Season {s.SeasonNumber} knockout?",
             "The semi-finals are drawn from the current league table, so it needs at least 8 teams. It can't be redrawn afterwards.",
             "Draw knockout");
-        if (!ok) return;
-
-        await Run(async () =>
-        {
-            await KnockoutSvc.GenerateKnockoutAsync(s.Id);
-            return $"Season {s.SeasonNumber} knockout drawn.";
-        });
+        if (ok) await Vm.DrawKnockout(s);
     }
 
     private async Task Delete()
     {
-        var s = seasons.FirstOrDefault(x => x.Id == deleteId);
-        if (s == null) return;
+        if (Vm.SeasonToDelete is not { } s) return;
 
         var ok = await confirm.Ask($"Delete Season {s.SeasonNumber}?",
             $"This permanently removes every fixture, result, stat and knockout game in Season {s.SeasonNumber}. It can't be undone.",
             "Delete for good", danger: true, typeToConfirm: s.SeasonNumber.ToString());
-        if (!ok) return;
-
-        await Run(async () =>
-        {
-            await AdminService.DeleteSeason(s.Id);
-            deleteId = 0;
-            return $"Season {s.SeasonNumber} deleted.";
-        });
-    }
-
-    private async Task Run(Func<Task<string>> action)
-    {
-        seasonMessage = null;
-        try
-        {
-            seasonMessage = await action();
-            seasonIsError = false;
-            seasons = await AdminService.GetSeasons();
-        }
-        catch (Exception ex)
-        {
-            seasonIsError = true;
-            seasonMessage = ex.Message;
-        }
+        if (ok) await Vm.DeleteSeason(s);
     }
 }

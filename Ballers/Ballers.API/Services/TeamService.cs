@@ -1,14 +1,14 @@
+using Ballers.Models;
 using Ballers.API.Data;
 using Ballers.Shared;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Ballers.API.Services
 {
-    public record TeamSummary(int Id, string Name, string? ProfileImageUrl, string? ManagerName);
-
     public interface ITeamService
     {
-        Task<List<TeamSummary>> GetTeamsAsync();
+        Task<List<TeamDto>> GetTeamsAsync();
 
         /// <summary>
         /// Every club with its current-season record, form and squad rating, for
@@ -21,24 +21,39 @@ namespace Ballers.API.Services
     {
         private const int FormLength = 5;
 
+        // The overview rebuilds the whole league table and every squad's
+        // rating, and the Teams page, each club page and every manager's HQ
+        // ask for it. A minute's staleness is fine, as for Team of the Week.
+        private static readonly TimeSpan OverviewCacheTtl = TimeSpan.FromSeconds(60);
+        private const string OverviewCacheKey = "teams:overview";
+
         private readonly ApplicationDbContext _db;
         private readonly IFixtureService _fixtures;
         private readonly ILeagueSettingsService _settings;
+        private readonly IMemoryCache _cache;
 
-        public TeamService(ApplicationDbContext db, IFixtureService fixtures, ILeagueSettingsService settings)
+        public TeamService(ApplicationDbContext db, IFixtureService fixtures, ILeagueSettingsService settings, IMemoryCache cache)
         {
             _db = db;
             _fixtures = fixtures;
             _settings = settings;
+            _cache = cache;
         }
 
-        public async Task<List<TeamSummary>> GetTeamsAsync() =>
+        public async Task<List<TeamDto>> GetTeamsAsync() =>
             await _db.Teams
                 .OrderBy(t => t.Name)
-                .Select(t => new TeamSummary(t.Id, t.Name, t.ProfileImageUrl, t.ManagerName))
+                .Select(t => new TeamDto { Id = t.Id, Name = t.Name, ProfileImageUrl = t.ProfileImageUrl, ManagerName = t.ManagerName })
                 .ToListAsync();
 
-        public async Task<List<TeamOverviewDto>> GetOverviewAsync()
+        public async Task<List<TeamOverviewDto>> GetOverviewAsync() =>
+            await _cache.GetOrCreateAsync(OverviewCacheKey, entry =>
+            {
+                entry.AbsoluteExpirationRelativeToNow = OverviewCacheTtl;
+                return BuildOverviewAsync();
+            }) ?? new List<TeamOverviewDto>();
+
+        private async Task<List<TeamOverviewDto>> BuildOverviewAsync()
         {
             var teams = await _db.Teams.AsNoTracking().OrderBy(t => t.Name).ToListAsync();
 

@@ -1,4 +1,5 @@
 using Ballers.Shared;
+using Ballers.UI.Infrastructure;
 using System.Net.Http.Json;
 
 namespace Ballers.Services
@@ -9,12 +10,8 @@ namespace Ballers.Services
 
         public PlayerAccountService(HttpClient http) => _http = http;
 
-        public async Task<List<ClaimablePlayerDto>> GetClaimablePlayers(int teamId)
-        {
-            var response = await _http.GetAsync($"api/playeraccount/teams/{teamId}/claimable");
-            if (!response.IsSuccessStatusCode) return new();
-            return await response.Content.ReadFromJsonAsync<List<ClaimablePlayerDto>>() ?? new();
-        }
+        public Task<List<ClaimablePlayerDto>> GetClaimablePlayers(int teamId) =>
+            _http.GetListOrEmpty<ClaimablePlayerDto>($"api/playeraccount/teams/{teamId}/claimable");
 
         /// <summary>
         /// Signs a player up. Throws with the server's reason on failure — the
@@ -23,43 +20,23 @@ namespace Ballers.Services
         public async Task Register(PlayerSignupRequest request)
         {
             var response = await _http.PostAsJsonAsync("api/playeraccount/register", request);
-            if (response.IsSuccessStatusCode) return;
 
             if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
-                throw new Exception("Too many sign-up attempts. Please try again later.");
+                throw new ApiException("Too many sign-up attempts. Please try again later.", 429);
 
-            var message = await response.Content.ReadAsStringAsync();
-            throw new Exception(string.IsNullOrWhiteSpace(message)
-                ? "Unable to sign up."
-                : message);
+            await response.EnsureOk("Unable to sign up.");
         }
 
-        public async Task<PlayerAccountStatusDto?> GetMyStatus()
-        {
-            var response = await _http.GetAsync("api/playeraccount/me");
-            if (!response.IsSuccessStatusCode) return null;
-            return await response.Content.ReadFromJsonAsync<PlayerAccountStatusDto>();
-        }
+        public Task<PlayerAccountStatusDto?> GetMyStatus() =>
+            _http.GetOrDefault<PlayerAccountStatusDto>("api/playeraccount/me");
 
-        public async Task<List<PlayerAccountRequestDto>> GetRequests()
-        {
-            var response = await _http.GetAsync("api/playeraccount/requests");
-            if (!response.IsSuccessStatusCode) return new();
-            return await response.Content.ReadFromJsonAsync<List<PlayerAccountRequestDto>>() ?? new();
-        }
+        public Task<List<PlayerAccountRequestDto>> GetRequests() =>
+            _http.GetListOrEmpty<PlayerAccountRequestDto>("api/playeraccount/requests");
 
         public Task Approve(int requestId) => Resolve(requestId, "approve");
         public Task Reject(int requestId) => Resolve(requestId, "reject");
 
-        private async Task Resolve(int requestId, string action)
-        {
-            var response = await _http.PostAsync($"api/playeraccount/requests/{requestId}/{action}", null);
-            if (response.IsSuccessStatusCode) return;
-
-            var message = await response.Content.ReadAsStringAsync();
-            throw new Exception(string.IsNullOrWhiteSpace(message)
-                ? $"Unable to {action} that request."
-                : message);
-        }
+        private Task Resolve(int requestId, string action) =>
+            _http.PostOk($"api/playeraccount/requests/{requestId}/{action}", null, $"Unable to {action} that request.");
     }
 }

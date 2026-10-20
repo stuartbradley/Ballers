@@ -13,11 +13,7 @@
    (wwwroot/js/cardTilt.js). *@
 <div class="teams-page">
 
-    <header class="tm-hero">
-        <span class="tm-eyebrow">Ballers League</span>
-        <h1>The Teams</h1>
-        <p class="tm-sub">Meet the clubs: their form, their table position and how their squads rate.</p>
-    </header>
+    <PageHero Eyebrow="Ballers League" Title="The Teams" Subtitle="Meet the clubs: their form, their table position and how their squads rate." />
 
     <div class="tm-body">
         @if (isLoading)
@@ -51,7 +47,7 @@
             <div class="tm-grid" id="teams-grid">
                 @foreach (var team in Sorted)
                 {
-                    <a class="tm-card" href="/team/@team.Id" style="@KitStyle(team.HomeKitColour)">
+                    <a class="tm-card" href="/team/@team.Id" style="@Format.KitStyle(team.HomeKitColour)">
                         <span class="tm-sheen" aria-hidden="true"></span>
 
                         <div class="tm-card-top">
@@ -78,7 +74,7 @@
                             }
                             else
                             {
-                                <div class="tm-crest tm-crest-placeholder"><span>@Initials(team.Name)</span></div>
+                                <div class="tm-crest tm-crest-placeholder"><span>@Format.TeamInitials(team.Name)</span></div>
                             }
                         </div>
 
@@ -182,21 +178,8 @@
         catch (JSException) { /* decoration only */ }
     }
 
-    // The club's home kit colour tints its card. Only a plain hex colour is
-    // used, so nothing else can be injected into the style attribute.
-    private static string? KitStyle(string? colour)
-        => colour != null && System.Text.RegularExpressions.Regex.IsMatch(colour, "^#[0-9a-fA-F]{3,8}$")
-            ? $"--kit:{colour}"
-            : null;
 
     private static string FormLabel(TeamOverviewDto t)
         => t.Form.Count == 0 ? "No games played yet" : "Last results, oldest first: " + string.Join(", ", t.Form);
 
-    static string Initials(string name)
-    {
-        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        return parts.Length >= 2
-            ? $"{parts[0][0]}{parts[1][0]}".ToUpper()
-            : name.Length >= 2 ? name[..2].ToUpper() : name.ToUpper();
-    }
 }

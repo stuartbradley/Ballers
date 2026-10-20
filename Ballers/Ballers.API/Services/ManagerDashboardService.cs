@@ -17,7 +17,7 @@ namespace Ballers.API.Services
     public class ManagerDashboardService : IManagerDashboardService
     {
         // A squad counts as picked at this size, as on the fixture page.
-        public const int SquadSize = 11;
+        public const int SquadSize = LeagueRules.SquadMinimum;
 
         // Jobs for the next game only appear once it's this close.
         private static readonly TimeSpan PrepWindow = TimeSpan.FromDays(14);
@@ -151,7 +151,18 @@ namespace Ballers.API.Services
                 })
                 .ToList();
 
-            AddTodos(dto, fixtures, playerIds.Count, now, IsHome, OurStatsIn);
+            // Stats sent without one of ours named man of the match.
+            var missingMotm = season == null
+                ? new HashSet<int>()
+                : (await FixtureCompleteness
+                        .Query(_db, _db.Fixtures.AsNoTracking().Where(f => f.SeasonId == season.Id
+                            && (f.HomeTeamId == teamId || f.AwayTeamId == teamId)))
+                        .ToListAsync())
+                    .Where(c => c.NeedsMotm(teamId))
+                    .Select(c => c.FixtureId)
+                    .ToHashSet();
+
+            AddTodos(dto, fixtures, playerIds.Count, now, IsHome, OurStatsIn, missingMotm);
             return dto;
         }
 
@@ -171,7 +182,7 @@ namespace Ballers.API.Services
         }
 
         private static void AddTodos(ManagerDashboardDto dto, List<Row> fixtures, int squadSize, DateTime now,
-                                     Func<Row, bool> isHome, Func<Row, bool> ourStatsIn)
+                                     Func<Row, bool> isHome, Func<Row, bool> ourStatsIn, HashSet<int> missingMotm)
         {
             // Results first: a game that's been and gone without our stats holds
             // up the table, the points and everyone's cards.
@@ -182,6 +193,18 @@ namespace Ballers.API.Services
                     Kind = "stats",
                     Title = $"Send your stats v {(isHome(f) ? f.Away : f.Home)}",
                     Detail = $"Played {f.SortKey:ddd d MMM}. The result only counts once both teams have sent theirs.",
+                    Link = $"/fixture/{f.Id}?tab=stats",
+                    Urgent = true
+                });
+            }
+
+            foreach (var f in fixtures.Where(f => missingMotm.Contains(f.Id)).OrderBy(f => f.SortKey))
+            {
+                dto.Todos.Add(new ManagerTodoDto
+                {
+                    Kind = "motm",
+                    Title = $"Pick your man of the match v {(isHome(f) ? f.Away : f.Home)}",
+                    Detail = "Your stats are in but nobody's been named man of the match.",
                     Link = $"/fixture/{f.Id}?tab=stats",
                     Urgent = true
                 });

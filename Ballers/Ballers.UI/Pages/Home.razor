@@ -7,16 +7,10 @@
 
 <PageTitle>Blackpool Ballers League</PageTitle>
 
-@inject SeasonService SeasonService;
-@inject LeagueService LeagueService;
-@inject FixtureService FixtureService;
-@inject StatService StatService;
-@inject PenaltyService PenaltyService;
-@inject TotwService TotwService;
-@inject GalleryService GalleryService;
 @inject HttpClient Http;
 @inject IJSRuntime JS;
 @inject NavigationManager Nav;
+@inherits ViewModelComponent<HomeViewModel>
 
 @* The whole page is one floodlit night: every section shares the shell,
    heading and card styles in Home.razor.css. Elements marked data-reveal
@@ -30,7 +24,7 @@
             <span class="hero-beam hero-beam-right"></span>
         </div>
         <div class="hero-overlay">
-            <div class="hero-eyebrow">@SeasonEyebrow</div>
+            <div class="hero-eyebrow">@Vm.SeasonEyebrow</div>
             <h1>
                 Blackpool <span class="accent">Ballers</span> League
             </h1>
@@ -47,13 +41,13 @@
     </section>
 
     @* What's on this week, at a glance, straight under the hero. *@
-    @if (currentWeek != null)
+    @if (Vm.CurrentWeek != null)
     {
-        var next = currentWeek.Matches.FirstOrDefault(m => !m.IsPlayed);
+        var next = Vm.CurrentWeek.Matches.FirstOrDefault(m => !m.IsPlayed);
         <div class="matchday-strip">
             <div class="container matchday-inner">
-                <span class="matchday-week">Match week @currentWeek.WeekNumber</span>
-                <span class="matchday-dates">@currentWeek.DateRange</span>
+                <span class="matchday-week">Match week @Vm.CurrentWeek.WeekNumber</span>
+                <span class="matchday-dates">@Vm.CurrentWeek.DateRange</span>
                 @if (next != null)
                 {
                     <span class="matchday-next">
@@ -65,7 +59,7 @@
                         }
                     </span>
                 }
-                else if (currentWeek.Matches.Any())
+                else if (Vm.CurrentWeek.Matches.Any())
                 {
                     <span class="matchday-next"><span class="matchday-label">Results are in</span></span>
                 }
@@ -116,13 +110,13 @@
             </header>
 
             <div data-reveal>
-                @if (isLoading)
+                @if (Vm.IsLoading)
                 {
                     <LoadingSpinner />
                 }
-                else if (currentWeek != null)
+                else if (Vm.CurrentWeek != null)
                 {
-                    <FixtureWeekCard Week="currentWeek" />
+                    <FixtureWeekCard Week="Vm.CurrentWeek" />
                 }
                 else
                 {
@@ -133,7 +127,7 @@
     </section>
 
     <!-- ── STANDINGS (league + penalty league, tabbed) ── -->
-    @if (isLoading || seasons.Any())
+    @if (Vm.IsLoading || Vm.Seasons.Any())
     {
         <section id="standings" class="home-section tone-800 standings">
             <div class="container">
@@ -145,23 +139,23 @@
                 <div class="standings-bar" data-reveal>
                     <div class="standings-tabs" role="tablist" aria-label="Choose a table">
                         <button type="button" role="tab" id="tab-league"
-                                class="standings-tab @(activeTable == "league" ? "is-active" : "")"
-                                aria-selected="@(activeTable == "league" ? "true" : "false")"
+                                class="standings-tab @(Vm.ActiveTable == "league" ? "is-active" : "")"
+                                aria-selected="@(Vm.ActiveTable == "league" ? "true" : "false")"
                                 aria-controls="panel-league"
-                                @onclick="@(() => activeTable = "league")">League</button>
+                                @onclick="@(() => Vm.ActiveTable = "league")">League</button>
                         <button type="button" role="tab" id="tab-penalty"
-                                class="standings-tab @(activeTable == "penalty" ? "is-active" : "")"
-                                aria-selected="@(activeTable == "penalty" ? "true" : "false")"
+                                class="standings-tab @(Vm.ActiveTable == "penalty" ? "is-active" : "")"
+                                aria-selected="@(Vm.ActiveTable == "penalty" ? "true" : "false")"
                                 aria-controls="panel-penalty"
-                                @onclick="@(() => activeTable = "penalty")">Penalty league</button>
+                                @onclick="@(() => Vm.ActiveTable = "penalty")">Penalty league</button>
                     </div>
 
                     <label class="season-picker">
                         <span class="visually-hidden">Season</span>
                         <select class="season-select"
-                                @bind="selectedSeasonId"
-                                @bind:after="LoadTable">
-                            @foreach (var season in seasons)
+                                @bind="Vm.SelectedSeasonId"
+                                @bind:after="Vm.LoadTable">
+                            @foreach (var season in Vm.Seasons)
                             {
                                 <option value="@season.Id">Season @season.SeasonNumber</option>
                             }
@@ -170,11 +164,11 @@
                 </div>
 
                 <div class="glass table-card" data-reveal>
-                    @if (isLoading)
+                    @if (Vm.IsLoading)
                     {
                         <LoadingSpinner />
                     }
-                    else if (activeTable == "league")
+                    else if (Vm.ActiveTable == "league")
                     {
                         <div role="tabpanel" id="panel-league" aria-labelledby="tab-league" class="table-scroll">
                             <table class="standings-table">
@@ -193,7 +187,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach (var team in table)
+                                    @foreach (var team in Vm.Table)
                                     {
                                         <tr class="@RowClass(team.Position)">
                                             <td class="col-pos">@team.Position</td>
@@ -210,7 +204,7 @@
                                     }
                                 </tbody>
                             </table>
-                            @if (!table.Any())
+                            @if (!Vm.Table.Any())
                             {
                                 <p class="empty-note">No results yet this season.</p>
                             }
@@ -235,7 +229,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach (var row in penaltyTable)
+                                    @foreach (var row in Vm.PenaltyTable)
                                     {
                                         <tr class="@RowClass(row.Position)">
                                             <td class="col-pos">@row.Position</td>
@@ -252,7 +246,7 @@
                                     }
                                 </tbody>
                             </table>
-                            @if (!penaltyTable.Any())
+                            @if (!Vm.PenaltyTable.Any())
                             {
                                 <p class="empty-note">No shootouts yet this season.</p>
                             }
@@ -264,16 +258,16 @@
     }
 
     <!-- ── TEAM OF THE WEEK ── -->
-    @if (currentTotw != null)
+    @if (Vm.CurrentTotw != null)
     {
         <section class="home-section tone-900 totw-section">
             <div class="container">
                 <header class="section-head" data-reveal>
-                    <span class="section-eyebrow">Match week @currentTotw.MatchNumber · @currentTotw.WeekStart.ToString("d MMM yyyy")</span>
+                    <span class="section-eyebrow">Match week @Vm.CurrentTotw.MatchNumber · @Vm.CurrentTotw.WeekStart.ToString("d MMM yyyy")</span>
                     <h2>Team of the Week</h2>
                 </header>
                 <div class="totw-pitch" data-reveal>
-                    <TotwLineup Totw="currentTotw" />
+                    <TotwLineup Totw="Vm.CurrentTotw" />
                 </div>
                 <div class="section-foot" data-reveal>
                     <a class="btn-ghost" href="/totw">View all weeks →</a>
@@ -291,11 +285,11 @@
             </header>
 
             <div class="stats-grid" data-reveal-stagger>
-                @foreach (var board in Boards)
+                @foreach (var board in Vm.Boards)
                 {
                     <div class="glass stat-card stat-@board.Key">
                         <h3>@board.Title</h3>
-                        @if (isLoading)
+                        @if (Vm.IsLoading)
                         {
                             <LoadingSpinner />
                         }
@@ -325,7 +319,7 @@
     </section>
 
     <!-- ── MATCH PHOTOS ── -->
-    @if (recentGalleries.Any())
+    @if (Vm.RecentGalleries.Any())
     {
         <section class="home-section tone-900 home-galleries">
             <div class="container">
@@ -335,7 +329,7 @@
                 </header>
 
                 <div class="home-galleries-strip" data-reveal-stagger>
-                    @foreach (var gallery in recentGalleries)
+                    @foreach (var gallery in Vm.RecentGalleries)
                     {
                         <button class="home-gallery-card" @onclick="@(() => Nav.NavigateTo($"/gallery/{gallery.Id}"))">
                             @if (!string.IsNullOrEmpty(gallery.CoverThumbnailUrl))
@@ -400,86 +394,18 @@
 </div>
 
 @code {
-    private FixtureWeekDto? currentWeek;
-    private List<LeagueTableRowDto> table = new();
-    private List<SeasonDto> seasons = new();
-    private SeasonDto? currentSeason;
-    private int selectedSeasonId;
-    private List<PlayerGoalsDto> topScorers = new();
-    private List<PlayerAssistDto> topAssists = new();
-    private List<PlayerMotmDto> topMotm = new();
-    private List<PenaltyTableRowDto> penaltyTable = new();
-    private TeamOfTheWeekDto? currentTotw;
-    private List<GallerySummaryDto> recentGalleries = new();
-    private bool isLoading = true;
-
-    // Which of the two tables the standings section is showing.
-    private string activeTable = "league";
+    // The page's data is in HomeViewModel; the scroll-in reveal stays here.
 
     // The reveal script is run once for the page as first drawn, and again
     // once the data has arrived and the tables, stats and photos exist.
     private bool revealedLoaded;
 
-    // The strip is a taster, not the full list — that's what /galleries is for.
-    private const int HomeGalleryCount = 3;
-
-    private string SeasonEyebrow => currentSeason != null
-        ? $"Season {currentSeason.SeasonNumber} · Now underway"
-        : "Now underway";
-
-    private record Board(string Key, string Title, IReadOnlyList<(string Name, int Value)> Rows);
-
-    private IEnumerable<Board> Boards => new[]
-    {
-        new Board("goals", "Top Goalscorers", topScorers.Select(p => (p.Name, p.Goals)).ToList()),
-        new Board("assists", "Top Assists", topAssists.Select(p => (p.Name, p.Assists)).ToList()),
-        new Board("motm", "Most MOTMs", topMotm.Select(p => (p.Name, p.Motm)).ToList())
-    };
-
-    protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-            var scorersTask = StatService.GetTopGoalScorers();
-            var assistsTask = StatService.GetTopAssists();
-            var motmTask = StatService.GetTopMotm();
-            var weekTask = FixtureService.GetCurrentWeek();
-            var seasonsTask = SeasonService.GetSeasons();
-            var currentSeasonTask = SeasonService.GetCurrentSeason();
-            var totwTask = TotwService.GetCurrent();
-            var galleriesTask = GalleryService.GetGalleries();
-
-            await Task.WhenAll(scorersTask, assistsTask, motmTask, weekTask, seasonsTask, currentSeasonTask, totwTask, galleriesTask);
-
-            topScorers = scorersTask.Result;
-            topAssists = assistsTask.Result;
-            topMotm = motmTask.Result;
-            currentWeek = weekTask.Result;
-            seasons = seasonsTask.Result;
-            currentTotw = totwTask.Result;
-
-            // Only galleries that actually have a cover are worth showing here.
-            recentGalleries = galleriesTask.Result
-                .Where(g => !string.IsNullOrEmpty(g.CoverThumbnailUrl))
-                .Take(HomeGalleryCount)
-                .ToList();
-
-            currentSeason = currentSeasonTask.Result;
-            selectedSeasonId = currentSeason?.Id ?? seasons.FirstOrDefault()?.Id ?? 0;
-
-            if (selectedSeasonId > 0)
-                await LoadTable();
-        }
-        finally
-        {
-            isLoading = false;
-        }
-    }
+    protected override Task OnInitializedAsync() => Vm.InitializeAsync();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!firstRender && (isLoading || revealedLoaded)) return;
-        if (!isLoading) revealedLoaded = true;
+        if (!firstRender && (Vm.IsLoading || revealedLoaded)) return;
+        if (!Vm.IsLoading) revealedLoaded = true;
 
         try
         {
@@ -489,15 +415,6 @@
         {
             // Decoration only. Without the script everything is simply shown.
         }
-    }
-
-    async Task LoadTable()
-    {
-        var tableTask = LeagueService.GetTable(selectedSeasonId);
-        var penaltyTask = PenaltyService.GetTable(selectedSeasonId);
-        await Task.WhenAll(tableTask, penaltyTask);
-        table = tableTask.Result;
-        penaltyTable = penaltyTask.Result;
     }
 
     async Task ScrollTo(string id)

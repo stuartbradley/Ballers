@@ -1,6 +1,6 @@
 using System.Net.Http.Json;
 using Ballers.Shared;
-using Microsoft.AspNetCore.Components.WebAssembly.Http;
+using Ballers.UI.Infrastructure;
 
 namespace Ballers.Services
 {
@@ -13,37 +13,21 @@ namespace Ballers.Services
             _http = http;
         }
 
+        // Throws rather than falling back to defaults: the admin switches would
+        // otherwise show everything unlocked when the settings didn't load.
         public async Task<LeagueSettingsDto> Get()
-            => await _http.GetFromJsonAsync<LeagueSettingsDto>("api/league-settings") ?? new();
-
-        public async Task SetPlayersLocked(bool locked)
         {
-            var request = new HttpRequestMessage(HttpMethod.Put, "api/league-settings/players-locked");
-            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
-            request.Content = JsonContent.Create(locked);
-
-            var response = await _http.SendAsync(request);
-            response.EnsureSuccessStatusCode();
+            var response = await _http.GetAsync("api/league-settings");
+            return await response.ReadOk<LeagueSettingsDto>("Couldn't load the league settings.") ?? new();
         }
 
-        public async Task SetFixturesLocked(bool locked)
-        {
-            var request = new HttpRequestMessage(HttpMethod.Put, "api/league-settings/fixtures-locked");
-            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
-            request.Content = JsonContent.Create(locked);
+        public Task SetPlayersLocked(bool locked) => Put("api/league-settings/players-locked", locked);
 
-            var response = await _http.SendAsync(request);
-            response.EnsureSuccessStatusCode();
-        }
+        public Task SetFixturesLocked(bool locked) => Put("api/league-settings/fixtures-locked", locked);
 
-        public async Task SetFixturesHidden(bool hidden)
-        {
-            var request = new HttpRequestMessage(HttpMethod.Put, "api/league-settings/fixtures-hidden");
-            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
-            request.Content = JsonContent.Create(hidden);
+        public Task SetFixturesHidden(bool hidden) => Put("api/league-settings/fixtures-hidden", hidden);
 
-            var response = await _http.SendAsync(request);
-            response.EnsureSuccessStatusCode();
-        }
+        private Task Put(string url, bool value) =>
+            _http.PutOk(url, value, "Couldn't save the setting.");
     }
 }

@@ -1,6 +1,5 @@
 using Ballers.API.Data;
 using Ballers.API.Models;
-using Ballers.API.Models.Requests;
 using Ballers.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,7 +8,7 @@ namespace Ballers.API.Services
     public interface IPenaltyService
     {
         Task<List<PenaltyTableRowDto>> GetTableAsync(int seasonId);
-        Task<(List<PenaltyKickResult> HomeKicks, List<PenaltyKickResult> AwayKicks)?> GetShootoutAsync(int fixtureId);
+        Task<(List<PenaltyKickResultDto> HomeKicks, List<PenaltyKickResultDto> AwayKicks)?> GetShootoutAsync(int fixtureId);
         Task SubmitKicksAsync(int fixtureId, int teamId, List<PenaltyKickEntry> kicks);
     }
 
@@ -89,7 +88,7 @@ namespace Ballers.API.Services
             return ordered;
         }
 
-        public async Task<(List<PenaltyKickResult> HomeKicks, List<PenaltyKickResult> AwayKicks)?> GetShootoutAsync(int fixtureId)
+        public async Task<(List<PenaltyKickResultDto> HomeKicks, List<PenaltyKickResultDto> AwayKicks)?> GetShootoutAsync(int fixtureId)
         {
             var fixture = await _db.Fixtures.FindAsync(fixtureId);
             if (fixture == null) return null;
@@ -100,18 +99,18 @@ namespace Ballers.API.Services
                 .FirstOrDefaultAsync(s => s.FixtureId == fixtureId);
 
             if (shootout == null)
-                return (new List<PenaltyKickResult>(), new List<PenaltyKickResult>());
+                return (new List<PenaltyKickResultDto>(), new List<PenaltyKickResultDto>());
 
             var homeKicks = shootout.Kicks
                 .Where(k => k.TeamId == fixture.HomeTeamId)
                 .OrderBy(k => k.Order)
-                .Select(k => new PenaltyKickResult(k.Order, k.PlayerId, k.Player!.Name, k.Scored))
+                .Select(k => new PenaltyKickResultDto { Order = k.Order, PlayerId = k.PlayerId, PlayerName = k.Player!.Name, Scored = k.Scored })
                 .ToList();
 
             var awayKicks = shootout.Kicks
                 .Where(k => k.TeamId == fixture.AwayTeamId)
                 .OrderBy(k => k.Order)
-                .Select(k => new PenaltyKickResult(k.Order, k.PlayerId, k.Player!.Name, k.Scored))
+                .Select(k => new PenaltyKickResultDto { Order = k.Order, PlayerId = k.PlayerId, PlayerName = k.Player!.Name, Scored = k.Scored })
                 .ToList();
 
             return (homeKicks, awayKicks);

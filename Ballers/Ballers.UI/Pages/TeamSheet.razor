@@ -6,12 +6,10 @@
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize]
 
-@inject FixtureService FixtureService
-@inject TeamService TeamService
-@inject AuthService AuthService
 @inject HttpClient Http
 @inject NavigationManager Nav
 @inject IJSRuntime JS
+@inherits ViewModelComponent<TeamSheetViewModel>
 
 <PageTitle>Team Sheet</PageTitle>
 
@@ -21,13 +19,13 @@
         <button class="ts-back" @onclick="@(() => Nav.NavigateTo("/manager-fixtures"))">← Back</button>
 
         <div class="ts-variant-select">
-            <button class="ts-variant-btn @(variant == 1 ? "active" : "")" @onclick="() => variant = 1">Street</button>
-            <button class="ts-variant-btn @(variant == 2 ? "active" : "")" @onclick="() => variant = 2">Split</button>
-            <button class="ts-variant-btn @(variant == 4 ? "active" : "")" @onclick="() => variant = 4">Graffiti</button>
-            <button class="ts-variant-btn @(variant == 5 ? "active" : "")" @onclick="() => variant = 5">Community</button>
+            <button class="ts-variant-btn @(Vm.Variant == 1 ? "active" : "")" @onclick="() => Vm.Variant = 1">Street</button>
+            <button class="ts-variant-btn @(Vm.Variant == 2 ? "active" : "")" @onclick="() => Vm.Variant = 2">Split</button>
+            <button class="ts-variant-btn @(Vm.Variant == 4 ? "active" : "")" @onclick="() => Vm.Variant = 4">Graffiti</button>
+            <button class="ts-variant-btn @(Vm.Variant == 5 ? "active" : "")" @onclick="() => Vm.Variant = 5">Community</button>
         </div>
 
-        @if (fixture != null)
+        @if (Vm.Fixture != null)
         {
             <button class="ts-download" @onclick="DownloadImage" disabled="@isDownloading">
                 @(isDownloading ? "Saving…" : "⬇ Download")
@@ -35,48 +33,48 @@
         }
     </div>
 
-    @if (isLoading)
+    @if (Vm.IsLoading)
     {
         <LoadingSpinner />
     }
-    else if (fixture == null)
+    else if (Vm.Fixture == null)
     {
         <div class="ts-error">Fixture not found.</div>
     }
     else
     {
-        @if (squadIsProvisional)
+        @if (Vm.SquadIsProvisional)
         {
             <div class="ts-notice">
-                No squad picked for this fixture yet — showing the full @sheetTeamName roster.
+                No squad picked for this fixture yet — showing the full @Vm.SheetTeamName roster.
             </div>
         }
 
         <div id="poster-capture" class="ts-capture">
-            @if (variant == 1)
+            @if (Vm.Variant == 1)
             {
-                <TeamSheetClassic Fixture="fixture" HomeBadge="@homeBadge" AwayBadge="@awayBadge"
-                                  SheetTeamName="@sheetTeamName" Squad="squad" />
+                <TeamSheetClassic Fixture="Vm.Fixture" HomeBadge="@homeBadge" AwayBadge="@awayBadge"
+                                  SheetTeamName="@Vm.SheetTeamName" Squad="Vm.Squad" />
             }
-            else if (variant == 2)
+            else if (Vm.Variant == 2)
             {
-                <TeamSheetSplit Fixture="fixture" HomeBadge="@homeBadge" AwayBadge="@awayBadge"
-                                SheetTeamName="@sheetTeamName" Squad="squad" />
+                <TeamSheetSplit Fixture="Vm.Fixture" HomeBadge="@homeBadge" AwayBadge="@awayBadge"
+                                SheetTeamName="@Vm.SheetTeamName" Squad="Vm.Squad" />
             }
-            else if (variant == 3)
+            else if (Vm.Variant == 3)
             {
-                <TeamSheetVintage Fixture="fixture" HomeBadge="@homeBadge" AwayBadge="@awayBadge"
-                                  SheetTeamName="@sheetTeamName" Squad="squad" />
+                <TeamSheetVintage Fixture="Vm.Fixture" HomeBadge="@homeBadge" AwayBadge="@awayBadge"
+                                  SheetTeamName="@Vm.SheetTeamName" Squad="Vm.Squad" />
             }
-            else if (variant == 4)
+            else if (Vm.Variant == 4)
             {
-                <TeamSheetGraffiti Fixture="fixture" HomeBadge="@homeBadge" AwayBadge="@awayBadge"
-                                   SheetTeamName="@sheetTeamName" Squad="squad" />
+                <TeamSheetGraffiti Fixture="Vm.Fixture" HomeBadge="@homeBadge" AwayBadge="@awayBadge"
+                                   SheetTeamName="@Vm.SheetTeamName" Squad="Vm.Squad" />
             }
             else
             {
-                <TeamSheetCommunity Fixture="fixture" HomeBadge="@homeBadge" AwayBadge="@awayBadge"
-                                    SheetTeamName="@sheetTeamName" Squad="squad" />
+                <TeamSheetCommunity Fixture="Vm.Fixture" HomeBadge="@homeBadge" AwayBadge="@awayBadge"
+                                    SheetTeamName="@Vm.SheetTeamName" Squad="Vm.Squad" />
             }
         </div>
     }
@@ -84,24 +82,24 @@
 </div>
 
 @code {
+    // The sheet's data is in TeamSheetViewModel; fitting the names and the
+    // download happen in the browser, here.
+
     [Parameter] public int Id { get; set; }
 
-    private FixtureDetailsDto? fixture;
-    private List<PlayerCardDto> squad = new();
-    private string? homeBadge;
-    private string? awayBadge;
-    private string sheetTeamName = "";
-    private bool isLoading = true;
-    private bool isDownloading = false;
-    private bool squadIsProvisional = false;
-    private int variant = 1;
+    private bool isDownloading;
+
+    private string? homeBadge => Abs(Vm.HomeBadgePath);
+    private string? awayBadge => Abs(Vm.AwayBadgePath);
+
+    protected override Task OnInitializedAsync() => Vm.LoadAsync(Id);
 
     // Names are shrunk to fit their column by measuring the rendered text, which
     // can only happen after the poster is in the DOM. Re-runs on every render so
     // switching variant re-fits against that variant's layout.
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (fixture == null) return;
+        if (Vm.Fixture == null) return;
         try
         {
             await JS.InvokeVoidAsync("teamSheetExport.fitNames", "poster-capture");
@@ -114,57 +112,16 @@
 
     private async Task DownloadImage()
     {
-        if (fixture == null) return;
+        if (Vm.DownloadFileName is not { } filename) return;
         isDownloading = true;
         try
         {
-            var filename = $"{Safe(fixture.HomeTeam)}-vs-{Safe(fixture.AwayTeam)}-teamsheet.png";
             await JS.InvokeVoidAsync("teamSheetExport.download", "poster-capture", filename);
         }
         finally
         {
             isDownloading = false;
         }
-    }
-
-    private static string Safe(string? s)
-    {
-        var bad = Path.GetInvalidFileNameChars().Concat(new[] { ' ' }).ToArray();
-        return string.Join("-", (s ?? "").Split(bad, StringSplitOptions.RemoveEmptyEntries));
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        fixture = await FixtureService.GetFixture(Id);
-        if (fixture == null) { isLoading = false; return; }
-
-        var user = await AuthService.GetCurrentUser();
-        // The sheet is for the logged-in manager's team; fall back to the home team
-        // (e.g. admin/referee viewing) so the page always renders something useful.
-        var sheetTeamId = user?.TeamId ?? fixture.HomeTeamId;
-        sheetTeamName = sheetTeamId == fixture.AwayTeamId ? fixture.AwayTeam : fixture.HomeTeam;
-
-        var homeTask = TeamService.GetProfile(fixture.HomeTeamId);
-        var awayTask = TeamService.GetProfile(fixture.AwayTeamId);
-        var rosterTask = TeamService.GetSquad(sheetTeamId);
-        var pickedTask = FixtureService.GetFixtureSquad(Id);
-        await Task.WhenAll(homeTask, awayTask, rosterTask, pickedTask);
-
-        homeBadge = Abs(homeTask.Result?.ProfileImageUrl);
-        awayBadge = Abs(awayTask.Result?.ProfileImageUrl);
-
-        // The fixture squad endpoint returns picks for both teams, so intersecting
-        // with this team's roster filters out the opposition as well as unpicked players.
-        var pickedIds = pickedTask.Result.Select(p => p.PlayerId).ToHashSet();
-        var picked = rosterTask.Result.Where(p => pickedIds.Contains(p.Id)).ToList();
-
-        // No squad saved for this fixture yet — show the full roster rather than a blank sheet.
-        squadIsProvisional = picked.Count == 0;
-        squad = (squadIsProvisional ? rosterTask.Result : picked)
-            .OrderBy(p => p.Number)
-            .ToList();
-
-        isLoading = false;
     }
 
     private string? Abs(string? url)

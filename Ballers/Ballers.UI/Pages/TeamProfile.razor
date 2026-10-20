@@ -2,23 +2,21 @@
 @using Ballers.Models
 @using Ballers.Services
 @using Ballers.Shared
-@inject TeamService TeamService
-@inject FixtureService FixtureService
-@inject SeasonService SeasonService
 @inject HttpClient Http
+@inherits ViewModelComponent<TeamProfileViewModel>
 
-<PageTitle>@(profile?.Name ?? "Team Profile")</PageTitle>
+<PageTitle>@(Vm.Profile?.Name ?? "Team Profile")</PageTitle>
 
 @* A club's page: its season at a glance, its next game and form, who leads it,
    and its squad as player cards that turn over to show their season. Tinted
    by the club's home kit colour. *@
-<div class="team-profile-page" style="@KitStyle(profile?.HomeKitColour)">
+<div class="team-profile-page" style="@Format.KitStyle(Vm.Profile?.HomeKitColour)">
 
-    @if (isLoading)
+    @if (Vm.IsLoading)
     {
         <div class="tp-loading"><LoadingSpinner /></div>
     }
-    else if (profile == null)
+    else if (Vm.Profile == null)
     {
         <div class="tp-404">
             <h2>Team not found</h2>
@@ -32,47 +30,47 @@
             <a class="tp-backlink" href="/teams">← All teams</a>
 
             <div class="tp-crest-wrap">
-                @if (!string.IsNullOrEmpty(profile.ProfileImageUrl))
+                @if (!string.IsNullOrEmpty(Vm.Profile.ProfileImageUrl))
                 {
-                    <img class="tp-crest" src="@(Http.BaseAddress!.ToString().TrimEnd('/') + profile.ProfileImageUrl)" alt="@profile.Name crest" />
+                    <img class="tp-crest" src="@(Http.BaseAddress!.ToString().TrimEnd('/') + Vm.Profile.ProfileImageUrl)" alt="@Vm.Profile.Name crest" />
                 }
                 else
                 {
-                    <div class="tp-crest tp-crest-placeholder"><span>@Initials(profile.Name)</span></div>
+                    <div class="tp-crest tp-crest-placeholder"><span>@Format.TeamInitials(Vm.Profile.Name)</span></div>
                 }
             </div>
 
             <span class="tp-eyebrow">Club profile</span>
-            <h1>@profile.Name</h1>
+            <h1>@Vm.Profile.Name</h1>
             <div class="tp-pills">
-                @if (profile.YearFormed.HasValue)
+                @if (Vm.Profile.YearFormed.HasValue)
                 {
-                    <span class="tp-pill">Est. @profile.YearFormed</span>
+                    <span class="tp-pill">Est. @Vm.Profile.YearFormed</span>
                 }
-                @if (!string.IsNullOrEmpty(profile.ManagerName))
+                @if (!string.IsNullOrEmpty(Vm.Profile.ManagerName))
                 {
-                    <span class="tp-pill">Manager: @profile.ManagerName</span>
+                    <span class="tp-pill">Manager: @Vm.Profile.ManagerName</span>
                 }
             </div>
 
             @* The season at a glance. *@
-            @if (overview != null)
+            @if (Vm.Overview != null)
             {
                 <div class="tp-strip">
                     <div class="tp-stat tp-stat-pos">
-                        <strong>@(overview.Position is int p ? $"#{p}" : "—")</strong>
+                        <strong>@(Vm.Overview.Position is int p ? $"#{p}" : "—")</strong>
                         <span>League</span>
                     </div>
-                    <div class="tp-stat"><strong>@overview.Played</strong><span>Played</span></div>
-                    <div class="tp-stat"><strong>@overview.Won</strong><span>Won</span></div>
-                    <div class="tp-stat"><strong>@overview.Drawn</strong><span>Drawn</span></div>
-                    <div class="tp-stat"><strong>@overview.Lost</strong><span>Lost</span></div>
-                    <div class="tp-stat tp-stat-pts"><strong>@overview.Points</strong><span>Points</span></div>
+                    <div class="tp-stat"><strong>@Vm.Overview.Played</strong><span>Played</span></div>
+                    <div class="tp-stat"><strong>@Vm.Overview.Won</strong><span>Won</span></div>
+                    <div class="tp-stat"><strong>@Vm.Overview.Drawn</strong><span>Drawn</span></div>
+                    <div class="tp-stat"><strong>@Vm.Overview.Lost</strong><span>Lost</span></div>
+                    <div class="tp-stat tp-stat-pts"><strong>@Vm.Overview.Points</strong><span>Points</span></div>
                     <div class="tp-stat tp-stat-form">
                         <span class="tp-form">
-                            @if (overview.Form.Any())
+                            @if (Vm.Overview.Form.Any())
                             {
-                                @foreach (var r in overview.Form)
+                                @foreach (var r in Vm.Overview.Form)
                                 {
                                     <span class="tp-dot tp-dot-@r.ToLower()">@r</span>
                                 }
@@ -84,8 +82,8 @@
                         </span>
                         <span>Form</span>
                     </div>
-                    <div class="tp-stat tp-stat-rating tier-@(overview.SquadTier ?? "none")">
-                        <strong>@(overview.SquadOverall?.ToString() ?? "—")</strong>
+                    <div class="tp-stat tp-stat-rating tier-@(Vm.Overview.SquadTier ?? "none")">
+                        <strong>@(Vm.Overview.SquadOverall?.ToString() ?? "—")</strong>
                         <span>Squad rating</span>
                     </div>
                 </div>
@@ -95,16 +93,16 @@
         <div class="tp-body">
 
             <!-- ── NEXT GAME + FORM ── -->
-            @if (nextGame != null || recent.Any())
+            @if (Vm.NextGame != null || Vm.Recent.Any())
             {
                 <section class="tp-section">
                     <h2 class="tp-h2">This season</h2>
                     <div class="tp-season">
                         <div class="tp-panel tp-next">
                             <span class="tp-panel-label">Next game</span>
-                            @if (nextGame is { } ng)
+                            @if (Vm.NextGame is { } ng)
                             {
-                                var home = ng.Match.Home == profile.Name;
+                                var home = ng.Match.Home == Vm.Profile.Name;
                                 <div class="tp-next-vs">
                                     <span class="tp-ha">@(home ? "Home" : "Away")</span>
                                     <span class="tp-next-opp">v @(home ? ng.Match.Away : ng.Match.Home)</span>
@@ -129,13 +127,13 @@
                         </div>
 
                         <div class="tp-panel tp-recent">
-                            <span class="tp-panel-label">Last @recent.Count results</span>
-                            @if (recent.Any())
+                            <span class="tp-panel-label">Last @Vm.Recent.Count results</span>
+                            @if (Vm.Recent.Any())
                             {
                                 <ul class="tp-results">
-                                    @foreach (var (week, m) in recent)
+                                    @foreach (var (week, m) in Vm.Recent)
                                     {
-                                        var home = m.Home == profile.Name;
+                                        var home = m.Home == Vm.Profile.Name;
                                         var us = home ? m.HomeScore : m.AwayScore;
                                         var them = home ? m.AwayScore : m.HomeScore;
                                         var res = us > them ? "w" : us == them ? "d" : "l";
@@ -157,12 +155,12 @@
             }
 
             <!-- ── TEAM LEADERS ── -->
-            @if (playerCards.Any())
+            @if (Vm.PlayerCards.Any())
             {
                 <section class="tp-section">
                     <h2 class="tp-h2">Team leaders</h2>
                     <div class="tp-leaders">
-                        @foreach (var leader in Leaders)
+                        @foreach (var leader in Vm.Leaders)
                         {
                             <div class="tp-panel tp-leader">
                                 <span class="tp-panel-label">@leader.Title</span>
@@ -183,29 +181,29 @@
             }
 
             <!-- ── SQUAD ── -->
-            @if (playerCards.Any())
+            @if (Vm.PlayerCards.Any())
             {
                 <section class="tp-section">
                     <div class="tp-squad-head">
                         <h2 class="tp-h2">Squad</h2>
                         <div class="tp-tiers">
-                            @foreach (var (tier, count) in TierCounts)
+                            @foreach (var (tier, count) in Vm.TierCounts)
                             {
                                 <span class="tp-tier-chip tier-@tier">@count @tier</span>
                             }
-                            @if (playerCards.Count(p => p.Attributes == null) is var noCard and > 0)
+                            @if (Vm.PlayerCards.Count(p => p.Attributes == null) is var noCard and > 0)
                             {
                                 <span class="tp-tier-chip">@noCard without a card</span>
                             }
                         </div>
                         <div class="tp-sort" role="group" aria-label="Arrange squad">
-                            <button type="button" class="tp-sort-btn @(byPosition ? "is-active" : "")" aria-pressed="@(byPosition ? "true" : "false")" @onclick="() => byPosition = true">By position</button>
-                            <button type="button" class="tp-sort-btn @(!byPosition ? "is-active" : "")" aria-pressed="@(!byPosition ? "true" : "false")" @onclick="() => byPosition = false">By rating</button>
+                            <button type="button" class="tp-sort-btn @(Vm.ByPosition ? "is-active" : "")" aria-pressed="@(Vm.ByPosition ? "true" : "false")" @onclick="() => Vm.ByPosition = true">By position</button>
+                            <button type="button" class="tp-sort-btn @(!Vm.ByPosition ? "is-active" : "")" aria-pressed="@(!Vm.ByPosition ? "true" : "false")" @onclick="() => Vm.ByPosition = false">By rating</button>
                         </div>
                     </div>
 
                     @* The highest-rated card, shown large. *@
-                    @if (TopRated is { } star)
+                    @if (Vm.TopRated is { } star)
                     {
                         <div class="tp-featured">
                             <div class="tp-featured-card">
@@ -227,7 +225,7 @@
 
                     <p class="tp-hint">Hover a card (or tap it) to see its season.</p>
 
-                    @foreach (var group in SquadGroups)
+                    @foreach (var group in Vm.SquadGroups)
                     {
                         @if (group.Title != null)
                         {
@@ -236,12 +234,12 @@
                         <div class="tp-squad-grid">
                             @foreach (var p in group.Players)
                             {
-                                var isFlipped = flipped.Contains(p.Id);
+                                var isFlipped = Vm.Flipped.Contains(p.Id);
                                 <div class="tp-flip @(isFlipped ? "is-flipped" : "")"
                                      tabindex="0" role="button"
                                      aria-pressed="@(isFlipped ? "true" : "false")"
                                      aria-label="@($"{p.Name}. Show season stats")"
-                                     @onclick="() => Toggle(p.Id)"
+                                     @onclick="() => Vm.Toggle(p.Id)"
                                      @onkeydown="e => OnKey(e, p.Id)">
                                     <div class="tp-flip-inner">
                                         <div class="tp-face tp-front">
@@ -277,48 +275,48 @@
 
             <!-- ── ABOUT, MANAGER, KITS, INFO ── -->
             <section class="tp-section tp-info-grid">
-                @if (!string.IsNullOrEmpty(profile.Bio))
+                @if (!string.IsNullOrEmpty(Vm.Profile.Bio))
                 {
                     <div class="tp-panel tp-bio">
                         <span class="tp-panel-label">About the club</span>
-                        <p>@profile.Bio</p>
+                        <p>@Vm.Profile.Bio</p>
                     </div>
                 }
 
-                @if (!string.IsNullOrEmpty(profile.ManagerName))
+                @if (!string.IsNullOrEmpty(Vm.Profile.ManagerName))
                 {
                     <div class="tp-panel tp-manager">
                         <span class="tp-panel-label">Manager</span>
                         <div class="tp-manager-row">
-                            @if (!string.IsNullOrEmpty(profile.ManagerImageBase64))
+                            @if (!string.IsNullOrEmpty(Vm.Profile.ManagerImageBase64))
                             {
-                                <img class="tp-manager-photo" src="@profile.ManagerImageBase64" alt="@profile.ManagerName" />
+                                <img class="tp-manager-photo" src="@Vm.Profile.ManagerImageBase64" alt="@Vm.Profile.ManagerName" />
                             }
                             else
                             {
-                                <div class="tp-manager-photo tp-manager-initials">@Initials(profile.ManagerName)</div>
+                                <div class="tp-manager-photo tp-manager-initials">@Format.TeamInitials(Vm.Profile.ManagerName)</div>
                             }
                             <div>
-                                <span class="tp-manager-name">@profile.ManagerName</span>
-                                <span class="tp-manager-wins">@profile.Wins @(profile.Wins == 1 ? "win" : "wins") this season</span>
-                                <span class="tp-tier-chip tier-@ManagerTier(profile.Wins)">@ManagerTier(profile.Wins) manager</span>
+                                <span class="tp-manager-name">@Vm.Profile.ManagerName</span>
+                                <span class="tp-manager-wins">@Vm.Profile.Wins @(Vm.Profile.Wins == 1 ? "win" : "wins") this season</span>
+                                <span class="tp-tier-chip tier-@TeamProfileViewModel.ManagerTier(Vm.Profile.Wins)">@TeamProfileViewModel.ManagerTier(Vm.Profile.Wins) manager</span>
                             </div>
                         </div>
                     </div>
                 }
 
-                @if (!string.IsNullOrEmpty(profile.HomeKitColour) || !string.IsNullOrEmpty(profile.AwayKitColour))
+                @if (!string.IsNullOrEmpty(Vm.Profile.HomeKitColour) || !string.IsNullOrEmpty(Vm.Profile.AwayKitColour))
                 {
                     <div class="tp-panel tp-kits">
                         <span class="tp-panel-label">Kits</span>
                         <div class="tp-kit-row">
-                            @if (!string.IsNullOrEmpty(profile.HomeKitColour))
+                            @if (!string.IsNullOrEmpty(Vm.Profile.HomeKitColour))
                             {
-                                <div class="tp-kit">@KitJersey(profile.HomeKitColour!)<span>Home</span></div>
+                                <div class="tp-kit">@KitJersey(Vm.Profile.HomeKitColour!)<span>Home</span></div>
                             }
-                            @if (!string.IsNullOrEmpty(profile.AwayKitColour))
+                            @if (!string.IsNullOrEmpty(Vm.Profile.AwayKitColour))
                             {
-                                <div class="tp-kit">@KitJersey(profile.AwayKitColour!)<span>Away</span></div>
+                                <div class="tp-kit">@KitJersey(Vm.Profile.AwayKitColour!)<span>Away</span></div>
                             }
                         </div>
                     </div>
@@ -327,20 +325,20 @@
                 <div class="tp-panel tp-contact">
                     <span class="tp-panel-label">Club info</span>
                     <dl class="tp-info">
-                        @if (!string.IsNullOrEmpty(profile.ManagerName))
+                        @if (!string.IsNullOrEmpty(Vm.Profile.ManagerName))
                         {
-                            <div><dt>Manager</dt><dd>@profile.ManagerName</dd></div>
+                            <div><dt>Manager</dt><dd>@Vm.Profile.ManagerName</dd></div>
                         }
-                        @if (profile.YearFormed.HasValue)
+                        @if (Vm.Profile.YearFormed.HasValue)
                         {
-                            <div><dt>Founded</dt><dd>@profile.YearFormed</dd></div>
+                            <div><dt>Founded</dt><dd>@Vm.Profile.YearFormed</dd></div>
                         }
-                        @if (!string.IsNullOrEmpty(profile.PhoneNumber))
+                        @if (!string.IsNullOrEmpty(Vm.Profile.PhoneNumber))
                         {
-                            <div><dt>Contact</dt><dd><a href="tel:@profile.PhoneNumber">@profile.PhoneNumber</a></dd></div>
+                            <div><dt>Contact</dt><dd><a href="tel:@Vm.Profile.PhoneNumber">@Vm.Profile.PhoneNumber</a></dd></div>
                         }
                     </dl>
-                    @if (string.IsNullOrEmpty(profile.ManagerName) && !profile.YearFormed.HasValue && string.IsNullOrEmpty(profile.PhoneNumber))
+                    @if (string.IsNullOrEmpty(Vm.Profile.ManagerName) && !Vm.Profile.YearFormed.HasValue && string.IsNullOrEmpty(Vm.Profile.PhoneNumber))
                     {
                         <p class="tp-muted">No club information available yet.</p>
                     }
@@ -353,132 +351,19 @@
 </div>
 
 @code {
+    // The club's data and the squad views are in TeamProfileViewModel.
+
     [Parameter] public int TeamId { get; set; }
 
-    private TeamProfileDto? profile;
-    private TeamOverviewDto? overview;
-    private List<PlayerCardDto> playerCards = new();
-    private bool isLoading = true;
-    private bool byPosition = true;
-
-    // Cards turned over by a tap (screens with no pointer to hover with).
-    private readonly HashSet<int> flipped = new();
-
-    private (int Week, FixtureMatchDto Match)? nextGame;
-    private List<(int Week, FixtureMatchDto Match)> recent = new();
-
-    private static readonly string[] PositionOrder = { "GK", "DEF", "MID", "FWD" };
-    private static readonly Dictionary<string, string> PositionNames = new()
-    {
-        ["GK"] = "Goalkeepers", ["DEF"] = "Defenders", ["MID"] = "Midfielders", ["FWD"] = "Forwards"
-    };
-
-    // bronze < 3 wins ≤ silver < 6 wins ≤ gold
-    static string ManagerTier(int wins) => wins >= 6 ? "gold" : wins >= 3 ? "silver" : "bronze";
-
-    private PlayerCardDto? TopRated => playerCards
-        .Where(p => p.Attributes != null)
-        .OrderByDescending(p => p.Attributes!.Overall)
-        .ThenBy(p => p.Name)
-        .FirstOrDefault();
-
-    private IEnumerable<(string Tier, int Count)> TierCounts => new[] { "gold", "silver", "bronze" }
-        .Select(t => (t, playerCards.Count(p => p.Tier == t)))
-        .Where(t => t.Item2 > 0);
-
-    private record Leader(string Title, PlayerCardDto? Player, int Value);
-
-    private IEnumerable<Leader> Leaders
-    {
-        get
-        {
-            Leader Top(string title, Func<PlayerCardDto, int> by)
-            {
-                var p = playerCards.OrderByDescending(by).ThenBy(p => p.Name).FirstOrDefault();
-                return new Leader(title, p, p == null ? 0 : by(p));
-            }
-            yield return Top("Top scorer", p => p.Goals);
-            yield return Top("Most assists", p => p.Assists);
-            yield return Top("Most MOTMs", p => p.Motm);
-        }
-    }
-
-    private record SquadGroup(string? Title, List<PlayerCardDto> Players);
-
-    // Best-rated first in every list; players without a card follow, by shirt.
-    private IEnumerable<PlayerCardDto> RatingOrder(IEnumerable<PlayerCardDto> players) => players
-        .OrderByDescending(p => p.Attributes?.Overall ?? -1)
-        .ThenBy(p => p.Number);
-
-    private IEnumerable<SquadGroup> SquadGroups => byPosition
-        ? playerCards
-            .GroupBy(p => p.Position)
-            .OrderBy(g => Array.IndexOf(PositionOrder, g.Key) is var i and >= 0 ? i : PositionOrder.Length)
-            .Select(g => new SquadGroup(PositionNames.GetValueOrDefault(g.Key, g.Key), RatingOrder(g).ToList()))
-        : new[] { new SquadGroup(null, RatingOrder(playerCards).ToList()) };
+    protected override Task OnParametersSetAsync() => Vm.LoadAsync(TeamId);
 
     RenderFragment KitJersey(string colour) => @<svg class="tp-jersey" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
         <path d="M22 6 L8 14 L4 26 L14 32 L16 28 L16 58 L48 58 L48 28 L50 32 L60 26 L56 14 L42 6 C40 12 34 14 32 14 C30 14 24 12 22 6 Z"
               fill="@colour" stroke="rgba(0,0,0,0.35)" stroke-width="1.5" stroke-linejoin="round" />
     </svg>;
 
-    protected override async Task OnParametersSetAsync()
-    {
-        isLoading = true;
-        flipped.Clear();
-
-        var profileTask = TeamService.GetProfile(TeamId);
-        var squadTask = TeamService.GetSquad(TeamId);
-        var overviewTask = TeamService.GetOverview();
-        var seasonTask = SeasonService.GetCurrentSeason();
-        await Task.WhenAll(profileTask, squadTask, overviewTask, seasonTask);
-
-        profile = profileTask.Result;
-        playerCards = squadTask.Result;
-        overview = overviewTask.Result.FirstOrDefault(t => t.Id == TeamId);
-
-        nextGame = null;
-        recent = new();
-        if (profile != null && seasonTask.Result is { } season)
-        {
-            // The public schedule, narrowed to this club (matched by name, as the
-            // schedule identifies teams by name).
-            var weeks = await FixtureService.GetFixtureWeeks(season.Id);
-            var ours = weeks
-                .SelectMany(w => w.Matches.Select(m => (Week: w.WeekNumber, Match: m)))
-                .Where(x => x.Match.Home == profile.Name || x.Match.Away == profile.Name)
-                .ToList();
-
-            var upcoming = ours.Where(x => !x.Match.IsPlayed).OrderBy(x => x.Week).ToList();
-            nextGame = upcoming.Count > 0 ? upcoming[0] : null;
-            recent = ours.Where(x => x.Match.IsPlayed).OrderByDescending(x => x.Week).Take(5).ToList();
-        }
-
-        isLoading = false;
-    }
-
-    private void Toggle(int playerId)
-    {
-        if (!flipped.Add(playerId)) flipped.Remove(playerId);
-    }
-
     private void OnKey(KeyboardEventArgs e, int playerId)
     {
-        if (e.Key is "Enter" or " ") Toggle(playerId);
-    }
-
-    // The club's home kit colour tints the page. Only a plain hex colour is used,
-    // so nothing else can be injected into the style attribute.
-    private static string? KitStyle(string? colour)
-        => colour != null && System.Text.RegularExpressions.Regex.IsMatch(colour, "^#[0-9a-fA-F]{3,8}$")
-            ? $"--kit:{colour}"
-            : null;
-
-    static string Initials(string name)
-    {
-        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        return parts.Length >= 2
-            ? $"{parts[0][0]}{parts[1][0]}".ToUpper()
-            : name.Length >= 2 ? name[..2].ToUpper() : name.ToUpper();
+        if (e.Key is "Enter" or " ") Vm.Toggle(playerId);
     }
 }

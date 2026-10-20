@@ -4,8 +4,8 @@
 @using Ballers.Components
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize(Roles = "Player")]
-@inject PlayerCardService CardService
 @inject IJSRuntime JS
+@inherits ViewModelComponent<MyCardViewModel>
 
 <PageTitle>My Card</PageTitle>
 
@@ -15,11 +15,11 @@
    (wwwroot/js/homeReveal.js). *@
 <div class="my-card-page" id="my-card-root">
 
-    @if (loading)
+    @if (Vm.Loading)
     {
         <div class="mc-loading"><LoadingSpinner /></div>
     }
-    else if (card == null)
+    else if (Vm.Card == null)
     {
         <div class="mc-loading">
             <p class="my-card-error">We couldn't load your card. Try reloading the page.</p>
@@ -31,33 +31,33 @@
         <header class="mc-hero">
             @* Where the saved overall stands: across the league, and among
                players in the same position. *@
-            @if (card.OverallOf > 0)
+            @if (Vm.Card.OverallOf > 0)
             {
                 <div class="mc-ranks" aria-label="Your ranking">
                     <span class="mc-rank">
-                        <span class="mc-rank-num">#@card.OverallRank</span>
-                        <span class="mc-rank-text">of @card.OverallOf in the league</span>
+                        <span class="mc-rank-num">#@Vm.Card.OverallRank</span>
+                        <span class="mc-rank-text">of @Vm.Card.OverallOf in the league</span>
                     </span>
                     <span class="mc-rank">
-                        <span class="mc-rank-num">#@card.PositionRank</span>
-                        <span class="mc-rank-text">of @card.PositionOf @PositionPlural</span>
+                        <span class="mc-rank-num">#@Vm.Card.PositionRank</span>
+                        <span class="mc-rank-text">of @Vm.Card.PositionOf @Vm.PositionPlural</span>
                     </span>
                 </div>
             }
             <span class="mc-eyebrow">Your card</span>
-            <h1>@card.Name</h1>
+            <h1>@Vm.Card.Name</h1>
             <p class="mc-meta">
-                @if (!string.IsNullOrEmpty(card.TeamName))
+                @if (!string.IsNullOrEmpty(Vm.Card.TeamName))
                 {
-                    <span>@card.TeamName</span>
+                    <span>@Vm.Card.TeamName</span>
                 }
-                <span>#@card.Number</span>
-                <span>@card.Position</span>
+                <span>#@Vm.Card.Number</span>
+                <span>@Vm.Card.Position</span>
             </p>
             <div class="mc-chips">
-                <span class="mc-chip mc-chip-tier tier-@(displayTier ?? "bronze")">@(displayTier ?? "bronze") card</span>
-                <span class="mc-chip">Overall <strong>@PreviewOverall</strong></span>
-                <span class="mc-chip">@card.TotalPointsEarned points earned</span>
+                <span class="mc-chip mc-chip-tier tier-@(Vm.DisplayTier ?? "bronze")">@(Vm.DisplayTier ?? "bronze") card</span>
+                <span class="mc-chip">Overall <strong>@Vm.PreviewOverall</strong></span>
+                <span class="mc-chip">@Vm.Card.TotalPointsEarned points earned</span>
             </div>
         </header>
 
@@ -65,18 +65,18 @@
             <div class="mc-layout">
 
                 <!-- ── THE CARD ── -->
-                <div class="mc-stage @(upgrading ? "is-upgrading" : "") up-@upgradeTo" data-reveal>
+                <div class="mc-stage @(Vm.Upgrading ? "is-upgrading" : "") up-@Vm.UpgradeTo" data-reveal>
                     @* The stats preview the spend as you build it. The tier art does
                        not: it stays on the saved tier, so that moving up a tier
                        happens on Save, with its own moment. *@
                     <div class="mc-burst" aria-hidden="true"></div>
                     <div class="mc-card">
-                        <PlayerCard Name="@card.Name"
-                                    Number="@card.Number"
-                                    Position="@card.Position"
-                                    ImageUrl="@card.ImageUrl"
-                                    Attributes="@PreviewAttributes"
-                                    Tier="@displayTier" />
+                        <PlayerCard Name="@Vm.Card.Name"
+                                    Number="@Vm.Card.Number"
+                                    Position="@Vm.Card.Position"
+                                    ImageUrl="@Vm.Card.ImageUrl"
+                                    Attributes="@Vm.PreviewAttributes"
+                                    Tier="@Vm.DisplayTier" />
                         <div class="mc-flash" aria-hidden="true"></div>
                     </div>
                     <div class="mc-sparks" aria-hidden="true">
@@ -87,28 +87,28 @@
                     </div>
                     <div class="mc-floor" aria-hidden="true"></div>
 
-                    @if (showBanner && upgradeFrom != null && upgradeTo != null)
+                    @if (Vm.ShowBanner && Vm.UpgradeFrom != null && Vm.UpgradeTo != null)
                     {
                         <div class="mc-upgrade-banner" role="status">
-                            <span class="tier-word tier-@upgradeFrom">@upgradeFrom</span>
+                            <span class="tier-word tier-@Vm.UpgradeFrom">@Vm.UpgradeFrom</span>
                             <span class="mc-upgrade-arrow">→</span>
-                            <span class="tier-word tier-@upgradeTo">@upgradeTo</span>
+                            <span class="tier-word tier-@Vm.UpgradeTo">@Vm.UpgradeTo</span>
                         </div>
                     }
-                    else if (TierRank(previewTier) > TierRank(displayTier))
+                    else if (Vm.PreviewIsUpgrade)
                     {
-                        <div class="mc-upgrade-hint">Save to go <strong class="tier-word tier-@previewTier">@previewTier</strong></div>
+                        <div class="mc-upgrade-hint">Save to go <strong class="tier-word tier-@Vm.PreviewTier">@Vm.PreviewTier</strong></div>
                     }
                 </div>
 
                 <!-- ── SPEND POINTS ── -->
                 <section class="mc-panel" data-reveal>
                     <div class="points-balance">
-                        <span class="points-balance-value">@Remaining</span>
-                        <span class="points-balance-label">point@(Remaining == 1 ? "" : "s") to spend</span>
+                        <span class="points-balance-value">@Vm.Remaining</span>
+                        <span class="points-balance-label">point@(Vm.Remaining == 1 ? "" : "s") to spend</span>
                     </div>
 
-                    @if (card.UnspentPoints == 0)
+                    @if (Vm.Card.UnspentPoints == 0)
                     {
                         <p class="points-note">
                             Nothing to spend right now. You'll earn more after your next game.
@@ -123,7 +123,7 @@
                     }
 
                     <div class="attribute-rows">
-                        @foreach (var row in rows)
+                        @foreach (var row in Vm.Rows)
                         {
                             <div class="attribute-row @(row.Added > 0 ? "is-changed" : "")">
                                 <span class="attribute-row-label">@row.Label</span>
@@ -140,14 +140,14 @@
                                     <button type="button"
                                             class="step-btn"
                                             disabled="@(row.Added == 0)"
-                                            @onclick="() => Step(row, -1)"
+                                            @onclick="() => Vm.Step(row, -1)"
                                             title="Take one back"
                                             aria-label="@($"Take one point back from {row.Label}")">−</button>
                                     <span class="attribute-row-added">+@row.Added</span>
                                     <button type="button"
                                             class="step-btn"
-                                            disabled="@(!CanAdd(row))"
-                                            @onclick="() => Step(row, 1)"
+                                            disabled="@(!Vm.CanAdd(row))"
+                                            @onclick="() => Vm.Step(row, 1)"
                                             title="Add one"
                                             aria-label="@($"Add a point to {row.Label}")">+</button>
                                 </div>
@@ -155,26 +155,26 @@
                                 @* How far the stat is towards the league's cap, with
                                    the points being added shown on the end. *@
                                 <div class="attribute-row-bar" aria-hidden="true">
-                                    <span class="bar-current" style="width:@Share(row.Current)%"></span>
-                                    <span class="bar-added" style="width:@Share(row.Added)%"></span>
+                                    <span class="bar-current" style="width:@Vm.Share(row.Current)%"></span>
+                                    <span class="bar-added" style="width:@Vm.Share(row.Added)%"></span>
                                 </div>
                             </div>
                         }
                     </div>
 
                     <div class="my-card-summary">
-                        <span>Overall @card.Attributes.Overall</span>
-                        @if (PreviewOverall != card.Attributes.Overall)
+                        <span>Overall @Vm.Card.Attributes.Overall</span>
+                        @if (Vm.PreviewOverall != Vm.Card.Attributes.Overall)
                         {
-                            <span class="my-card-summary-new">→ @PreviewOverall</span>
+                            <span class="my-card-summary-new">→ @Vm.PreviewOverall</span>
                         }
                     </div>
 
-                    @if (error != null)
+                    @if (Vm.Error != null)
                     {
-                        <p class="my-card-error">@error</p>
+                        <p class="my-card-error">@Vm.Error</p>
                     }
-                    @if (saved)
+                    @if (Vm.Saved)
                     {
                         <p class="my-card-saved">Saved.</p>
                     }
@@ -182,14 +182,14 @@
                     <div class="my-card-actions">
                         <button type="button"
                                 class="btn-gold"
-                                disabled="@(Allocated == 0 || saving)"
-                                @onclick="Save">
-                            @(saving ? "Saving…" : $"Save {Allocated} point{(Allocated == 1 ? "" : "s")}")
+                                disabled="@(Vm.Allocated == 0 || Vm.Saving)"
+                                @onclick="Vm.Save">
+                            @(Vm.Saving ? "Saving…" : $"Vm.Save {Vm.Allocated} point{(Vm.Allocated == 1 ? "" : "s")}")
                         </button>
                         <button type="button"
                                 class="btn-ghost"
-                                disabled="@(Allocated == 0 || saving)"
-                                @onclick="Reset">
+                                disabled="@(Vm.Allocated == 0 || Vm.Saving)"
+                                @onclick="Vm.Reset">
                             Clear
                         </button>
                     </div>
@@ -197,7 +197,7 @@
             </div>
 
             <!-- ── HISTORY ── -->
-            @if (awards.Count > 0)
+            @if (Vm.Awards.Count > 0)
             {
                 <section class="mc-panel points-history" data-reveal>
                     <div class="section-head">
@@ -211,17 +211,17 @@
                                     <th>Match</th>
                                     <th>Opponent</th>
                                     <th class="num">Points</th>
-                                    <th>Breakdown</th>
+                                    <th>MyCardViewModel.Breakdown</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var award in awards)
+                                @foreach (var award in Vm.Awards)
                                 {
                                     <tr>
                                         <td>@(award.Kickoff?.ToString("d MMM yyyy") ?? "—")</td>
                                         <td class="opponent">@(award.Opponent ?? "—")</td>
                                         <td class="num">+@award.Points</td>
-                                        <td class="breakdown">@Breakdown(award)</td>
+                                        <td class="breakdown">@MyCardViewModel.Breakdown(award)</td>
                                     </tr>
                                 }
                             </tbody>
@@ -234,248 +234,17 @@
 </div>
 
 @code {
-    private MyPlayerCardDto? card;
-    private List<PlayerPointsAwardDto> awards = new();
-    private List<AttributeRow> rows = new();
+    // The card's state and spending rules are in MyCardViewModel.
 
-    private bool loading = true;
-    private bool saving;
-    private bool saved;
-    private string? error;
-    private string? previewTier;
     private bool revealed;
 
-    // The tier the card art shows: the saved one. It only changes on Save, and
-    // a move up plays the upgrade (see PlayUpgrade).
-    private string? displayTier;
-    private bool upgrading;
-    private bool showBanner;
-    private string? upgradeFrom;
-    private string? upgradeTo;
-
-    // The league's own tier thresholds, so the preview tier is right. Falls
-    // back to the defaults if they could not be fetched.
-    private int silverAt = 20;
-    private int goldAt = 35;
-
-    private int Allocated => rows.Sum(r => r.Added);
-    private int Remaining => (card?.UnspentPoints ?? 0) - Allocated;
-
-    private sealed class AttributeRow
-    {
-        public required string Name { get; init; }
-        public required string Label { get; init; }
-        public int Current { get; set; }
-        public int Added { get; set; }
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        var thresholds = await CardService.GetTierThresholds();
-        if (thresholds != null)
-        {
-            silverAt = thresholds.SilverOverallThreshold;
-            goldAt = thresholds.GoldOverallThreshold;
-        }
-        await Load();
-    }
+    protected override Task OnInitializedAsync() => Vm.InitializeAsync();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (loading || revealed) return;
+        if (Vm.Loading || revealed) return;
         revealed = true;
         try { await JS.InvokeVoidAsync("homeReveal.scan", "my-card-root"); }
         catch (JSException) { /* decoration only; everything is shown without it */ }
-    }
-
-    private string PositionPlural => card?.Position switch
-    {
-        "GK" => "goalkeepers",
-        "DEF" => "defenders",
-        "MID" => "midfielders",
-        "FWD" => "forwards",
-        var other => $"{other} players"
-    };
-
-    // A stat's share of the league's cap, as a bar width.
-    private string Share(int value)
-        => Math.Clamp(value * 100.0 / Math.Max(1, card?.AttributeCap ?? 99), 0, 100)
-            .ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
-
-    // Only the first load shows the spinner. A reload after a failed save keeps
-    // the page in place: swapping it out would redraw the panels, and the
-    // scroll-in reveal has already been spent on the first ones.
-    private async Task Load()
-    {
-        if (card == null) loading = true;
-        card = await CardService.GetMyCard();
-        awards = await CardService.GetMyAwards();
-        BuildRows();
-        if (card != null) displayTier = TierFor(card.Attributes.Overall);
-        loading = false;
-    }
-
-    private string TierFor(int overall)
-        => overall >= goldAt ? "gold" : overall >= silverAt ? "silver" : "bronze";
-
-    private static int TierRank(string? tier) => tier switch
-    {
-        "gold" => 2,
-        "silver" => 1,
-        "bronze" => 0,
-        _ => -1
-    };
-
-    // The card turns away, swaps its art at the edge-on moment, and turns back
-    // in a burst of light. The timings match the keyframes in MyCard.razor.css:
-    // the swap lands at a third of the 1.2s turn.
-    private async Task PlayUpgrade(string from, string to)
-    {
-        upgradeFrom = from;
-        upgradeTo = to;
-        upgrading = true;
-        showBanner = true;
-        StateHasChanged();
-
-        await Task.Delay(400);
-        displayTier = to;
-        StateHasChanged();
-
-        await Task.Delay(1000);
-        upgrading = false;
-        StateHasChanged();
-
-        // The banner stays a moment longer so it can be read, without holding
-        // up the buttons while it does.
-        _ = HideBannerLater();
-    }
-
-    private async Task HideBannerLater()
-    {
-        await Task.Delay(2600);
-        showBanner = false;
-        await InvokeAsync(StateHasChanged);
-    }
-
-    private void BuildRows()
-    {
-        if (card == null) return;
-
-        var a = card.Attributes;
-        rows = new()
-        {
-            new() { Name = nameof(a.Finishing), Label = "Finishing", Current = a.Finishing },
-            new() { Name = nameof(a.Tackling),  Label = "Tackling",  Current = a.Tackling },
-            new() { Name = nameof(a.Passing),   Label = "Passing",   Current = a.Passing },
-            new() { Name = nameof(a.Dribbling), Label = "Dribbling", Current = a.Dribbling },
-            new() { Name = nameof(a.Pace),      Label = "Pace",      Current = a.Pace },
-            new() { Name = nameof(a.Strength),  Label = "Strength",  Current = a.Strength },
-        };
-
-        UpdatePreview();
-    }
-
-    // Mirrors the server's rules so a spend that would be refused cannot be built
-    // in the first place. The server still checks — this only saves a round trip.
-    private bool CanAdd(AttributeRow row)
-        => Remaining > 0 && row.Current + row.Added < (card?.AttributeCap ?? 99);
-
-    private void Step(AttributeRow row, int delta)
-    {
-        if (delta > 0 && !CanAdd(row)) return;
-        if (delta < 0 && row.Added == 0) return;
-
-        row.Added += delta;
-        saved = false;
-        error = null;
-        UpdatePreview();
-    }
-
-    private void Reset()
-    {
-        foreach (var row in rows) row.Added = 0;
-        saved = false;
-        error = null;
-        UpdatePreview();
-    }
-
-    private PlayerAttributesDto PreviewAttributes => new()
-    {
-        Finishing = Value(nameof(PlayerAttributesDto.Finishing)),
-        Tackling = Value(nameof(PlayerAttributesDto.Tackling)),
-        Passing = Value(nameof(PlayerAttributesDto.Passing)),
-        Dribbling = Value(nameof(PlayerAttributesDto.Dribbling)),
-        Pace = Value(nameof(PlayerAttributesDto.Pace)),
-        Strength = Value(nameof(PlayerAttributesDto.Strength)),
-        Overall = PreviewOverall
-    };
-
-    private int Value(string name)
-    {
-        var row = rows.FirstOrDefault(r => r.Name == name);
-        return row == null ? 0 : row.Current + row.Added;
-    }
-
-    private int PreviewOverall => rows.Count == 0 ? 0 : rows.Sum(r => r.Current + r.Added) / 6;
-
-    // The tier the card would be once saved, against the league's thresholds.
-    private void UpdatePreview()
-        => previewTier = card?.Attributes == null ? null : TierFor(PreviewOverall);
-
-    private async Task Save()
-    {
-        if (card == null || Allocated == 0) return;
-
-        saving = true;
-        error = null;
-        saved = false;
-
-        try
-        {
-            card = await CardService.Allocate(new AllocatePointsRequest
-            {
-                Finishing = Added(nameof(AllocatePointsRequest.Finishing)),
-                Tackling = Added(nameof(AllocatePointsRequest.Tackling)),
-                Passing = Added(nameof(AllocatePointsRequest.Passing)),
-                Dribbling = Added(nameof(AllocatePointsRequest.Dribbling)),
-                Pace = Added(nameof(AllocatePointsRequest.Pace)),
-                Strength = Added(nameof(AllocatePointsRequest.Strength))
-            });
-
-            BuildRows();
-            saved = true;
-
-            var before = displayTier;
-            var after = TierFor(card.Attributes.Overall);
-            if (TierRank(after) > TierRank(before))
-                await PlayUpgrade(before ?? "bronze", after);
-            else
-                displayTier = after;
-        }
-        catch (Exception ex)
-        {
-            // Never swallowed: a spend that quietly failed would look to the
-            // player like their points had vanished.
-            error = ex.Message;
-            await Load();
-        }
-        finally
-        {
-            saving = false;
-        }
-    }
-
-    private int Added(string name) => rows.FirstOrDefault(r => r.Name == name)?.Added ?? 0;
-
-    private static string Breakdown(PlayerPointsAwardDto a)
-    {
-        var parts = new List<string>();
-        if (a.AppearancePoints > 0) parts.Add($"{a.AppearancePoints} played");
-        if (a.WinPoints > 0) parts.Add($"{a.WinPoints} win");
-        if (a.GoalPoints > 0) parts.Add($"{a.GoalPoints} goals");
-        if (a.AssistPoints > 0) parts.Add($"{a.AssistPoints} assists");
-        if (a.CleanSheetPoints > 0) parts.Add($"{a.CleanSheetPoints} clean sheet");
-        if (a.MotmPoints > 0) parts.Add($"{a.MotmPoints} man of the match");
-        return parts.Count == 0 ? "—" : string.Join(" · ", parts);
     }
 }

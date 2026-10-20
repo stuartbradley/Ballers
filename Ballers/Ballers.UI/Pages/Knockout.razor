@@ -3,9 +3,7 @@
 @using Ballers.Services
 @using Ballers.Shared
 @using Microsoft.AspNetCore.Components.Authorization
-@inject KnockoutService KnockoutSvc
-@inject SeasonService SeasonSvc
-@inject AuthenticationStateProvider AuthProvider
+@inherits ViewModelComponent<KnockoutViewModel>
 
 <PageTitle>Knockout</PageTitle>
 
@@ -15,35 +13,35 @@
         <div class="knockout-hero-inner">
             <p class="knockout-eyebrow">Ballers League</p>
             <h1>Knockout Stage</h1>
-            @if (bracket != null && bracket.Generated)
+            @if (Vm.Bracket != null && Vm.Bracket.Generated)
             {
-                <p class="knockout-sub">Season @bracket.SeasonNumber</p>
+                <p class="knockout-sub">Season @Vm.Bracket.SeasonNumber</p>
             }
         </div>
     </div>
 
     <div class="knockout-body">
-        @if (isLoading)
+        @if (Vm.IsLoading)
         {
             <LoadingSpinner />
         }
-        else if (bracket == null || !bracket.Generated)
+        else if (Vm.Bracket == null || !Vm.Bracket.Generated)
         {
             <div class="knockout-pending">
                 <div class="pending-icon">&#x1F3C6;</div>
                 <h2>Knockout Stage Not Yet Started</h2>
                 <p>The bracket will appear once the regular season concludes.</p>
 
-                @if (isAdmin)
+                @if (Vm.IsAdmin)
                 {
                     <div class="admin-generate">
                         <p class="generate-hint">Generate the bracket from the current standings.</p>
-                        <button class="generate-btn" @onclick="GenerateKnockout" disabled="@isGenerating">
-                            @(isGenerating ? "Generating..." : "Generate Knockout Bracket")
+                        <button class="generate-btn" @onclick="Vm.GenerateKnockout" disabled="@Vm.IsGenerating">
+                            @(Vm.IsGenerating ? "Generating..." : "Generate Knockout Bracket")
                         </button>
-                        @if (!string.IsNullOrEmpty(generateMessage))
+                        @if (!string.IsNullOrEmpty(Vm.GenerateMessage))
                         {
-                            <div class="@(generateIsError ? "ko-error" : "ko-success")">@generateMessage</div>
+                            <div class="@(Vm.GenerateIsError ? "ko-error" : "ko-success")">@Vm.GenerateMessage</div>
                         }
                     </div>
                 }
@@ -51,9 +49,9 @@
         }
         else
         {
-            @if (!string.IsNullOrEmpty(resultMessage))
+            @if (!string.IsNullOrEmpty(Vm.ResultMessage))
             {
-                <div class="@(resultIsError ? "ko-error" : "ko-success") result-toast">@resultMessage</div>
+                <div class="@(Vm.ResultIsError ? "ko-error" : "ko-success") result-toast">@Vm.ResultMessage</div>
             }
 
             <div class="tournaments">
@@ -69,9 +67,9 @@
                     <div class="bracket">
                         <div class="bracket-col semis-col">
                             <span class="round-label">Semi-Finals</span>
-                            @foreach (var sf in GetSemifinals("Cup"))
+                            @foreach (var sf in Vm.GetSemifinals("Cup"))
                             {
-                                <KnockoutMatchCard Fixture="sf" IsAdmin="isAdmin" UserTeamId="userTeamId" OnResultSubmit="HandleResultSubmit" />
+                                <KnockoutMatchCard Fixture="sf" IsAdmin="Vm.IsAdmin" UserTeamId="Vm.UserTeamId" OnResultSubmit="Vm.HandleResultSubmit" />
                             }
                         </div>
                         <div class="bracket-arrows">
@@ -80,14 +78,14 @@
                         </div>
                         <div class="bracket-col final-col">
                             <span class="round-label">Final</span>
-                            @{ var cupFinal = GetFinal("Cup"); }
+                            @{ var cupFinal = Vm.GetFinal("Cup"); }
                             @if (cupFinal != null)
                             {
-                                <KnockoutMatchCard Fixture="cupFinal" IsAdmin="isAdmin" IsFinal="true" UserTeamId="userTeamId" OnResultSubmit="HandleResultSubmit" />
+                                <KnockoutMatchCard Fixture="cupFinal" IsAdmin="Vm.IsAdmin" IsFinal="true" UserTeamId="Vm.UserTeamId" OnResultSubmit="Vm.HandleResultSubmit" />
                             }
                         </div>
                     </div>
-                    @{ var cupWinner = GetWinner("Cup"); }
+                    @{ var cupWinner = Vm.GetWinner("Cup"); }
                     @if (cupWinner != null)
                     {
                         <div class="tournament-winner cup-winner">
@@ -111,9 +109,9 @@
                     <div class="bracket">
                         <div class="bracket-col semis-col">
                             <span class="round-label">Semi-Finals</span>
-                            @foreach (var sf in GetSemifinals("Plate"))
+                            @foreach (var sf in Vm.GetSemifinals("Plate"))
                             {
-                                <KnockoutMatchCard Fixture="sf" IsAdmin="isAdmin" UserTeamId="userTeamId" OnResultSubmit="HandleResultSubmit" />
+                                <KnockoutMatchCard Fixture="sf" IsAdmin="Vm.IsAdmin" UserTeamId="Vm.UserTeamId" OnResultSubmit="Vm.HandleResultSubmit" />
                             }
                         </div>
                         <div class="bracket-arrows">
@@ -122,14 +120,14 @@
                         </div>
                         <div class="bracket-col final-col">
                             <span class="round-label">Final</span>
-                            @{ var plateFinal = GetFinal("Plate"); }
+                            @{ var plateFinal = Vm.GetFinal("Plate"); }
                             @if (plateFinal != null)
                             {
-                                <KnockoutMatchCard Fixture="plateFinal" IsAdmin="isAdmin" IsFinal="true" UserTeamId="userTeamId" OnResultSubmit="HandleResultSubmit" />
+                                <KnockoutMatchCard Fixture="plateFinal" IsAdmin="Vm.IsAdmin" IsFinal="true" UserTeamId="Vm.UserTeamId" OnResultSubmit="Vm.HandleResultSubmit" />
                             }
                         </div>
                     </div>
-                    @{ var plateWinner = GetWinner("Plate"); }
+                    @{ var plateWinner = Vm.GetWinner("Plate"); }
                     @if (plateWinner != null)
                     {
                         <div class="tournament-winner plate-winner">
@@ -148,84 +146,7 @@
 </div>
 
 @code {
-    private KnockoutBracketDto? bracket;
-    private bool isLoading = true;
-    private bool isAdmin = false;
-    private int? userTeamId = null;
-    private bool isGenerating = false;
-    private string generateMessage = "";
-    private bool generateIsError = false;
-    private string resultMessage = "";
-    private bool resultIsError = false;
+    // The bracket and its admin actions are in KnockoutViewModel.
 
-    protected override async Task OnInitializedAsync()
-    {
-        var authState = await AuthProvider.GetAuthenticationStateAsync();
-        isAdmin = authState.User.IsInRole("Admin");
-        var teamIdClaim = authState.User.FindFirst("TeamId")?.Value;
-        if (teamIdClaim != null && int.TryParse(teamIdClaim, out var tid))
-            userTeamId = tid;
-
-        var season = await SeasonSvc.GetCurrentSeason();
-        if (season != null)
-            bracket = await KnockoutSvc.GetBracketAsync(season.Id);
-
-        isLoading = false;
-    }
-
-    private List<KnockoutFixtureDto> GetSemifinals(string tournament)
-        => bracket?.Fixtures
-            .Where(f => f.Tournament == tournament && f.Round == "Semifinal")
-            .OrderBy(f => f.Slot)
-            .ToList() ?? new();
-
-    private KnockoutFixtureDto? GetFinal(string tournament)
-        => bracket?.Fixtures.FirstOrDefault(f => f.Tournament == tournament && f.Round == "Final");
-
-    private string? GetWinner(string tournament)
-    {
-        var final = GetFinal(tournament);
-        if (final == null || !final.IsPlayed) return null;
-        return final.HomeScore > final.AwayScore ? final.HomeTeamName : final.AwayTeamName;
-    }
-
-    private async Task GenerateKnockout()
-    {
-        isGenerating = true;
-        generateMessage = "";
-        try
-        {
-            var season = await SeasonSvc.GetCurrentSeason();
-            if (season == null) throw new Exception("No active season found.");
-            await KnockoutSvc.GenerateKnockoutAsync(season.Id);
-            bracket = await KnockoutSvc.GetBracketAsync(season.Id);
-            generateMessage = "Knockout bracket generated.";
-            generateIsError = false;
-        }
-        catch (Exception ex)
-        {
-            generateMessage = ex.Message;
-            generateIsError = true;
-        }
-        isGenerating = false;
-    }
-
-    private async Task HandleResultSubmit((int Id, int HomeScore, int AwayScore) result)
-    {
-        resultMessage = "";
-        try
-        {
-            await KnockoutSvc.SubmitResultAsync(result.Id, result.HomeScore, result.AwayScore);
-            var season = await SeasonSvc.GetCurrentSeason();
-            if (season != null)
-                bracket = await KnockoutSvc.GetBracketAsync(season.Id);
-            resultMessage = "Result saved.";
-            resultIsError = false;
-        }
-        catch (Exception ex)
-        {
-            resultMessage = ex.Message;
-            resultIsError = true;
-        }
-    }
+    protected override Task OnInitializedAsync() => Vm.InitializeAsync();
 }

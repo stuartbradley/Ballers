@@ -134,15 +134,8 @@
         }
         else
         {
-            <div class="team-crest team-crest-placeholder"><span>@Initials(name)</span></div>
+            <div class="team-crest team-crest-placeholder"><span>@Format.TeamInitials(name)</span></div>
         }
     };
 
-    static string Initials(string name)
-    {
-        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        return parts.Length >= 2
-            ? $"{parts[0][0]}{parts[1][0]}".ToUpper()
-            : name.Length >= 2 ? name[..2].ToUpper() : name.ToUpper();
-    }
 }

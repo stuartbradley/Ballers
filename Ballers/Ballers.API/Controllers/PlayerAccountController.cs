@@ -1,3 +1,4 @@
+using Ballers.API.Authorization;
 using Ballers.API.Models;
 using Ballers.API.Services;
 using Ballers.Shared;
@@ -69,7 +70,7 @@ namespace Ballers.API.Controllers
         }
 
         [HttpGet("requests")]
-        [Authorize(Roles = "Manager,Admin")]
+        [Authorize(Policy = Policies.SquadStaff)]
         public async Task<IActionResult> GetRequests()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -84,7 +85,7 @@ namespace Ballers.API.Controllers
         }
 
         [HttpPost("requests/{id:int}/approve")]
-        [Authorize(Roles = "Manager,Admin")]
+        [Authorize(Policy = Policies.SquadStaff)]
         public async Task<IActionResult> Approve(int id)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -101,7 +102,7 @@ namespace Ballers.API.Controllers
         }
 
         [HttpPost("requests/{id:int}/reject")]
-        [Authorize(Roles = "Manager,Admin")]
+        [Authorize(Policy = Policies.SquadStaff)]
         public async Task<IActionResult> Reject(int id)
         {
             var user = await _userManager.GetUserAsync(User);

@@ -1,5 +1,5 @@
-using System.Net.Http.Json;
 using Ballers.Shared;
+using Ballers.UI.Infrastructure;
 
 namespace Ballers.Client.Services;
 
@@ -12,32 +12,26 @@ public class NotificationService
         _http = http;
     }
 
-    public async Task<NotificationsResponse?> GetAsync()
-    {
-        try { return await _http.GetFromJsonAsync<NotificationsResponse>("api/notifications"); }
-        catch { return null; }
-    }
+    public Task<NotificationsResponse?> GetAsync() =>
+        _http.GetOrDefault<NotificationsResponse>("api/notifications");
 
+    // Marking as read is best-effort: the bell refreshes on its next poll, so
+    // a failure here is not worth telling anyone about.
     public async Task MarkReadAsync(int id)
     {
-        try { await _http.PostAsync($"api/notifications/{id}/read", null); }
-        catch { }
+        try { await _http.PostOk($"api/notifications/{id}/read", null, ""); }
+        catch (ApiException) { }
     }
 
     public async Task MarkAllReadAsync()
     {
-        try { await _http.PostAsync("api/notifications/read-all", null); }
-        catch { }
+        try { await _http.PostOk("api/notifications/read-all", null, ""); }
+        catch (ApiException) { }
     }
 
-    public async Task<List<NotificationSettingDto>> GetSettingsAsync()
-    {
-        try { return await _http.GetFromJsonAsync<List<NotificationSettingDto>>("api/notifications/settings") ?? new(); }
-        catch { return new(); }
-    }
+    public Task<List<NotificationSettingDto>> GetSettingsAsync() =>
+        _http.GetListOrEmpty<NotificationSettingDto>("api/notifications/settings");
 
-    public async Task UpdateSettingAsync(NotificationType type, bool isEnabled)
-    {
-        await _http.PutAsJsonAsync($"api/notifications/settings/{(int)type}", isEnabled);
-    }
+    public Task UpdateSettingAsync(NotificationType type, bool isEnabled) =>
+        _http.PutOk($"api/notifications/settings/{(int)type}", isEnabled, "Couldn't save that notification setting.");
 }

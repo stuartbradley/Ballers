@@ -1,5 +1,6 @@
+using Ballers.API.Authorization;
 using Ballers.API.Models;
-using Ballers.API.Models.Requests;
+using Ballers.Models;
 using Microsoft.AspNetCore.Identity;
 using Ballers.API.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -9,7 +10,7 @@ namespace Ballers.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = Policies.SiteAdmin)]
     public class AdminController : ControllerBase
     {
         private readonly IAdminService _admin;

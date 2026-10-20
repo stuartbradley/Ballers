@@ -115,6 +115,33 @@ namespace Ballers.Tests
         }
 
         [Fact]
+        public async Task Attention_FlagsPlayedFixturesMissingFairplayOrTrueMotm()
+        {
+            var db = await Seed(nameof(Attention_FlagsPlayedFixturesMissingFairplayOrTrueMotm));
+            db.Players.AddRange(
+                new Player { Id = 1, Name = "Star", TeamId = 1 },
+                new Player { Id = 2, Name = "Other", TeamId = 2 });
+            db.FixturePlayerStats.Add(new FixturePlayerStat { FixtureId = 1, PlayerId = 1, ManOfTheMatch = true });
+            db.FairplayRatings.Add(new FairplayRating { FixtureId = 1, TeamId = 1, Rating = 8 });
+            await db.SaveChangesAsync();
+
+            var attention = (await new AdminOverviewService(db).GetAsync(Now)).Attention;
+            var review = Assert.Single(attention, a => a.Kind == "review" && a.Link == "/fixture/1");
+            Assert.Equal("Missing Unity man of the match, fairplay ratings, true man of the match", review.Detail);
+            // Fixture 2: home stats in without a man of the match, not yet played.
+            Assert.Equal("Missing Unity man of the match",
+                Assert.Single(attention, a => a.Kind == "review" && a.Link == "/fixture/2").Detail);
+
+            // Unity's MOTM named, both sides rated and a true MOTM picked: nothing left on fixture 1.
+            db.FixturePlayerStats.Add(new FixturePlayerStat { FixtureId = 1, PlayerId = 2, ManOfTheMatch = true });
+            db.FairplayRatings.Add(new FairplayRating { FixtureId = 1, TeamId = 2, Rating = 7 });
+            (await db.Fixtures.FindAsync(1))!.TrueMotmPlayerId = 1;
+            await db.SaveChangesAsync();
+
+            Assert.DoesNotContain((await new AdminOverviewService(db).GetAsync(Now)).Attention, a => a.Kind == "review" && a.Link == "/fixture/1");
+        }
+
+        [Fact]
         public async Task NoActiveSeason_StillReturnsCounts()
         {
             var db = DbContextFactory.Create(nameof(NoActiveSeason_StillReturnsCounts));

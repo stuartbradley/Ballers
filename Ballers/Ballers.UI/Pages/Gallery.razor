@@ -4,20 +4,20 @@
 @using Ballers.UI.Infrastructure
 @implements IAsyncDisposable
 
-@inject GalleryService GalleryService
+@inherits ViewModelComponent<GalleryViewModel>
 @inject NavigationManager Nav
 @inject HttpClient Http
 @inject IJSRuntime JS
 
-<PageTitle>@(gallery?.Title ?? (gallery != null ? $"{gallery.HomeTeam} v {gallery.AwayTeam} photos" : "Gallery"))</PageTitle>
+<PageTitle>@(Vm.Gallery?.Title ?? (Vm.Gallery != null ? $"{Vm.Gallery.HomeTeam} v {Vm.Gallery.AwayTeam} photos" : "Gallery"))</PageTitle>
 
 <div class="gal-page">
 
-    @if (isLoading)
+    @if (Vm.IsLoading)
     {
         <div class="gal-loading"><LoadingSpinner /></div>
     }
-    else if (gallery == null)
+    else if (Vm.Gallery == null)
     {
         <div class="gal-error">
             <p>That gallery doesn't exist, or isn't published yet.</p>
@@ -39,46 +39,46 @@
                     <a href="/galleries" class="gal-back-link">← All galleries</a>
                     <button type="button" class="gal-share" @onclick="Share">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4M18 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm12 7a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /></svg>
-                        @(shareLabel ?? "Share")
+                        @(Vm.ShareLabel ?? "Share")
                     </button>
                 </div>
 
-                <span class="gal-week">Match Week @gallery.Week</span>
+                <span class="gal-week">Match Week @Vm.Gallery.Week</span>
 
                 <h1 class="gal-fixture">
-                    <span class="gal-team">@gallery.HomeTeam</span>
-                    @if (gallery.IsPlayed)
+                    <span class="gal-team">@Vm.Gallery.HomeTeam</span>
+                    @if (Vm.Gallery.IsPlayed)
                     {
-                        <span class="gal-score">@gallery.HomeScore<span class="gal-score-sep">–</span>@gallery.AwayScore</span>
+                        <span class="gal-score">@Vm.Gallery.HomeScore<span class="gal-score-sep">–</span>@Vm.Gallery.AwayScore</span>
                     }
                     else
                     {
                         <span class="gal-vs">v</span>
                     }
-                    <span class="gal-team">@gallery.AwayTeam</span>
+                    <span class="gal-team">@Vm.Gallery.AwayTeam</span>
                 </h1>
 
                 <div class="gal-meta">
-                    @if (gallery.Kickoff.HasValue)
+                    @if (Vm.Gallery.Kickoff.HasValue)
                     {
-                        <span>@gallery.Kickoff.Value.ToString("dddd d MMMM yyyy")</span>
+                        <span>@Vm.Gallery.Kickoff.Value.ToString("dddd d MMMM yyyy")</span>
                     }
-                    @if (!string.IsNullOrWhiteSpace(gallery.Location))
+                    @if (!string.IsNullOrWhiteSpace(Vm.Gallery.Location))
                     {
-                        <span>@gallery.Location</span>
+                        <span>@Vm.Gallery.Location</span>
                     }
-                    <span>@gallery.PhotoCount photos</span>
+                    <span>@Vm.Gallery.PhotoCount photos</span>
                 </div>
 
-                @if (!string.IsNullOrWhiteSpace(gallery.Description))
+                @if (!string.IsNullOrWhiteSpace(Vm.Gallery.Description))
                 {
-                    <p class="gal-description">@gallery.Description</p>
+                    <p class="gal-description">@Vm.Gallery.Description</p>
                 }
             </div>
         </header>
 
         <!-- ── Photographer credit ── -->
-        @if (gallery.Photographer is { } photographer)
+        @if (Vm.Gallery.Photographer is { } photographer)
         {
             <section class="gal-credit">
                 <div class="gal-credit-inner">
@@ -121,7 +121,7 @@
 
         <!-- ── Photos ── -->
         <div class="gal-body">
-            @if (!photos.Any() && !isLoadingMore)
+            @if (!Vm.Photos.Any() && !Vm.IsLoadingMore)
             {
                 <p class="gal-empty">No photos in this gallery yet.</p>
             }
@@ -129,12 +129,12 @@
             @* Justified rows: every photo keeps its own shape, and each row
                stretches to the full width (see .gal-rows). *@
             <div class="gal-rows">
-                @foreach (var (photo, index) in photos.Select((p, i) => (p, i)))
+                @foreach (var (photo, index) in Vm.Photos.Select((p, i) => (p, i)))
                 {
                     var ratio = Ratio(photo);
                     <button class="gal-tile"
                             style="--r: @ratio.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture)"
-                            @onclick="() => OpenLightbox(index)"
+                            @onclick="() => Vm.OpenLightbox(index)"
                             aria-label="Open photo @(index + 1)">
                         <img src="@Abs(photo.ThumbnailUrl)"
                              srcset="@MediaUrls.SrcSet(Http, photo.ThumbnailUrl, photo.ImageUrl)"
@@ -146,7 +146,7 @@
                 }
             </div>
 
-            @if (isLoadingMore)
+            @if (Vm.IsLoadingMore)
             {
                 <div class="gal-loading-more">Loading more photos…</div>
             }
@@ -155,10 +155,10 @@
             <div id="@SentinelId" class="gal-sentinel"></div>
 
             <!-- ── The galleries either side of this one ── -->
-            @if (Newer != null || Older != null)
+            @if (Vm.Newer != null || Vm.Older != null)
             {
                 <nav class="gal-neighbours" aria-label="Other galleries">
-                    @foreach (var (g, label, cls) in new[] { (Older, "Previous match", "is-prev"), (Newer, "Next match", "is-next") })
+                    @foreach (var (g, label, cls) in new[] { (Vm.Older, "Previous match", "is-prev"), (Vm.Newer, "Next match", "is-next") })
                     {
                         if (g == null)
                         {
@@ -183,23 +183,23 @@
         </div>
 
         <!-- ── Lightbox ── -->
-        @if (lightboxIndex is { } current && current < photos.Count)
+        @if (Vm.LightboxIndex is { } current && current < Vm.Photos.Count)
         {
-            var photo = photos[current];
+            var photo = Vm.Photos[current];
 
             <div class="gal-lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer"
                  tabindex="-1" @ref="lightboxRef"
-                 @onclick="CloseLightbox" @onkeydown="OnLightboxKey"
+                 @onclick="Vm.CloseLightbox" @onkeydown="OnLightboxKey"
                  @ontouchstart="OnTouchStart" @ontouchend="OnTouchEnd">
 
                 <div class="gal-lb-bar" @onclick:stopPropagation>
-                    <span class="gal-lb-counter">@(current + 1) / @gallery.PhotoCount</span>
+                    <span class="gal-lb-counter">@(current + 1) / @Vm.Gallery.PhotoCount</span>
                     <div class="gal-lb-tools">
                         <button type="button" class="gal-lb-btn" @onclick="DownloadCurrent" aria-label="Download full-size photo">
                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-5-5m5 5l5-5M4 19h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
                             <span>Download</span>
                         </button>
-                        <button type="button" class="gal-lb-btn gal-lb-close" @onclick="CloseLightbox" aria-label="Close">✕</button>
+                        <button type="button" class="gal-lb-btn gal-lb-close" @onclick="Vm.CloseLightbox" aria-label="Close">✕</button>
                     </div>
                 </div>
 
@@ -207,7 +207,7 @@
                     @if (current > 0)
                     {
                         <button class="gal-lightbox-nav prev"
-                                @onclick="ShowPrevious" @onclick:stopPropagation
+                                @onclick="Vm.ShowPrevious" @onclick:stopPropagation
                                 aria-label="Previous photo">‹</button>
                     }
 
@@ -217,29 +217,29 @@
                          alt="Match photo @(current + 1)"
                          @onclick:stopPropagation />
 
-                    @if (current < photos.Count - 1)
+                    @if (current < Vm.Photos.Count - 1)
                     {
                         <button class="gal-lightbox-nav next"
-                                @onclick="ShowNext" @onclick:stopPropagation
+                                @onclick="Vm.ShowNext" @onclick:stopPropagation
                                 aria-label="Next photo">›</button>
                     }
                 </div>
 
                 <div class="gal-lb-thumbs" id="gal-thumbs" @onclick:stopPropagation>
-                    @foreach (var (p, i) in photos.Select((p, i) => (p, i)))
+                    @foreach (var (p, i) in Vm.Photos.Select((p, i) => (p, i)))
                     {
                         <button type="button" class="gal-lb-thumb @(i == current ? "is-active" : "")"
                                 aria-label="Photo @(i + 1)" aria-current="@(i == current ? "true" : null)"
-                                @onclick="() => ShowAt(i)">
+                                @onclick="() => Vm.ShowAt(i)">
                             <img src="@Abs(p.ThumbnailUrl)" alt="" loading="lazy" decoding="async" />
                         </button>
                     }
                 </div>
 
                 @* The next photo, loading out of sight, so stepping on is instant. *@
-                @if (current + 1 < photos.Count)
+                @if (current + 1 < Vm.Photos.Count)
                 {
-                    <img class="gal-preload" src="@Abs(photos[current + 1].ImageUrl)" alt="" aria-hidden="true" />
+                    <img class="gal-preload" src="@Abs(Vm.Photos[current + 1].ImageUrl)" alt="" aria-hidden="true" />
                 }
             </div>
         }
@@ -248,23 +248,12 @@
 </div>
 
 @code {
+    // The gallery's state is in GalleryViewModel; the browser work (watching
+    // the scroll, focus, downloads, sharing, swipes) stays here.
+
     [Parameter] public int Id { get; set; }
 
-    private const int PageSize = 40;
-
-    private GalleryDetailDto? gallery;
-    private readonly List<GalleryPhotoDto> photos = new();
-    private List<GallerySummaryDto> allGalleries = new();   // newest first
-
-    private bool isLoading = true;
-    private bool isLoadingMore;
-    private bool hasMore = true;
-    private int? lightboxIndex;
-    private string? shareLabel;
-
     private ElementReference lightboxRef;
-    private bool focusLightbox;
-    private bool centreThumb;
 
     private DotNetObjectReference<Gallery>? selfRef;
     private bool observerAttached;
@@ -272,24 +261,10 @@
 
     private string SentinelId => $"gal-sentinel-{Id}";
 
-    private GallerySummaryDto? Summary => allGalleries.FirstOrDefault(g => g.Id == Id);
-
-    private int SummaryIndex => allGalleries.FindIndex(g => g.Id == Id);
-    private GallerySummaryDto? Newer => SummaryIndex > 0 ? allGalleries[SummaryIndex - 1] : null;
-    private GallerySummaryDto? Older => SummaryIndex >= 0 && SummaryIndex < allGalleries.Count - 1 ? allGalleries[SummaryIndex + 1] : null;
-
-    // The gallery's chosen cover, or its first photo when it has none listed.
-    private string? CoverUrl =>
-        Abs(Summary?.CoverImageUrl ?? Summary?.CoverThumbnailUrl ?? photos.FirstOrDefault()?.ImageUrl);
+    private string? CoverUrl => Abs(Vm.CoverPath);
 
     protected override async Task OnParametersSetAsync()
     {
-        isLoading = true;
-        photos.Clear();
-        hasMore = true;
-        lightboxIndex = null;
-        shareLabel = null;
-
         // A new gallery (the next/previous links) means a new sentinel to
         // watch. Id has already changed, so the old one goes by its saved name.
         if (attachedSentinel != null)
@@ -299,37 +274,25 @@
             observerAttached = false;
         }
 
-        var galleryTask = GalleryService.GetGallery(Id);
-        var listTask = allGalleries.Any() ? Task.FromResult(allGalleries) : GalleryService.GetGalleries();
-        await Task.WhenAll(galleryTask, listTask);
-
-        gallery = galleryTask.Result;
-        allGalleries = listTask.Result;
-
-        if (gallery != null)
-        {
-            await LoadNextPageAsync();
-        }
-
-        isLoading = false;
+        await Vm.LoadAsync(Id);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (focusLightbox)
+        if (Vm.FocusLightboxPending)
         {
-            focusLightbox = false;
+            Vm.FocusLightboxPending = false;
             try { await lightboxRef.FocusAsync(); } catch (JSException) { } catch (InvalidOperationException) { }
         }
 
-        if (centreThumb)
+        if (Vm.CentreThumbPending)
         {
-            centreThumb = false;
+            Vm.CentreThumbPending = false;
             try { await JS.InvokeVoidAsync("galleryScroll.centreThumb", "gal-thumbs"); } catch (JSException) { }
         }
 
         // The sentinel only exists once the gallery has rendered.
-        if (gallery == null || observerAttached) return;
+        if (Vm.Gallery == null || observerAttached) return;
 
         selfRef ??= DotNetObjectReference.Create(this);
 
@@ -347,28 +310,7 @@
     }
 
     [JSInvokable]
-    public async Task LoadMoreAsync()
-    {
-        if (!hasMore || isLoadingMore) return;
-
-        await LoadNextPageAsync();
-        StateHasChanged();
-    }
-
-    private async Task LoadNextPageAsync()
-    {
-        if (!hasMore || isLoadingMore) return;
-
-        isLoadingMore = true;
-        StateHasChanged();
-
-        var page = await GalleryService.GetPhotos(Id, photos.Count, PageSize);
-
-        photos.AddRange(page.Photos);
-        hasMore = page.HasMore;
-
-        isLoadingMore = false;
-    }
+    public Task LoadMoreAsync() => Vm.LoadMoreAsync();
 
     /// <summary>
     /// Width over height. Photos missing their size are drawn as 3:2, the
@@ -389,45 +331,13 @@
 
     // ── Lightbox ──
 
-    private void OpenLightbox(int index)
-    {
-        lightboxIndex = index;
-        focusLightbox = true;
-        centreThumb = true;
-    }
-
-    private void CloseLightbox() => lightboxIndex = null;
-
-    private void ShowAt(int index)
-    {
-        if (index < 0 || index >= photos.Count) return;
-        lightboxIndex = index;
-        centreThumb = true;
-    }
-
-    private void ShowPrevious()
-    {
-        if (lightboxIndex is > 0) ShowAt(lightboxIndex.Value - 1);
-    }
-
-    private async Task ShowNext()
-    {
-        if (lightboxIndex is not { } current) return;
-
-        // Stepping onto the last loaded photo pulls the next page in, so paging
-        // through the lightbox keeps working past the first chunk.
-        if (current >= photos.Count - 2 && hasMore) await LoadNextPageAsync();
-
-        if (current < photos.Count - 1) ShowAt(current + 1);
-    }
-
     private Task OnLightboxKey(KeyboardEventArgs e)
     {
         switch (e.Key)
         {
-            case "ArrowLeft": ShowPrevious(); break;
-            case "ArrowRight": return ShowNext();
-            case "Escape": CloseLightbox(); break;
+            case "ArrowLeft": Vm.ShowPrevious(); break;
+            case "ArrowRight": return Vm.ShowNext();
+            case "Escape": Vm.CloseLightbox(); break;
         }
         return Task.CompletedTask;
     }
@@ -449,40 +359,24 @@
         var dx = e.ChangedTouches[0].ClientX - touchX;
         var dy = e.ChangedTouches[0].ClientY - touchY;
         if (Math.Abs(dx) < 50 || Math.Abs(dx) < Math.Abs(dy) * 1.5) return Task.CompletedTask;
-        if (dx > 0) { ShowPrevious(); return Task.CompletedTask; }
-        return ShowNext();
+        if (dx > 0) { Vm.ShowPrevious(); return Task.CompletedTask; }
+        return Vm.ShowNext();
     }
 
     private async Task DownloadCurrent()
     {
-        if (gallery == null || lightboxIndex is not { } i || i >= photos.Count) return;
-        var name = $"ballers-mw{gallery.Week}-{Slug(gallery.HomeTeam)}-v-{Slug(gallery.AwayTeam)}-{i + 1}.jpg";
-        try { await JS.InvokeVoidAsync("galleryScroll.download", Abs(photos[i].ImageUrl), name); }
+        if (Vm.CurrentDownload is not { } d) return;
+        try { await JS.InvokeVoidAsync("galleryScroll.download", Abs(d.Photo.ImageUrl), d.FileName); }
         catch (JSException) { }
     }
 
-    private static string Slug(string s) =>
-        new string(s.ToLowerInvariant().Select(c => char.IsLetterOrDigit(c) ? c : '-').ToArray()).Trim('-');
-
     private async Task Share()
     {
-        if (gallery == null) return;
-        var title = $"{gallery.HomeTeam} v {gallery.AwayTeam} — Match Week {gallery.Week} photos";
+        if (Vm.ShareTitle is not { } title) return;
         string result;
         try { result = await JS.InvokeAsync<string>("galleryScroll.share", title, Nav.Uri); }
         catch (JSException) { result = "failed"; }
-
-        shareLabel = result switch
-        {
-            "copied" => "Link copied",
-            "failed" => "Couldn't share",
-            _ => null
-        };
-        if (shareLabel == null) return;
-
-        StateHasChanged();
-        await Task.Delay(2500);
-        shareLabel = null;
+        await Vm.ShowShareResult(result);
     }
 
     private string? Abs(string? url) => MediaUrls.Absolute(Http, url);
@@ -496,6 +390,7 @@
 
     public async ValueTask DisposeAsync()
     {
+        Dispose();
         try
         {
             await JS.InvokeVoidAsync("galleryScroll.disconnect", attachedSentinel ?? SentinelId);

@@ -7,9 +7,8 @@
 @using Microsoft.AspNetCore.Components.Forms
 @attribute [Authorize(Roles = "Admin")]
 
-@inject GalleryService GalleryService
-@inject FixtureService FixtureService
 @inject HttpClient Http
+@inherits ViewModelComponent<AdminGalleriesViewModel>
 
 <PageTitle>Galleries — Admin</PageTitle>
 
@@ -19,15 +18,15 @@
 
     <div class="ag-body">
 
-        @if (isLoading)
+        @if (Vm.IsLoading)
         {
             <LoadingSpinner />
         }
         else
         {
-            @if (!string.IsNullOrEmpty(message))
+            @if (!string.IsNullOrEmpty(Vm.Message))
             {
-                <div class="ag-message @(messageIsError ? "error" : "")">@message</div>
+                <div class="ag-message @(Vm.MessageIsError ? "error" : "")">@Vm.Message</div>
             }
 
             <!-- ── Photographers ── -->
@@ -38,36 +37,36 @@
                 </p>
 
                 <div class="ag-form-grid">
-                    <label>Name<input @bind="photographerForm.Name" placeholder="Paul Keeling Photography" /></label>
-                    <label>Website<input @bind="photographerForm.Website" placeholder="paulkeelingphotography.com" /></label>
-                    <label>Instagram<input @bind="photographerForm.Instagram" placeholder="instagram.com/…" /></label>
-                    <label>Facebook<input @bind="photographerForm.Facebook" placeholder="facebook.com/…" /></label>
-                    <label>Email<input @bind="photographerForm.Email" placeholder="hello@example.com" /></label>
-                    <label>Logo URL<input @bind="photographerForm.LogoUrl" placeholder="/uploads/…" /></label>
-                    <label class="ag-span-2">Bio<textarea @bind="photographerForm.Bio" rows="2"></textarea></label>
+                    <label>Name<input @bind="Vm.PhotographerForm.Name" placeholder="Paul Keeling Photography" /></label>
+                    <label>Website<input @bind="Vm.PhotographerForm.Website" placeholder="paulkeelingphotography.com" /></label>
+                    <label>Instagram<input @bind="Vm.PhotographerForm.Instagram" placeholder="instagram.com/…" /></label>
+                    <label>Facebook<input @bind="Vm.PhotographerForm.Facebook" placeholder="facebook.com/…" /></label>
+                    <label>Email<input @bind="Vm.PhotographerForm.Email" placeholder="hello@example.com" /></label>
+                    <label>Logo URL<input @bind="Vm.PhotographerForm.LogoUrl" placeholder="/uploads/…" /></label>
+                    <label class="ag-span-2">Bio<textarea @bind="Vm.PhotographerForm.Bio" rows="2"></textarea></label>
                 </div>
 
                 <div class="ag-actions">
-                    <button class="ag-btn primary" @onclick="SavePhotographer">
-                        @(editingPhotographerId is null ? "Add photographer" : "Save changes")
+                    <button class="ag-btn primary" @onclick="Vm.SavePhotographer">
+                        @(Vm.EditingPhotographerId is null ? "Add photographer" : "Save changes")
                     </button>
-                    @if (editingPhotographerId is not null)
+                    @if (Vm.EditingPhotographerId is not null)
                     {
-                        <button class="ag-btn" @onclick="CancelPhotographerEdit">Cancel</button>
+                        <button class="ag-btn" @onclick="Vm.CancelPhotographerEdit">Cancel</button>
                     }
                 </div>
 
-                @if (photographers.Any())
+                @if (Vm.Photographers.Any())
                 {
                     <ul class="ag-list">
-                        @foreach (var p in photographers)
+                        @foreach (var p in Vm.Photographers)
                         {
                             <li>
                                 <span class="ag-list-name">@p.Name</span>
                                 <span class="ag-list-meta">@p.Website</span>
                                 <span class="ag-list-actions">
-                                    <button class="ag-link" @onclick="() => EditPhotographer(p)">Edit</button>
-                                    <button class="ag-link danger" @onclick="() => DeletePhotographer(p)">Delete</button>
+                                    <button class="ag-link" @onclick="() => Vm.EditPhotographer(p)">Edit</button>
+                                    <button class="ag-link danger" @onclick="() => Vm.DeletePhotographer(p)">Delete</button>
                                 </span>
                             </li>
                         }
@@ -80,7 +79,7 @@
                 <h2>New gallery</h2>
                 <p class="ag-hint">One gallery per fixture. Fixtures that already have one aren't listed.</p>
 
-                @if (!availableFixtures.Any())
+                @if (!Vm.AvailableFixtures.Any())
                 {
                     <p class="ag-empty">Every fixture already has a gallery.</p>
                 }
@@ -89,32 +88,32 @@
                     <div class="ag-form-grid">
                         <label class="ag-span-2">
                             Fixture
-                            <select @bind="newGalleryFixtureId">
+                            <select @bind="Vm.NewGalleryFixtureId">
                                 <option value="0">— choose a fixture —</option>
-                                @foreach (var f in availableFixtures)
+                                @foreach (var f in Vm.AvailableFixtures)
                                 {
-                                    <option value="@f.Id">@FixtureLabel(f)</option>
+                                    <option value="@f.Id">@AdminGalleriesViewModel.FixtureLabel(f)</option>
                                 }
                             </select>
                         </label>
 
                         <label>
                             Photographer
-                            <select @bind="newGalleryPhotographerId">
+                            <select @bind="Vm.NewGalleryPhotographerId">
                                 <option value="0">— none —</option>
-                                @foreach (var p in photographers)
+                                @foreach (var p in Vm.Photographers)
                                 {
                                     <option value="@p.Id">@p.Name</option>
                                 }
                             </select>
                         </label>
 
-                        <label>Title (optional)<input @bind="newGalleryTitle" placeholder="Opening day" /></label>
-                        <label class="ag-span-2">Description (optional)<textarea @bind="newGalleryDescription" rows="2"></textarea></label>
+                        <label>Title (optional)<input @bind="Vm.NewGalleryTitle" placeholder="Opening day" /></label>
+                        <label class="ag-span-2">Description (optional)<textarea @bind="Vm.NewGalleryDescription" rows="2"></textarea></label>
                     </div>
 
                     <div class="ag-actions">
-                        <button class="ag-btn primary" @onclick="CreateGallery">Create gallery</button>
+                        <button class="ag-btn primary" @onclick="Vm.CreateGallery">Create gallery</button>
                     </div>
                 }
             </section>
@@ -123,13 +122,13 @@
             <section class="ag-card">
                 <h2>Galleries</h2>
 
-                @if (!galleries.Any())
+                @if (!Vm.Galleries.Any())
                 {
                     <p class="ag-empty">No galleries yet.</p>
                 }
                 else
                 {
-                    @foreach (var g in galleries)
+                    @foreach (var g in Vm.Galleries)
                     {
                         <div class="ag-gallery">
                             <div class="ag-gallery-head">
@@ -166,23 +165,23 @@
                                     @* Which fixture a gallery is attached to decides where the
                                        "View match photos" button shows up, so link straight to it. *@
                                     <a class="ag-link" href="/fixture/@g.FixtureId">Fixture</a>
-                                    <button class="ag-link" @onclick="() => TogglePublished(g)">
+                                    <button class="ag-link" @onclick="() => Vm.TogglePublished(g)">
                                         @(g.IsPublished ? "Hide" : "Publish")
                                     </button>
                                     @* Uploads sort themselves, but this fixes galleries
                                        added before that, without re-uploading. *@
-                                    <button class="ag-link" @onclick="() => Resort(g)">Sort by filename</button>
-                                    <button class="ag-link danger" @onclick="() => DeleteGallery(g)">Delete</button>
+                                    <button class="ag-link" @onclick="() => Vm.Resort(g)">Sort by filename</button>
+                                    <button class="ag-link danger" @onclick="() => Vm.DeleteGallery(g)">Delete</button>
                                 </div>
                             </div>
 
                             <div class="ag-upload">
                                 <InputFile OnChange="e => OnFilesSelected(e, g.Id)" multiple accept="image/*" />
 
-                                @if (uploadingGalleryId == g.Id)
+                                @if (Vm.UploadingGalleryId == g.Id)
                                 {
                                     <span class="ag-upload-status">
-                                        Uploading @uploadedCount of @uploadTotal…
+                                        Uploading @Vm.UploadedCount of @Vm.UploadTotal…
                                     </span>
                                 }
                             </div>
@@ -199,237 +198,12 @@
 </AdminShell>
 
 @code {
-    private bool isLoading = true;
-    private string? message;
-    private bool messageIsError;
+    // The page's state and actions are in AdminGalleriesViewModel.
 
-    private List<GallerySummaryDto> galleries = new();
-    private List<PhotographerDto> photographers = new();
-    private List<FixtureDto> allFixtures = new();
+    protected override Task OnInitializedAsync() => Vm.InitializeAsync();
 
-    private PhotographerDto photographerForm = new();
-    private int? editingPhotographerId;
-
-    private int newGalleryFixtureId;
-    private int newGalleryPhotographerId;
-    private string? newGalleryTitle;
-    private string? newGalleryDescription;
-
-    private int? uploadingGalleryId;
-    private int uploadedCount;
-    private int uploadTotal;
-
-    // Photos go up in small batches. Sending a whole 200-photo gallery in one
-    // request would blow past the server's request size limit and give no
-    // feedback until it finished.
-    private const int UploadBatchSize = 5;
-    private const long MaxFileBytes = 15 * 1024 * 1024;
-
-    private List<FixtureDto> availableFixtures =>
-        allFixtures.Where(f => galleries.All(g => g.FixtureId != f.Id)).ToList();
-
-    protected override async Task OnInitializedAsync()
-    {
-        await ReloadAsync();
-        allFixtures = await FixtureService.GetFixtures();
-        isLoading = false;
-    }
-
-    private async Task ReloadAsync()
-    {
-        galleries = await GalleryService.GetGalleries();
-        photographers = await GalleryService.GetPhotographers();
-    }
-
-    private static string FixtureLabel(FixtureDto f)
-        => $"Week {f.Week} — {f.HomeTeam} v {f.AwayTeam}" +
-           (f.KickOff.HasValue ? $" ({f.KickOff.Value:d MMM yyyy})" : "");
-
-    // ── Photographers ──
-
-    private async Task SavePhotographer()
-    {
-        if (string.IsNullOrWhiteSpace(photographerForm.Name))
-        {
-            Show("A photographer needs a name.", error: true);
-            return;
-        }
-
-        var ok = editingPhotographerId is { } id
-            ? await GalleryService.UpdatePhotographer(id, photographerForm)
-            : await GalleryService.CreatePhotographer(photographerForm) is not null;
-
-        if (!ok)
-        {
-            Show("Could not save that photographer.", error: true);
-            return;
-        }
-
-        photographerForm = new PhotographerDto();
-        editingPhotographerId = null;
-        await ReloadAsync();
-        Show("Photographer saved.");
-    }
-
-    private void EditPhotographer(PhotographerDto p)
-    {
-        editingPhotographerId = p.Id;
-        photographerForm = new PhotographerDto
-        {
-            Name = p.Name,
-            Website = p.Website,
-            Instagram = p.Instagram,
-            Facebook = p.Facebook,
-            Email = p.Email,
-            Bio = p.Bio,
-            LogoUrl = p.LogoUrl
-        };
-    }
-
-    private void CancelPhotographerEdit()
-    {
-        editingPhotographerId = null;
-        photographerForm = new PhotographerDto();
-    }
-
-    private async Task DeletePhotographer(PhotographerDto p)
-    {
-        if (!await GalleryService.DeletePhotographer(p.Id))
-        {
-            Show("Could not delete that photographer.", error: true);
-            return;
-        }
-
-        await ReloadAsync();
-        Show($"{p.Name} removed. Their galleries are still there, just uncredited.");
-    }
-
-    // ── Galleries ──
-
-    private async Task CreateGallery()
-    {
-        if (newGalleryFixtureId == 0)
-        {
-            Show("Choose a fixture first.", error: true);
-            return;
-        }
-
-        var request = new SaveGalleryRequest
-        {
-            FixtureId = newGalleryFixtureId,
-            PhotographerId = newGalleryPhotographerId == 0 ? null : newGalleryPhotographerId,
-            Title = string.IsNullOrWhiteSpace(newGalleryTitle) ? null : newGalleryTitle,
-            Description = string.IsNullOrWhiteSpace(newGalleryDescription) ? null : newGalleryDescription,
-            IsPublished = true
-        };
-
-        if (await GalleryService.CreateGallery(request) is null)
-        {
-            Show("Could not create that gallery.", error: true);
-            return;
-        }
-
-        newGalleryFixtureId = 0;
-        newGalleryPhotographerId = 0;
-        newGalleryTitle = null;
-        newGalleryDescription = null;
-
-        await ReloadAsync();
-        Show("Gallery created — add photos to it below.");
-    }
-
-    private async Task TogglePublished(GallerySummaryDto g)
-    {
-        var request = new SaveGalleryRequest
-        {
-            FixtureId = g.FixtureId,
-            Title = g.Title,
-            IsPublished = !g.IsPublished
-        };
-
-        if (!await GalleryService.UpdateGallery(g.Id, request))
-        {
-            Show("Could not change that gallery.", error: true);
-            return;
-        }
-
-        await ReloadAsync();
-    }
-
-    private async Task Resort(GallerySummaryDto g)
-    {
-        if (!await GalleryService.ResortGallery(g.Id))
-        {
-            Show("Could not reorder that gallery.", error: true);
-            return;
-        }
-
-        await ReloadAsync();
-        Show($"{g.HomeTeam} v {g.AwayTeam} is back in filename order.");
-    }
-
-    private async Task DeleteGallery(GallerySummaryDto g)
-    {
-        if (!await GalleryService.DeleteGallery(g.Id))
-        {
-            Show("Could not delete that gallery.", error: true);
-            return;
-        }
-
-        await ReloadAsync();
-        Show("Gallery deleted.");
-    }
-
-    private async Task OnFilesSelected(InputFileChangeEventArgs e, int galleryId)
-    {
-        var files = e.GetMultipleFiles(1000);
-        if (files.Count == 0) return;
-
-        uploadingGalleryId = galleryId;
-        uploadedCount = 0;
-        uploadTotal = files.Count;
-        var problems = new List<string>();
-
-        foreach (var batch in files.Chunk(UploadBatchSize))
-        {
-            using var content = new MultipartFormDataContent();
-
-            foreach (var file in batch)
-            {
-                if (file.Size > MaxFileBytes)
-                {
-                    problems.Add($"{file.Name} is over 15 MB");
-                    continue;
-                }
-
-                var stream = file.OpenReadStream(MaxFileBytes);
-                var streamContent = new StreamContent(stream);
-                streamContent.Headers.ContentType =
-                    new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
-                content.Add(streamContent, "files", file.Name);
-            }
-
-            var result = await GalleryService.UploadPhotos(galleryId, content);
-            problems.AddRange(result.Rejected);
-
-            uploadedCount += batch.Length;
-            StateHasChanged();
-        }
-
-        uploadingGalleryId = null;
-        await ReloadAsync();
-
-        Show(problems.Count == 0
-            ? $"Uploaded {uploadTotal} photos."
-            : $"Uploaded with {problems.Count} problem(s): {string.Join("; ", problems.Take(3))}",
-            error: problems.Count > 0);
-    }
-
-    private void Show(string text, bool error = false)
-    {
-        message = text;
-        messageIsError = error;
-    }
+    private Task OnFilesSelected(InputFileChangeEventArgs e, int galleryId)
+        => Vm.UploadFiles(galleryId, e.GetMultipleFiles(1000));
 
     private string? Abs(string? url) => MediaUrls.Absolute(Http, url);
 }

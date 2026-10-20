@@ -129,6 +129,27 @@ namespace Ballers.Tests
         }
 
         [Fact]
+        public async Task Todos_FlagStatsSentWithoutOurManOfTheMatch()
+        {
+            var db = await Seed(nameof(Todos_FlagStatsSentWithoutOurManOfTheMatch));
+            db.Fixtures.AddRange(
+                // Both in; only Unity named a man of the match.
+                F(1, 1, 2, Now.AddDays(-7)).With(f => { f.IsPlayed = true; f.HomeStatsSubmitted = f.AwayStatsSubmitted = true; }),
+                // Ours in with a man of the match.
+                F(2, 3, 1, Now.AddDays(-3)).With(f => f.AwayStatsSubmitted = true));
+            db.FixturePlayerStats.AddRange(
+                new FixturePlayerStat { FixtureId = 1, PlayerId = 100, ManOfTheMatch = true },
+                new FixturePlayerStat { FixtureId = 2, PlayerId = 2, ManOfTheMatch = true });
+            await db.SaveChangesAsync();
+
+            var dto = (await Build(db).GetAsync(1, Now))!;
+
+            var motm = Assert.Single(dto.Todos, t => t.Kind == "motm");
+            Assert.Equal("/fixture/1?tab=stats", motm.Link);
+            Assert.Equal("Pick your man of the match v Unity", motm.Title);
+        }
+
+        [Fact]
         public async Task TopPlayers_CountOnlyThisTeamsPlayedGames()
         {
             var db = await Seed(nameof(TopPlayers_CountOnlyThisTeamsPlayedGames));

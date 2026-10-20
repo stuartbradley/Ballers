@@ -1,5 +1,5 @@
-using System.Net.Http.Json;
 using Ballers.Shared;
+using Ballers.UI.Infrastructure;
 
 namespace Ballers.Services
 {
@@ -9,111 +9,68 @@ namespace Ballers.Services
 
         public GalleryService(HttpClient http) => _http = http;
 
-        public async Task<List<GallerySummaryDto>> GetGalleries()
-        {
-            var response = await _http.GetAsync("api/galleries");
-            if (!response.IsSuccessStatusCode) return new();
-            return await response.Content.ReadFromJsonAsync<List<GallerySummaryDto>>() ?? new();
-        }
+        public Task<List<GallerySummaryDto>> GetGalleries() =>
+            _http.GetListOrEmpty<GallerySummaryDto>("api/galleries");
 
-        public async Task<GalleryDetailDto?> GetGallery(int id)
-        {
-            var response = await _http.GetAsync($"api/galleries/{id}");
-            if (!response.IsSuccessStatusCode) return null;
-            return await response.Content.ReadFromJsonAsync<GalleryDetailDto>();
-        }
+        public Task<GalleryDetailDto?> GetGallery(int id) =>
+            _http.GetOrDefault<GalleryDetailDto>($"api/galleries/{id}");
 
         /// <summary>Photos arrive a page at a time — a full gallery is hundreds of images.</summary>
-        public async Task<GalleryPhotoPageDto> GetPhotos(int galleryId, int skip, int take)
-        {
-            var response = await _http.GetAsync($"api/galleries/{galleryId}/photos?skip={skip}&take={take}");
-            if (!response.IsSuccessStatusCode) return new();
-            return await response.Content.ReadFromJsonAsync<GalleryPhotoPageDto>() ?? new();
-        }
+        public async Task<GalleryPhotoPageDto> GetPhotos(int galleryId, int skip, int take) =>
+            await _http.GetOrDefault<GalleryPhotoPageDto>($"api/galleries/{galleryId}/photos?skip={skip}&take={take}")
+            ?? new();
 
         /// <summary>Returns the gallery id for a fixture, or null when it has none.</summary>
-        public async Task<int?> GetGalleryIdForFixture(int fixtureId)
-        {
-            var response = await _http.GetAsync($"api/galleries/by-fixture/{fixtureId}");
-            if (!response.IsSuccessStatusCode) return null;
+        public async Task<int?> GetGalleryIdForFixture(int fixtureId) =>
+            (await _http.GetOrDefault<FixtureGalleryRefDto>($"api/galleries/by-fixture/{fixtureId}"))?.GalleryId;
 
-            var result = await response.Content.ReadFromJsonAsync<FixtureGalleryRefDto>();
-            return result?.GalleryId;
-        }
-
-        public async Task<List<PhotographerDto>> GetPhotographers()
-        {
-            var response = await _http.GetAsync("api/photographers");
-            if (!response.IsSuccessStatusCode) return new();
-            return await response.Content.ReadFromJsonAsync<List<PhotographerDto>>() ?? new();
-        }
+        public Task<List<PhotographerDto>> GetPhotographers() =>
+            _http.GetListOrEmpty<PhotographerDto>("api/photographers");
 
         // ── Admin ─────────────────────────────────────────────────────────
+        // Each throws an ApiException with the API's reason when it fails.
 
-        public async Task<int?> CreateGallery(SaveGalleryRequest request)
-        {
-            var response = await _http.PostAsJsonAsync("api/galleries", request);
-            if (!response.IsSuccessStatusCode) return null;
+        public async Task<int> CreateGallery(SaveGalleryRequest request) =>
+            (await _http.PostOk<CreatedRef>("api/galleries", request, "Couldn't create the gallery."))?.Id ?? 0;
 
-            var created = await response.Content.ReadFromJsonAsync<CreatedRef>();
-            return created?.Id;
-        }
+        public Task UpdateGallery(int id, SaveGalleryRequest request) =>
+            _http.PutOk($"api/galleries/{id}", request, "Couldn't save the gallery.");
 
-        public async Task<bool> UpdateGallery(int id, SaveGalleryRequest request)
-        {
-            var response = await _http.PutAsJsonAsync($"api/galleries/{id}", request);
-            return response.IsSuccessStatusCode;
-        }
-
-        public async Task<bool> DeleteGallery(int id)
-        {
-            var response = await _http.DeleteAsync($"api/galleries/{id}");
-            return response.IsSuccessStatusCode;
-        }
+        public Task DeleteGallery(int id) =>
+            _http.DeleteOk($"api/galleries/{id}", "Couldn't delete the gallery.");
 
         /// <summary>Puts a gallery back into filename order.</summary>
-        public async Task<bool> ResortGallery(int galleryId)
-        {
-            var response = await _http.PostAsync($"api/galleries/{galleryId}/resort", null);
-            return response.IsSuccessStatusCode;
-        }
+        public Task ResortGallery(int galleryId) =>
+            _http.PostOk($"api/galleries/{galleryId}/resort", null, "Couldn't re-sort the gallery.");
 
-        public async Task<bool> DeletePhoto(int galleryId, int photoId)
-        {
-            var response = await _http.DeleteAsync($"api/galleries/{galleryId}/photos/{photoId}");
-            return response.IsSuccessStatusCode;
-        }
+        public Task DeletePhoto(int galleryId, int photoId) =>
+            _http.DeleteOk($"api/galleries/{galleryId}/photos/{photoId}", "Couldn't delete the photo.");
 
+        /// <summary>
+        /// Never throws: a batch that fails outright comes back as one rejection,
+        /// so the upload loop can carry on with the next batch.
+        /// </summary>
         public async Task<UploadResult> UploadPhotos(int galleryId, MultipartFormDataContent content)
         {
-            var response = await _http.PostAsync($"api/galleries/{galleryId}/photos", content);
-            if (!response.IsSuccessStatusCode)
-                return new UploadResult(0, [$"Upload failed: {response.StatusCode}"]);
-
-            return await response.Content.ReadFromJsonAsync<UploadResult>()
-                   ?? new UploadResult(0, ["Upload returned no result."]);
+            try
+            {
+                return await _http.PostOk<UploadResult>($"api/galleries/{galleryId}/photos", content, "Upload failed.")
+                       ?? new UploadResult(0, ["Upload returned no result."]);
+            }
+            catch (ApiException ex)
+            {
+                return new UploadResult(0, [ex.Message]);
+            }
         }
 
-        public async Task<int?> CreatePhotographer(PhotographerDto photographer)
-        {
-            var response = await _http.PostAsJsonAsync("api/photographers", photographer);
-            if (!response.IsSuccessStatusCode) return null;
+        public async Task<int> CreatePhotographer(PhotographerDto photographer) =>
+            (await _http.PostOk<CreatedRef>("api/photographers", photographer, "Couldn't add the photographer."))?.Id ?? 0;
 
-            var created = await response.Content.ReadFromJsonAsync<CreatedRef>();
-            return created?.Id;
-        }
+        public Task UpdatePhotographer(int id, PhotographerDto photographer) =>
+            _http.PutOk($"api/photographers/{id}", photographer, "Couldn't save the photographer.");
 
-        public async Task<bool> UpdatePhotographer(int id, PhotographerDto photographer)
-        {
-            var response = await _http.PutAsJsonAsync($"api/photographers/{id}", photographer);
-            return response.IsSuccessStatusCode;
-        }
-
-        public async Task<bool> DeletePhotographer(int id)
-        {
-            var response = await _http.DeleteAsync($"api/photographers/{id}");
-            return response.IsSuccessStatusCode;
-        }
+        public Task DeletePhotographer(int id) =>
+            _http.DeleteOk($"api/photographers/{id}", "Couldn't delete the photographer.");
 
         private sealed record CreatedRef(int Id);
     }

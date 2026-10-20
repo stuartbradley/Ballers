@@ -1,5 +1,5 @@
-﻿using Ballers.Models;
-using System.Net.Http.Json;
+using Ballers.Models;
+using Ballers.UI.Infrastructure;
 
 namespace Ballers.Services
 {
@@ -12,16 +12,10 @@ namespace Ballers.Services
             _httpClient = httpClient;
         }
 
-        public async Task<List<SeasonDto>> GetSeasons()
-        {
-            return await _httpClient.GetFromJsonAsync<List<SeasonDto>>("api/seasons") ?? new List<SeasonDto>();
-        }
+        public Task<List<SeasonDto>> GetSeasons() =>
+            _httpClient.GetListOrEmpty<SeasonDto>("api/seasons");
 
-        public async Task<SeasonDto?> GetCurrentSeason()
-        {
-            var response = await _httpClient.GetAsync("api/seasons/current");
-            if (!response.IsSuccessStatusCode) return null;
-            return await response.Content.ReadFromJsonAsync<SeasonDto>();
-        }
+        public Task<SeasonDto?> GetCurrentSeason() =>
+            _httpClient.GetOrDefault<SeasonDto>("api/seasons/current");
     }
 }

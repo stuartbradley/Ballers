@@ -3,9 +3,8 @@
 @using Ballers.Shared
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize(Roles = "Admin")]
+@inherits ViewModelComponent<AdminViewModel>
 
-@inject AdminService AdminService
-@inject LeagueSettingsService LeagueSettingsSvc
 
 <PageTitle>Admin · Overview</PageTitle>
 
@@ -14,15 +13,15 @@
    the sidebar. *@
 <AdminShell Section="overview" Title="Overview" Subtitle="The league at a glance, and anything that needs you.">
     <Actions>
-        <button type="button" class="adm-btn" @onclick="Load" disabled="@loading">
+        <button type="button" class="adm-btn" @onclick="Vm.Load" disabled="@Vm.Loading">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
             Refresh
         </button>
     </Actions>
     <ChildContent>
-        @if (overview == null)
+        @if (Vm.Overview == null)
         {
-            @if (loading)
+            @if (Vm.Loading)
             {
                 <LoadingSpinner />
             }
@@ -35,7 +34,7 @@
         }
         else
         {
-            var o = overview;
+            var o = Vm.Overview;
 
             <div class="adm-stats">
                 <a class="adm-stat" href="/admin/season">
@@ -98,7 +97,7 @@
                     else
                     {
                         <div class="adm-rows">
-                            @foreach (var a in o.Attention.Take(showAllAttention ? int.MaxValue : 8))
+                            @foreach (var a in o.Attention.Take(Vm.ShowAllAttention ? int.MaxValue : 8))
                             {
                                 var (icon, tone) = AttentionLook(a.Kind);
                                 <a class="adm-row" href="@a.Link">
@@ -113,8 +112,8 @@
                         </div>
                         @if (o.Attention.Count > 8)
                         {
-                            <button type="button" class="adm-btn is-small" style="margin-top:12px" @onclick="() => showAllAttention = !showAllAttention">
-                                @(showAllAttention ? "Show fewer" : $"Show all {o.Attention.Count}")
+                            <button type="button" class="adm-btn is-small" style="margin-top:12px" @onclick="() => Vm.ShowAllAttention = !Vm.ShowAllAttention">
+                                @(Vm.ShowAllAttention ? "Show fewer" : $"Show all {o.Attention.Count}")
                             </button>
                         }
                     }
@@ -127,11 +126,11 @@
                         </div>
                         <div class="adm-rows">
                             @Switch("Lock player registration", "Managers can't add players to their squads.",
-                                    o.PlayersLocked, "Locked", "Open", v => SetSwitch("players", v))
+                                    o.PlayersLocked, "Locked", "Open", v => Vm.SetSwitch("players", v))
                             @Switch("Lock fixtures", "Managers and referees can't submit stats or edit fixtures.",
-                                    o.FixturesLocked, "Locked", "Open", v => SetSwitch("fixtures", v))
+                                    o.FixturesLocked, "Locked", "Open", v => Vm.SetSwitch("fixtures", v))
                             @Switch("Hide fixtures from the public", "For uploading a season before revealing it.",
-                                    o.FixturesHidden, "Hidden", "Visible", v => SetSwitch("hidden", v))
+                                    o.FixturesHidden, "Hidden", "Visible", v => Vm.SetSwitch("hidden", v))
                         </div>
 
                         <div class="adm-row" style="border-top:1px solid rgba(255,255,255,.06);margin-top:12px;padding-top:14px">
@@ -139,14 +138,14 @@
                                 <span class="adm-row-title">Player card points</span>
                                 <span class="adm-row-sub">Pays out any played fixture not yet credited. Safe to run any time.</span>
                             </span>
-                            <button type="button" class="adm-btn is-primary" disabled="@runningPayout" @onclick="RunPayout">
-                                @(runningPayout ? "Running…" : "Run payout")
+                            <button type="button" class="adm-btn is-primary" disabled="@Vm.RunningPayout" @onclick="Vm.RunPayout">
+                                @(Vm.RunningPayout ? "Running…" : "Run payout")
                             </button>
                         </div>
 
-                        @if (switchMessage != null)
+                        @if (Vm.SwitchMessage != null)
                         {
-                            <div class="adm-msg @(switchIsError ? "is-error" : "is-ok")">@switchMessage</div>
+                            <div class="adm-msg @(Vm.SwitchIsError ? "is-error" : "is-ok")">@Vm.SwitchMessage</div>
                         }
                     </section>
 
@@ -183,21 +182,9 @@
 </AdminShell>
 
 @code {
-    private AdminOverviewDto? overview;
-    private bool loading = true;
-    private bool showAllAttention;
-    private bool runningPayout;
-    private string? switchMessage;
-    private bool switchIsError;
+    // The overview and its actions are in AdminViewModel; the view helpers stay here.
 
-    protected override Task OnInitializedAsync() => Load();
-
-    private async Task Load()
-    {
-        loading = true;
-        overview = await AdminService.GetOverview();
-        loading = false;
-    }
+    protected override Task OnInitializedAsync() => Vm.Load();
 
     private RenderFragment Switch(string title, string help, bool on, string onText, string offText, Func<bool, Task> set) =>
         @<div class="adm-row">
@@ -212,63 +199,6 @@
                 <em>@(on ? onText : offText)</em>
             </label>
         </div>;
-
-    private async Task SetSwitch(string which, bool value)
-    {
-        if (overview == null) return;
-        switchMessage = null;
-        try
-        {
-            switch (which)
-            {
-                case "players":
-                    await LeagueSettingsSvc.SetPlayersLocked(value);
-                    overview.PlayersLocked = value;
-                    switchMessage = value ? "Player registration locked." : "Player registration open.";
-                    break;
-                case "fixtures":
-                    await LeagueSettingsSvc.SetFixturesLocked(value);
-                    overview.FixturesLocked = value;
-                    switchMessage = value ? "Fixtures locked for editing." : "Fixtures open for editing.";
-                    break;
-                case "hidden":
-                    await LeagueSettingsSvc.SetFixturesHidden(value);
-                    overview.FixturesHidden = value;
-                    switchMessage = value ? "Fixtures hidden from the public." : "Fixtures visible to the public.";
-                    break;
-            }
-            switchIsError = false;
-        }
-        catch (Exception ex)
-        {
-            switchIsError = true;
-            switchMessage = ex.Message;
-        }
-    }
-
-    private async Task RunPayout()
-    {
-        runningPayout = true;
-        switchMessage = null;
-        try
-        {
-            var (fixtures, players, points) = await AdminService.RunPlayerPoints();
-            switchIsError = false;
-            switchMessage = points == 0
-                ? "Nothing to pay out: every played fixture is already settled."
-                : $"Credited {points} point(s) to {players} player(s) across {fixtures} fixture(s).";
-            overview = await AdminService.GetOverview() ?? overview;
-        }
-        catch (Exception ex)
-        {
-            switchIsError = true;
-            switchMessage = ex.Message;
-        }
-        finally
-        {
-            runningPayout = false;
-        }
-    }
 
     private static string Pct(int part, int whole) =>
         whole <= 0 ? "0%" : $"{Math.Clamp(100.0 * part / whole, 0, 100):0}%";
@@ -291,6 +221,7 @@
         "referee" => ("M12 4v16M5 8l7-4 7 4M5 8v4c0 3 3 5 7 6 4-1 7-3 7-6V8", "is-blue"),
         "kickoff" => ("M12 7v5l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z", "is-blue"),
         "signup" => ("M16 19v-1a4 4 0 0 0-8 0v1M12 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19 8v6m3-3h-6", "is-violet"),
+        "review" => ("M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z", "is-amber"),
         _ => ("M12 8v5m0 3h.01", "")
     };
 

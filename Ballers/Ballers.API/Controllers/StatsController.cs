@@ -1,3 +1,4 @@
+using Ballers.Models;
 using Ballers.API.Models;
 using Ballers.API.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -24,7 +25,7 @@ namespace Ballers.API.Controllers
         public async Task<IActionResult> GetSummary()
         {
             var (scorers, assists, motm) = await _stats.GetTopStatsSummaryAsync();
-            return Ok(new { scorers, assists, motm });
+            return Ok(new StatsSummaryDto { Scorers = scorers, Assists = assists, Motm = motm });
         }
 
         [AllowAnonymous]

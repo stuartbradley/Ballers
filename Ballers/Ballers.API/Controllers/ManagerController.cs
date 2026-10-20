@@ -1,3 +1,4 @@
+using Ballers.API.Authorization;
 using Ballers.API.Models;
 using Ballers.API.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -8,7 +9,7 @@ namespace Ballers.API.Controllers
 {
     [Route("api/manager")]
     [ApiController]
-    [Authorize(Roles = "Manager")]
+    [Authorize(Policy = Policies.Manager)]
     public class ManagerController : ControllerBase
     {
         private readonly IManagerDashboardService _dashboard;
