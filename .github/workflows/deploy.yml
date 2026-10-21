@@ -2,8 +2,15 @@ name: Deploy
 
 on:
   push:
-    branches: [ main ]
+    # Any branch deploys to UAT; a v* tag deploys to live.
+    branches: [ '**' ]
     tags: [ 'v*' ]
+
+# One deploy per target at a time: a second push waits rather than
+# uploading over a deploy that is still running.
+concurrency:
+  group: deploy-${{ startsWith(github.ref, 'refs/tags/v') && 'live' || 'uat' }}
+  cancel-in-progress: false
 
 jobs:
   deploy:
