@@ -1,3 +1,4 @@
+using Ballers.API.Authorization;
 using Ballers.API.Data;
 using Ballers.API.Models;
 using Ballers.API.Services;
@@ -10,7 +11,9 @@ namespace Ballers.API.Controllers
 {
     [ApiController]
     [Route("api/debug")]
-    [AllowAnonymous]
+    // UAT is on the public internet and these endpoints wipe the data, reset
+    // passwords and list logins, so only a signed-in admin may use them.
+    [Authorize(Policy = Policies.SiteAdmin)]
     public partial class DebugController : ControllerBase
     {
         private readonly IWebHostEnvironment _env;

@@ -4,6 +4,9 @@
    Section is the key of the page's own sidebar entry, so it shows as current.
    Links marked Out leave the admin area for a page that managers or the
    public also use. *@
+@using Microsoft.AspNetCore.Components.WebAssembly.Hosting
+@inject IWebAssemblyHostEnvironment HostEnv
+@inject IConfiguration Config
 <div class="adm-shell">
     <aside class="adm-side" aria-label="Admin sections">
         <span class="adm-side-brand">League admin</span>
@@ -65,7 +68,17 @@
     private record Group(string Label, Item[] Items);
 
     // Icon paths are 24×24 line drawings.
-    private static readonly Group[] Groups =
+    private Group[] Groups => ShowDebug ? AllGroups.Append(DebugGroup).ToArray() : AllGroups;
+
+    // The data seeding tools: never on live, where the API refuses them too.
+    private bool ShowDebug => HostEnv.IsDevelopment() || Config.GetValue<bool>("IsUAT");
+
+    private static readonly Group DebugGroup = new("Testing", new Item[]
+    {
+        new("debug", "Debug", "/debug", "M9 9h6v8H9zM12 5v4M8 7l-2-2m10 2 2-2M5 13H3m18 0h-2M5 17l-2 1m18-1-2 1", Out: true),
+    });
+
+    private static readonly Group[] AllGroups =
     {
         new("League", new Item[]
         {
