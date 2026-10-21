@@ -39,6 +39,7 @@
         // A result only counts towards the table once both sides have submitted.
         public bool HomeStatsSubmitted { get; set; }
         public bool AwayStatsSubmitted { get; set; }
+        public bool IsWalkover { get; set; }
 
         public bool IsKnockout { get; set; }
         public string KnockoutTournament { get; set; } = "";

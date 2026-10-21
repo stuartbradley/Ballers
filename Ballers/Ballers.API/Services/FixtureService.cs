@@ -31,6 +31,9 @@ namespace Ballers.API.Services
         Task<TrueMotmDetail?> GetTrueMotmAsync(int fixtureId);
         Task<bool> SetTrueMotmAsync(int fixtureId, int? playerId);
         Task<List<TrueMotmRow>> GetTrueMotmLogAsync();
+        Task<List<Ballers.Shared.WalkoverFixtureDto>> GetWalkoverFixturesAsync();
+        Task<string?> AwardWalkoverAsync(int fixtureId, int winnerTeamId);
+        Task<string?> UndoWalkoverAsync(int fixtureId);
     }
 
     public class FixtureService : IFixtureService
@@ -79,6 +82,7 @@ namespace Ballers.API.Services
                 AwayViceCaptainName = f.AwayViceCaptain?.Name,
                 HomeStatsSubmitted = f.HomeStatsSubmitted,
                 AwayStatsSubmitted = f.AwayStatsSubmitted,
+                IsWalkover = f.IsWalkover,
             };
         }
 
@@ -121,6 +125,7 @@ namespace Ballers.API.Services
                     SeasonIsActive = f.Season != null && f.Season.IsActive,
                     HomeStatsSubmitted = f.HomeStatsSubmitted,
                     AwayStatsSubmitted = f.AwayStatsSubmitted,
+                    IsWalkover = f.IsWalkover,
                     ManagerCaptainSet = teamId != null &&
                         ((f.HomeTeamId == teamId && f.HomeCaptainId != null) || (f.AwayTeamId == teamId && f.AwayCaptainId != null))
                 })
@@ -157,10 +162,10 @@ namespace Ballers.API.Services
                 fixtures = fixtures
                     .Select(f => f with
                     {
-                        ManagerStatsSubmitted = submittedSet.Contains(f.Id),
+                        ManagerStatsSubmitted = submittedSet.Contains(f.Id) || f.IsWalkover,
                         ManagerSquadSubmitted = squadCounts.ContainsKey(f.Id),
                         ManagerSquadCount = squadCounts.GetValueOrDefault(f.Id),
-                        ManagerPensSubmitted = pensSet.Contains(f.Id)
+                        ManagerPensSubmitted = pensSet.Contains(f.Id) || f.IsWalkover
                     })
                     .ToList();
             }
@@ -286,6 +291,7 @@ namespace Ballers.API.Services
                     f.Location,
                     f.Postcode,
                     f.IsPlayed,
+                    f.IsWalkover,
                     f.HomeScore,
                     f.AwayScore,
                     f.SeasonId,
@@ -376,6 +382,7 @@ namespace Ballers.API.Services
                                 Location = f.Location ?? "",
                                 Postcode = f.Postcode ?? "",
                                 IsPlayed = f.IsPlayed,
+                                IsWalkover = f.IsWalkover,
                                 HomeScore = f.HomeScore,
                                 AwayScore = f.AwayScore,
                                 HomeScorers = f.IsPlayed
@@ -543,6 +550,10 @@ namespace Ballers.API.Services
 
             var fixture = await _db.Fixtures.FindAsync(fixtureId)
                 ?? throw new KeyNotFoundException($"Fixture {fixtureId} not found.");
+
+            // A walkover's score is set by the admin; stats would overwrite it.
+            if (fixture.IsWalkover)
+                throw new InvalidOperationException("This game was a walkover, so there are no stats to enter.");
 
             // Enforce at most one MOTM per submission
             bool foundMotm = false;
@@ -725,6 +736,89 @@ namespace Ballers.API.Services
             (f.HomeCaptainId, f.AwayCaptainId) = (f.AwayCaptainId, f.HomeCaptainId);
             (f.HomeViceCaptainId, f.AwayViceCaptainId) = (f.AwayViceCaptainId, f.HomeViceCaptainId);
             (f.HomeScore, f.AwayScore) = (f.AwayScore, f.HomeScore);
+
+            await _db.SaveChangesAsync();
+            return null;
+        }
+
+        // ── Walkovers ───────────────────────────────────────────────────
+
+        public const int WalkoverGoals = 3;
+
+        /// <summary>
+        /// League fixtures in the active season that can still be awarded as a
+        /// walkover (no stats in from either side), plus those that already are.
+        /// </summary>
+        public async Task<List<Ballers.Shared.WalkoverFixtureDto>> GetWalkoverFixturesAsync()
+        {
+            return await _db.Fixtures
+                .Where(f => f.Season!.IsActive && !f.IsKnockout
+                         && (f.IsWalkover || (!f.HomeStatsSubmitted && !f.AwayStatsSubmitted && !f.IsPlayed)))
+                .OrderBy(f => f.MatchNumber)
+                .ThenBy(f => f.Kickoff)
+                .Select(f => new Ballers.Shared.WalkoverFixtureDto
+                {
+                    Id = f.Id,
+                    Week = f.MatchNumber,
+                    Kickoff = f.Kickoff,
+                    WindowStart = f.WindowStart,
+                    HomeTeamId = f.HomeTeamId,
+                    HomeTeam = f.HomeTeam!.Name,
+                    AwayTeamId = f.AwayTeamId,
+                    AwayTeam = f.AwayTeam!.Name,
+                    IsWalkover = f.IsWalkover,
+                    HomeScore = f.HomeScore,
+                    AwayScore = f.AwayScore
+                })
+                .ToListAsync();
+        }
+
+        /// <summary>
+        /// Awards the fixture to <paramref name="winnerTeamId"/> 3-0 because the
+        /// other side couldn't field a team. The result counts in the table like
+        /// any other, but no player is credited with the goals. Returns why it
+        /// can't be awarded, or null once it has been.
+        /// </summary>
+        public async Task<string?> AwardWalkoverAsync(int fixtureId, int winnerTeamId)
+        {
+            var f = await _db.Fixtures.FindAsync(fixtureId)
+                ?? throw new KeyNotFoundException("Fixture not found.");
+
+            if (f.IsKnockout)
+                return "Knockout games can't be awarded as a walkover.";
+            if (winnerTeamId != f.HomeTeamId && winnerTeamId != f.AwayTeamId)
+                return "The winner must be one of the two teams in the fixture.";
+            if (f.IsWalkover)
+                return "This fixture is already a walkover.";
+            if (f.IsPlayed || f.HomeStatsSubmitted || f.AwayStatsSubmitted
+                || await _db.FixturePlayerStats.AnyAsync(s => s.FixtureId == fixtureId))
+                return "Stats are already in for this game, so it can't be a walkover.";
+
+            bool homeWins = winnerTeamId == f.HomeTeamId;
+            f.HomeScore = homeWins ? WalkoverGoals : 0;
+            f.AwayScore = homeWins ? 0 : WalkoverGoals;
+            f.IsWalkover = true;
+            f.HomeStatsSubmitted = f.AwayStatsSubmitted = true;
+            f.IsPlayed = true;
+            f.TrueMotmPlayerId = null;
+
+            await _db.SaveChangesAsync();
+            return null;
+        }
+
+        /// <summary>Puts a walkover back to an unplayed fixture awaiting stats.</summary>
+        public async Task<string?> UndoWalkoverAsync(int fixtureId)
+        {
+            var f = await _db.Fixtures.FindAsync(fixtureId)
+                ?? throw new KeyNotFoundException("Fixture not found.");
+
+            if (!f.IsWalkover)
+                return "This fixture isn't a walkover.";
+
+            f.IsWalkover = false;
+            f.HomeScore = f.AwayScore = 0;
+            f.HomeStatsSubmitted = f.AwayStatsSubmitted = false;
+            f.IsPlayed = false;
 
             await _db.SaveChangesAsync();
             return null;

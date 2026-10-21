@@ -145,7 +145,11 @@
                                 </summary>
 
                                 <div class="fx-detail">
-                                    @if (m.HomeScorers.Any() || m.AwayScorers.Any())
+                                    @if (m.IsWalkover)
+                                    {
+                                        <p class="fx-walkover">Walkover: @(m.HomeScore > m.AwayScore ? m.Away : m.Home) couldn't field a team, so the game was awarded 3-0.</p>
+                                    }
+                                    else if (m.HomeScorers.Any() || m.AwayScorers.Any())
                                     {
                                         <div class="fx-scorers">
                                             <div class="fx-scorers-col fx-home">

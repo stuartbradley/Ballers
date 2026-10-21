@@ -179,6 +179,15 @@
 
 /* ===== GOAL SCORERS ===== */
 
+.walkover-note {
+    margin: 10px 0 0;
+    padding: 8px 0;
+    font-size: 0.85rem;
+    font-style: italic;
+    text-align: center;
+    opacity: 0.8;
+}
+
 .scorers {
     display: grid;
     grid-template-columns: 1fr 52px 1fr;

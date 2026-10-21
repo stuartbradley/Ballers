@@ -29,6 +29,7 @@
         public bool SeasonIsActive { get; set; }
         public bool HomeStatsSubmitted { get; set; }
         public bool AwayStatsSubmitted { get; set; }
+        public bool IsWalkover { get; set; }
 
         // The manager's own side only.
         public int ManagerSquadCount { get; set; }

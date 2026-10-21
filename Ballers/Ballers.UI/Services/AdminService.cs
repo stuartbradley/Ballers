@@ -220,6 +220,29 @@
             return string.IsNullOrWhiteSpace(text) || text.StartsWith("{") ? $"Request failed ({(int)response.StatusCode})." : text;
         }
 
+        // ── Walkovers ─────────────────────────────────────────────────────
+
+        public async Task<List<Ballers.Shared.WalkoverFixtureDto>> GetWalkoverFixtures()
+        {
+            try { return await _http.GetFromJsonAsync<List<Ballers.Shared.WalkoverFixtureDto>>("api/admin/walkovers") ?? new(); }
+            catch (HttpRequestException) { return new(); }
+        }
+
+        public async Task AwardWalkover(int fixtureId, int winnerTeamId)
+        {
+            var response = await _http.PostAsJsonAsync($"api/admin/fixtures/{fixtureId}/walkover",
+                new Ballers.Shared.AwardWalkoverRequest { WinnerTeamId = winnerTeamId });
+            if (!response.IsSuccessStatusCode)
+                throw new Exception(await ReadError(response));
+        }
+
+        public async Task UndoWalkover(int fixtureId)
+        {
+            var response = await _http.DeleteAsync($"api/admin/fixtures/{fixtureId}/walkover");
+            if (!response.IsSuccessStatusCode)
+                throw new Exception(await ReadError(response));
+        }
+
         public async Task<List<TeamDto>> GetTeams()
             => await _http.GetFromJsonAsync<List<TeamDto>>("api/teams") ?? new();
 

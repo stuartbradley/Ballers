@@ -19,6 +19,7 @@ namespace Ballers.API.Controllers
         private readonly IPlayerPointsService _playerPoints;
         private readonly ILeagueSettingsService _leagueSettings;
         private readonly IAdminOverviewService _overview;
+        private readonly INotificationService _notifications;
         private readonly UserManager<ApplicationUser> _userManager;
 
         public AdminController(
@@ -29,6 +30,7 @@ namespace Ballers.API.Controllers
             IPlayerPointsService playerPoints,
             ILeagueSettingsService leagueSettings,
             IAdminOverviewService overview,
+            INotificationService notifications,
             UserManager<ApplicationUser> userManager)
         {
             _admin = admin;
@@ -38,6 +40,7 @@ namespace Ballers.API.Controllers
             _playerPoints = playerPoints;
             _leagueSettings = leagueSettings;
             _overview = overview;
+            _notifications = notifications;
             _userManager = userManager;
         }
 
@@ -183,6 +186,47 @@ namespace Ballers.API.Controllers
             {
                 await _admin.DeleteSeasonAsync(id);
                 return Ok();
+            }
+            catch (KeyNotFoundException ex) { return NotFound(ex.Message); }
+        }
+
+        // ── Walkovers ───────────────────────────────────────────────────
+
+        [HttpGet("walkovers")]
+        public async Task<IActionResult> GetWalkoverFixtures()
+            => Ok(await _fixtures.GetWalkoverFixturesAsync());
+
+        [HttpPost("fixtures/{id}/walkover")]
+        public async Task<IActionResult> AwardWalkover(int id, Ballers.Shared.AwardWalkoverRequest request)
+        {
+            try
+            {
+                var problem = await _fixtures.AwardWalkoverAsync(id, request.WinnerTeamId);
+                if (problem != null) return Conflict(problem);
+
+                var f = await _fixtures.GetByIdAsync(id);
+                if (f != null)
+                {
+                    var (winner, loser) = request.WinnerTeamId == f.HomeTeamId
+                        ? (f.HomeTeam, f.AwayTeam)
+                        : (f.AwayTeam, f.HomeTeam);
+                    var msg = $"Walkover: {winner} awarded a 3-0 win over {loser}.";
+                    var link = $"/fixture/{id}";
+                    await _notifications.CreateForTeamAsync(f.HomeTeamId, Ballers.Shared.NotificationType.ResultSubmitted, msg, link, id);
+                    await _notifications.CreateForTeamAsync(f.AwayTeamId, Ballers.Shared.NotificationType.ResultSubmitted, msg, link, id);
+                }
+                return Ok();
+            }
+            catch (KeyNotFoundException ex) { return NotFound(ex.Message); }
+        }
+
+        [HttpDelete("fixtures/{id}/walkover")]
+        public async Task<IActionResult> UndoWalkover(int id)
+        {
+            try
+            {
+                var problem = await _fixtures.UndoWalkoverAsync(id);
+                return problem == null ? Ok() : Conflict(problem);
             }
             catch (KeyNotFoundException ex) { return NotFound(ex.Message); }
         }

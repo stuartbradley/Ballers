@@ -47,5 +47,10 @@
         public string? KnockoutTournament { get; set; }
         public string? KnockoutRound { get; set; }
         public int KnockoutSlot { get; set; }
+
+        // The other side couldn't field a team, so the admin awarded the game 3-0.
+        // No one scored, so there are no player stats; the score is set directly
+        // and the fixture takes no stats until the walkover is undone.
+        public bool IsWalkover { get; set; }
     }
 }

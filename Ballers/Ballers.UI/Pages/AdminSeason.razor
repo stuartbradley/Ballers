@@ -215,6 +215,75 @@
             }
         </section>
 
+        @if (seasons.Any(s => s.IsActive))
+        {
+            var openFixtures = walkoverFixtures.Where(w => !w.IsWalkover).ToList();
+            var awarded = walkoverFixtures.Where(w => w.IsWalkover).ToList();
+            var picked = openFixtures.FirstOrDefault(w => w.Id == walkoverFixtureId);
+
+            <section class="adm-card" aria-labelledby="walkover-title">
+                <div class="adm-card-head">
+                    <div>
+                        <h2 id="walkover-title">Walkovers</h2>
+                        <p class="adm-card-sub">When a side can't field a team, award the game 3-0 to the team that turned up. It counts in the table, but no player is credited with the goals.</p>
+                    </div>
+                </div>
+
+                <div class="adm-toolbar" style="margin:0 0 12px;justify-content:flex-start;flex-wrap:wrap">
+                    <select class="adm-input" style="max-width:340px" value="@walkoverFixtureId"
+                            @onchange="e => { walkoverFixtureId = int.TryParse(e.Value?.ToString(), out var id) ? id : 0; walkoverWinnerId = 0; }">
+                        <option value="0">Choose a fixture…</option>
+                        @foreach (var w in openFixtures)
+                        {
+                            <option value="@w.Id">Week @w.Week · @w.HomeTeam v @w.AwayTeam@(w.Kickoff.HasValue ? $" · {w.Kickoff:d MMM}" : "")</option>
+                        }
+                    </select>
+                    @if (picked != null)
+                    {
+                        <span class="adm-label">Awarded to</span>
+                        <div class="adm-chips">
+                            <button type="button" class="adm-chip @(walkoverWinnerId == picked.HomeTeamId ? "is-active" : "")"
+                                    @onclick="() => walkoverWinnerId = picked.HomeTeamId">@picked.HomeTeam</button>
+                            <button type="button" class="adm-chip @(walkoverWinnerId == picked.AwayTeamId ? "is-active" : "")"
+                                    @onclick="() => walkoverWinnerId = picked.AwayTeamId">@picked.AwayTeam</button>
+                        </div>
+                    }
+                    <button type="button" class="adm-btn is-primary" disabled="@(picked == null || walkoverWinnerId == 0)" @onclick="AwardWalkover">Award walkover</button>
+                </div>
+
+                @if (!openFixtures.Any())
+                {
+                    <p class="adm-help">No fixtures waiting on stats in the active season.</p>
+                }
+
+                @if (awarded.Any())
+                {
+                    <div class="adm-rows">
+                        @foreach (var w in awarded)
+                        {
+                            <div class="adm-row">
+                                <span class="adm-row-main">
+                                    <span class="adm-row-title">
+                                        @w.HomeTeam @w.HomeScore–@w.AwayScore @w.AwayTeam
+                                        <span class="adm-badge is-blue">Walkover</span>
+                                    </span>
+                                    <span class="adm-row-sub">Week @w.Week@(w.Kickoff.HasValue ? $" · {w.Kickoff:d MMM yyyy}" : "")</span>
+                                </span>
+                                <span class="adm-row-end">
+                                    <button type="button" class="adm-btn is-small" @onclick="() => UndoWalkover(w)">Undo</button>
+                                </span>
+                            </div>
+                        }
+                    </div>
+                }
+
+                @if (walkoverMessage != null)
+                {
+                    <div class="adm-msg @(walkoverIsError ? "is-error" : "is-ok")">@walkoverMessage</div>
+                }
+            </section>
+        }
+
         @if (seasons.Any())
         {
             <section class="adm-card adm-danger" aria-labelledby="danger-title">
@@ -252,6 +321,13 @@
     private int deleteId;
     private AdminConfirm confirm = default!;
 
+    // Walkovers
+    private List<Ballers.Shared.WalkoverFixtureDto> walkoverFixtures = new();
+    private int walkoverFixtureId;
+    private int walkoverWinnerId;
+    private string? walkoverMessage;
+    private bool walkoverIsError;
+
     // Wizard
     private bool wizardOpen;
     private int step;
@@ -283,10 +359,61 @@
     {
         var seasonsTask = AdminService.GetSeasons();
         var teamsTask = AdminService.GetTeams();
-        await Task.WhenAll(seasonsTask, teamsTask);
+        var walkoversTask = AdminService.GetWalkoverFixtures();
+        await Task.WhenAll(seasonsTask, teamsTask, walkoversTask);
         seasons = seasonsTask.Result;
         teams = teamsTask.Result;
+        walkoverFixtures = walkoversTask.Result;
         loading = false;
+    }
+
+    private async Task AwardWalkover()
+    {
+        var w = walkoverFixtures.FirstOrDefault(x => x.Id == walkoverFixtureId);
+        if (w == null || walkoverWinnerId == 0) return;
+
+        var (winner, loser) = walkoverWinnerId == w.HomeTeamId ? (w.HomeTeam, w.AwayTeam) : (w.AwayTeam, w.HomeTeam);
+        var ok = await confirm.Ask($"Award {winner} a walkover?",
+            $"{loser} couldn't field a team, so {winner} win 3-0. The result goes in the table straight away and no stats can be entered for the game. Both teams are notified.",
+            "Award walkover");
+        if (!ok) return;
+
+        await RunWalkover(async () =>
+        {
+            await AdminService.AwardWalkover(w.Id, walkoverWinnerId);
+            walkoverFixtureId = walkoverWinnerId = 0;
+            return $"{winner} awarded a 3-0 walkover over {loser}.";
+        });
+    }
+
+    private async Task UndoWalkover(Ballers.Shared.WalkoverFixtureDto w)
+    {
+        var ok = await confirm.Ask($"Undo the {w.HomeTeam} v {w.AwayTeam} walkover?",
+            "The 3-0 comes off the table and the fixture goes back to waiting on stats from both teams.",
+            "Undo walkover");
+        if (!ok) return;
+
+        await RunWalkover(async () =>
+        {
+            await AdminService.UndoWalkover(w.Id);
+            return $"Walkover undone. {w.HomeTeam} v {w.AwayTeam} is waiting on stats again.";
+        });
+    }
+
+    private async Task RunWalkover(Func<Task<string>> action)
+    {
+        walkoverMessage = null;
+        try
+        {
+            walkoverMessage = await action();
+            walkoverIsError = false;
+        }
+        catch (Exception ex)
+        {
+            walkoverIsError = true;
+            walkoverMessage = ex.Message;
+        }
+        walkoverFixtures = await AdminService.GetWalkoverFixtures();
     }
 
     private void OpenWizard()
@@ -434,6 +561,7 @@
             seasonMessage = await action();
             seasonIsError = false;
             seasons = await AdminService.GetSeasons();
+            walkoverFixtures = await AdminService.GetWalkoverFixtures();
         }
         catch (Exception ex)
         {

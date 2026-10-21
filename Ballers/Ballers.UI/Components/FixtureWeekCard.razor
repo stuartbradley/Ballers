@@ -32,7 +32,11 @@
                     </div>
                 </div>
 
-                @if (match.IsPlayed && (match.HomeScorers.Any() || match.AwayScorers.Any()))
+                @if (match.IsWalkover)
+                {
+                    <p class="walkover-note">Walkover: @(match.HomeScore > match.AwayScore ? match.Away : match.Home) couldn't field a team, awarded 3-0.</p>
+                }
+                else if (match.IsPlayed && (match.HomeScorers.Any() || match.AwayScorers.Any()))
                 {
                     <div class="scorers">
                         <div class="scorers-col home-scorers">

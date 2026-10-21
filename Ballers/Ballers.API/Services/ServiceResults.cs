@@ -31,6 +31,7 @@ namespace Ballers.API.Services
         // A result is only counted once both are true; see Fixture.IsPlayed.
         public bool HomeStatsSubmitted { get; init; }
         public bool AwayStatsSubmitted { get; init; }
+        public bool IsWalkover { get; init; }
     }
     public record HeadToHeadResult(
         int FixtureId, string HomeTeam, string AwayTeam,
@@ -59,6 +60,7 @@ namespace Ballers.API.Services
         public bool SeasonIsActive { get; init; }
         public bool HomeStatsSubmitted { get; init; }
         public bool AwayStatsSubmitted { get; init; }
+        public bool IsWalkover { get; init; }
 
         // The manager's own side only; zero/false for admins and referees.
         public int ManagerSquadCount { get; init; }
