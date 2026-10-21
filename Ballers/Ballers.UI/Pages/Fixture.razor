@@ -85,6 +85,15 @@
                 </a>
             }
 
+            @if (fixture.IsWalkover)
+            {
+                <div class="awaiting-stats-banner">
+                    Walkover: <strong>@(fixture.HomeScore > fixture.AwayScore ? fixture.AwayTeam : fixture.HomeTeam)</strong>
+                    couldn't field a team, so the game was awarded <strong>3-0</strong> to
+                    @(fixture.HomeScore > fixture.AwayScore ? fixture.HomeTeam : fixture.AwayTeam). There are no stats to enter.
+                </div>
+            }
+
             @if (AwaitingOtherTeamStats)
             {
                 <div class="awaiting-stats-banner">
@@ -116,6 +125,9 @@
                         @onclick="@(() => SelectTab("overview"))">
                     Overview
                 </button>
+                @* A walkover has no squad, stats or pens to enter: the admin set the 3-0. *@
+                @if (!fixture.IsWalkover)
+                {
                 <button class="tab @(activeTab == "squad" ? "active" : "")"
                         @onclick="@(() => SelectTab("squad"))">
                     Squad
@@ -129,6 +141,7 @@
                         @onclick="@(() => SelectTab("penalties"))">
                     Penalties
                 </button>
+                }
             </div>
 
             <!-- OVERVIEW TAB -->

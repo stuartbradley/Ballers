@@ -22,6 +22,8 @@
         public string Location { get; set; } = "";
         public string Postcode { get; set; } = "";
         public bool IsPlayed { get; set; }
+        // Awarded 3-0 by the admin; there are no scorers to list.
+        public bool IsWalkover { get; set; }
         public int HomeScore { get; set; }
         public int AwayScore { get; set; }
         public List<GoalScorerDto> HomeScorers { get; set; } = new();

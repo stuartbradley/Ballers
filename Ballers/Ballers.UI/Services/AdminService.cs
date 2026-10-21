@@ -160,6 +160,46 @@
             }
         }
 
+        // ── Walkovers ──
+
+        public async Task<List<Ballers.Shared.WalkoverFixtureDto>> GetWalkoverFixtures()
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, "api/admin/walkovers");
+            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+            try
+            {
+                var response = await _http.SendAsync(request);
+                if (!response.IsSuccessStatusCode) return new();
+                return await response.Content.ReadFromJsonAsync<List<Ballers.Shared.WalkoverFixtureDto>>() ?? new();
+            }
+            catch (HttpRequestException) { return new(); }
+        }
+
+        public async Task AwardWalkover(int fixtureId, int winnerTeamId)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Post, $"api/admin/fixtures/{fixtureId}/walkover");
+            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+            request.Content = JsonContent.Create(new Ballers.Shared.AwardWalkoverRequest { WinnerTeamId = winnerTeamId });
+            var response = await _http.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
+                var msg = (await response.Content.ReadAsStringAsync()).Trim('"');
+                throw new Exception(string.IsNullOrWhiteSpace(msg) ? $"Error {(int)response.StatusCode}" : msg);
+            }
+        }
+
+        public async Task UndoWalkover(int fixtureId)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Delete, $"api/admin/fixtures/{fixtureId}/walkover");
+            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+            var response = await _http.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
+                var msg = (await response.Content.ReadAsStringAsync()).Trim('"');
+                throw new Exception(string.IsNullOrWhiteSpace(msg) ? $"Error {(int)response.StatusCode}" : msg);
+            }
+        }
+
         public async Task DeleteSeason(int id)
         {
             var request = new HttpRequestMessage(HttpMethod.Delete, $"api/admin/seasons/{id}");

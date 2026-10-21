@@ -91,6 +91,9 @@ namespace Ballers.API.Controllers
             if (fixture.IsEditLocked)
                 return Conflict("This fixture is locked — more than 2 weeks have passed since it was played.");
 
+            if (fixture.IsWalkover)
+                return Conflict("This game was a walkover, so there are no stats to enter.");
+
             var actingTeamId = ResolveActingTeamId(isAdmin, user, fixture, request.TeamId);
             if (actingTeamId is null) return BadRequest("That team is not in this fixture.");
 

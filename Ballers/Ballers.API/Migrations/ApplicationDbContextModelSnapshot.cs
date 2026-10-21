@@ -169,6 +169,9 @@ namespace Ballers.API.Migrations
                     b.Property<bool>("IsPlayed")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsWalkover")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime?>("Kickoff")
                         .HasColumnType("datetime2");
 

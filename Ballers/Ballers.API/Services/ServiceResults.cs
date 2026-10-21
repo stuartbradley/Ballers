@@ -29,6 +29,7 @@ namespace Ballers.API.Services
         // A result is only counted once both are true; see Fixture.IsPlayed.
         public bool HomeStatsSubmitted { get; init; }
         public bool AwayStatsSubmitted { get; init; }
+        public bool IsWalkover { get; init; }
     }
     public record HeadToHeadResult(
         int FixtureId, string HomeTeam, string AwayTeam,
@@ -42,6 +43,7 @@ namespace Ballers.API.Services
         public bool IsKnockout { get; init; }
         public string KnockoutTournament { get; init; } = "";
         public string KnockoutRound { get; init; } = "";
+        public bool IsWalkover { get; init; }
     }
     public record PlayerGoalsStat(int PlayerId, string Name, int Goals);
     public record PlayerAssistsStat(int PlayerId, string Name, int Assists);

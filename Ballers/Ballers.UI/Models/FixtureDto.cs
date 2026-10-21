@@ -16,5 +16,6 @@
         public bool IsKnockout { get; set; }
         public string KnockoutTournament { get; set; } = "";
         public string KnockoutRound { get; set; } = "";
+        public bool IsWalkover { get; set; }
     }
 }
