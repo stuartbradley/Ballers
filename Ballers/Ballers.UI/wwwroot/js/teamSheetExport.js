@@ -20,6 +20,7 @@ window.teamSheetExport = {
 
     download: async function (elementId, filename) {
         const node = document.getElementById(elementId);
+        if (node) await window.loadSnapdom();
         if (!node || !window.snapdom) {
             console.error('teamSheetExport: node or snapdom not available');
             return false;

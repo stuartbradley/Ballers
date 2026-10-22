@@ -8,12 +8,14 @@
     <base href="/" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- One request for every webfont. Kept as a <link> rather than a CSS
+         @import: snapdom skips nested @imports when it embeds fonts for the
+         team sheet export. -->
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Saira+Semi+Condensed:wght@300;400;500;600;700&family=Anton&family=Bebas+Neue&family=Permanent+Marker&family=Bangers&display=swap" rel="stylesheet">
     <link href="css/site.css" rel="stylesheet" />
     <link href="css/admin.css" rel="stylesheet" />
     <link href="css/comic.css" rel="stylesheet" />
     <link href="Ballers.UI.styles.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Saira+Semi+Condensed:wght@300;400;500;600;700&family=Anton&family=Bebas+Neue&family=Permanent+Marker&family=Bangers&display=swap" rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Blackpool Ballers League — fixtures, tables, stats and squad management for Blackpool's five-a-side football league." />
     <meta property="og:title" content="Blackpool Ballers League" />
@@ -23,30 +25,113 @@
     <meta property="og:image" content="https://blackpoolballersleague.co.uk/images/BBL-Logo.png" />
     <link rel="canonical" href="https://blackpoolballersleague.co.uk/" />
     <link rel="icon" type="image/png" href="/images/BBL-Logo.png" />
+    <!-- Splash shown while the app downloads. Blazor replaces it on first
+         render, and sets --blazor-load-percentage as the files arrive. -->
+    <style>
+        .app-loading {
+            flex: 1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+        }
+        .app-loading img {
+            width: 140px;
+            height: 140px;
+        }
+        .app-loading-bar {
+            width: 200px;
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(15, 23, 42, 0.1);
+            overflow: hidden;
+        }
+        .app-loading-bar span {
+            display: block;
+            height: 100%;
+            width: var(--blazor-load-percentage, 0%);
+            background: #F97316;
+            transition: width 0.2s ease-out;
+        }
+    </style>
 </head>
 
 <body>
-    <div id="app"></div>
+    <div id="app">
+        <div class="app-loading" role="status" aria-label="Loading">
+            <img src="/images/BBL-Logo.png" alt="Blackpool Ballers League" width="140" height="140" />
+            <div class="app-loading-bar"><span></span></div>
+        </div>
+    </div>
     <!-- Disable React DevTools hook — prevents import-outside-module errors and console overrides in Blazor WASM -->
     <script>window.__REACT_DEVTOOLS_GLOBAL_HOOK__ = { isDisabled: true };</script>
-    <script src="_framework/blazor.webassembly.js"></script>
-    <script src="js/dashboardCharts.js"></script>
-    <script src="js/imageCrop.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@zumer/snapdom/dist/snapdom.min.js"></script>
-    <script src="js/teamSheetExport.js"></script>
-    <script src="js/galleryScroll.js"></script>
-    <script src="js/analytics.js"></script>
+    <script>
+        // snapdom is only needed to save an image (team sheet, team of the
+        // week), so it is fetched the first time someone does that.
+        window.loadSnapdom = function () {
+            if (window.snapdom) return Promise.resolve();
+            if (!window._snapdomLoading) {
+                window._snapdomLoading = new Promise(function (resolve) {
+                    var s = document.createElement('script');
+                    s.src = 'https://cdn.jsdelivr.net/npm/@zumer/snapdom/dist/snapdom.min.js';
+                    s.onload = resolve;
+                    s.onerror = function () { window._snapdomLoading = null; resolve(); };
+                    document.head.appendChild(s);
+                });
+            }
+            return window._snapdomLoading;
+        };
+    </script>
+    <!-- defer: downloads alongside each other and runs in this order once the
+         page is parsed, so a slow CDN never holds up the app. -->
+    <script src="_framework/blazor.webassembly.js" autostart="false" defer></script>
+    <script src="js/dashboardCharts.js" defer></script>
+    <script src="js/imageCrop.js" defer></script>
+    <script src="js/teamSheetExport.js" defer></script>
+    <script src="js/galleryScroll.js" defer></script>
+    <script src="js/analytics.js" defer></script>
     <!-- Motion One: vanilla-JS animation (the Framer Motion author's library, no React).
          Pinned like Chart.js above so a CDN release can't change the home page. -->
-    <script src="https://cdn.jsdelivr.net/npm/motion@11.18.2/dist/motion.min.js"></script>
-    <script src="js/cardShowcase.js"></script>
-    <script src="js/homeReveal.js"></script>
-    <script src="js/fixturesPage.js"></script>
-    <script src="js/cardTilt.js"></script>
-    <script src="js/totwExport.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/motion@11.18.2/dist/motion.min.js" defer></script>
+    <script src="js/cardShowcase.js" defer></script>
+    <script src="js/homeReveal.js" defer></script>
+    <script src="js/fixturesPage.js" defer></script>
+    <script src="js/cardTilt.js" defer></script>
+    <script src="js/totwExport.js" defer></script>
+    <!-- Starts the app from the Brotli files the publish step writes next to
+         each framework file (about a third of the size). The host can't send
+         them with Content-Encoding, so the browser fetches the .br and
+         decompresses it here. Decoder: google/brotli v1.1.0 js/decode.min.js.
+         Locally there are no .br files, and any failure falls back to the
+         normal file, so a missing .br never stops the app starting. -->
     <script type="module">
-        import { removeBackground } from 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/index.browser.js';
-        window._imglyRemoveBackground = removeBackground;
+        import { BrotliDecode } from './js/brotli-decode.min.js';
+
+        const compressed = ['assembly', 'dotnetwasm', 'pdb', 'lazyAssembly', 'satelliteResources'];
+        const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+
+        async function loadBrotli(type, defaultUri) {
+            try {
+                // no-cache: the names aren't hashed, so always revalidate (a 304 is cheap).
+                const response = await fetch(defaultUri + '.br', { cache: 'no-cache' });
+                if (!response.ok) throw new Error(response.status);
+                const decoded = BrotliDecode(new Int8Array(await response.arrayBuffer()));
+                const contentType = type === 'dotnetwasm' ? 'application/wasm' : 'application/octet-stream';
+                return new Response(decoded, { headers: { 'content-type': contentType } });
+            } catch (e) {
+                console.warn('Brotli load failed, using the uncompressed file', defaultUri, e);
+                return fetch(defaultUri, { cache: 'no-cache' });
+            }
+        }
+
+        Blazor.start({
+            loadBootResource: function (type, name, defaultUri, integrity) {
+                if (isLocal || !compressed.includes(type)) return;
+                return loadBrotli(type, defaultUri);
+            }
+        });
     </script>
 </body>
 

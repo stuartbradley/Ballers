@@ -7,6 +7,7 @@
 window.totwPage = {
     download: async function (elementId, filename) {
         const node = document.getElementById(elementId);
+        if (node) await window.loadSnapdom();
         if (!node || !window.snapdom) return false;
 
         const prev = { width: node.style.width, minWidth: node.style.minWidth, maxWidth: node.style.maxWidth };

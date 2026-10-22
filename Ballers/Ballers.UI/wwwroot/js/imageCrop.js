@@ -186,7 +186,19 @@ window.imageCrop = {
     },
 
     removeBackground: async function (dataUrl) {
-        if (!window._imglyRemoveBackground) return dataUrl;
+        // The library is large, so it is only fetched the first time someone
+        // removes a background, not on every page load.
+        if (!window._imglyRemoveBackground) {
+            try {
+                // +esm is jsDelivr's browser bundle; the package's own dist
+                // files import bare names (lodash) a browser can't resolve.
+                const lib = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/+esm');
+                window._imglyRemoveBackground = lib.removeBackground;
+            } catch (e) {
+                console.error('imageCrop: background removal failed to load', e);
+                return dataUrl;
+            }
+        }
 
         const res = await fetch(dataUrl);
         const blob = await res.blob();
