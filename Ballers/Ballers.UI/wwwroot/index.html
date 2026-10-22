@@ -112,24 +112,56 @@
         const compressed = ['assembly', 'dotnetwasm', 'pdb', 'lazyAssembly', 'satelliteResources'];
         const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 
+        // The host answers 503 when it gets ~50 requests at once, and taking
+        // over the download also takes over Blazor's own retry. So: a few
+        // files at a time, and a 5xx or network error is retried after a pause.
+        const maxParallel = 6;
+        let running = 0;
+        const waiting = [];
+
+        async function limited(work) {
+            if (running >= maxParallel) await new Promise(resolve => waiting.push(resolve));
+            running++;
+            try {
+                return await work();
+            } finally {
+                running--;
+                const next = waiting.shift();
+                if (next) next();
+            }
+        }
+
+        async function fetchWithRetry(url) {
+            for (let attempt = 1; ; attempt++) {
+                let response;
+                try {
+                    // no-cache: the names aren't hashed, so always revalidate (a 304 is cheap).
+                    response = await fetch(url, { cache: 'no-cache' });
+                } catch (e) {
+                    if (attempt >= 4) throw e;
+                }
+                if (response && (response.ok || response.status < 500 || attempt >= 4)) return response;
+                await new Promise(resolve => setTimeout(resolve, 500 * attempt));
+            }
+        }
+
         async function loadBrotli(type, defaultUri) {
             try {
-                // no-cache: the names aren't hashed, so always revalidate (a 304 is cheap).
-                const response = await fetch(defaultUri + '.br', { cache: 'no-cache' });
+                const response = await fetchWithRetry(defaultUri + '.br');
                 if (!response.ok) throw new Error(response.status);
                 const decoded = BrotliDecode(new Int8Array(await response.arrayBuffer()));
                 const contentType = type === 'dotnetwasm' ? 'application/wasm' : 'application/octet-stream';
                 return new Response(decoded, { headers: { 'content-type': contentType } });
             } catch (e) {
                 console.warn('Brotli load failed, using the uncompressed file', defaultUri, e);
-                return fetch(defaultUri, { cache: 'no-cache' });
+                return fetchWithRetry(defaultUri);
             }
         }
 
         Blazor.start({
             loadBootResource: function (type, name, defaultUri, integrity) {
                 if (isLocal || !compressed.includes(type)) return;
-                return loadBrotli(type, defaultUri);
+                return limited(() => loadBrotli(type, defaultUri));
             }
         });
     </script>
